@@ -1,0 +1,61 @@
+.login {
+    margin-top: 7rem;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+aside {
+    border-radius: 10px 0px 0 10px;
+    padding: 0 3rem;
+    background-color: #1D597B;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+aside img {
+    width: 100%;
+    max-width: 70px;
+}
+
+.form-content {
+    background-color: #05314C;
+    padding: 5rem 3rem;
+    border-radius: 20px;
+    text-align: center;
+}
+
+
+.input-group {
+    text-align: left;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 15px;
+}
+
+button {
+    margin: 20px 0;
+    background-color: #1D597B;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    color: white;
+    border-radius: 20px;
+    display: block;
+    text-align: center;
+    font-weight: bold;
+}
+
+a {
+    color: rgb(218, 218, 218);
+    text-decoration: none;
+}
+
+a span {
+    color: white;
+    text-decoration: underline;
+}

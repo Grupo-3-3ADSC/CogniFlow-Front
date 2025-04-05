@@ -1,0 +1,23 @@
+:root {
+  --primary-color: #05314C;
+  --secondary-color: #1D597B;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+
+
+body {
+  font-family: 'Poppins', sans-serif;
+  color: white;
+  background-color: #05314C;
+  background-image: url('./assets/background.png');
+  background-size: cover;
+
+  overflow-x: hidden;
+}
+
