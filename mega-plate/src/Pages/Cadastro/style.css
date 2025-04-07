@@ -1,14 +1,42 @@
-*{overflow: hidden;}
+*{  box-sizing: border-box;
+  margin: 0;
+  padding: 0;}
 
-
-.login {
-    margin-top: 25vh;
-    display: flex;
-    justify-content: center;
-    gap: 5px;
+.cadastro {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 7vh;
+  padding: 4rem 0; 
+  z-index: 1;
 }
 
-.aside-login {
+.navbar {
+    background-color: #05314C;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .navbar-left {
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+
+.navbar-right img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.aside-cadastro {
     border-radius: 10px 0px 0 10px;
     padding: 0 3rem;
     background-color: #1D597B;
@@ -17,7 +45,7 @@
     align-items: center;
 }
 
-.aside-login img {
+.aside-cadastro img {
     width: 100%;
     max-width: 70px;
 }
@@ -29,6 +57,7 @@
     text-align: center;
     width: 100%;
     max-width: 350px;
+    border: 5px solid #ccc;
 }
 
 
@@ -46,22 +75,11 @@
     box-sizing: border-box;
 }
 
-
-.olho {
-    position: absolute;
-    top: 70%;
-    right: 12px;
-    transform: translateY(-50%);
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-  }
-
-.login h1 {
+.cadastro h1 {
     font-size: 2.5rem;
 }
 
-.login button {
+.cadastro button {
     margin: 20px 0;
     background-color: #1D597B;
     padding: 10px;
@@ -76,20 +94,37 @@
     outline: none;
 }   
 
-.login button:hover {
+.cadastro button:hover {
     background-color: #1a4e6d;
     cursor: pointer;
 }
 
-.login a {
+.cadastro a {
     color: rgb(218, 218, 218);
     text-decoration: none;
     cursor: pointer;
 }
 
-.login a span {
+.cadastro a span {
     color: white;
     text-decoration: underline;
 }
 
+.bloco-fundo{
+    background-color: #05314C;
+    width: 75vw;
+    height: 75vh;
+    position: absolute;
+    top: 0;
+    left: 50vw;
+    transform: translateX(-50%);
+    z-index: 0; 
+    border-radius: 20px;
+}
 
+
+.aside-cadastro,
+.form-content {
+  z-index: 1; 
+  position: relative;
+}
