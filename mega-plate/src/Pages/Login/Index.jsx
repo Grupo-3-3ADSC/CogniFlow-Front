@@ -4,7 +4,7 @@ import logo from '../../assets/logo-megaplate.png'
 export function Login() {
     return(
         <section className='login'>
-            <aside>
+            <aside className='aside-login'>
                 <img src={logo} alt="" />
             </aside>
             <main className='form-content'>
@@ -12,12 +12,12 @@ export function Login() {
 
                 <div className='input-group'>
                     <p>Nome</p>
-                    <input type="text" />
+                    <input placeholder="Marcos Antonio"  type="text" />
                 </div>
 
                 <div className='input-group'>
                     <p>Senha</p>
-                    <input type="text" />
+                    <input placeholder='********' type="text" />
                 </div>
 
                 <button>ENTRAR</button>
