@@ -1,6 +1,5 @@
 import './style.css'
 import logo from '../../assets/logo-megaplate.png'
-import { useNavigate } from 'react-router-dom';
 import user from '../../assets/User.png';
 
 export function Cadastro() {
@@ -13,17 +12,29 @@ export function Cadastro() {
           <img src={user}/>
         </div>
         </nav>
-
+        <div class="tab-container">
+              <div class="tab active">PERFIL</div>
+               <div class="tab">CADASTRO</div>
+                 </div>
         <section className='cadastro'>
         
-        <div className='bloco-fundo'>     
+        
+        <div className='bloco-fundo'>  
+
+
+        <div class="tab-container-user">
+              <div class="tab active">Usuario</div>
+               <div class="tab">Fornecedor</div>
+                 </div>   
                         </div>
             <aside className='aside-cadastro'>
                             <img src={logo} alt="" />
                         </aside>
+                        
+                        
                                
                         <main className='form-content'>
-                            <h1>Cadastro</h1>
+                            
             
                             <div className='input-group'>
                                 <p>Nome</p>
