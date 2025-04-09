@@ -3,6 +3,11 @@ import logo from '../../assets/logo-megaplate.png'
 import user from '../../assets/User.png';
 
 export function Cadastro() {
+
+
+   const irParaEstoque = () => {
+        window.location.href = '/estoque'
+    }
     return (
       <>
       <nav className='navbar'>
@@ -63,7 +68,7 @@ export function Cadastro() {
             
                             <button>CADASTRAR</button>
             
-
+                            <a onClick={irParaEstoque}>Não tem conta? <span>Cadastrar</span></a>
                         </main>
           </section>
           
