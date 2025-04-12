@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #05314C;
+    --secondary-color: #4586AB;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-image: url('../../assets/background.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    font-family: "Poppins", sans-serif;
+    background-color: var(--primary-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+}
+
+.navbar {
+    width: 100%;
+    height: 70px;
+    background-color: #05314C;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+.menu-lateral {
+    width: 80px;
+    height: 100vh;
+    background-color: #1D597B;
+    position: fixed;
+    left: 0;
+    top: 0;
+    border-radius: 0px 20px 20px 0px;
+    transition: width 0.3s ease;
+}
+
+.menu-lateral img {
+    width: 9vh;
+    height: 9vh;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-top: 5%;
+    margin-left: 3%;
+}
+
+.menu-lateral:hover {
+    width: 250px;
+
+
+    img {
+        width: 15vh;
+        height: 15vh;
+        margin-left: 25%;
+    }
+}
+
+.perfil {
+    margin-left: auto;
+    padding: 20px;
+}
+
+.perfil img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+    border: 2px solid white;
+}
+
+.box-mega {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 216px;
+    height: 524px;
+    background-color: var(--secondary-color);
+    border-radius: 20px 0px 0px 20px;
+}
+
+.box-mega h1 {
+    font-size: 22px;
+    color: white;
+    text-align: center;
+}
+
+.box-campos {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-color);
+    width: 436px;
+    height: 524px;
+    border-radius: 0px 20px 20px 0px;
+    padding: 20px;
+    gap: 16px;
+}
+
+.box-campos label {
+    font-weight: bold;
+    color: white;
+    width: 274px;
+    text-align: left;
+    font-size: 14px;
+}
+
+.box-campos input {
+    width: 274px;
+    height: 48px;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 40px;
+    background-color: white;
+    outline: none;
+}
+
+.box-campos input::placeholder {
+    color: #888;
+}
+
+select {
+    width: 274px;
+    height: 48px;
+    border-radius: 40px;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    background-color: white;
+}
+
+button {
+    background-color: var(--secondary-color);
+    border-radius: 80px;
+    width: 160px;
+    height: 44px;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+}
+
+select {
+    color: gray;
+}
+
+select:valid {
+    color: black;
+}
