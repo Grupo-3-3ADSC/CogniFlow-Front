@@ -171,3 +171,43 @@ select {
 select:valid {
     color: black;
 }
+
+.menu-items ul {
+    list-style: none;
+    padding: 20px 0;
+    color: white;
+  }
+  
+  .menu-items ul li {
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background 0.2s ease-in-out;
+  }
+  
+  .menu-items ul li:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+  }
+  
+  .submenu-items {
+    display: none;
+    flex-direction: column;
+    padding-left: 24px;
+    font-size: 14px;
+  }
+  
+  .submenu:hover .submenu-items {
+    display: flex;
+  }
+  
+  .logout {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    color: white;
+    padding: 12px 20px;
+    cursor: pointer;
+  }
+  

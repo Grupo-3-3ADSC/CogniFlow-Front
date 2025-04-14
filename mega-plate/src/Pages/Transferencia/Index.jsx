@@ -1,8 +1,19 @@
 import './style.css'
 import logo from '../../assets/logo-megaplate.png'
 import user from '../../assets/User.png'
+import { useNavigate } from 'react-router-dom';
 
 export function Transferencia() {
+
+    const navigate = useNavigate();
+
+    function irParaOrdemDeCompra() {
+        navigate('/ordemDeCompra');
+    }
+
+    function irParaCadastro() {
+        navigate('/cadastro');
+    }
 
     return (
         <>
@@ -11,10 +22,30 @@ export function Transferencia() {
                 <header className='navbar'>
                     <div className='menu-lateral'>
                         <img src={logo} alt="" />
+                        <nav className='menu-items'>
+                            <ul>
+                                <li><i className="icon-usuario" /> Usuários</li>
+                                <li><i className="icon-transferencia" /> Transferência</li>
+                                <li><i className="icon-dashboard" /> Dashboard</li>
+                                <li className="submenu">
+                                    <div className="submenu-title">Formulários ▾</div>
+                                    <ul className="submenu-items">
+                                        <li>Cadastrar Materiais</li>
+                                        <li>Cadastrar Fornecedores</li>
+                                        <li onClick={irParaOrdemDeCompra}>Ordem de Compra</li>
+                                        <li onClick={irParaCadastro}>Cadastrar Usuários</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </nav>
+                        <div className='logout'>
+                            <i className="icon-logout" /> Log out
+                        </div>
                     </div>
                     <div className='perfil'>
                         <img className='userPhoto' src={user} alt="" />
                     </div>
+
                 </header>
 
                 <div className='box-mega'>
