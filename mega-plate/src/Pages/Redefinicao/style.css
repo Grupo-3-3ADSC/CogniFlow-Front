@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+*{overflow: hidden;}
+
+
+.redefinicao {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    font-weight: bold;
+}
+
+.aside-redefinicao {
+    border-radius: 10px 0px 0 10px;
+    padding: 0 3rem;
+    background-color: #1D597B;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.aside-redefinicao img {
+    width: 100%;
+    max-width: 70px;
+}
+
+.form-content {
+    background-color: #05314C;
+    padding: 4rem 3rem;
+    border-radius: 20px;
+    text-align: center;
+    width: 100%;
+    max-width: 350px;
+}
+
+
+.input-group {
+    text-align: left;
+    position: relative;
+    width: 100%;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px 40px 10px 10px;
+    border-radius: 15px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+
+.olho {
+    position: absolute;
+    top: 70%;
+    right: 12px;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+  }
+
+
+.redefinicao button {
+    margin: 20px 0;
+    background-color: #1D597B;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    color: white;
+    border-radius: 20px;
+    display: block;
+    text-align: center;
+    font-weight: bold;
+    border: none;
+    outline: none;
+}   
+
+.redefinicao button:hover {
+    background-color: #1a4e6d;
+    cursor: pointer;
+}
+
+.redefinicao a {
+    color: rgb(218, 218, 218);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.redefinicao a span {
+    color: white;
+    text-decoration: underline;
+}
+
+
