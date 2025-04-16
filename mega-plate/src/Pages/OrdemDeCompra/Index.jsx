@@ -6,6 +6,7 @@ import progressoConcluido from '../../assets/progresso1Concluido.png';
 import progresso2Concluido from '../../assets/progresso2Concluido.png';
 import progresso3Concluido from '../../assets/progresso3Concluido.png';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 {/* TIVE QUE USAR MODULE NESSA PARTE POR CAUSA QUE BUGA O CSS DO LOGIN E CADASTRO
     SE NÃO TIVER O CSS MODULE, ÚNICA COISA QUE MUDA É O JEITO DE COLOCAR A VARIÁVEL
@@ -40,16 +41,17 @@ export function OrdemDeCompra() {
             ],
             imagem: progresso2Concluido
         },
-        4:{
-            inputs:[],
+        4: {
+            inputs: [],
             imagem: progresso3Concluido
         }
     };
 
-
+    const navigate = useNavigate();
     const [progresso, setProgresso] = useState(1);
     const [image, setImage] = useState(etapas[1].imagem);
     const [titulo, setTitulo] = useState('ORDEM DE COMPRA');
+    const [nomeBotao, setNomeBotao] = useState('PRÓXIMO');
 
     useEffect(() => {
         if (progresso == 4) {
@@ -57,8 +59,9 @@ export function OrdemDeCompra() {
         } else {
             setTitulo('ORDEM DE COMPRA');
         }
+
     }
-    , [progresso]);
+        , [progresso]);
 
     function mudarProgresso() {
         const novoProgresso = progresso + 1;
@@ -66,20 +69,37 @@ export function OrdemDeCompra() {
             setProgresso(novoProgresso);
             setImage(etapas[novoProgresso].imagem);
         }
+
+        if (progresso == 2) {
+            setNomeBotao('FINALIZAR');
+            return;
+        }
+
+        setNomeBotao('PRÓXIMO');
     }
 
     function voltarProgresso() {
         const novoProgresso = progresso - 1;
         if (etapas[novoProgresso]) {
-          setProgresso(novoProgresso);
-          setImage(etapas[novoProgresso].imagem);
+            setProgresso(novoProgresso);
+            setImage(etapas[novoProgresso].imagem);
         }
-      }
+    }
+
+    function reiniciarOrdemDeCompra() {
+        setProgresso(1);
+        setImage(etapas[1].imagem);
+    }
+
+    function irParaDashboard(){
+        navigate('/dashboard') // link ficticio enquanto não tem redirecionamento para dash
+    }
 
     return (
         <>
-            <div class={style.sidebar}>
-                <div class={style.menuIcon}>
+
+            <div className={style.sidebar}>
+                <div className={style.menuIcon}>
                     <div></div>
                     <div></div>
                     <div></div>
@@ -100,9 +120,9 @@ export function OrdemDeCompra() {
                 </div>
 
                 <main className={style.formContent}>
-                    <span className={style.spanTitulo} style={progresso == 4 ? 
-                    {backgroundColor:'#1D597B', width: '330px', height: '200px'} : 
-                    {backgroundColor:'#05314C'}}>
+                    <span className={style.spanTitulo} style={progresso == 4 ?
+                        { backgroundColor: '#1D597B', width: '330px', height: '200px' } :
+                        { backgroundColor: '#05314C' }}>
                         <h1>{titulo}</h1>
                     </span>
                     <div className={style.inputs}>
@@ -123,22 +143,38 @@ export function OrdemDeCompra() {
                     </div>
 
                     <div className={style.botaoPdf}>
-                    <button disabled={progresso === 1} style={progresso != 4 ? {display:'none'} : {display:'block'}}>
-                        BAIXAR ORDEM DE COMPRA 
-                    </button>
-                 </div>
+                        <button disabled={progresso === 1} style={progresso != 4 ? { display: 'none' } : { display: 'block' }}>
+                            BAIXAR ORDEM DE COMPRA
+                        </button>
+                    </div>
 
                 </main>
 
                 <div className={style.botoes}>
-                    {progresso > 1 ? (
-    <button onClick={voltarProgresso}>VOLTAR</button>
-  ) : (
-    <span disabled={progresso === 1} 
-    style={{ visibility: 'hidden' }}>VOLTAR</span>
-  )}
-  <button onClick={mudarProgresso} disabled={progresso === 4}
-  style={progresso == 4 ? {display:'none'} : {display:'block'}}>PRÓXIMO</button>
+                    {progresso > 1 && progresso < 4 ? (
+                        <button onClick={voltarProgresso}>VOLTAR</button>
+                    ) : (
+                        <span disabled={progresso === 1}
+                            style={{ visibility: 'hidden' }}>VOLTAR</span>
+                    )}
+
+                    <button onClick={mudarProgresso} disabled={progresso === 4}
+                        style={progresso == 4 ? { display: 'none' } : { display: 'block' }}>{nomeBotao}</button>
+
+                    { progresso === 4 && (
+                    <div style={{display:'flex', 
+                    flexDirection:'column-reverse'}}>
+
+                    <button onClick={reiniciarOrdemDeCompra} disabled={progresso < 4}
+                        style={progresso < 4 ? { display: 'none' } : { display: 'block' }}>
+                        CRIAR NOVA ORDEM DE COMPRA
+                    </button>
+
+                    <button onClick={irParaDashboard} disabled={progresso < 4}
+                        style={progresso < 4 ? { display: 'none' } : { display: 'block' }}>
+                        IR PARA DASHBOARD
+                    </button>
+                    </div>)}
                 </div>
             </section>
         </>

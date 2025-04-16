@@ -2,6 +2,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  overflow: auto;
 }
 
 .cadastro {
@@ -110,7 +111,7 @@
   background-color: #1D597B;
   padding: 10px;
   width: 10vw;
-  height: 10%;
+  height: 50px;
   border: none;
   color: white;
   border-radius: 20px;
