@@ -7,17 +7,34 @@ import progresso2Concluido from '../../assets/progresso2Concluido.png';
 import progresso3Concluido from '../../assets/progresso3Concluido.png';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../../provider/api';
+import { jsPDF } from 'jspdf';
 
 {/* TIVE QUE USAR MODULE NESSA PARTE POR CAUSA QUE BUGA O CSS DO LOGIN E CADASTRO
     SE NÃO TIVER O CSS MODULE, ÚNICA COISA QUE MUDA É O JEITO DE COLOCAR A VARIÁVEL
     NA CLASSE E TEM QUE MUDAR O NOME DAS CLASSES PARA TIRAR O HÍFEN. */}
 export function OrdemDeCompra() {
 
+    const [listaUsuarios, setListaUsuario] = useState([]);
+
+    function getFornecedores() {
+        // colocando usuarios como exemplo de fornecedores
+        api.get("").then((resposta) => {
+            setListaUsuario(resposta.data)
+        }).catch((erro) => {
+            console.error("Erro ao buscar usuários", erro);
+        });
+    }
+
+    useEffect(() => {
+        getFornecedores();
+    }, []);
+
     {/* EDITE AQUI PARA MODIFICAR AS INPUTS */ }
     const etapas = {
         1: {
             inputs: [
-                { id: 'input1', titulo: 'Fornecedor', tipo: 'select', options: ['Fornecedor 1', 'Fornecedor 2'] },
+                { id: 'input1', titulo: 'Fornecedor', tipo: 'select', options: listaUsuarios },
                 { id: 'input2', titulo: 'Prazo de entrega', tipo: 'text' },
                 { id: 'input3', titulo: 'I.E', tipo: 'text' },
                 { id: 'input4', titulo: 'Cond. Pagamento', tipo: 'text' }
@@ -52,6 +69,7 @@ export function OrdemDeCompra() {
     const [image, setImage] = useState(etapas[1].imagem);
     const [titulo, setTitulo] = useState('ORDEM DE COMPRA');
     const [nomeBotao, setNomeBotao] = useState('PRÓXIMO');
+    const [valoresInput, setValoresInput] = useState({});
 
     useEffect(() => {
         if (progresso == 4) {
@@ -84,6 +102,8 @@ export function OrdemDeCompra() {
             setProgresso(novoProgresso);
             setImage(etapas[novoProgresso].imagem);
         }
+
+        setNomeBotao('PRÓXIMO');
     }
 
     function reiniciarOrdemDeCompra() {
@@ -91,8 +111,22 @@ export function OrdemDeCompra() {
         setImage(etapas[1].imagem);
     }
 
-    function irParaDashboard(){
+    function irParaDashboard() {
         navigate('/dashboard') // link ficticio enquanto não tem redirecionamento para dash
+    }
+
+    function baixarPDF() {
+
+        const doc = new jsPDF();
+
+        let posicaoY = 20;
+
+        Object.keys(valoresInput).forEach((campo) => {
+            doc.text(`${campo}: ${valoresInput[campo]}`, 10, posicaoY);
+            posicaoY += 10;
+        });
+
+        doc.save('ordemDeCompra.pdf');
     }
 
     return (
@@ -130,20 +164,25 @@ export function OrdemDeCompra() {
                             <div key={input.id} className={style.inputGroup}>
                                 <p>{input.titulo}</p>
                                 {input.tipo === 'select' ? (
-                                    <select>
+                                    <select
+                                        value={valoresInput[input.titulo] || ''}
+                                        onChange={(e) => setValoresInput({ ...valoresInput, [input.titulo]: e.target.value })}>
                                         {input.options.map((opt, i) => (
-                                            <option key={i}>{opt}</option>
+                                            <option key={i} value={opt.nome}>{opt.nome}</option>
                                         ))}
                                     </select>
                                 ) : (
-                                    <input type="text" />
+                                    <input type="text"
+                                        value={valoresInput[input.titulo] || ''}
+                                        onChange={(e) => setValoresInput({ ...valoresInput, [input.titulo]: e.target.value })} />
                                 )}
                             </div>
                         ))}
                     </div>
 
                     <div className={style.botaoPdf}>
-                        <button disabled={progresso === 1} style={progresso != 4 ? { display: 'none' } : { display: 'block' }}>
+                        <button disabled={progresso === 1} style={progresso != 4 ? { display: 'none' } : { display: 'block' }}
+                            onClick={baixarPDF}>
                             BAIXAR ORDEM DE COMPRA
                         </button>
                     </div>
@@ -161,20 +200,22 @@ export function OrdemDeCompra() {
                     <button onClick={mudarProgresso} disabled={progresso === 4}
                         style={progresso == 4 ? { display: 'none' } : { display: 'block' }}>{nomeBotao}</button>
 
-                    { progresso === 4 && (
-                    <div style={{display:'flex', 
-                    flexDirection:'column-reverse'}}>
+                    {progresso === 4 && (
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column-reverse'
+                        }}>
 
-                    <button onClick={reiniciarOrdemDeCompra} disabled={progresso < 4}
-                        style={progresso < 4 ? { display: 'none' } : { display: 'block' }}>
-                        CRIAR NOVA ORDEM DE COMPRA
-                    </button>
+                            <button onClick={reiniciarOrdemDeCompra} disabled={progresso < 4}
+                                style={progresso < 4 ? { display: 'none' } : { display: 'block' }}>
+                                CRIAR NOVA ORDEM DE COMPRA
+                            </button>
 
-                    <button onClick={irParaDashboard} disabled={progresso < 4}
-                        style={progresso < 4 ? { display: 'none' } : { display: 'block' }}>
-                        IR PARA DASHBOARD
-                    </button>
-                    </div>)}
+                            <button onClick={irParaDashboard} disabled={progresso < 4}
+                                style={progresso < 4 ? { display: 'none' } : { display: 'block' }}>
+                                IR PARA DASHBOARD
+                            </button>
+                        </div>)}
                 </div>
             </section>
         </>
