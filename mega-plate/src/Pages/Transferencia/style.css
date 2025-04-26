@@ -29,12 +29,15 @@ body {
     align-items: center;
     justify-content: center;
     gap: 0;
+    width: 100%;
+    height: 100%;
 }
 
+/* Navbar */
 .navbar {
     width: 100%;
     height: 70px;
-    background-color: #05314C;
+    background-color: var(--primary-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -45,6 +48,7 @@ body {
     z-index: 1000;
 }
 
+/* Menu lateral */
 .menu-lateral {
     width: 80px;
     height: 100vh;
@@ -67,29 +71,106 @@ body {
 
 .menu-lateral:hover {
     width: 250px;
-
-
-    img {
-        width: 15vh;
-        height: 15vh;
-        margin-left: 25%;
-    }
 }
 
-.perfil {
-    margin-left: auto;
-    padding: 20px;
+.menu-lateral:hover img {
+    width: 15vh;
+    height: 15vh;
+    margin-left: 25%;
 }
 
-.perfil img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
+.menu-items ul {
+    list-style: none;
+    padding: 20px 0;
+    color: white;
+}
+
+.menu-items ul li {
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
     cursor: pointer;
-    border: 2px solid white;
+    transition: background 0.2s ease-in-out;
 }
 
+.menu-items ul li img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    transition: all 0.3s ease;
+}
+
+.menu-items ul li img + span {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.menu-lateral:hover .menu-items ul li img + span {
+    display: inline;
+    opacity: 1;
+    margin-left: 8px;
+}
+
+.menu-lateral:hover .menu-items ul li img {
+    width: 24px;
+    height: 24px;
+}
+
+.menu-items ul li:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+.submenu-items {
+    display: none;
+    flex-direction: column;
+    padding-left: 24px;
+    font-size: 14px;
+}
+
+.submenu:hover .submenu-items {
+    display: flex;
+}
+
+/* Logout */
+.logout {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    color: white;
+    padding: 12px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logout img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    transition: all 0.3s ease;
+}
+
+.menu-lateral:hover .logout img {
+    width: 24px;
+    height: 24px;
+}
+
+.logout span {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.menu-lateral:hover .logout span {
+    display: inline;
+    opacity: 1;
+    margin-left: 8px;
+}
+
+/* Tela de transferência */
 .box-mega {
     display: flex;
     justify-content: center;
@@ -127,7 +208,8 @@ body {
     font-size: 14px;
 }
 
-.box-campos input {
+.box-campos input,
+.box-campos select {
     width: 274px;
     height: 48px;
     padding: 12px;
@@ -142,16 +224,6 @@ body {
     color: #888;
 }
 
-select {
-    width: 274px;
-    height: 48px;
-    border-radius: 40px;
-    padding: 12px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    background-color: white;
-}
-
 button {
     background-color: var(--secondary-color);
     border-radius: 80px;
@@ -164,50 +236,83 @@ button {
     cursor: pointer;
 }
 
-select {
-    color: gray;
+button:hover {
+    background-color: #144a63;
 }
 
-select:valid {
-    color: black;
-}
-
-.menu-items ul {
-    list-style: none;
-    padding: 20px 0;
-    color: white;
-  }
-  
-  .menu-items ul li {
-    align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
-    cursor: pointer;
-    transition: background 0.2s ease-in-out;
-  }
-  
-  .menu-items ul li:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-  }
-  
-  .submenu-items {
-    display: none;
-    flex-direction: column;
-    padding-left: 24px;
-    font-size: 14px;
-  }
-  
-  .submenu:hover .submenu-items {
+.container.success-screen .box-sucesso {
     display: flex;
-  }
-  
-  .logout {
-    position: absolute;
-    bottom: 20px;
-    width: 100%;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    gap: 20px;
+}
+
+.box-sucesso h1 {
+    font-size: 24px;
+    font-weight: bold;
     color: white;
-    padding: 12px 20px;
+    margin-bottom: 10px;
+}
+
+.box-sucesso p {
+    font-size: 16px;
+    color: white;
+    margin-bottom: 20px;
+}
+
+.box-sucesso button {
+    margin: 10px;
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 8px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
     cursor: pointer;
-  }
-  
+    transition: background-color 0.3s ease;
+}
+
+.box-sucesso button:hover {
+    background-color: #144a63;
+}
+
+/* Botão de relatório */
+.box-sucesso .botao-relatorio {
+    background-color: #ffffff;
+    color: var(--secondary-color);
+    font-weight: bold;
+    border: 2px solid var(--secondary-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.box-sucesso .botao-relatorio:hover {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.container.transfer-screen .box-sucesso {
+    display: none;
+}
+
+.container.transfer-screen .box-mega,
+.container.transfer-screen .box-campos {
+    display: flex;
+}
+
+.container.success-screen .box-mega,
+.container.success-screen .box-campos {
+    display: none;
+}
+
+.container.success-screen .box-sucesso {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    gap: 20px;
+}

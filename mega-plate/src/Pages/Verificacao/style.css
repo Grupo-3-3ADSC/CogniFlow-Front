@@ -131,14 +131,26 @@ button:hover {
     }
 
     .code-inputs input {
-        width: 35px; /* Reduz um pouco os inputs do código */
+        width: 35px; 
         height: 35px;
         font-size: 16px;
     }
 
     button {
-        width: 100%; /* Botão ocupa toda a largura do card */
-        padding: 14px; /* Aumenta um pouco para toque confortável */
+        width: 100%; 
+        padding: 14px; 
         font-size: 18px;
     }
+}
+
+.email-input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px solid white;
+    background: white;
+    color: black;
+    outline: none;
+    font-size: 16px;
+    margin-bottom: 12px;
 }
