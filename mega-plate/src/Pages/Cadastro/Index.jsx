@@ -14,7 +14,7 @@ export function Cadastro() {
     nome: '',
     email: '', 
     cargo: '',
-    senha: '',
+    password: '',
   });
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export function Cadastro() {
   };
 
   const cadastrar = () => {
-    if (!formData.nome || !formData.email || !formData.cargo || !formData.senha) {
+    if (!formData.nome || !formData.email || !formData.cargo || !formData.password) {
       alert('Por favor, preencha todos os campos');
       return;
     }
@@ -42,12 +42,12 @@ export function Cadastro() {
         nome: formData.nome,
         email: formData.email,
         cargo: formData.cargo,
-        senha: formData.senha,
+        password: formData.password,
       })
       .then((response) => {
         console.log(response.data);
         exibir();
-        setFormData({ nome: '', email: '', cargo: '', senha: '' }); // Reset form
+        setFormData({ nome: '', email: '', cargo: '', password: '' }); // Reset form
       })
       .catch((error) => {
         console.error('Erro ao cadastrar usuário:', error);
@@ -112,8 +112,8 @@ export function Cadastro() {
             <input
               placeholder="********"
               type="password"
-              value={formData.senha}
-              onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
           </div>
 
