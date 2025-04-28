@@ -13,15 +13,9 @@ export function Redefinicao() {
         setVisivel(!visivel);
     };
 
-
-    // const irParaCadastro = () => {
-    //     navigate('/cadastro');
-    // }
-
-
-    // const irParaLinks = () => {
-    //     navigate('/links');
-    // }
+    function irParaLogin() {
+        navigate('/login');
+    }
 
     return (
         <section className='redefinicao'>
@@ -44,7 +38,7 @@ export function Redefinicao() {
                     <img className='olho' src={olho} onClick={visorSenha} alt='Mostrar senha' />
                 </div>
 
-                <button>REDEFINIR</button>
+                <button onClick={irParaLogin}>REDEFINIR</button>
 
                 {/* <a onClick={irParaCadastro}>Não tem conta? <span>Cadastrar</span></a> */}
                 {/* <a onClick={irParaLinks}>Links</a> */}

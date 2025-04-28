@@ -21,6 +21,7 @@ function App() {
         <Route path='/Verificacao' element={<Verificacao />} />
         <Route path='/Transferencia' element={<Transferencia />} />
         <Route path='/Redefinicao' element={<Redefinicao />} />
+        <Route path='/login' element={<Login />} />
       </Routes>
     </Router>
   );

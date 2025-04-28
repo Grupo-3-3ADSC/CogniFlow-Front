@@ -91,6 +91,7 @@ body {
     padding: 12px 20px;
     cursor: pointer;
     transition: background 0.2s ease-in-out;
+    
 }
 
 .menu-items ul li img {
@@ -100,13 +101,13 @@ body {
     transition: all 0.3s ease;
 }
 
-.menu-items ul li img + span {
+.menu-items ul li img+span {
     display: none;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
 
-.menu-lateral:hover .menu-items ul li img + span {
+.menu-lateral:hover .menu-items ul li img+span {
     display: inline;
     opacity: 1;
     margin-left: 8px;
@@ -144,30 +145,39 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
 }
 
 .logout img {
-    width: 32px;
-    height: 32px;
+    width: 53px;
+    height: 53px;
     object-fit: contain;
     transition: all 0.3s ease;
 }
 
-.menu-lateral:hover .logout img {
-    width: 24px;
-    height: 24px;
-}
-
 .logout span {
     display: none;
+    /* Esconde o texto "Log out" por padrão */
     opacity: 0;
     transition: opacity 0.3s ease;
+}
+
+.menu-lateral:hover .logout {
+    justify-content: flex-start;
+    /* Alinha o ícone e o texto à esquerda quando expandido */
+    padding-left: 20px;
+    /* Adiciona espaçamento à esquerda */
 }
 
 .menu-lateral:hover .logout span {
     display: inline;
     opacity: 1;
-    margin-left: 8px;
+}
+
+.menu-lateral:hover .logout img {
+    width: 53px;
+    height: 38px;
+
 }
 
 /* Tela de transferência */
@@ -315,4 +325,27 @@ button:hover {
     text-align: center;
     padding: 20px;
     gap: 20px;
+}
+
+.perfil {
+    position: absolute;
+    right: 20px;
+    /* Move o ícone para a direita */
+    top: 50%;
+    /* Centraliza verticalmente */
+    transform: translateY(-50%);
+    /* Ajusta o alinhamento vertical */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.perfil img {
+    width: 40px;
+    /* Ajuste o tamanho do ícone conforme necessário */
+    height: 40px;
+    border-radius: 50%;
+    /* Torna o ícone circular */
+    object-fit: cover;
+    cursor: pointer;
 }

@@ -10,7 +10,7 @@ import { useState } from 'react';
 
 export function Transferencia() {
     const navigate = useNavigate();
-    const [showSuccessScreen, setShowSuccessScreen] = useState(false); // Estado para alternar entre telas
+    const [showSuccessScreen, setShowSuccessScreen] = useState(false);
 
     function irParaOrdemDeCompra() {
         navigate('/ordemDeCompra');
@@ -30,6 +30,10 @@ export function Transferencia() {
 
     function handleTransferir() {
         setShowSuccessScreen(true); 
+    }
+
+    function fazerLogout() {
+        navigate('/login');
     }
 
     return (
@@ -81,8 +85,8 @@ export function Transferencia() {
                             </ul>
                         </nav>
                         <div className="logout">
-                            <img src={iconLogout} alt="" />
-                            <i className="icon-logout" /> Log out
+                            <img onClick={fazerLogout} src={iconLogout} alt="Logout" />
+                            <span onClick={fazerLogout}>Log out</span>
                         </div>
                     </div>
                     <div className="perfil">
