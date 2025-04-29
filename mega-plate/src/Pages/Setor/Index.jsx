@@ -13,8 +13,8 @@ export function Setor() {
 //     }
     return (
       <>
-       <div class="sidebar">
-    <div class="menu-icon">
+       <div className="sidebar">
+    <div className="menu-icon">
       <div></div>
       <div></div>
       <div></div>
@@ -27,8 +27,8 @@ export function Setor() {
           <img src={user}/>
         </div>
         </nav>
-        <div class="tab-container">
-              <div class="tab active">Cadastro</div>
+        <div className="tab-container">
+              <div className="tab active">Cadastro</div>
                
                  </div>
         <section className='cadastro'>
@@ -37,8 +37,8 @@ export function Setor() {
         <div className='bloco-fundo'>  
 
 
-        <div class="tab-container-user">
-              <div class="tab active">Setor</div>
+        <div className="tab-container-user">
+              <div className="tab active">Setor</div>
                  </div>   
                         </div>
             <aside className='aside-cadastro'>

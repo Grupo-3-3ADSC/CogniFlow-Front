@@ -1,9 +1,12 @@
 import React from 'react';
-import  Login  from './Pages/Login/Index';
+import Login from './Pages/Login/Index';
 import Cadastro from './Pages/Cadastro/Index';
 import OrdemDeCompra from './Pages/OrdemDeCompra/Index';
 import Estoque from './Pages/Estoque/Index';
 import Setor from './Pages/Setor/Index';
+import Verificacao from './Pages/Verificacao/Index';
+import Transferencia from './Pages/Transferencia/Index';
+import Redefinicao from './Pages/Redefinicao/Index';
 
 import {Route, BrowserRouter as Router, Routes} from 'react-router-dom';
 
@@ -16,6 +19,9 @@ function App() {
         <Route path='/ordemDeCompra' element={<OrdemDeCompra/>} />
         <Route path='/estoque' element={<Estoque />} />
         <Route path='/setor' element={<Setor />} />
+        <Route path='/Verificacao' element={<Verificacao />} />
+        <Route path='/Transferencia' element={<Transferencia />} />
+        <Route path='/Redefinicao' element={<Redefinicao />} />
       </Routes>
     </Router>
   );

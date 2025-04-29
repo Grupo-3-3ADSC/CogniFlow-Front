@@ -15,8 +15,8 @@ export function Estoque() {
     }
     return (
       <>
-       <div class="sidebar">
-    <div class="menu-icon">
+       <div className="sidebar">
+    <div className="menu-icon">
       <div></div>
       <div></div>
       <div></div>
@@ -29,8 +29,8 @@ export function Estoque() {
           <img src={user}/>
         </div>
         </nav>
-        <div class="tab-container">
-              <div class="tab active">Cadastro</div>
+        <div className="tab-container">
+              <div className="tab active">Cadastro</div>
                
                  </div>
         <section className='cadastro'>
@@ -39,8 +39,8 @@ export function Estoque() {
         <div className='bloco-fundo'>  
 
 
-        <div class="tab-container-user">
-              <div class="tab active">Estoque</div>
+        <div className="tab-container-user">
+              <div className="tab active">Estoque</div>
                  </div>   
                         </div>
             <aside className='aside-cadastro'>

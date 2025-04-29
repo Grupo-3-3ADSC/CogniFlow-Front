@@ -1,16 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 
-.login {
+.redefinicao {
     display: flex;
-    justify-content: center; 
-    align-items: center; 
+    justify-content: center;
+    align-items: center;
     gap: 5px;
+    font-weight: bold;
     overflow: hidden;
     width: 100vw; 
     height: 100vh; 
 }
 
-.aside-login {
+.aside-redefinicao {
     border-radius: 10px 0px 0 10px;
     padding: 0 3rem;
     background-color: #1D597B;
@@ -20,7 +22,7 @@
     height: 60vh;
 }
 
-.aside-login img {
+.aside-redefinicao img {
     width: 100%;
     max-width: 70px;
 }
@@ -60,11 +62,8 @@
     cursor: pointer;
   }
 
-.login h1 {
-    font-size: 2.5rem;
-}
 
-.login button {
+.redefinicao button {
     margin: 20px 0;
     background-color: #1D597B;
     padding: 10px;
@@ -79,18 +78,18 @@
     outline: none;
 }   
 
-.login button:hover {
+.redefinicao button:hover {
     background-color: #1a4e6d;
     cursor: pointer;
 }
 
-.login a {
+.redefinicao a {
     color: rgb(218, 218, 218);
     text-decoration: none;
     cursor: pointer;
 }
 
-.login a span {
+.redefinicao a span {
     color: white;
     text-decoration: underline;
 }

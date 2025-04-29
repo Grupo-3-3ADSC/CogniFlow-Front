@@ -17,6 +17,10 @@ export function Login() {
         const visorpassword = () => {
           setVisivel(!visivel);
         };
+
+        function irParaVerificacao(){
+            navigate('/verificacao')
+        }
         
 
 
@@ -75,7 +79,7 @@ export function Login() {
 
                 <button onClick={login}>ENTRAR</button>
 
-                {/* <a onClick={irParaCadastro}>Não tem conta? <span>Cadastrar</span></a> */}
+                <a onClick={irParaVerificacao}><span>Esqueceu a senha?</span></a>
             </main>
         </section>
     )

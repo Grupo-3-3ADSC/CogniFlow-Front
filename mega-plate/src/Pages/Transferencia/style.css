@@ -1,0 +1,426 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #05314C;
+    --secondary-color: #4586AB;
+    --third-color: #1d597b;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+.container-transferencia{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* navbar-transferencia */
+.navbar-transferencia {
+    width: 100%;
+    height: 70px;
+    background-color: var(--primary-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+/* Menu lateral */
+.menu-lateral {
+    width: 80px;
+    height: 100vh;
+    background-color: #1D597B;
+    position: fixed;
+    left: 0;
+    top: 0;
+    border-radius: 0px 20px 20px 0px;
+    transition: width 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+}
+
+.menu-lateral.expandido {
+    width: 250px; /* Largura do menu expandido */
+}
+
+.menu-hamburguer{
+    width: 40px; /* Tamanho do ícone de menu */
+    height: 40px;
+    margin: 20px 0;
+    cursor: pointer;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* .menu-hamburguer:hover {
+    transform: scale(1.1);
+    opacity: 0.8; 
+} */
+
+/* Centraliza o ícone no menu colapsado */
+.menu-lateral.colapsado .menu-hamburguer {
+    margin-top: 20px; /* Espaçamento superior */
+    margin-bottom: auto; /* Empurra o ícone para o topo */
+}
+
+.menu-lateral img {
+    width: 30px; 
+    height: 30px;
+    cursor: pointer;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/*
+.menu-lateral:hover {
+    width: 250px;
+}
+
+.menu-lateral:hover img {
+    width: 15vh;
+    height: 15vh;
+     margin-left: 25%; 
+} *\
+
+/* Itens do menu */
+.menu-items {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding-top: 20px;
+}
+
+.icons-menu {
+    width: 32px; /* Define o tamanho dos ícones */
+    height: 32px;
+    object-fit: contain; /* Garante que os ícones mantenham suas proporções */
+    transition: all 0.3s ease;
+}
+
+.menu-items ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.menu-items ul li {
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.menu-items ul li img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    transition: all 0.3s ease;
+}
+
+.menu-items ul li img+span {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.menu-lateral .menu-items ul li img+span {
+    display: inline;
+    opacity: 1;
+    margin-left: 8px;
+}
+
+.menu-lateral .menu-items ul li img {
+    width: 24px;
+    height: 24px;
+}
+
+.menu-items ul li:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+.submenu-items {
+    display: none;
+    flex-direction: column;
+    padding-left: 24px;
+    font-size: 14px;
+}
+
+.submenu:hover .submenu-items {
+    display: flex;
+}
+
+/* Logout */
+.logout {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    color: white;
+    padding: 12px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.logout img {
+    width: 53px;
+    height: 53px;
+    object-fit: contain;
+    transition: all 0.3s ease;
+}
+
+.logout span {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.menu-lateral.expandido .logout span {
+    display: inline;
+    opacity: 1;
+}
+
+.menu-lateral .logout img {
+    width: 53px;
+    height: 38px
+}
+
+/* Tela de transferência */
+.box-mega {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 216px;
+    height: 524px;
+    background-color: var(--secondary-color);
+    border-radius: 20px 0px 0px 20px;
+}
+
+.box-mega h1 {
+    font-size: 22px;
+    color: white;
+    text-align: center;
+}
+
+.box-campos {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-color);
+    width: 436px;
+    height: 524px;
+    border-radius: 0px 20px 20px 0px;
+    padding: 20px;
+    gap: 16px;
+}
+
+.box-campos label {
+    font-weight: bold;
+    color: white;
+    width: 274px;
+    text-align: left;
+    font-size: 14px;
+}
+
+.box-campos input,
+.box-campos select {
+    width: 274px;
+    height: 48px;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 40px;
+    background-color: white;
+    outline: none;
+}
+
+.box-campos input::placeholder {
+    color: #888;
+}
+
+button {
+    background-color: var(--secondary-color);
+    border-radius: 80px;
+    width: 160px;
+    height: 44px;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #144a63;
+}
+
+.container-transferencia.success-screen .box-sucesso {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    gap: 20px;
+}
+
+.box-sucesso {
+    background-color: #1D597B;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 1000px;
+    height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4);
+}
+
+.box-sucesso h1 {
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 10px;
+}
+
+.box-sucesso p {
+    font-size: 16px;
+    color: white;
+    margin-bottom: 20px;
+}
+
+.box-sucesso button {
+    margin: 10px;
+    font-size: 12px;
+    border-radius: 8px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* .container-transferencia.transfer-screen {
+    margin-top: 12%;
+} */
+
+.container-transferencia.success-screen .botoes-acao {
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+    width: 766px;
+}
+
+.botoes {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    width: 766px;
+}
+
+.botoes-acao {
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.botoes-acao button {
+    font-size: 18px;
+    border-radius: 49px;
+    background-color: var(--third-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 403px;
+}
+
+.botoes-acao button:hover {
+    background-color: #144a63;
+}
+
+.box-sucesso button:hover {
+    background-color: #144a63;
+}
+
+/* Botão de relatório */
+.box-sucesso .botao-relatorio {
+    background-color: #05314C;
+    font-weight: bold;
+    border: 2px solid var(--secondary-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    border-radius: 49px;
+    width: 200px;
+    height: 60px;
+}
+
+.box-sucesso .botao-relatorio:hover {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.container-transferencia.transfer-screen .box-sucesso {
+    display: none;
+}
+
+.container-transferencia.transfer-screen .box-mega,
+.container-transferencia.transfer-screen .box-campos {
+    display: flex;
+}
+
+.container-transferencia.success-screen .box-mega,
+.container-transferencia.success-screen .box-campos {
+    display: none;
+}
+
+.container-transferencia.success-screen .box-sucesso {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    gap: 20px;
+}
+
+.perfil {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.perfil img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+}
