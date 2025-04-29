@@ -1,0 +1,190 @@
+*{  box-sizing: border-box;
+  margin: 0;
+  padding: 0;}
+
+.cadastro {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  padding: 4rem 0 4rem 0rem; 
+  z-index: 1;
+
+}
+
+.navbar {
+    background-color: #05314C;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .navbar-left {
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+
+.navbar-right img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.aside-cadastro {
+    border-radius: 25px 0px 0 25px;
+    padding: 0 3rem;
+    background-color: #1D597B;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 12vw;
+    height: 60vh;
+    position: relative;
+    z-index: 1;
+    box-shadow: -10px 0px 20px rgba(0, 0, 0, 0.4); 
+}
+
+.aside-cadastro img {
+    width: 100%;
+    max-width: 80px;
+}
+
+.form-content {
+    background-color: #05314C;
+    /* padding: 4rem 3rem; */
+    border-radius: 20px;
+    width: 100%;
+    max-width: 350px;
+    height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0px 20px 20px 0px;
+    padding: 2rem;
+    border: 3px solid #ccc;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4); 
+}
+.tab-container {
+      display: flex;
+      /* padding: 20px; */
+      gap: 5px;
+      justify-content: flex-start;
+      padding-left: 15%;
+      padding-top: 2rem;
+      width: 80%;
+
+    }
+
+    .tab {
+      padding: 10px 30px;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+      background-color: #1F5F7C;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .tab.active {
+      background-color: #14425C; /* cor mais escura para a aba ativa */
+    }
+
+    .content {
+      background-color: #14425C;
+      height: 300px;
+      padding: 20px;
+      color: white;
+      border-top: none;
+    }
+    .tab-container-user{
+      display: flex;
+      /* padding: 20px; */
+      gap: 5px;
+      justify-content: flex-start;
+      padding-left: 43%;
+      padding-top: 2.2rem;
+      width: 80%;
+      font-size: 0.8rem;
+    }
+
+
+    
+    
+    
+
+.input-group {
+    text-align: left;
+    position: relative;
+    width: 100%;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px 40px 10px 10px;
+    border-radius: 15px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+/* .cadastro h1 {
+    font-size: 2.5rem;
+} */
+
+.cadastro button {
+    margin: 20px 0;
+    background-color: #1D597B;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    color: white;
+    border-radius: 20px;
+    display: block;
+    text-align: center;
+    font-weight: bold;
+    border: none;
+    outline: none;
+}   
+
+.cadastro button:hover {
+    background-color: #1a4e6d;
+    cursor: pointer;
+}
+
+.cadastro a {
+    color: rgb(218, 218, 218);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.cadastro a span {
+    color: white;
+    text-decoration: underline;
+}
+
+.bloco-fundo{
+    background-color: #05314C;
+    width: 75vw;
+    height: 78vh;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    
+    transform: translate(-50%, -50%);
+    z-index: 0; 
+    border-radius: 20px;
+}
+
+
+.aside-cadastro,
+.form-content {
+  z-index: 1; 
+  position: relative;
+}
