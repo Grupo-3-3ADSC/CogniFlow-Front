@@ -45,6 +45,30 @@ export function Transferencia() {
     }
 
     function handleTransferir() {
+
+        // Validação dos campos
+        if (quantidadeUMR.trim() === '' || tipoMaterial.trim() === '' || tipoTransferencia.trim() === '') {
+            alert('Por favor, preencha todos os campos.');
+            return;
+        }
+        if (isNaN(quantidadeUMR)) { // Verifica se a quantidade UMR é um número
+            alert('A quantidade UMR deve ser um número.');
+            return;
+        }   
+        if (quantidadeUMR <= 0) { // Verifica se a quantidade UMR é maior que zero
+            alert('A quantidade UMR deve ser maior que zero.');
+            return;
+        }
+        if (tipoMaterial === 'Selecione uma opção') { // Verifica se o tipo de material foi selecionado
+            alert('Por favor, selecione um tipo de material.');
+            return;
+        }
+        if (tipoTransferencia === 'Selecione uma opção') { // Verifica se o tipo de transferência foi selecionado
+            alert('Por favor, selecione um tipo de transferência.');
+            return;
+        }
+        // Se todos os campos estiverem preenchidos, exibe a tela de sucesso
+        alert('Transferência realizada com sucesso!');
         setShowSuccessScreen(true);
     }
 
