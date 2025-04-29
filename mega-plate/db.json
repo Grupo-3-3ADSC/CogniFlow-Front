@@ -1,0 +1,28 @@
+{
+  "usuarios": [
+    {
+      "id": "6a85"
+    },
+    {
+      "id": "e7de",
+      "nome": "aaa",
+      "email": "aaa",
+      "cargo": "aaa",
+      "senha": "aaa"
+    },
+    {
+      "id": "2031",
+      "nome": "nogueira",
+      "email": "nogueira123",
+      "cargo": "ceo",
+      "senha": "123456"
+    },
+    {
+      "id": "5ccf",
+      "nome": "matheus",
+      "email": "matheus",
+      "cargo": "gerente",
+      "senha": "456789"
+    }
+  ]
+}

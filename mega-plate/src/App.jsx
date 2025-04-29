@@ -2,7 +2,9 @@ import React from 'react';
 import  Login  from './Pages/Login/Index';
 import Cadastro from './Pages/Cadastro/Index';
 import OrdemDeCompra from './Pages/OrdemDeCompra/Index';
-import Links from './Pages/Links';
+import Estoque from './Pages/Estoque/Index';
+import Setor from './Pages/Setor/Index';
+
 import {Route, BrowserRouter as Router, Routes} from 'react-router-dom';
 
 function App() {
@@ -10,9 +12,10 @@ function App() {
     <Router>
       <Routes>
         <Route path='/' element={<Login />} />
-        <Route path='/links' element={<Links />} />
         <Route path='/cadastro' element={<Cadastro />} />
         <Route path='/ordemDeCompra' element={<OrdemDeCompra/>} />
+        <Route path='/estoque' element={<Estoque />} />
+        <Route path='/setor' element={<Setor />} />
       </Routes>
     </Router>
   );
