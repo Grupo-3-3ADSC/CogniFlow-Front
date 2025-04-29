@@ -12,14 +12,27 @@
     box-sizing: border-box;
 }
 
+.transferencia-body {
+    background-image: url('../../assets/background.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    font-family: "Poppins", sans-serif;
+    background-color: var(--primary-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
 
 .container-transferencia{
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
+    
 }
 
 /* navbar-transferencia */

@@ -7,9 +7,8 @@ import iconLogout from '../../assets/icon-logout.png';
 import iconTransferencia from '../../assets/icon-transferencia.png';
 import iconFormularios from '../../assets/icon-formularios.png';
 import menuHamburguer from '../../assets/menu-hamburger.png';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 
 export function Transferencia() {
     const navigate = useNavigate();
@@ -18,6 +17,16 @@ export function Transferencia() {
     const [tipoMaterial, setTipoMaterial] = useState('');
     const [tipoTransferencia, setTipoTransferencia] = useState('');
     const [menuExpandido, setMenuExpandido] = useState(false);
+
+    useEffect(() => {
+        // Adiciona a classe ao body
+        document.body.classList.add('transferencia-body');
+
+        // Remove a classe ao desmontar o componente
+        return () => {
+            document.body.classList.remove('transferencia-body');
+        };
+    }, []);
 
     function toggleMenu() {
         setMenuExpandido(!menuExpandido);
@@ -46,68 +55,69 @@ export function Transferencia() {
 
     function handleTransferir() {
 
-        // Validação dos campos
         if (quantidadeUMR.trim() === '' || tipoMaterial.trim() === '' || tipoTransferencia.trim() === '') {
             alert('Por favor, preencha todos os campos.');
             return;
         }
-        if (isNaN(quantidadeUMR)) { // Verifica se a quantidade UMR é um número
+        if (isNaN(quantidadeUMR)) {
             alert('A quantidade UMR deve ser um número.');
             return;
-        }   
-        if (quantidadeUMR <= 0) { // Verifica se a quantidade UMR é maior que zero
+        }
+        if (quantidadeUMR <= 0) {
             alert('A quantidade UMR deve ser maior que zero.');
             return;
         }
-        if (tipoMaterial === 'Selecione uma opção') { // Verifica se o tipo de material foi selecionado
+        if (tipoMaterial === 'Selecione uma opção') {
             alert('Por favor, selecione um tipo de material.');
             return;
         }
-        if (tipoTransferencia === 'Selecione uma opção') { // Verifica se o tipo de transferência foi selecionado
+        if (tipoTransferencia === 'Selecione uma opção') {
             alert('Por favor, selecione um tipo de transferência.');
             return;
         }
-        // Se todos os campos estiverem preenchidos, exibe a tela de sucesso
-        alert('Transferência realizada com sucesso!');
         setShowSuccessScreen(true);
     }
 
     function handleNovaTransferencia() {
-        // Redefine os estados para os valores iniciais
+
         setQuantidadeUMR('');
         setTipoMaterial('');
         setTipoTransferencia('');
-        setShowSuccessScreen(false); // Retorna para a tela de transferência
+        setShowSuccessScreen(false);
     }
 
     function fazerLogout() {
-        navigate('/login');
+        navigate('/');
     }
 
     function gerarPDF() {
         const doc = new jsPDF();
 
-        // Adiciona título
+        
         doc.setFontSize(18);
         doc.text('Relatório de Transferência de Material', 20, 20);
 
-        // Adiciona informações da transferência
+        
         doc.setFontSize(12);
-        doc.text(`Quantidade UMR: ${quantidadeUMR}`, 20, 40);
-        doc.text(`Tipo de Material: ${tipoMaterial}`, 20, 50);
-        doc.text(`Tipo de Transferência: ${tipoTransferencia}`, 20, 60);
+        const dataAtual = new Date().toLocaleString(); // Data e hora atual
+        doc.text(`Data e Hora: ${dataAtual}`, 20, 40);
+        doc.text(`Usuário: Nome do Usuário`, 20, 50); // Substitua pelo nome do usuário, se disponível
+       
+        doc.text(`Quantidade UMR: ${quantidadeUMR}`, 20, 70);
+        doc.text(`Tipo de Material: ${tipoMaterial}`, 20, 80);
+        doc.text(`Tipo de Transferência: ${tipoTransferencia}`, 20, 90);
 
-        // Adiciona rodapé
+        
         doc.setFontSize(10);
-        doc.text('Relatório gerado automaticamente.', 20, 280);
+        doc.text('Relatório gerado automaticamente pelo sistema.', 20, 280);
+        doc.text('Mega Plate - Supremacia em Corte', 20, 290);
 
-        // Salva o PDF
+        
         doc.save('relatorio-transferencia.pdf');
     }
 
     return (
         <>
-        {/* <div className="transferencia"> */}
             <div className={`container-transferencia ${showSuccessScreen ? 'success-screen' : 'transfer-screen'}`}>
                 <header className="navbar-transferencia">
                     <div className={`menu-lateral ${menuExpandido ? 'expandido' : 'colapsado'}`}>
@@ -179,8 +189,9 @@ export function Transferencia() {
                 </div>
 
                 <div className="box-campos">
-                    <label htmlFor="input-quantidadeUMR">Quantidade UMR:</label>
+                    <label htmlFor="quantidadeUMR">Quantidade UMR:</label>
                     <input
+                        id='quantidadeUMR'
                         className="input-quantidadeUMR"
                         type="text"
                         maxLength={10}
@@ -189,8 +200,9 @@ export function Transferencia() {
                         onChange={(e) => setQuantidadeUMR(e.target.value)}
                     />
 
-                    <label htmlFor="select-tipoMaterial">Tipo de Material:</label>
+                    <label htmlFor="tipoMaterial">Tipo de Material:</label>
                     <select
+                        id='tipoMaterial'
                         className="input-material"
                         value={tipoMaterial}
                         onChange={(e) => setTipoMaterial(e.target.value)}
@@ -203,8 +215,9 @@ export function Transferencia() {
                         <option value="HARDOX 450">HARDOX 450</option>
                     </select>
 
-                    <label htmlFor="select-tipo">Tipo de Transferência:</label>
+                    <label htmlFor="tipo">Tipo de Transferência:</label>
                     <select
+                        id='tipo'
                         className="input-tipoTransferencia"
                         value={tipoTransferencia}
                         onChange={(e) => setTipoTransferencia(e.target.value)}
@@ -234,7 +247,6 @@ export function Transferencia() {
                     <button onClick={handleNovaTransferencia}>REALIZAR OUTRA TRANSFERÊNCIA</button>
                 </div>
             </div>
-            {/* </div> */}
         </>
     );
 }
