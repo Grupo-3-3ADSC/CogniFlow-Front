@@ -31,6 +31,7 @@ export function Verificacao() {
 
     return (
         <>
+        
         <div className="verificacao">
             <div className="container-verificacao">
 

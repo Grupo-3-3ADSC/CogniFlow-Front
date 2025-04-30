@@ -2,6 +2,8 @@ import './style.css'
 import logo from '../../assets/logo-megaplate.png'
 import user from '../../assets/User.png';
 import { useNavigate } from 'react-router-dom';
+import NavBar from '../../components/NavBar';
+
 
 
 export function Estoque() {
@@ -15,20 +17,9 @@ export function Estoque() {
     }
     return (
       <>
-       <div className="sidebar">
-    <div className="menu-icon">
-      <div></div>
-      <div></div>
-      <div></div>
-    </div>
-  </div>
-      <nav className='navbar'>
-      <div className='navbar-left'>
-        </div>
-        <div className='navbar-right'>
-          <img src={user}/>
-        </div>
-        </nav>
+      <NavBar />
+
+      
         <div className="tab-container">
               <div className="tab active">Cadastro</div>
                
@@ -72,7 +63,7 @@ export function Estoque() {
                                 <input placeholder='' type='Text'/>
                             </div>
             
-                            <button>CADASTRAR</button>
+                            <button id='buttonEstoque'>CADASTRAR</button>
             
                             <a onClick={irParaSetor}>Não tem conta? <span>Cadastrar</span></a>
                         </main>

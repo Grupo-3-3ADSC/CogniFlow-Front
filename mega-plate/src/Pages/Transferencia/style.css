@@ -6,12 +6,6 @@
     --third-color: #1d597b;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 .transferencia-body {
     background-image: url('../../assets/background.png');
     background-size: cover;
@@ -25,196 +19,13 @@
     height: 100vh;
 }
 
-.container-transferencia{
+.container-transferencia {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0;
     width: 100%;
-    height: 100%;
-    
-}
-
-/* navbar-transferencia */
-.navbar-transferencia {
-    width: 100%;
-    height: 70px;
-    background-color: var(--primary-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-}
-
-/* Menu lateral */
-.menu-lateral {
-    width: 80px;
-    height: 100vh;
-    background-color: #1D597B;
-    position: fixed;
-    left: 0;
-    top: 0;
-    border-radius: 0px 20px 20px 0px;
-    transition: width 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 0;
-}
-
-.menu-lateral.expandido {
-    width: 250px; /* Largura do menu expandido */
-}
-
-.menu-hamburguer{
-    width: 40px; /* Tamanho do ícone de menu */
-    height: 40px;
-    margin: 20px 0;
-    cursor: pointer;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-/* .menu-hamburguer:hover {
-    transform: scale(1.1);
-    opacity: 0.8; 
-} */
-
-/* Centraliza o ícone no menu colapsado */
-.menu-lateral.colapsado .menu-hamburguer {
-    margin-top: 20px; /* Espaçamento superior */
-    margin-bottom: auto; /* Empurra o ícone para o topo */
-}
-
-.menu-lateral img {
-    width: 30px; 
-    height: 30px;
-    cursor: pointer;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-/*
-.menu-lateral:hover {
-    width: 250px;
-}
-
-.menu-lateral:hover img {
-    width: 15vh;
-    height: 15vh;
-     margin-left: 25%; 
-} *\
-
-/* Itens do menu */
-.menu-items {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    padding-top: 20px;
-}
-
-.icons-menu {
-    width: 32px; /* Define o tamanho dos ícones */
-    height: 32px;
-    object-fit: contain; /* Garante que os ícones mantenham suas proporções */
-    transition: all 0.3s ease;
-}
-
-.menu-items ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-}
-
-.menu-items ul li {
-    align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
-    cursor: pointer;
-    transition: background-color 0.3s ease-in-out;
-}
-
-.menu-items ul li img {
-    width: 32px;
-    height: 32px;
-    object-fit: contain;
-    transition: all 0.3s ease;
-}
-
-.menu-items ul li img+span {
-    display: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.menu-lateral .menu-items ul li img+span {
-    display: inline;
-    opacity: 1;
-    margin-left: 8px;
-}
-
-.menu-lateral .menu-items ul li img {
-    width: 24px;
-    height: 24px;
-}
-
-.menu-items ul li:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-}
-
-.submenu-items {
-    display: none;
-    flex-direction: column;
-    padding-left: 24px;
-    font-size: 14px;
-}
-
-.submenu:hover .submenu-items {
-    display: flex;
-}
-
-/* Logout */
-.logout {
-    position: absolute;
-    bottom: 20px;
-    width: 100%;
-    color: white;
-    padding: 12px 20px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.logout img {
-    width: 53px;
-    height: 53px;
-    object-fit: contain;
-    transition: all 0.3s ease;
-}
-
-.logout span {
-    display: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.menu-lateral.expandido .logout span {
-    display: inline;
-    opacity: 1;
-}
-
-.menu-lateral .logout img {
-    width: 53px;
-    height: 38px
+    margin-top: 20vh;
+    height: 80vh;
 }
 
 /* Tela de transferência */
@@ -335,10 +146,6 @@ button:hover {
     transition: background-color 0.3s ease;
 }
 
-/* .container-transferencia.transfer-screen {
-    margin-top: 12%;
-} */
-
 .container-transferencia.success-screen .botoes-acao {
     justify-content: flex-end;
     gap: 12px;
@@ -379,7 +186,6 @@ button:hover {
     background-color: #144a63;
 }
 
-/* Botão de relatório */
 .box-sucesso .botao-relatorio {
     background-color: #05314C;
     font-weight: bold;
@@ -417,23 +223,4 @@ button:hover {
     text-align: center;
     padding: 20px;
     gap: 20px;
-}
-
-.perfil {
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.perfil img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    cursor: pointer;
 }

@@ -1,14 +1,11 @@
 import './style.css';
-// import logo from '../../assets/logo-megaplate.png';
 import user from '../../assets/User.png';
 import { useNavigate } from 'react-router-dom';
-import iconDash from '../../assets/icon-dash.png';
-import iconLogout from '../../assets/icon-logout.png';
-import iconTransferencia from '../../assets/icon-transferencia.png';
-import iconFormularios from '../../assets/icon-formularios.png';
-import menuHamburguer from '../../assets/menu-hamburger.png';
 import { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
+
+// Importando o componente NavBar reutilizável
+import NavBar from '../../components/NavBar';
 
 export function Transferencia() {
     const navigate = useNavigate();
@@ -16,7 +13,6 @@ export function Transferencia() {
     const [quantidadeUMR, setQuantidadeUMR] = useState('');
     const [tipoMaterial, setTipoMaterial] = useState('');
     const [tipoTransferencia, setTipoTransferencia] = useState('');
-    const [menuExpandido, setMenuExpandido] = useState(false);
 
     useEffect(() => {
         // Adiciona a classe ao body
@@ -28,33 +24,7 @@ export function Transferencia() {
         };
     }, []);
 
-    function toggleMenu() {
-        setMenuExpandido(!menuExpandido);
-    }
-
-
-    function irParaOrdemDeCompra() {
-        navigate('/ordemDeCompra');
-    }
-
-    function irParaCadastro() {
-        navigate('/cadastro');
-    }
-
-    function irParaDashMaterial() {
-        navigate('/dashboardMaterial');
-    }
-
-    function irParaDashFornecedor() {
-        navigate('/dashboardFornecedor');
-    }
-
-    function irParaTransferencia() {
-        navigate('/transferencia');
-    }
-
     function handleTransferir() {
-
         if (quantidadeUMR.trim() === '' || tipoMaterial.trim() === '' || tipoTransferencia.trim() === '') {
             alert('Por favor, preencha todos os campos.');
             return;
@@ -79,24 +49,17 @@ export function Transferencia() {
     }
 
     function handleNovaTransferencia() {
-
         setQuantidadeUMR('');
         setTipoMaterial('');
         setTipoTransferencia('');
         setShowSuccessScreen(false);
     }
 
-    function fazerLogout() {
-        navigate('/');
-    }
-
     function gerarPDF() {
         const doc = new jsPDF();
-
         
         doc.setFontSize(18);
         doc.text('Relatório de Transferência de Material', 20, 20);
-
         
         doc.setFontSize(12);
         const dataAtual = new Date().toLocaleString(); // Data e hora atual
@@ -106,83 +69,20 @@ export function Transferencia() {
         doc.text(`Quantidade UMR: ${quantidadeUMR}`, 20, 70);
         doc.text(`Tipo de Material: ${tipoMaterial}`, 20, 80);
         doc.text(`Tipo de Transferência: ${tipoTransferencia}`, 20, 90);
-
         
         doc.setFontSize(10);
         doc.text('Relatório gerado automaticamente pelo sistema.', 20, 280);
         doc.text('Mega Plate - Supremacia em Corte', 20, 290);
-
         
         doc.save('relatorio-transferencia.pdf');
     }
 
     return (
         <>
+            {/* Usando o componente NavBar reutilizável */}
+            <NavBar userName="Usuário" />
+            
             <div className={`container-transferencia ${showSuccessScreen ? 'success-screen' : 'transfer-screen'}`}>
-                <header className="navbar-transferencia">
-                    <div className={`menu-lateral ${menuExpandido ? 'expandido' : 'colapsado'}`}>
-                        <img src={menuHamburguer}
-                            alt="Menu"
-                            className='menu-hamburguer'
-                            onClick={toggleMenu}
-                        />
-
-                        {menuExpandido && (
-                            <nav className="menu-items">
-                                <ul className='menu-list'>
-                                    <li>
-                                        <img className='icons-menu' src={iconTransferencia} alt="Ícone de Transferência" />
-                                        <span className="menu-text" onClick={irParaTransferencia}>Transferência</span>
-                                    </li>
-                                    <li className="submenu">
-                                        <div className="icon-dashboard">
-                                            <img className='icons-menu' src={iconDash} alt="Ícone de Dashboard" />
-                                            <span className="menu-text">Dashboard ▾</span>
-                                        </div>
-                                        <ul className="submenu-items">
-                                            <li>
-                                                <span className="menu-text" onClick={irParaDashMaterial}>Dashboard Material</span>
-                                            </li>
-                                            <li>
-                                                <span className="menu-text" onClick={irParaDashFornecedor}>Dashboard Fornecedor</span>
-                                            </li>
-                                        </ul>
-                                    </li>
-                                    <li className="submenu">
-                                        <div className="submenu-title">
-                                            <img className='icons-menu' src={iconFormularios} alt="Ícone de Formulários" />
-                                            <span className="menu-text">Formulários ▾</span>
-                                        </div>
-                                        <ul className="submenu-items">
-                                            <li>
-                                                <span className="menu-text">Cadastrar Material</span>
-                                            </li>
-                                            <li>
-                                                <span className="menu-text">Cadastrar Fornecedores</span>
-                                            </li>
-                                            <li>
-                                                <span className="menu-text" onClick={irParaOrdemDeCompra}>Ordem de Compra</span>
-                                            </li>
-                                            <li>
-                                                <span className="menu-text" onClick={irParaCadastro}>Cadastrar Usuários</span>
-                                            </li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </nav>
-                        )}
-                        <div className="logout">
-                            <img onClick={fazerLogout} src={iconLogout} alt="Logout" />
-                            <span onClick={fazerLogout}>Log out</span>
-                        </div>
-                    </div>
-                    <div className="perfil">
-                        <span>Olá, Usuário!</span>
-
-                        <img className="userPhoto" src={user} alt="" />
-                    </div>
-                </header>
-
                 {/* Tela de transferência */}
                 <div className="box-mega">
                     <h1>TRANSFERÊNCIA <br /> DE MATERIAL</h1>

@@ -7,12 +7,6 @@
     --header-color: #1D597B;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 .verificacao {
     background-image: url('../../assets/background.png');
     background-size: cover;
@@ -62,11 +56,11 @@
 }
 
 
-.card p {
+/* .card p {
     font-size: 16px;
     margin-bottom: 20px;
     line-height: 1.5;
-}
+} */
 
 
 .code-inputs {

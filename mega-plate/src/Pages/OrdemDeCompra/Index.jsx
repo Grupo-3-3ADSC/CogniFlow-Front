@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../provider/api';
 import { jsPDF } from 'jspdf';
+import NavBar from '../../components/NavBar';
+
 
 {/* TIVE QUE USAR MODULE NESSA PARTE POR CAUSA QUE BUGA O CSS DO LOGIN E CADASTRO
     SE NÃO TIVER O CSS MODULE, ÚNICA COISA QUE MUDA É O JEITO DE COLOCAR A VARIÁVEL
@@ -131,21 +133,9 @@ export function OrdemDeCompra() {
 
     return (
         <>
+<NavBar />
 
-            <div className={style.sidebar}>
-                <div className={style.menuIcon}>
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                </div>
-            </div>
-
-            <nav className={style.navbar}>
-                <div className={style.navbarLeft}></div>
-                <div className={style.navbarRight}>
-                    <img src={user} />
-                </div>
-            </nav>
+            
 
             <section className={style.cadastro}>
 

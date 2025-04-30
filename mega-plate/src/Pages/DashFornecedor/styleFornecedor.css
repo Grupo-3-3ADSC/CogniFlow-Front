@@ -1,0 +1,724 @@
+:root {
+    --primary-color: #05314C;
+    --secondary-color: #4586AB;
+    --dashboard-margin: 5%;  /* Margem uniforme para todo o dashboard */
+}
+  
+.filter-header {
+    display: flex;
+    gap: 10px;
+    background: #05314C;
+    padding: 15px;
+    border-radius: 40px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    width: 90%;
+    height: 15%;
+    margin-left: var(--dashboard-margin);
+    margin-right: var(--dashboard-margin);
+    justify-content: space-between;
+}
+
+#select-Filtro, input {
+    color: white;
+    padding: 8px;
+    border: 2px solid #ffffff;
+    border-radius: 40px;
+    height: 5vh;
+    width: 30vh;
+    background-color: #05314C;
+    font-size: 8px;
+    transition: all 0.3s ease;
+}
+
+#select-Filtro:hover, input:hover {
+    color: black;
+    background-color: #ffffff;
+    border: 2px solid #05314C;
+    cursor: pointer;
+}
+
+.IndexFornecedor {
+    /* Corrigido o caminho da imagem de fundo */
+    background-image: url('../../assets/background.png'); /* Use este caminho se a imagem estiver na pasta public */
+    /* Alternativa se estiver usando import: */
+    /* background-image: var(--background-image); /* E defina a variável no seu arquivo JS */
+    padding: 20px;
+    justify-content: center;
+    align-items: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    font-family: "Poppins", sans-serif;
+    width: 100%;
+    height: 100%;
+    margin-left: 5vh;
+}
+
+.containerDash {
+    margin-top: 3vh;
+    display: flex;
+    gap: 20px;
+    width: 90%;
+    max-width: 100%;
+    margin-left: var(--dashboard-margin);
+    margin-right: var(--dashboard-margin);
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.dashboard {
+    color: white;
+    flex: 3;
+    background: #05314C;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 105vh;
+}
+
+/* Estilos base para todos os gráficos */
+.chart {
+    background-color: #1D597B;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.chart:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+.chart::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    border-radius: 12px 12px 0 0;
+}
+
+/* Gráfico de barras */
+#bar_chart {
+    height: 45vh;
+    width: 100%;
+    margin-bottom: 25px;
+}
+
+#bar_chart::before {
+    background: linear-gradient(90deg, #05314C, #4586AB);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 22px;
+    color: #ffffff;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: 6fr 3fr;
+    grid-template-rows: auto auto;
+    gap: 20px;
+    width: 100%;
+}
+
+#Kpi {
+    display: flex;
+    padding: 5vh;
+    justify-content: center;
+    width: 100%;
+}
+
+#chart-aviso3{
+    width: 246px;
+    height: 191px;
+    background-color: #1D597B;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 15px;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    position: relative;
+    margin-left: 67px;
+}
+
+#chart-aviso-fornecedor2 {
+    width: 246px;
+    height: 191px;
+    background-color: #1D597B;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 15px;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    position: relative;
+    margin-left: 25px
+}
+
+#chart-aviso1{
+    width: 246px;
+    height: 191px;
+    background-color: #1D597B;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 15px;
+    border-radius: 12px;
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    position: relative;
+    margin-right: 67px;
+
+}
+
+#chart-aviso1::before, #chart-aviso2::before, #chart-aviso3::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    border-radius: 12px 12px 0 0;
+}
+
+#chart-aviso1::before {
+    background: linear-gradient(90deg, #05314C, #4586AB);
+}
+
+#chart-aviso2::before {
+    background: linear-gradient(90deg, #05314C, #4586AB);
+}
+
+#chart-aviso3::before {
+    background: linear-gradient(90deg, #05314C, #4586AB);
+}
+
+#chart-aviso1:hover, #chart-aviso2:hover, #chart-aviso3:hover {
+    transform: translateY(-5px);
+}
+
+.kpi-title {
+    color: white;
+    font-weight: bold;
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.kpi-subtitle {
+    color: #ccc;
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+.kpi-data {
+    color: white;
+    font-size: 16px;
+    line-height: 1.4;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#bar_chart1, #bar_chart2 {
+    width: 100%;
+    background-color: #1D597B;
+    margin-top: 5vh;
+}
+
+#bar_chart2 {
+    height: 45vh;
+}
+
+#multi_line_chart {
+    height: 150px;
+    background-color: #1D597B;
+    width: 100%;
+}
+
+
+
+
+
+#titulo {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+#Produto {
+    width: 100%;
+    text-align: center;
+    margin: 5px 0;
+    padding: 10px 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+#Produto:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.02);
+}
+
+#charts-superior {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 100%;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+#charts-inferior {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    justify-content: center;
+}
+
+.arrow-toggle {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.arrow-toggle:hover {
+    color: #05314C;
+}
+
+/* Supplier Table Container - Replacing Alerts */
+.supplier-table-container {
+    flex: 1;
+    background: #05314C;
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    height: 100vh;
+}
+
+.supplier-table-container h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: white;
+}
+
+.supplier-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background-color: #1D597B;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.supplier-table thead {
+    background-color: #4586AB;
+}
+
+.supplier-table th {
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: bold;
+    font-size: 14px;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.supplier-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 14px;
+    color: white;
+    transition: background-color 0.2s ease;
+}
+
+.supplier-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+}
+
+.supplier-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.navbar {
+    width: 100%;
+    height: 70px;
+    background-color: #05314C;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+  
+/* .menu-lateral {
+    width: 80px;
+    height: 100vh;
+    background-color: #1D597B;
+    position: fixed;
+    left: 0;
+    top: 0;
+    border-radius: 0px 20px 20px 0px;
+    transition: width 0.3s ease;
+}
+  
+.menu-lateral img {
+    width: 10vh;
+    height: 10vh;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-top: 5%;
+    margin-left: 3%;
+}
+  
+.menu-lateral:hover {
+    width: 250px;
+}
+  
+.menu-lateral:hover img {
+    width: 15vh;
+    height: 15vh;
+    margin-left: 25%;
+} */
+  
+.perfil {
+    margin-left: auto;
+    padding: 20px;
+}
+  
+.perfil img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+    border: 2px solid white;
+    transition: transform 0.2s ease;
+}
+
+.perfil img:hover {
+    transform: scale(1.1);
+    border: 2px solid #4586AB;
+}
+
+/* Para títulos internos dos gráficos */
+.chart h4, .chart h5 {
+    color: white;
+    margin-top: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 16px;
+}
+
+/* Responsividade */
+@media (max-width: 1200px) {
+    #charts-superior, #charts-inferior {
+        flex-direction: column;
+    }
+  
+    #bar_chart, #line_chart, #chart-aviso, #chart-aviso2 {
+        width: 100%;
+    }
+    
+    .dashboard {
+        height: auto;
+    }
+    
+    .supplier-table-container {
+        height: auto;
+        margin-top: 20px;
+    }
+    
+    .containerDash {
+        flex-direction: column;
+    }
+}
+
+/* Additional responsive styling for supplier table */
+@media (max-width: 768px) {
+    .supplier-table th, 
+    .supplier-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}
+
+/* Chart Styles */
+.chart {
+    background-color: #1D597B;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    padding: 18px;
+    position: relative;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+}
+  
+.chart:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+  
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+  
+.chart-header h4 {
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+}
+  
+.chart-actions {
+    display: flex;
+    gap: 8px;
+}
+  
+.chart-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+  
+.chart-action:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    transform: scale(1.1);
+}
+  
+.chart-loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    text-align: center;
+}
+  
+.chart-animated {
+    animation: fadeIn 0.6s ease-out;
+}
+  
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+  
+  
+#bar_chart::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #7986CB, #5C6BC0);
+}
+  
+#line_chart::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #4DD0E1, #26C6DA);
+}
+  
+.google-visualization-tooltip {
+    border-radius: 8px !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+}
+  
+#chart-aviso, #chart-aviso2 {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+  
+#chart-aviso:hover, #chart-aviso2:hover {
+    transform: translateY(-5px);
+}
+  
+#chart-aviso .kpi-value, #chart-aviso2 .kpi-value {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+  
+#chart-aviso .kpi-label, #chart-aviso2 .kpi-label {
+    font-size: 13px;
+    opacity: 0.9;
+}
+  
+#chart-aviso::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #FF5252, #FF8A80);
+}
+  
+#chart-aviso2::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #66BB6A, #A5D6A7);
+}
+  
+
+  
+#Produto {
+    background-color: rgba(255, 255, 255, 0.08);
+    padding: 12px 15px;
+    margin: 8px 0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    border-left: 3px solid #4DB6AC;
+}
+  
+#Produto:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateX(3px);
+}
+
+/* Estilo para a barra de pesquisa */
+.search-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+    width: 220px;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 8px 12px;
+    padding-right: 30px;
+    border: 2px solid #ffffff;
+    border-radius: 40px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+    background-color: #05314C;
+    color: white;
+  }
+  
+  .search-input:focus {
+    color: black;
+    background-color: #ffffff;
+    border: 2px solid #05314C;
+  }
+  
+  .search-input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .search-input:focus::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+  }
+  
+  .search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  
+  .search-icon:hover {
+    transform: translateY(-50%) scale(1.2);
+  }
+  
+  /* Ajuste no layout da barra de filtros para acomodar a pesquisa */
+  .filter-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    padding: 15px;
+  }
+  
+  #select-Filtro, #dateInput {
+    height: 40px;
+  }
+  
+  .search-results {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  #textFiltro{
+    color: white;
+    margin-top: 2vh;
+    margin-right: 2vh;
+  }
+
+  #FiltroData{
+    display: flex;
+  }

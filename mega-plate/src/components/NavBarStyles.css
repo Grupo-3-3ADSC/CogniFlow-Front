@@ -1,0 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #05314C;
+    --secondary-color: #4586AB;
+    --third-color: #1d597b;
+}
+
+.navbar-transferencia {
+    width: 100%;
+    height: 70px;
+    background-color: var(--primary-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    font-family: "Poppins", sans-serif;
+}
+
+/* Menu lateral */
+.menu-lateral {
+    width: 80px;
+    height: 100vh;
+    background-color: var(--third-color);
+    position: fixed;
+    left: 0;
+    top: 0;
+    border-radius: 0px 20px 20px 0px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px 0;
+    transition: width 0.3s ease;
+    overflow: hidden;
+}
+
+/* Quando o mouse passa por cima, expande */
+.menu-lateral:hover {
+    width: 250px;
+}
+
+.menu-hamburguer {
+    width: 60px;
+    height: 60px;
+    margin: 5px auto;
+    cursor: pointer;
+}
+
+.menu-items {
+    width: 100%;
+}
+
+.menu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.menu-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    color: white;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.3s ease;
+}
+
+.menu-list li:hover {
+    background-color: #144e72;
+}
+
+.menu-list li span {
+    white-space: nowrap;
+    display: none;
+}
+
+.menu-lateral:hover .menu-list li span {
+    display: inline;
+}
+
+.submenu-list {
+    list-style: none;
+    padding-left: 32px;
+    margin-top: -10px;
+    margin-bottom: 10px;
+    display: none;
+}
+
+.menu-lateral:hover .submenu-list {
+    display: block;
+}
+
+.submenu-list li {
+    padding: 6px 0;
+    font-size: 14px;
+    color: white;
+    cursor: pointer;
+}
+
+.submenu-list li:hover {
+    background-color: #144e72;
+    padding-left: 8px;
+}
+
+.icons-menu {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+}
+
+.logout {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    color: white;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.logout:hover {
+    background-color: #144e72;
+}
+
+.logout span {
+    display: none;
+}
+
+.menu-lateral:hover .logout span {
+    display: inline;
+}
+
+.logout img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.perfil {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-family: "Poppins", sans-serif;
+}
+
+.perfil img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+}

@@ -1,6 +1,4 @@
-*{  box-sizing: border-box;
-  margin: 0;
-  padding: 0;}
+
 
 .cadastro {
   position: relative;
@@ -9,7 +7,11 @@
   gap: 5px;
   padding: 4rem 0 4rem 0rem; 
   z-index: 1;
+  margin-top: -10px;
+}
 
+#textCadastro{
+  font-size: 12px;
 }
 
 .navbar {
@@ -61,12 +63,12 @@
     border-radius: 20px;
     width: 100%;
     max-width: 350px;
-    height: 80vh;
+    height: 60vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    border-radius: 0px 20px 20px 0px;
+    border-radius: 25px 0px 0 25px;
     padding: 2rem;
     border: 3px solid #ccc;
     box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4); 
@@ -79,10 +81,10 @@
       padding-left: 15%;
       padding-top: 2rem;
       width: 80%;
-
+      margin-top: 10vh;
     }
 
-    .tab {
+    .tabActiveUsuario {
       padding: 10px 30px;
       border-top-left-radius: 10px;
       border-top-right-radius: 10px;
@@ -91,10 +93,29 @@
       font-weight: bold;
       cursor: pointer;
       transition: background-color 0.3s;
+      margin-top: -20px;
     }
 
-    .tab.active {
+    .tabActiveUsuario {
       background-color: #14425C; /* cor mais escura para a aba ativa */
+      border: 3px solid #ccc;
+
+    }
+
+    .tabFornecedor {
+      padding: 10px 30px;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+      background-color: #1F5F7C;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: -20px;
+    }
+
+    .tabFornecedor {
+      background-color: #14425C;
     }
 
     .content {
@@ -114,8 +135,6 @@
       width: 80%;
       font-size: 0.8rem;
     }
-
-
     
     
     
@@ -138,8 +157,7 @@
     font-size: 2.5rem;
 } */
 
-.cadastro button {
-    margin: 20px 0;
+#buttonCadastrar {
     background-color: #1D597B;
     padding: 10px;
     width: 100%;
@@ -153,7 +171,7 @@
     outline: none;
 }   
 
-.cadastro button:hover {
+#buttonCadastrar:hover {
     background-color: #1a4e6d;
     cursor: pointer;
 }

@@ -7,6 +7,9 @@ import Setor from './Pages/Setor/Index';
 import Verificacao from './Pages/Verificacao/Index';
 import Transferencia from './Pages/Transferencia/Index';
 import Redefinicao from './Pages/Redefinicao/Index';
+import DashMaterial from './Pages/DashMaterial/AppMaterial'
+import DashFornecedor from './Pages/DashFornecedor/App'
+
 
 import {Route, BrowserRouter as Router, Routes} from 'react-router-dom';
 
@@ -14,7 +17,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path='/' element={<Login />} />
+        <Route path='/Login' element={<Login />} />
         <Route path='/cadastro' element={<Cadastro />} />
         <Route path='/ordemDeCompra' element={<OrdemDeCompra/>} />
         <Route path='/estoque' element={<Estoque />} />
@@ -22,6 +25,8 @@ function App() {
         <Route path='/Verificacao' element={<Verificacao />} />
         <Route path='/Transferencia' element={<Transferencia />} />
         <Route path='/Redefinicao' element={<Redefinicao />} />
+        <Route path='/Material' element={<DashMaterial />} />
+        <Route path='/Fornecedor' element={<DashFornecedor />} />
       </Routes>
     </Router>
   );

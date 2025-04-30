@@ -1,7 +1,4 @@
-*{  box-sizing: border-box;
-    margin: 0;
-    padding: 0;}
-  
+ 
   .cadastro {
     position: relative;
     display: flex;
@@ -138,37 +135,6 @@
       font-size: 2.5rem;
   } */
   
-  .cadastro button {
-      margin: 20px 0;
-      background-color: #1D597B;
-      padding: 10px;
-      width: 100%;
-      border: none;
-      color: white;
-      border-radius: 20px;
-      display: block;
-      text-align: center;
-      font-weight: bold;
-      border: none;
-      outline: none;
-  }   
-  
-  .cadastro button:hover {
-      background-color: #1a4e6d;
-      cursor: pointer;
-  }
-  
-  .cadastro a {
-      color: rgb(218, 218, 218);
-      text-decoration: none;
-      cursor: pointer;
-  }
-  
-  .cadastro a span {
-      color: white;
-      text-decoration: underline;
-  }
-  
   .bloco-fundo{
       background-color: #05314C;
       width: 75vw;
@@ -189,9 +155,9 @@
     position: relative;
     gap: 10px;
   }
-  p{
+  /* p{
     padding-left: 5px;  
-  }
+  } */
 
 
 
@@ -209,16 +175,4 @@
     justify-content: center;
     padding: 15px;
     box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-  }
-
-  .menu-icon {
-    width: 30px;
-    cursor: pointer;
-  }
-
-  .menu-icon div {
-    height: 3px;
-    background: white;
-    margin: 5px 0;
-    border-radius: 2px;
   }

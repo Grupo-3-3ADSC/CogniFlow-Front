@@ -1,0 +1,642 @@
+/* Correção para o fundo */
+.IndexMaterial {
+    /* Corrigido o caminho da imagem de fundo */
+    background-image: url('../../assets/background.png'); /* Use este caminho se a imagem estiver na pasta public */
+    /* Alternativa se estiver usando import: */
+    /* background-image: var(--background-image); /* E defina a variável no seu arquivo JS */
+    padding: 20px;
+    justify-content: center;
+    align-items: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    font-family: "Poppins", sans-serif;
+    width: 100%;
+    height: 100%;
+    margin-left: 5vh;
+}
+
+/* Fallback se a imagem não for encontrada */
+
+
+:root {
+    --primary-color: #05314C;
+    --secondary-color: #4586AB;
+}
+
+.container{
+    margin-top: 10vh;
+}
+  
+.filter-header {
+    display: flex;
+    gap: 10px;
+    background: #05314C;
+    padding: 15px;
+    border-radius: 40px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    width: 90%;
+    height: 15%;
+    margin-left: 8%;
+    justify-content: space-between;
+}
+
+#select-Filtro, input {
+    color: white;
+    padding: 8px;
+    border: 2px solid #ffffff;
+    border-radius: 40px;
+    height: 5vh;
+    width: 30vh;
+    background-color: #05314C;
+    font-size: 8px;
+    transition: all 0.3s ease;
+}
+
+#select-Filtro:hover, input:hover {
+    color: black;
+    background-color: #ffffff;
+    border: 2px solid #05314C;
+    cursor: pointer;
+}
+
+
+
+.containerDash {
+    margin-top: 3vh;
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 150%;
+    justify-content: center;
+    align-items: center;
+}
+
+.dashboardMaterial {
+    color: white;
+    flex: 3;
+    background:#05314C;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 105vh;
+}
+
+/* Estilos base para todos os gráficos */
+.chart {
+    background-color: #1D597B;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.chart:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+.chart::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    border-radius: 12px 12px 0 0;
+}
+
+/* Gráfico de pizza */
+#pie_chart1 {
+    width: 35vh;
+    height: auto;
+}
+
+#pie_chart1::before {
+    background: linear-gradient(90deg, #4586AB, #05314C);
+}
+
+/* Gráfico de barras */
+#bar_chart {
+    height: 45vh;
+    width: 100%;
+    margin-right: 5vh;
+    margin-bottom: 25px;
+}
+
+#bar_chart::before {
+    background: linear-gradient(90deg, #05314C, #4586AB);
+}
+
+/* Gráfico de linha */
+#line_chart {
+    height: 45vh;
+    width: 100%;
+    margin-bottom: 25px;
+}
+
+#line_chart::before {
+    background: linear-gradient(90deg, #4586AB, #7EB9D9);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 22px;
+    color: #ffffff;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: 6fr 3fr;
+    grid-template-rows: auto auto;
+    gap: 20px;
+    width: 100%;
+}
+
+#KpiMaterial{
+    margin-right: 10vh;
+}
+
+#chart-aviso {
+    width: 40vh;
+    height: 15vh;
+    background-color: #1D597B;
+ 
+}
+
+#chart-aviso2 {
+    margin-top: 4%;
+    width: 40vh;
+    height: 15vh;
+    background-color: #1D597B;
+}
+
+#chart-aviso, #chart-aviso2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    transition: transform 0.3s ease;
+    margin-top: 2vh;
+}
+
+#charts-superior-material{
+    display: flex;
+}
+
+#chart-aviso:hover, #chart-aviso2:hover {
+    transform: translateY(-5px);
+}
+
+#chart-aviso::before {
+    background: linear-gradient(90deg, #FF4C4C, #FF8080);
+}
+
+#chart-aviso2::before {
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+}
+
+#bar_chart1 {
+    width: 60vh;
+    background-color: #1D597B;
+    margin-top: 5vh;
+}
+
+#bar_chart2 {
+    width: 60vh;
+    height: 45vh;
+    background-color: #1D597B;
+    margin-left: 10vh;
+    margin-top: 5vh;
+}
+
+#multi_line_chart {
+    height: 150px;
+    background-color: #1D597B;
+}
+
+#chart-produtos {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 35vh;
+    height: auto;
+    background-color: #1D597B;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+#chart-produtos::before {
+    background: linear-gradient(90deg, #1D597B, #4586AB);
+}
+
+#titulo {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+#Produto {
+    width: 100%;
+    text-align: center;
+    margin: 5px 0;
+    padding: 10px 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+#Produto:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.02);
+}
+
+#charts-superior {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+#charts-inferior {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+}
+
+.arrow-toggle {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.arrow-toggle:hover {
+    color: #05314C;
+}
+
+.alerts {
+    flex: 1;
+    background: #05314C;
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    height: 100vh;
+}
+
+.alerts h3 {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.alerts ul {
+    list-style: none;
+    padding: 0;
+}
+
+.alerts li {
+    background: #ffcc00;
+    color: black;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    transition: 0.3s ease-in-out, transform 0.2s;
+}
+
+.alerts li:hover {
+    background: #e6b800;
+    cursor: pointer;
+    transform: scale(1.05);
+}
+
+.perfil {
+    margin-left: auto;
+    padding: 20px;
+}
+  
+.perfil img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+    border: 2px solid white;
+    transition: transform 0.2s ease;
+}
+
+.perfil img:hover {
+    transform: scale(1.1);
+    border: 2px solid #4586AB;
+}
+
+/* Para títulos internos dos gráficos */
+.chart h4, .chart h5 {
+    color: white;
+    margin-top: 0;
+   
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 16px;
+}
+
+/* Ajuste para alinhamento dos gráficos */
+#charts-superior-material {
+    display: flex;
+    gap: 20px;  /* Espaçamento uniforme entre os elementos */
+    width: 100%;
+    margin-bottom: 20px;
+    margin-left: 10vh;
+}
+
+/* Unificação de estilo dos containers de gráficos */
+#charts-superior, #charts-inferior {
+    display: flex;
+    gap: 20px;  /* Espaçamento uniforme entre os elementos */
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+/* Ajustes nos tamanhos dos gráficos para melhor alinhamento */
+#pie_chart1 {
+    width: 35vh;
+    height: auto;
+}
+
+#bar_chartMaterial {
+    height: 40vh;
+    width: 100%;
+    margin-right: 0;  /* Removido margin-right específico */
+    margin-bottom: 0;  /* Removido margin-bottom específico */
+}
+
+#line_chart {
+    height: 40vh;
+    width: 100%;
+    margin-bottom: 0;  /* Removido margin-bottom específico */
+}
+
+/* Ajustes nos cards de aviso */
+#chart-aviso, #chart-aviso2 {
+    width: 40vh;
+    height: 15vh;
+    background-color: #1D597B;
+    margin: 0;  /* Removido margens específicas */
+}
+
+/* Ajuste no gráfico de barras */
+#bar_chart1, #bar_chart2 {
+    width: calc(50% - 10px);  /* Calculando largura para distribuição igual com gap */
+    height: 45vh;
+    background-color: #1D597B;
+    margin: 0;  /* Removido margens específicas */
+}
+
+/* Dimensões dos gráficos produtos */
+#chart-produtos {
+    width: 35vh;
+    height: auto;
+    margin: 0;  /* Removido margens específicas */
+}
+
+/* Responsividade atualizada */
+@media (max-width: 1200px) {
+    #charts-superior, #charts-inferior, #charts-superior-material {
+        flex-direction: column;
+    }
+  
+    #bar_chart, #line_chart, #pie_chart1, #chart-aviso, #chart-aviso2, #chart-produtos, #bar_chart1, #bar_chart2 {
+        width: 100%;
+        margin: 0 0 20px 0;  /* Adicionado margin-bottom para separação vertical */
+    }
+    
+    .dashboardMaterial {
+        margin-left: 5%;
+        height: auto;
+    }
+}
+/* Chart Styles - Add to your styles.css */
+
+/* Base chart styling with improved look */
+.chart {
+    background-color: var(--accent-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    padding: 18px;
+    position: relative;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+  }
+  
+  .chart:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  /* Chart header with flex layout for title and actions */
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  
+  .chart-header h4 {
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+  }
+  
+  /* Chart action buttons */
+  .chart-actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .chart-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+  }
+  
+  .chart-action:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    transform: scale(1.1);
+  }
+  
+  /* Loading state */
+  .chart-loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    text-align: center;
+  }
+  
+  /* Animation for charts on load */
+  .chart-animated {
+    animation: fadeIn 0.6s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* Different colors for different chart types */
+  #pie_chart1::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #4DB6AC, #26A69A);
+  }
+  
+  #bar_chart::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #7986CB, #5C6BC0);
+  }
+  
+  #line_chart::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #4DD0E1, #26C6DA);
+  }
+  
+  /* Tooltip custom styling (handled in JS but we can style the container) */
+  .google-visualization-tooltip {
+    border-radius: 8px !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+  }
+  
+  /* KPI indicators with improved styling */
+  #chart-aviso, #chart-aviso2 {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    margin-top: 2vh;
+  }
+  
+  #chart-aviso:hover, #chart-aviso2:hover {
+    transform: translateY(-5px);
+  }
+  
+  #chart-aviso .kpi-value, #chart-aviso2 .kpi-value {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  #chart-aviso .kpi-label, #chart-aviso2 .kpi-label {
+    font-size: 13px;
+    opacity: 0.9;
+  }
+  
+  #chart-aviso::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #FF5252, #FF8A80);
+  }
+  
+  #chart-aviso2::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #66BB6A, #A5D6A7);
+  }
+  
+  /* Enhanced product list */
+  #chart-produtos {
+    padding: 20px;
+  }
+  
+  #Produto {
+    background-color: rgba(255, 255, 255, 0.08);
+    padding: 12px 15px;
+    margin: 8px 0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    border-left: 3px solid #4DB6AC;
+  }
+  
+  #Produto:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateX(3px);
+  }
+  
+  /* Responsive adjustments for charts */
+  @media (max-width: 768px) {
+    .chart {
+      padding: 15px;
+    }
+    
+    .chart-header h4 {
+      font-size: 14px;
+    }
+    
+    .chart-action {
+      width: 24px;
+      height: 24px;
+      font-size: 12px;
+    }
+  }
