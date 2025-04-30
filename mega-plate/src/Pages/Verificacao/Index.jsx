@@ -16,6 +16,11 @@ export function Verificacao() {
     };
 
     const handleSendEmail = () => {
+        const email = document.querySelector('.email-input').value;
+        if (!email) {
+            alert('Por favor, insira um e-mail válido.');
+            return;
+        }
         setShowEmailScreen(false);
     };
 

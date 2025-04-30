@@ -13,6 +13,7 @@ export function Transferencia() {
     const [quantidadeUMR, setQuantidadeUMR] = useState('');
     const [tipoMaterial, setTipoMaterial] = useState('');
     const [tipoTransferencia, setTipoTransferencia] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         // Adiciona a classe ao body
@@ -45,7 +46,12 @@ export function Transferencia() {
             alert('Por favor, selecione um tipo de transferência.');
             return;
         }
-        setShowSuccessScreen(true);
+        setIsLoading(true);
+
+        setTimeout(() => {
+            setIsLoading(false);
+            setShowSuccessScreen(true);
+        }, 2000);
     }
 
     function handleNovaTransferencia() {
@@ -57,23 +63,23 @@ export function Transferencia() {
 
     function gerarPDF() {
         const doc = new jsPDF();
-        
+
         doc.setFontSize(18);
         doc.text('Relatório de Transferência de Material', 20, 20);
-        
+
         doc.setFontSize(12);
         const dataAtual = new Date().toLocaleString(); // Data e hora atual
         doc.text(`Data e Hora: ${dataAtual}`, 20, 40);
         doc.text(`Usuário: Nome do Usuário`, 20, 50); // Substitua pelo nome do usuário, se disponível
-       
+
         doc.text(`Quantidade UMR: ${quantidadeUMR}`, 20, 70);
         doc.text(`Tipo de Material: ${tipoMaterial}`, 20, 80);
         doc.text(`Tipo de Transferência: ${tipoTransferencia}`, 20, 90);
-        
+
         doc.setFontSize(10);
         doc.text('Relatório gerado automaticamente pelo sistema.', 20, 280);
         doc.text('Mega Plate - Supremacia em Corte', 20, 290);
-        
+
         doc.save('relatorio-transferencia.pdf');
     }
 
@@ -81,7 +87,7 @@ export function Transferencia() {
         <>
             {/* Usando o componente NavBar reutilizável */}
             <NavBar userName="Usuário" />
-            
+
             <div className={`container-transferencia ${showSuccessScreen ? 'success-screen' : 'transfer-screen'}`}>
                 {/* Tela de transferência */}
                 <div className="box-mega">
@@ -129,9 +135,10 @@ export function Transferencia() {
                         <option value="Externa">Externa</option>
                     </select>
 
-                    <button className="botao-confirmar" onClick={handleTransferir}>
-                        TRANSFERIR
-                    </button>
+                    <button className="botao-confirmar" onClick={handleTransferir} disabled={isLoading}>
+                         {isLoading ? 'Transferindo...' : 'TRANSFERIR'}
+                     </button>
+
                 </div>
 
                 {/* Tela de sucesso */}
