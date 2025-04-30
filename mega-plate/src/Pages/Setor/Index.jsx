@@ -1,18 +1,12 @@
 import './style.css'
 import logo from '../../assets/logo-megaplate.png'
 import user from '../../assets/User.png';
-// import { useNavigate } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
 
 
 
 export function Setor() {
 
-//     const navigate = useNavigate();
-            
-//    const irParaSetor = () => {
-//     navigate('/setor');
-//     }
     return (
       <>
 
@@ -20,28 +14,27 @@ export function Setor() {
 
       
         <div className="tab-container">
-              <div className="tab active">Cadastro</div>
+              {/* <div className="tab active">Cadastro</div> */}
                
                  </div>
-        <section className='cadastro'>
+        <section className='setor'>
         
         
-        <div className='bloco-fundo'>  
+        <div className='bloco-fundo-setor'>  
 
 
         <div className="tab-container-user">
               <div className="tab active">Setor</div>
                  </div>   
                         </div>
-            <aside className='aside-cadastro'>
+            <aside className='aside-setor'>
                             <img src={logo} alt="" />
                         </aside>
                         
                         
-                               
                         <main className='form-content'>
                             
-            
+    
                             <div className='input-group'>
                                 <p>nome</p>
                                 <input placeholder=""  type="text" />

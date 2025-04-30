@@ -23,9 +23,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
+    min-width: 90vw;
     margin-top: 20vh;
-    height: 80vh;
+    min-height: 80vh;
+    flex-wrap: wrap; /* Permite que os elementos se reorganizem em telas menores */
 }
 
 /* Tela de transferência */
@@ -75,11 +76,8 @@
     border: 1px solid #ccc;
     border-radius: 40px;
     background-color: white;
+    color: black;
     outline: none;
-}
-
-.box-campos input::placeholder {
-    color: #888;
 }
 
 button {
@@ -127,6 +125,7 @@ button:hover {
     font-weight: bold;
     color: white;
     margin-bottom: 10px;
+    text-align: center;
 }
 
 .box-sucesso p {
@@ -146,28 +145,33 @@ button:hover {
     transition: background-color 0.3s ease;
 }
 
-.container-transferencia.success-screen .botoes-acao {
+.container-transferencia.success-screen .botao-acao {
     justify-content: flex-end;
     gap: 12px;
     margin-top: 20px;
-    width: 766px;
+    width: 100%;
+    max-width: 766px;
 }
 
 .botoes {
     display: flex;
-    justify-content: end;
-    align-items: center;
-    width: 766px;
+    justify-content: center; /* Alterado para center para melhor responsividade */
+    align-items: normal;
+    width: 100%;
+    max-width: 766px;
+    margin: 0 auto; /* Centralizar na página */
+    padding: 0 20px; /* Adicionado padding lateral */
 }
 
-.botoes-acao {
+.botao-acao {
+    display: flex;
     justify-content: center;
     align-items: center;
     gap: 12px;
-    margin-top: 20px;
+    width: 100%;
 }
 
-.botoes-acao button {
+.botao-acao button {
     font-size: 18px;
     border-radius: 49px;
     background-color: var(--third-color);
@@ -175,10 +179,11 @@ button:hover {
     border: none;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    width: 403px;
+    width: 100%;
+    max-width: 403px;
 }
 
-.botoes-acao button:hover {
+.botao-acao button:hover {
     background-color: #144a63;
 }
 
@@ -192,8 +197,12 @@ button:hover {
     border: 2px solid var(--secondary-color);
     transition: background-color 0.3s ease, color 0.3s ease;
     border-radius: 49px;
-    width: 200px;
+    width: 100%;
+    max-width: 300px;
     height: 60px;
+    font-size: 16px;
+    padding: 0 15px;
+    text-align: center;
 }
 
 .box-sucesso .botao-relatorio:hover {
@@ -223,4 +232,195 @@ button:hover {
     text-align: center;
     padding: 20px;
     gap: 20px;
+}
+
+
+@media screen and (max-width: 992px) {
+    .container-transferencia {
+        margin-top: 10vh;
+        padding: 0 20px;
+    }
+    
+    .botoes {
+        max-width: 90%;
+    }
+    
+    .box-sucesso {
+        max-width: 90%;
+        height: auto;
+        min-height: 50vh;
+        margin: 0 20px;
+    }
+    
+    .box-sucesso h1 {
+        font-size: 22px;
+    }
+    
+    .botao-acao button {
+        max-width: 350px;
+    }
+}
+
+
+@media screen and (max-width: 768px) {
+    .container-transferencia {
+        flex-direction: column;
+        margin-top: 5vh;
+    }
+    
+    .box-mega {
+        width: 90%;
+        max-width: 400px;
+        height: auto;
+        border-radius: 20px 20px 0 0;
+        padding: 15px 0;
+    }
+    
+    .box-mega h1 {
+        font-size: 20px;
+        padding: 15px 0;
+    }
+    
+    .box-campos {
+        width: 90%;
+        max-width: 400px;
+        height: auto;
+        border-radius: 0 0 20px 20px;
+        padding: 25px 15px;
+    }
+    
+    .box-campos label {
+        width: 90%;
+    }
+    
+    .box-campos input,
+    .box-campos select {
+        width: 90%;
+    }
+    
+    .box-sucesso {
+        padding: 25px 15px;
+        min-height: 40vh;
+    }
+    
+    .box-sucesso h1 {
+        font-size: 20px;
+    }
+    
+    .box-sucesso .botao-relatorio {
+        max-width: 280px;
+        height: 50px;
+        font-size: 14px;
+    }
+    
+    .botoes {
+        max-width: 95%;
+    }
+    
+    .botao-acao button {
+        max-width: 300px;
+        font-size: 16px;
+    }
+    
+    button {
+        width: 140px;
+        height: 40px;
+        font-size: 18px;
+    }
+}
+
+
+@media screen and (max-width: 576px) {
+    .container-transferencia {
+        margin-top: 3vh;
+    }
+    
+    .box-mega {
+        width: 95%;
+    }
+    
+    .box-mega h1 {
+        font-size: 18px;
+    }
+    
+    .box-campos {
+        width: 95%;
+        gap: 12px;
+    }
+    
+    .box-campos label {
+        font-size: 13px;
+    }
+    
+    .box-campos input,
+    .box-campos select {
+        height: 42px;
+        font-size: 14px;
+    }
+    
+    .box-sucesso {
+        min-height: 35vh;
+    }
+    
+    .box-sucesso h1 {
+        font-size: 18px;
+    }
+    
+    .box-sucesso .botao-relatorio {
+        max-width: 250px;
+        height: 45px;
+        font-size: 12px;
+        padding: 0 10px;
+    }
+    
+    .botao-acao button {
+        max-width: 250px;
+        font-size: 14px;
+        height: 40px;
+    }
+    
+    button {
+        width: 120px;
+        height: 36px;
+        font-size: 16px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .box-mega h1 {
+        font-size: 16px;
+    }
+    
+    .box-campos label {
+        font-size: 12px;
+    }
+    
+    .box-campos input,
+    .box-campos select {
+        height: 38px;
+        font-size: 13px;
+    }
+    
+    .box-sucesso h1 {
+        font-size: 16px;
+    }
+    
+    .box-sucesso .botao-relatorio {
+        max-width: 220px;
+        height: 40px;
+        font-size: 10px;
+    }
+    
+    .botao-acao button {
+        max-width: 220px;
+        font-size: 10px;
+        height: 40px;
+        text-align: center;
+    }
+    
+    button {
+        width: 110px;
+        height: 34px;
+        font-size: 14px;
+    }
 }

@@ -4,61 +4,90 @@ import user from '../../assets/User.png';
 import { useEffect, useState } from 'react';
 import { api } from '../../provider/api.js';
 import NavBar from '../../components/NavBar'; // Importando a NavBar
+import { useNavigate } from 'react-router-dom';
 
 
 export function Cadastro() {
-  const irParaEstoque = () => {
-    window.location.href = '/estoque';
-  };
+
+  const navigate = useNavigate();
 
   const [listarUsuario, setListarUsuario] = useState([]);
   const [formData, setFormData] = useState({
     nome: '',
-    email: '', 
-    cargo: '',
+    email: '',
+    cargo: {
+      id: 1,
+      nome: 'comum'
+    },
     password: '',
   });
-
-  useEffect(() => {
-    exibir();
-  }, []);
-
-  const exibir = () => {
-    api
-      .get('/usuarios')
-      .then((response) => {
-        setListarUsuario(response.data);
-      })
-      .catch((error) => {
-        console.error('Erro ao listar usuários:', error);
-      });
-  };
 
   const cadastrar = () => {
     if (!formData.nome || !formData.email || !formData.cargo || !formData.password) {
       alert('Por favor, preencha todos os campos');
       return;
     }
-    api
-      .post('/usuarios', {
-        nome: formData.nome,
-        email: formData.email,
-        cargo: formData.cargo,
-        password: formData.password,
-      })
+
+    const token = sessionStorage.getItem('authToken');
+
+    // console.log('Token:', token); // verificação se o token esta sendo pego corretamente
+
+    if (!token) {
+      alert('Token de autenticação não encontrado. Faça login novamente.');
+      navigate('/login')
+      return;
+    }
+
+    const userData = {
+      nome: formData.nome.trim(),
+      email: formData.email.trim(),
+      cargo: {
+        id: formData.cargo.id,
+        nome: formData.cargo.id === 1 ? 'comum' : 'gestor'
+      },
+      password: formData.password.trim()
+    };
+
+    const endpoint = formData.cargo.id === 2 ? '/usuarios/gestor' : '/usuarios';
+
+    api.post(endpoint, userData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+
       .then((response) => {
-        console.log(response.data);
-        exibir();
-        setFormData({ nome: '', email: '', cargo: '', password: '' }); // Reset form
+        console.log('Resposta do servidor:', response.data);
+        alert('Usuário cadastrado com sucesso!');
+        setFormData({ nome: '', email: '', cargo: '', password: '' });
       })
       .catch((error) => {
-        console.error('Erro ao cadastrar usuário:', error);
+        console.error('Erro completo:', error);
+        if (error.response) {
+          console.log('Status do erro:', error.response.status);
+          console.log('Dados do erro:', error.response.data);
+
+          if (error.response.status === 400) {
+
+            alert('Dados inválidos: ' + (error.response.data.message || 'Verifique as informações'));
+
+          } else if (error.response.status === 401) {
+            alert('Sessão expirada. Por favor, faça login novamente.');
+            navigate('/login');
+          } else {
+            alert('Erro ao cadastrar usuário: ' + (error.response.data?.message || 'Tente novamente mais tarde.'));
+          }
+        } else {
+          alert('Erro de conexão. Verifique sua internet e tente novamente.');
+        }
       });
   };
 
   return (
     <>
-              <NavBar />
+      <NavBar />
 
       <div className="tab-container">
         <div className="tab active">PERFIL</div>
@@ -96,13 +125,26 @@ export function Cadastro() {
           </div>
 
           <div className="input-group">
-            <p id='textCadastro'>Cargo</p>
-            <input
-              placeholder="Gerente"
-              type="text"
-              value={formData.cargo}
-              onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
-            />
+            <p>Cargo</p>
+            <select
+              value={formData.cargo.id}
+              onChange={(e) => {
+                const selectedId = parseInt(e.target.value);
+                setFormData({
+                  ...formData,
+                  cargo: {
+                    id: selectedId,
+                    nome: selectedId === 1 ? 'comum' : 'gestor'
+                  }
+                });
+              }}
+            >
+              <option value={1}>Usuário Comum</option>
+
+
+              <option value={2}>Gestor</option>
+
+            </select>
           </div>
 
           <div className="input-group">

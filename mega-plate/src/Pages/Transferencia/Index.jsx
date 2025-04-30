@@ -143,7 +143,7 @@ export function Transferencia() {
                 </div>
             </div>
             <div className="botoes">
-                <div className="botoes-acao" style={{ display: showSuccessScreen ? 'block' : 'none' }}>
+                <div className="botao-acao" style={{ display: showSuccessScreen ? 'block' : 'none' }}>
                     <button onClick={handleNovaTransferencia}>REALIZAR OUTRA TRANSFERÊNCIA</button>
                 </div>
             </div>

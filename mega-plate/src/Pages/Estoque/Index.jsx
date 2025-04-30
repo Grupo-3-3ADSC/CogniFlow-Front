@@ -8,39 +8,34 @@ import NavBar from '../../components/NavBar';
 
 export function Estoque() {
 
-    const navigate = useNavigate();
-
-    
-            
-   const irParaSetor = () => {
-        navigate('/setor');
-    }
+    // const navigate = useNavigate();
+     
     return (
       <>
       <NavBar />
 
       
         <div className="tab-container">
-              <div className="tab active">Cadastro</div>
+              {/* <div className="tab active">Cadastro</div> */}
                
                  </div>
-        <section className='cadastro'>
+        <section className='estoque'>
         
         
-        <div className='bloco-fundo'>  
+        <div className='bloco-fundo-estoque'>  
 
 
         <div className="tab-container-user">
               <div className="tab active">Estoque</div>
                  </div>   
                         </div>
-            <aside className='aside-cadastro'>
+            <aside className='aside-estoque'>
                             <img src={logo} alt="" />
                         </aside>
                         
                         
                                
-                        <main className='form-content'>
+                        <main className='form-content-estoque'>
                             
             
                             <div className='input-group'>
@@ -65,7 +60,6 @@ export function Estoque() {
             
                             <button id='buttonEstoque'>CADASTRAR</button>
             
-                            <a onClick={irParaSetor}>Não tem conta? <span>Cadastrar</span></a>
                         </main>
           </section>
           

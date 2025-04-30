@@ -114,12 +114,19 @@ export function OrdemDeCompra() {
     }
 
     function irParaDashboard() {
-        navigate('/dashboard') // link ficticio enquanto não tem redirecionamento para dash
+        navigate('/Material') // link ficticio enquanto não tem redirecionamento para dash
     }
 
     function baixarPDF() {
 
         const doc = new jsPDF();
+
+        doc.setFontSize(18);
+        doc.text('Ordem de compra', 20, 20);
+        
+        doc.setFontSize(12);
+        const dataAtual = new Date().toLocaleString(); 
+        doc.text(`Data e Hora: ${dataAtual}`, 20, 40);
 
         let posicaoY = 20;
 
@@ -137,7 +144,7 @@ export function OrdemDeCompra() {
 
             
 
-            <section className={style.cadastro}>
+            <section className={style.ordemDeCompra}>
 
                 <div className={style.progressoSecao}>
                     <img src={image} />

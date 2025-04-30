@@ -23,7 +23,7 @@ export function Redefinicao() {
             <aside className='aside-redefinicao'>
                 <img src={logo} alt="" />
             </aside>
-            <main className='form-content'>
+            <main className='form-content-redefinicao'>
                 <h1>Redefinição de Senha</h1>
 
                 <div className='input-group'>

@@ -1,6 +1,6 @@
 
   
-  .cadastro {
+  .estoque {
     position: relative;
     display: flex;
     justify-content: center;
@@ -34,7 +34,7 @@
     cursor: pointer;
   }
   
-  .aside-cadastro {
+  .aside-estoque {
       border-radius: 25px 0px 0 25px;
       padding: 0 3rem;
       background-color: #1D597B;
@@ -48,12 +48,12 @@
       box-shadow: -10px 0px 20px rgba(0, 0, 0, 0.4); 
   }
   
-  .aside-cadastro img {
+  .aside-estoque img {
       width: 100%;
       max-width: 80px;
   }
   
-  .form-content {
+  .form-content-estoque {
       background-color: #05314C;
       /* padding: 4rem 3rem; */
       border-radius: 20px;
@@ -113,11 +113,6 @@
         font-size: 0.8rem;
       }
   
-  
-      
-      
-      
-  
   .input-group {
       text-align: left;
       position: relative;
@@ -130,9 +125,12 @@
       border-radius: 15px;
       border: 1px solid #ccc;
       box-sizing: border-box;
+      background-color: white;
+      font-size: medium;
+      color: black;
   }
   
-  /* .cadastro h1 {
+  /* .estoque h1 {
       font-size: 2.5rem;
   } */
   
@@ -156,18 +154,18 @@
       cursor: pointer;
   }
   
-  .cadastro a {
+  .estoque a {
       color: rgb(218, 218, 218);
       text-decoration: none;
       cursor: pointer;
   }
   
-  .cadastro a span {
+  .estoque a span {
       color: white;
       text-decoration: underline;
   }
   
-  .bloco-fundo{
+  .bloco-fundo-estoque{
       background-color: #05314C;
       width: 75vw;
       height: 78vh;
@@ -181,8 +179,8 @@
   }
   
   
-  .aside-cadastro,
-  .form-content {
+  .aside-estoque,
+  .form-content-estoque {
     z-index: 1; 
     position: relative;
   }

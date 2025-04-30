@@ -53,8 +53,8 @@ const NavBar = ({ userName = "Usuário" }) => {
 
             {showDashSubmenu && (
               <ul className="submenu-list">
-                <li onClick={() => navigate('/dashboardFornecedor')}>Dashboard Fornecedor</li>
-                <li onClick={() => navigate('/dashboardMaterial')}>Dashboard Material</li>
+                <li onClick={() => navigate('/Fornecedor')}>Dashboard Fornecedor</li>
+                <li onClick={() => navigate('/Material')}>Dashboard Material</li>
               </ul>
             )}
 
@@ -78,10 +78,10 @@ const NavBar = ({ userName = "Usuário" }) => {
 
             {showFormSubmenu && (
               <ul className="submenu-list">
-                <li onClick={() => navigate('/cadastro')}>Cadastrar Estoque</li>
+                <li onClick={() => navigate('/estoque')}>Cadastrar Estoque</li>
                 <li onClick={() => navigate('/setor')}>Cadastrar Fornecedores</li>
                 <li onClick={() => navigate('/ordemDeCompra')}>Ordem de Compra</li>
-                <li onClick={() => navigate('/cadastroUsuario')}>Cadastrar Usuários</li>
+                <li onClick={() => navigate('/cadastro')}>Cadastrar Usuários</li>
               </ul>
             )}
           </ul>

@@ -39,8 +39,9 @@ export function Login() {
                     sessionStorage.setItem('authToken', response.data.token);
                     sessionStorage.setItem('usuario', response.data.nome);
                 }          
-                console.log(response.data)
-                setFormData({email:'', password: ''})
+                setFormData({email:'', password: ''});
+                divLoading.style.display = 'block';
+                setTimeout(navigate('/Material'),3000);
               })
               .catch((error)=>{
                 console.error('Erro no login do usuário: ', error);
@@ -78,6 +79,10 @@ export function Login() {
                 </div>
 
                 <button onClick={login}>ENTRAR</button>
+
+                <div style={{display: 'none'}} id='divLoading'>
+                    <img src='../../assets/loading.gif' />
+                </div>
 
                 <a onClick={irParaVerificacao}><span>Esqueceu a senha?</span></a>
             </main>
