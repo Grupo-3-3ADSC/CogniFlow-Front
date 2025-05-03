@@ -30,6 +30,7 @@
     text-align: center;
     width: 100%;
     max-width: 350px;
+    height: 60vh;
 }
 
 
@@ -45,6 +46,7 @@
     border-radius: 15px;
     border: 1px solid #ccc;
     box-sizing: border-box;
+    font-size: 12px;
 }
 
 

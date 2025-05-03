@@ -24,7 +24,7 @@
     align-items: center;
     justify-content: center;
     min-width: 90vw;
-    margin-top: 20vh;
+    margin-top: 10vh;
     min-height: 80vh;
     flex-wrap: wrap; /* Permite que os elementos se reorganizem em telas menores */
 }

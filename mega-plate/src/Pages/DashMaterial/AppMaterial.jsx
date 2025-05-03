@@ -146,7 +146,7 @@ function App() {
                   chartType="PieChart"
                   data={pieData}
                   options={{
-                    title: 'Distribuição de Materiais',
+                    title: 'Mais vendidos',
                     backgroundColor: 'transparent',
                     legend: { textStyle: { color: 'white' } },
                     titleTextStyle: { color: 'white' },
@@ -164,7 +164,7 @@ function App() {
                   chartType="ColumnChart"
                   data={barData}
                   options={{
-                    title: 'Produção Mensal',
+                    title: 'Estoque por setor',
                     backgroundColor: 'transparent',
                     legend: { textStyle: { color: 'white' } },
                     titleTextStyle: { color: 'white' },
@@ -181,7 +181,7 @@ function App() {
                   chartType="LineChart"
                   data={lineData}
                   options={{
-                    title: 'Consumo Diário',
+                    title: 'Media por mês',
                     backgroundColor: 'transparent',
                     legend: { textStyle: { color: 'white' } },
                     titleTextStyle: { color: 'white' },
@@ -200,8 +200,8 @@ function App() {
             <h3>Alertas</h3>
             <ul id="alert-list">
               <li>Alerta 1: Verificar dados</li>
-              <li>Alerta 2: Sistema atualizado</li>
-              <li>Alerta 3: Erro detectado</li>
+              <li id='alert2'>Alerta 2: Sistema atualizado</li>
+              <li id='alert3'>Alerta 3: Erro detectado</li>
             </ul>
           </div>
         </div>

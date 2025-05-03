@@ -1,4 +1,4 @@
-import './style.css';
+import styles from './Verificacao.module.css';
 import logo from '../../assets/logo-megaplate.png';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -37,11 +37,11 @@ export function Verificacao() {
     return (
         <>
         
-        <div className="verificacao">
-            <div className="container-verificacao">
+        <div className={styles.verificacao}>
+            <div className={styles['container-verificacao']}>
 
-                <div className="card" style={{ display: showEmailScreen ? 'block' : 'none' }}>
-                    <div className="card-header">REDEFINIR SENHA</div>
+                <div className={styles.card} style={{ display: showEmailScreen ? 'block' : 'none' }}>
+                    <div className={styles['card-header']}>REDEFINIR SENHA</div>
                     <p>
                         Insira o e-mail associado à sua conta. Enviaremos um código de 6 dígitos para redefinir sua senha.
                     </p>
@@ -50,8 +50,8 @@ export function Verificacao() {
                     <img src={logo} alt="" />
                 </div>
 
-                <div className="card" style={{ display: showEmailScreen ? 'none' : 'block' }}>
-                    <div className="card-header">VERIFICAÇÃO</div>
+                <div className={styles.card} style={{ display: showEmailScreen ? 'none' : 'block' }}>
+                    <div className={styles['card-header']}>VERIFICAÇÃO</div>
                     <p>
                         Enviamos um código de 6 dígitos para o seu e-mail. Insira-o abaixo para continuar com a redefinição da sua senha.
                     </p>

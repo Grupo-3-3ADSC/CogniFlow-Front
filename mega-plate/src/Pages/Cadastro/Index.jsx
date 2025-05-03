@@ -1,7 +1,6 @@
-import './styleCadastro.css';
+import styles from './Cadastro.module.css';
 import logo from '../../assets/logo-megaplate.png';
-import user from '../../assets/User.png';
-import { useEffect, useState } from 'react';
+import {  useState } from 'react';
 import { api } from '../../provider/api.js';
 import NavBar from '../../components/NavBar'; // Importando a NavBar
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +10,7 @@ export function Cadastro() {
 
   const navigate = useNavigate();
 
-  const [listarUsuario, setListarUsuario] = useState([]);
+ 
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
@@ -89,22 +88,20 @@ export function Cadastro() {
     <>
       <NavBar />
 
-      <div className="tab-container">
-        <div className="tab active">PERFIL</div>
-        <div className="tab">CADASTRO</div>
+      <div className= {styles['tab-container']}>
       </div>
-      <section className="cadastro">
-        <div className="bloco-fundo">
-          <div className="tab-container-user">
-            <div className="tabActiveUsuario">Usuario</div>
-            <div className="tabFornecedor">Fornecedor</div>
+      <section className= {styles.cadastro}>
+        <div className= {styles['bloco-fundo']}>
+          <div className={styles['tab-container-user']}>
+            <div className={styles.tabActiveUsuario}>Usuario</div>
+           
           </div>
         </div>
-        <aside className="aside-cadastro">
+        <aside className={styles['aside-cadastro']}>
           <img src={logo} alt="MegaPlate logo" />
         </aside>
-        <main className="form-content">
-          <div className="input-group">
+        <main className={styles['form-content']}>
+          <div className={styles['input-group']}>
             <p id='textCadastro'>Nome</p>
             <input
               placeholder="Marcos Antonio"
@@ -114,7 +111,7 @@ export function Cadastro() {
             />
           </div>
 
-          <div className="input-group">
+          <div className={styles['input-group']}>
             <p id='textCadastro'>Email</p>
             <input
               placeholder="exemplo@dominio.com"
@@ -124,7 +121,7 @@ export function Cadastro() {
             />
           </div>
 
-          <div className="input-group">
+          <div className={styles['input-group']}>
             <p>Cargo</p>
             <select
               value={formData.cargo.id}
@@ -147,7 +144,7 @@ export function Cadastro() {
             </select>
           </div>
 
-          <div className="input-group">
+          <div className={styles['input-group']}>
             <p id='textCadastro'>Senha</p>
             <input
               placeholder="********"
@@ -160,15 +157,6 @@ export function Cadastro() {
           <button id='buttonCadastrar' onClick={cadastrar}>CADASTRAR</button>
 
         </main>
-        <section className="user-list">
-          {listarUsuario.map((usuario) => (
-            <div key={usuario.id || Math.random()} className="user-card">
-              <h5 id='textCadastro'><strong>Nome:</strong> {usuario.nome}</h5>
-              <h5 id='textCadastro'><strong>Email:</strong> {usuario.email || 'N/A'}</h5>
-              <h5 id='textCadastro'><strong>Cargo:</strong> {usuario.cargo || 'N/A'}</h5>
-            </div>
-          ))}
-        </section>
       </section>
     </>
   );

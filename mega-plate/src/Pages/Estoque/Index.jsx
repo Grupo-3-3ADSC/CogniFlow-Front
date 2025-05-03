@@ -1,7 +1,7 @@
-import './style.css'
+import styles from './Estoque.module.css';
 import logo from '../../assets/logo-megaplate.png'
-import user from '../../assets/User.png';
-import { useNavigate } from 'react-router-dom';
+// import user from '../../assets/User.png';
+// import { useNavigate } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
 
 
@@ -13,49 +13,47 @@ export function Estoque() {
     return (
       <>
       <NavBar />
-
-      
-        <div className="tab-container">
-              {/* <div className="tab active">Cadastro</div> */}
+        <div className={styles['tab-container']}>
+              <div className="tab active">Cadastro</div>
                
                  </div>
-        <section className='estoque'>
+        <section className={styles.estoque}>
         
         
-        <div className='bloco-fundo-estoque'>  
+        <div className={styles['bloco-fundo-estoque']}>  
 
 
-        <div className="tab-container-user">
+        <div className={styles['tab-container-user']}>
               <div className="tab active">Estoque</div>
                  </div>   
                         </div>
-            <aside className='aside-estoque'>
+            <aside className={styles['aside-estoque']}>
                             <img src={logo} alt="" />
                         </aside>
                         
                         
                                
-                        <main className='form-content-estoque'>
+                        <main className={styles['form-content-estoque']}>
                             
             
-                            <div className='input-group'>
+                            <div className={styles['input-group']}>
                                 <p>Material</p>
-                                <input placeholder=""  type="text" />
+                                <input placeholder="SAE 1020"  type="text" />
                             </div>
 
-                            <div className='input-group'>
+                            <div className={styles['input-group']}>
                                 <p>Setor</p>
-                                <input placeholder='' type='Text'/>
+                                <input placeholder="A2" type='Text'/>
                             </div>
             
-                            <div className='input-group'>
+                            <div className={styles['input-group']}>
                                 <p>Quantidade atual</p>
-                                <input placeholder='' type='Text'/>
+                                <input placeholder="50" type='Text'/>
                             </div>
             
-                            <div className='input-group'>
+                            <div className={styles['input-group']}>
                                 <p>Quantidade adicional</p>
-                                <input placeholder='' type='Text'/>
+                                <input placeholder="10" type='Text'/>
                             </div>
             
                             <button id='buttonEstoque'>CADASTRAR</button>

@@ -7,6 +7,12 @@
     --header-color: #1D597B;
 }
 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 .verificacao {
     background-image: url('../../assets/background.png');
     background-size: cover;
@@ -56,11 +62,12 @@
 }
 
 
-/* .card p {
+.card p {
     font-size: 16px;
     margin-bottom: 20px;
     line-height: 1.5;
-} */
+}
+
 
 
 .code-inputs {
@@ -68,6 +75,7 @@
     justify-content: center;
     gap: 6px;
     margin-bottom: 16px;
+    
 }
 
 .code-inputs input {
@@ -145,6 +153,6 @@ button:hover {
     background: white;
     color: black;
     outline: none;
-    font-size: 16px;
+    font-size: 24px;
     margin-bottom: 12px;
 }

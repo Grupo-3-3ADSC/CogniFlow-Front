@@ -2,11 +2,11 @@
   
   .estoque {
     position: relative;
-    display: flex;
-    justify-content: center;
-    gap: 5px;
-    padding: 4rem 0 4rem 0rem; 
-    z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  padding: 4rem 0 4rem 0rem;
+  z-index: 1;
   
   }
   
@@ -53,22 +53,7 @@
       max-width: 80px;
   }
   
-  .form-content-estoque {
-      background-color: #05314C;
-      /* padding: 4rem 3rem; */
-      border-radius: 20px;
-      width: 100%;
-      max-width: 350px;
-      height: 60vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      border-radius: 0px 20px 20px 0px;
-      padding: 2rem;
-      border: 3px solid #ccc;
-      box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4); 
-  }
+
   .tab-container {
         display: flex;
         /* padding: 20px; */
@@ -77,6 +62,7 @@
         padding-left: 15%;
         padding-top: 2rem;
         width: 80%;
+        margin-top: 50px;
   
       }
   
@@ -89,10 +75,12 @@
         font-weight: bold;
         cursor: pointer;
         transition: background-color 0.3s;
+        
       }
   
       .tab.active {
         background-color: #1F5F7C; /* cor mais escura para a aba ativa */
+        
       }
   
       .content {
@@ -101,22 +89,53 @@
         padding: 20px;
         color: white;
         border-top: none;
+        
       }
       .tab-container-user{
         display: flex;
-        /* padding: 20px; */
         gap: 5px;
         justify-content: flex-start;
-        padding-left: 43%;
-        padding-top: 2.2rem;
+        padding-left: 45%;
+        padding-top: 1.8rem;
         width: 80%;
         font-size: 0.8rem;
+        
+      }
+      .aside-estoque {
+        border-radius: 25px 0px 0 25px;
+        padding: 0 3rem;
+        background-color: #1D597B;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 12vw;
+        height: 60vh;
+        position: relative;
+        z-index: 1;
+        box-shadow: -10px 0px 20px rgba(0, 0, 0, 0.4);
       }
   
+  .form-content-estoque {
+    background-color: #05314C;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 350px;
+  height: 60vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0px 25px 25px 0px;
+  padding: 2rem;
+  border: 3px solid #ccc;
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4);
+  
+  }
   .input-group {
       text-align: left;
       position: relative;
       width: 100%;
+
   }
   
   .input-group input {
@@ -125,14 +144,10 @@
       border-radius: 15px;
       border: 1px solid #ccc;
       box-sizing: border-box;
-      background-color: white;
-      font-size: medium;
-      color: black;
+      font-size: 12px;
   }
   
-  /* .estoque h1 {
-      font-size: 2.5rem;
-  } */
+
   
   #buttonEstoque {
       margin: 20px 0;

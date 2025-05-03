@@ -1,6 +1,6 @@
 import style from './style.module.css'
-import logo from '../../assets/logo-megaplate.png'
-import user from '../../assets/User.png';
+// import logo from '../../assets/logo-megaplate.png'
+// import user from '../../assets/User.png';
 import progressoImg from '../../assets/progressoOrdemDeCompra.png';
 import progressoConcluido from '../../assets/progresso1Concluido.png';
 import progresso2Concluido from '../../assets/progresso2Concluido.png';
@@ -45,10 +45,10 @@ export function OrdemDeCompra() {
         },
         2: {
             inputs: [
-                { id: 'input1', titulo: 'UME', tipo: 'text' },
+                { id: 'input1', titulo: 'Valor por Kg', tipo: 'text' },
                 { id: 'input2', titulo: 'Rastreabilidade', tipo: 'text' },
                 { id: 'input3', titulo: 'Material', tipo: 'text' },
-                { id: 'input4', titulo: 'Quantidade UMR', tipo: 'text' }
+                { id: 'input4', titulo: 'Valor por peça', tipo: 'text' }
 
             ],
             imagem: progressoConcluido
@@ -128,10 +128,10 @@ export function OrdemDeCompra() {
         const dataAtual = new Date().toLocaleString(); 
         doc.text(`Data e Hora: ${dataAtual}`, 20, 40);
 
-        let posicaoY = 20;
+        let posicaoY = 50;
 
         Object.keys(valoresInput).forEach((campo) => {
-            doc.text(`${campo}: ${valoresInput[campo]}`, 10, posicaoY);
+            doc.text(`${campo}: ${valoresInput[campo]}`, 20, posicaoY);
             posicaoY += 10;
         });
 
@@ -200,7 +200,7 @@ export function OrdemDeCompra() {
                     {progresso === 4 && (
                         <div style={{
                             display: 'flex',
-                            flexDirection: 'column-reverse'
+                            gap: '10px',
                         }}>
 
                             <button onClick={reiniciarOrdemDeCompra} disabled={progresso < 4}
