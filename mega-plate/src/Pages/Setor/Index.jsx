@@ -1,6 +1,6 @@
-import './style.css'
+import styles from './Setor.module.css'
 import logo from '../../assets/logo-megaplate.png'
-import user from '../../assets/User.png';
+// import user from '../../assets/User.png';
 import NavBar from '../../components/NavBar';
 
 
@@ -13,34 +13,25 @@ export function Setor() {
 <NavBar />
 
       
-        <div className="tab-container">
-              {/* <div className="tab active">Cadastro</div> */}
-               
+        <div className={styles["tab-container"]}>
+                          <div className={styles.tabActiveUsuario}>Cadastro</div>
                  </div>
-        <section className='setor'>
-        
-        
-        <div className='bloco-fundo-setor'>  
-
-
-        <div className="tab-container-user">
-              <div className="tab active">Setor</div>
+        <section className= {styles.setor}>
+        <div className={styles['bloco-fundo-setor']}>  
+        <div className={styles["tab-container-user"]}>
+              <div className={styles.tabActiveUsuario}>Setor</div>
                  </div>   
                         </div>
-            <aside className='aside-setor'>
+            <aside className={styles['aside-setor']}>
                             <img src={logo} alt="" />
                         </aside>
-                        
-                        
-                        <main className='form-content'>
-                            
-    
-                            <div className='input-group'>
+                        <main className={styles['form-content-setor']}>
+                            <div className={styles['input-group']}>
                                 <p>nome</p>
                                 <input placeholder=""  type="text" />
                             </div>
 
-                            <div className='input-group'>
+                            <div className={styles['input-group']}>
                                 <p>descrição</p>
                                 <input placeholder='' type='Text'/>
                             </div>

@@ -66,7 +66,7 @@
   
       }
   
-      .tab {
+      .tabActiveUsuario{
         padding: 10px 30px;
         border-top-left-radius: 10px;
         border-top-right-radius: 10px;
@@ -78,7 +78,7 @@
         
       }
   
-      .tab.active {
+      .tabActiveUsuario{
         background-color: #1F5F7C; /* cor mais escura para a aba ativa */
         
       }

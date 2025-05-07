@@ -1,4 +1,4 @@
-import styles from './Estoque.module.css';
+import styles from './estoque.module.css';
 import logo from '../../assets/logo-megaplate.png'
 // import user from '../../assets/User.png';
 // import { useNavigate } from 'react-router-dom';
@@ -14,7 +14,7 @@ export function Estoque() {
       <>
       <NavBar />
         <div className={styles['tab-container']}>
-              <div className="tab active">Cadastro</div>
+              <div className={styles.tabActiveUsuario}>Cadastro</div>
                
                  </div>
         <section className={styles.estoque}>
@@ -24,7 +24,7 @@ export function Estoque() {
 
 
         <div className={styles['tab-container-user']}>
-              <div className="tab active">Estoque</div>
+              <div className={styles.tabActiveUsuario}>Estoque</div>
                  </div>   
                         </div>
             <aside className={styles['aside-estoque']}>

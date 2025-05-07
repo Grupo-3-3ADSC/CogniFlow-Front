@@ -1,4 +1,4 @@
-import './style.css';
+import styles from './Redefinicao.module.css';
 import logo from '../../assets/logo-megaplate.png';
 import olho from '../../assets/olho.png';
 import { useNavigate } from 'react-router-dom';
@@ -18,21 +18,21 @@ export function Redefinicao() {
     }
 
     return (
-        <section className='redefinicao'>
+        <section className={styles.redefinicao}>
 
-            <aside className='aside-redefinicao'>
+            <aside className={styles['aside-redefinicao']}>
                 <img src={logo} alt="" />
             </aside>
-            <main className='form-content-redefinicao'>
+            <main className={styles['form-content-redefinicao']}>
                 <h1>Redefinição de Senha</h1>
 
-                <div className='input-group'>
+                <div className={styles['input-group']}>
                     <p>Nova Senha</p>
                     <input placeholder="********" type={visivel ? 'text' : 'password'} className='input-senha' />
                     <img className='olho' src={olho} onClick={visorSenha} alt='Mostrar senha' />
                 </div>
 
-                <div className='input-group'>
+                <div className={styles['input-group']}>
                     <p>Senha</p>
                     <input placeholder='********' type={visivel ? 'text' : 'password'} className='input-senha' />
                     <img className='olho' src={olho} onClick={visorSenha} alt='Mostrar senha' />

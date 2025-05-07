@@ -6,7 +6,7 @@
     gap: 5px;
     padding: 4rem 0 4rem 0rem; 
     z-index: 1;
-  
+    
   }
   
   .navbar {
@@ -51,66 +51,65 @@
       width: 100%;
       max-width: 80px;
   }
+  .tab-container {
+    display: flex;
+    /* padding: 20px; */
+    gap: 5px;
+    justify-content: flex-start;
+    padding-left: 15%;
+    padding-top: 2rem;
+    width: 80%;
+
+  }
+
+  .tabActiveUsuario {
+    padding: 10px 30px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    background-color: #1F5F7C;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .tabActiveUsuario{
+    background-color: #1F5F7C; /* cor mais escura para a aba ativa */
+  }
+
+  .content {
+    background-color: #14425C;
+    height: 300px;
+    padding: 20px;
+    color: white;
+    border-top: none;
+  }
+  .tab-container-user{
+    display: flex;
+    /* padding: 20px; */
+    gap: 5px;
+    justify-content: flex-start;
+    padding-left: 43%;
+    padding-top: 2.2rem;
+    width: 80%;
+    font-size: 0.8rem;
+  }
   
   .form-content-setor {
-      background-color: #05314C;
-      /* padding: 4rem 3rem; */
-      border-radius: 20px;
-      width: 100%;
-      max-width: 350px;
-      height: 60vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      border-radius: 0px 20px 20px 0px;
-      padding: 2rem;
-      border: 3px solid #ccc;
-      box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4); 
+    background-color: #05314C;
+    border-radius: 0px 25px 25px 0px;
+    width: 100%;
+    max-width: 350px;
+    height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    border: 3px solid #ccc;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4);
   }
-  .tab-container {
-        display: flex;
-        /* padding: 20px; */
-        gap: 5px;
-        justify-content: flex-start;
-        padding-left: 15%;
-        padding-top: 2rem;
-        width: 80%;
   
-      }
-  
-      .tab {
-        padding: 10px 30px;
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
-        background-color: #1F5F7C;
-        color: white;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background-color 0.3s;
-      }
-  
-      .tab.active {
-        background-color: #1F5F7C; /* cor mais escura para a aba ativa */
-      }
-  
-      .content {
-        background-color: #14425C;
-        height: 300px;
-        padding: 20px;
-        color: white;
-        border-top: none;
-      }
-      .tab-container-user{
-        display: flex;
-        /* padding: 20px; */
-        gap: 5px;
-        justify-content: flex-start;
-        padding-left: 43%;
-        padding-top: 2.2rem;
-        width: 80%;
-        font-size: 0.8rem;
-      }
   
   
       
