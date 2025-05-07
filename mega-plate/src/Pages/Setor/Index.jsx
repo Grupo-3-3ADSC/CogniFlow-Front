@@ -3,23 +3,18 @@ import logo from '../../assets/logo-megaplate.png'
 // import user from '../../assets/User.png';
 import NavBar from '../../components/NavBar';
 
-
-
 export function Setor() {
 
     return (
         <>
-
             <NavBar />
 
-
-            <div className={styles["tab-container"]}>
-                <div className={styles.tabActiveUsuario}>Cadastro</div>
-            </div>
+            <div className={styles["tab-container"]}></div>
+            {/* <div className={styles.tabActiveUsuario}>Cadastro</div> */}
             <section className={styles.setor}>
                 <div className={styles['bloco-fundo-setor']}>
                     <div className={styles["tab-container-user"]}>
-                        <div className={styles.tabActiveUsuario}>Setor</div>
+                        <div className={styles.tabActiveSetor}>Setor</div>
                     </div>
                 </div>
                 <aside className={styles['aside-setor']}>

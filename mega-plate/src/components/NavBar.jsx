@@ -79,7 +79,7 @@ const NavBar = ({ userName = "Usuário" }) => {
             {showFormSubmenu && (
               <ul className="submenu-list">
                 <li onClick={() => navigate('/estoque')}>Cadastrar Estoque</li>
-                <li onClick={() => navigate('/setor')}>Cadastrar Fornecedores</li>
+                <li onClick={() => navigate('/setor')}>Cadastrar de Setor</li>
                 <li onClick={() => navigate('/ordemDeCompra')}>Ordem de Compra</li>
                 <li onClick={() => navigate('/cadastro')}>Cadastrar Usuários</li>
                 <li onClick={() => navigate ('/CadastroMaterial')}>Cadastro de Material</li>
