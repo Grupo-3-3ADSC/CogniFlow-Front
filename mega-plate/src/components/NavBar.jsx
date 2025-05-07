@@ -82,6 +82,7 @@ const NavBar = ({ userName = "Usuário" }) => {
                 <li onClick={() => navigate('/setor')}>Cadastrar Fornecedores</li>
                 <li onClick={() => navigate('/ordemDeCompra')}>Ordem de Compra</li>
                 <li onClick={() => navigate('/cadastro')}>Cadastrar Usuários</li>
+                <li onClick={() => navigate ('/CadastroMaterial')}>Cadastro de Material</li>
               </ul>
             )}
           </ul>

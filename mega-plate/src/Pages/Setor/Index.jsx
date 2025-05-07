@@ -8,43 +8,43 @@ import NavBar from '../../components/NavBar';
 export function Setor() {
 
     return (
-      <>
+        <>
 
-<NavBar />
+            <NavBar />
 
-      
-        <div className={styles["tab-container"]}>
-                          <div className={styles.tabActiveUsuario}>Cadastro</div>
-                 </div>
-        <section className= {styles.setor}>
-        <div className={styles['bloco-fundo-setor']}>  
-        <div className={styles["tab-container-user"]}>
-              <div className={styles.tabActiveUsuario}>Setor</div>
-                 </div>   
-                        </div>
-            <aside className={styles['aside-setor']}>
-                            <img src={logo} alt="" />
-                        </aside>
-                        <main className={styles['form-content-setor']}>
-                            <div className={styles['input-group']}>
-                                <p>nome</p>
-                                <input placeholder=""  type="text" />
-                            </div>
 
-                            <div className={styles['input-group']}>
-                                <p>descrição</p>
-                                <input placeholder='' type='Text'/>
-                            </div>
-        
-            
-                            <button>CADASTRAR</button>
-            
-                            {/* <a onClick={irParaSetor}>Não tem conta? <span>Cadastrar</span></a> */}
-                        </main>
-          </section>
-          
-          </>
+            <div className={styles["tab-container"]}>
+                <div className={styles.tabActiveUsuario}>Cadastro</div>
+            </div>
+            <section className={styles.setor}>
+                <div className={styles['bloco-fundo-setor']}>
+                    <div className={styles["tab-container-user"]}>
+                        <div className={styles.tabActiveUsuario}>Setor</div>
+                    </div>
+                </div>
+                <aside className={styles['aside-setor']}>
+                    <img src={logo} alt="" />
+                </aside>
+                <main className={styles['form-content-setor']}>
+                    <div className={styles['input-group']}>
+                        <p>Nome</p>
+                        <input placeholder="" type="text" />
+                    </div>
+
+                    <div className={styles['input-group']}>
+                        <p>Descrição</p>
+                        <input placeholder='' type='Text' />
+                    </div>
+
+
+                    <button>CADASTRAR</button>
+
+                    {/* <a onClick={irParaSetor}>Não tem conta? <span>Cadastrar</span></a> */}
+                </main>
+            </section>
+
+        </>
     );
-  };
-  
-  export default Setor;
+};
+
+export default Setor;
