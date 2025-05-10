@@ -17,11 +17,11 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path='/Login' element={<Login />} />
-        <Route path='/cadastro' element={<Cadastro />} />
-        <Route path='/ordemDeCompra' element={<OrdemDeCompra/>} />
-        <Route path='/estoque' element={<Estoque />} />
-        <Route path='/setor' element={<Setor />} />
+        <Route path='/' element={<Login />} />
+        <Route path='/Cadastro' element={<Cadastro />} />
+        <Route path='/OrdemDeCompra' element={<OrdemDeCompra/>} />
+        <Route path='/Estoque' element={<Estoque />} />
+        <Route path='/Setor' element={<Setor />} />
         <Route path='/Verificacao' element={<Verificacao />} />
         <Route path='/Transferencia' element={<Transferencia />} />
         <Route path='/Redefinicao' element={<Redefinicao />} />

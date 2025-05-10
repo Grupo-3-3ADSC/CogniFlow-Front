@@ -1,4 +1,4 @@
-import styles from './Setor.module.css'
+import styles from './setor.module.css'
 import logo from '../../assets/logo-megaplate.png'
 // import user from '../../assets/User.png';
 import NavBar from '../../components/NavBar';

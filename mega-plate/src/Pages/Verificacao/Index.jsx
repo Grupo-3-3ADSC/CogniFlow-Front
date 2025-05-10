@@ -1,4 +1,4 @@
-import styles from './Verificacao.module.css';
+import styles from './verificacao.module.css';
 import logo from '../../assets/logo-megaplate.png';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';

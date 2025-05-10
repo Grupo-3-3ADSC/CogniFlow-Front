@@ -47,6 +47,9 @@
     border: 1px solid #ccc;
     box-sizing: border-box;
     font-size: 12px;
+    background-color: whitesmoke;
+     text-decoration: none !important;
+     color: initial !important;
 }
 
 
@@ -95,4 +98,7 @@
     text-decoration: underline;
 }
 
-
+.loading-gif{
+    height: 32px;
+    width: 32px;
+}

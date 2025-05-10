@@ -1,6 +1,7 @@
-import './style.css';
+import style from './login.module.css';
 import logo from '../../assets/logo-megaplate.png';
 import olho from '../../assets/olho.png';
+import loading from '../../assets/loading.gif';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { api } from '../../provider/api.js';
@@ -21,7 +22,6 @@ export function Login() {
         function irParaVerificacao(){
             navigate('/verificacao')
         }
-        
 
 
         const login = () =>{
@@ -41,7 +41,8 @@ export function Login() {
                 }          
                 setFormData({email:'', password: ''});
                 divLoading.style.display = 'block';
-                setTimeout(navigate('/Material'),3000);
+                setTimeout(function(){
+                navigate('/Material')},1500);
               })
               .catch((error)=>{
                 console.error('Erro no login do usuário: ', error);
@@ -51,15 +52,15 @@ export function Login() {
         }
 
     return(    
-        <section className='login'>
+        <section className={style.login}>
 
-            <aside className='aside-login'>
+            <aside className={style['aside-login']}>
                 <img src={logo} alt="" />
             </aside>
-            <main className='form-content'>
+            <main className={style['form-content']}>
                 <h1>Login</h1>
 
-                <div className='input-group'>
+                <div className={style['input-group']}>
                     <p>Email</p>
                     <input placeholder="marcos@email.com"  
                     type="text"
@@ -67,21 +68,21 @@ export function Login() {
                     onChange={(e) => setFormData({...formData, email: e.target.value})} />
                 </div>
 
-                <div className='input-group'>
+                <div className={style['input-group']}>
                     <p>Senha</p>
                     <input placeholder='********' 
                     type={visivel ? 'text' : 'password'} 
-                    className='input-password'
+                    className={style['input-password']}
                     value={formData.password}
                     onChange={(e) => setFormData({...formData, password: e.target.value})}/>
 
-                    <img className='olho' src={olho} onClick={visorpassword} alt='Mostrar password'/>
+                    <img className={style['olho']} src={olho} onClick={visorpassword} alt='Mostrar password'/>
                 </div>
 
                 <button onClick={login}>ENTRAR</button>
 
                 <div style={{display: 'none'}} id='divLoading'>
-                    <img src='../../assets/loading.gif' />
+                    <img src={loading} alt='Simbolo de carregamento' className={style['loading-gif']}/>
                 </div>
 
                 <a onClick={irParaVerificacao}><span>Esqueceu a senha?</span></a>

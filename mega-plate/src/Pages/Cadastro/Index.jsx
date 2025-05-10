@@ -1,4 +1,4 @@
-import styles from './Cadastro.module.css';
+import styles from './cadastro.module.css';
 import logo from '../../assets/logo-megaplate.png';
 import {  useState } from 'react';
 import { api } from '../../provider/api.js';

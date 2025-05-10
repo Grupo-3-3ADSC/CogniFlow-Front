@@ -1,4 +1,4 @@
-import style from './style.module.css'
+import style from './ordemDeCompra.module.css'
 // import logo from '../../assets/logo-megaplate.png'
 // import user from '../../assets/User.png';
 import progressoImg from '../../assets/progressoOrdemDeCompra.png';
@@ -11,17 +11,13 @@ import { api } from '../../provider/api';
 import { jsPDF } from 'jspdf';
 import NavBar from '../../components/NavBar';
 
-
-{/* TIVE QUE USAR MODULE NESSA PARTE POR CAUSA QUE BUGA O CSS DO LOGIN E CADASTRO
-    SE NÃO TIVER O CSS MODULE, ÚNICA COISA QUE MUDA É O JEITO DE COLOCAR A VARIÁVEL
-    NA CLASSE E TEM QUE MUDAR O NOME DAS CLASSES PARA TIRAR O HÍFEN. */}
 export function OrdemDeCompra() {
 
     const [listaUsuarios, setListaUsuario] = useState([]);
 
     function getFornecedores() {
         // colocando usuarios como exemplo de fornecedores
-        api.get("").then((resposta) => {
+        api.get("/usuarios").then((resposta) => {
             setListaUsuario(resposta.data)
         }).catch((erro) => {
             console.error("Erro ao buscar usuários", erro);
@@ -56,7 +52,8 @@ export function OrdemDeCompra() {
         3: {
             inputs: [
                 { id: 'input1', titulo: 'Valor Unitário', tipo: 'text' },
-                { id: 'input2', titulo: 'IPI', tipo: 'text' }
+                { id: 'input2', titulo: 'IPI', tipo: 'text' },
+                {id: 'input3', titulo: 'Total', tipo: 'text', disabled: true},
             ],
             imagem: progresso2Concluido
         },
@@ -72,6 +69,20 @@ export function OrdemDeCompra() {
     const [titulo, setTitulo] = useState('ORDEM DE COMPRA');
     const [nomeBotao, setNomeBotao] = useState('PRÓXIMO');
     const [valoresInput, setValoresInput] = useState({});
+
+     useEffect(() => {
+        const valorUnitario = parseFloat((valoresInput['Valor Unitário'] || '').replace(',', '.')) || 0;
+        const valorPorKg = parseFloat((valoresInput['Valor por Kg'] || '').replace(',','.')) || 0;
+
+        const total = valorUnitario * valorPorKg;
+
+        
+        setValoresInput((resultado) => ({
+            ...resultado,
+            Total: total.toFixed(2),
+        }));
+       
+    }, [valoresInput['Valor Unitário'], valoresInput['Valor por Kg']]);
 
     useEffect(() => {
         if (progresso == 4) {
@@ -114,7 +125,7 @@ export function OrdemDeCompra() {
     }
 
     function irParaDashboard() {
-        navigate('/Material') // link ficticio enquanto não tem redirecionamento para dash
+        navigate('/Material') 
     }
 
     function baixarPDF() {
@@ -123,9 +134,9 @@ export function OrdemDeCompra() {
 
         doc.setFontSize(18);
         doc.text('Ordem de compra', 20, 20);
-        
+
         doc.setFontSize(12);
-        const dataAtual = new Date().toLocaleString(); 
+        const dataAtual = new Date().toLocaleString();
         doc.text(`Data e Hora: ${dataAtual}`, 20, 40);
 
         let posicaoY = 50;
@@ -140,9 +151,7 @@ export function OrdemDeCompra() {
 
     return (
         <>
-<NavBar />
-
-            
+            <NavBar />
 
             <section className={style.ordemDeCompra}>
 
@@ -171,7 +180,9 @@ export function OrdemDeCompra() {
                                 ) : (
                                     <input type="text"
                                         value={valoresInput[input.titulo] || ''}
-                                        onChange={(e) => setValoresInput({ ...valoresInput, [input.titulo]: e.target.value })} />
+                                        onChange={(e) => setValoresInput({ ...valoresInput, [input.titulo]: e.target.value })} 
+                                        disabled={input.disabled}   
+                                        />
                                 )}
                             </div>
                         ))}
