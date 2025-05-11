@@ -1,4 +1,4 @@
-import styles from './Material.module.css';
+import styles from './material.module.css';
 import logo from '../../assets/logo-megaplate.png';
 import { useState } from 'react';
 import NavBar from '../../components/NavBar';

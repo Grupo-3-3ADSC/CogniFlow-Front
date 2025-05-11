@@ -121,6 +121,9 @@
   border: 1px solid #ccc;
   box-sizing: border-box;
   font-size: 12px;
+  text-decoration: none !important;
+  color: initial !important;
+  background: whitesmoke;
 }
 
 #buttonCadastrar {
