@@ -1,6 +1,6 @@
 import styles from './cadastro.module.css';
 import logo from '../../assets/logo-megaplate.png';
-import {  useState } from 'react';
+import { useState } from 'react';
 import { api } from '../../provider/api.js';
 import NavBar from '../../components/NavBar'; // Importando a NavBar
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +10,7 @@ export function Cadastro() {
 
   const navigate = useNavigate();
 
- 
+
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
@@ -88,13 +88,13 @@ export function Cadastro() {
     <>
       <NavBar />
 
-      <div className= {styles['tab-container']}>
+      <div className={styles['tab-container']}>
       </div>
-      <section className= {styles.cadastro}>
-        <div className= {styles['bloco-fundo']}>
+      <section className={styles.cadastro}>
+        <div className={styles['bloco-fundo']}>
           <div className={styles['tab-container-user']}>
             <div className={styles.tabActiveUsuario}>Usuario</div>
-           
+
           </div>
         </div>
         <aside className={styles['aside-cadastro']}>

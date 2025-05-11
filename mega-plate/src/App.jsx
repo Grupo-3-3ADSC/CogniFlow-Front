@@ -9,6 +9,7 @@ import Transferencia from './Pages/Transferencia/Index';
 import Redefinicao from './Pages/Redefinicao/Index';
 import DashMaterial from './Pages/DashMaterial/AppMaterial'
 import DashFornecedor from './Pages/DashFornecedor/App'
+import Material from './Pages/CadastroMaterial/Material';
 
 
 import {Route, BrowserRouter as Router, Routes} from 'react-router-dom';
@@ -27,6 +28,7 @@ function App() {
         <Route path='/Redefinicao' element={<Redefinicao />} />
         <Route path='/Material' element={<DashMaterial />} />
         <Route path='/Fornecedor' element={<DashFornecedor />} />
+        <Route path='/CadastroMaterial' element={<Material />} />
       </Routes>
     </Router>
   );
