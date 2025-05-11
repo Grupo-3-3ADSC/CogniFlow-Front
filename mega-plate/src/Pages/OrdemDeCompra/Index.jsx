@@ -16,8 +16,7 @@ export function OrdemDeCompra() {
     const [listaUsuarios, setListaUsuario] = useState([]);
 
     function getFornecedores() {
-        // colocando usuarios como exemplo de fornecedores
-        api.get("/usuarios").then((resposta) => {
+        api.get("/fornecedores").then((resposta) => {
             setListaUsuario(resposta.data)
         }).catch((erro) => {
             console.error("Erro ao buscar usuários", erro);
@@ -174,7 +173,7 @@ export function OrdemDeCompra() {
                                         value={valoresInput[input.titulo] || ''}
                                         onChange={(e) => setValoresInput({ ...valoresInput, [input.titulo]: e.target.value })}>
                                         {input.options.map((opt, i) => (
-                                            <option key={i} value={opt.nome}>{opt.nome}</option>
+                                            <option key={i} value={opt.nomeFantasia}>{opt.nomeFantasia}</option>
                                         ))}
                                     </select>
                                 ) : (
