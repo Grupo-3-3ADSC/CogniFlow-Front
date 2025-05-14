@@ -10,6 +10,8 @@ import Redefinicao from './Pages/Redefinicao/Index';
 import DashMaterial from './Pages/DashMaterial/AppMaterial'
 import DashFornecedor from './Pages/DashFornecedor/App'
 import Material from './Pages/CadastroMaterial/Material';
+import DashEstoque from './Pages/DashEstoque/AppEstoque'
+
 
 
 import {Route, BrowserRouter as Router, Routes} from 'react-router-dom';
@@ -29,6 +31,8 @@ function App() {
         <Route path='/Material' element={<DashMaterial />} />
         <Route path='/Fornecedor' element={<DashFornecedor />} />
         <Route path='/CadastroMaterial' element={<Material />} />
+        <Route path='/DashEstoque' element={<DashEstoque />} />
+
       </Routes>
     </Router>
   );

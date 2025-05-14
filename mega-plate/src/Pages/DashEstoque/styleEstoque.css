@@ -1,0 +1,249 @@
+/* Arquivo CSS para a tabela de estoque - styleFornecedor.css */
+:root {
+    --primary-color: #05314C;
+    --secondary-color: #4586AB;
+    --dashboard-margin: 5%;  /* Margem uniforme para todo o dashboard */
+}
+  
+.filter-header {
+    display: flex;
+    gap: 10px;
+    background: #05314C;
+    padding: 15px;
+    border-radius: 40px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    width: 90%;
+    height: 15%;
+    margin-left: var(--dashboard-margin);
+    margin-right: var(--dashboard-margin);
+    justify-content: space-between;
+}
+
+ #select-Filtro-Estoque {
+    color: white;
+    padding: 8px;
+    border: 2px solid #ffffff;
+    border-radius: 40px;
+    width: 30vh;
+    background-color: #05314C;
+    font-size: 16px;
+    transition: all 0.3s ease;
+} 
+
+.inputEstoque{
+    color: white;
+    padding: 8px;
+    border: 2px solid #ffffff;
+    border-radius: 40px;
+    height: 5vh;
+    width: 30vh;
+    background-color: #05314C;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+#select-Filtro-Estoque:hover{
+    color: rgb(255, 255, 255);
+    background-color: #ffffff;
+    border: 2px solid #05314C;
+    cursor: pointer;
+}
+
+.inputEstoque:hover{
+    color: black;
+    background-color: #ffffff;
+    border: 2px solid #05314C;
+    cursor: pointer;
+}
+
+
+.IndexFornecedor {
+    /* Corrigido o caminho da imagem de fundo */
+    background-image: url('../../assets/background.png'); /* Use este caminho se a imagem estiver na pasta public */
+    /* Alternativa se estiver usando import: */
+    /* background-image: var(--background-image); /* E defina a variável no seu arquivo JS */
+    padding: 20px;
+    justify-content: center;
+    align-items: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    font-family: "Poppins", sans-serif;
+    width: 100%;
+    height: 100%;
+    margin-left: 5vh;
+}
+
+.containerDash {
+    margin-top: 3vh;
+    display: flex;
+    gap: 20px;
+    width: 90%;
+    max-width: 100%;
+    margin-left: var(--dashboard-margin);
+    margin-right: var(--dashboard-margin);
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* Supplier Table Container - Table Styling */
+.supplier-table-container {
+    flex: 1;
+    background: #05314C;
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    min-height: 70vh;
+}
+
+.supplier-table-container h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: white;
+}
+
+.supplier-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background-color: #1D597B;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.supplier-table thead {
+    background-color: #4586AB;
+}
+
+.supplier-table th {
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: bold;
+    font-size: 14px;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.supplier-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 14px;
+    color: white;
+    transition: background-color 0.2s ease;
+}
+
+.supplier-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+}
+
+.supplier-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Estilo para a barra de pesquisa */
+.search-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+    width: 220px;
+}
+  
+.search-input {
+    width: 100%;
+    padding: 8px 12px;
+    padding-right: 30px;
+    border: 2px solid #ffffff;
+    border-radius: 40px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+    background-color: #05314C;
+    color: white;
+}
+  
+.search-input:focus {
+    color: black;
+    background-color: #ffffff;
+    border: 2px solid #05314C;
+}
+  
+.search-input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+  
+.search-input:focus::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+}
+  
+.search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+  
+.search-icon:hover {
+    transform: translateY(-50%) scale(1.2);
+}
+
+.search-results {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+#textFiltro {
+    color: white;
+    margin-top: 2vh;
+    margin-right: 2vh;
+}
+
+#FiltroData {
+    display: flex;
+}
+
+/* Responsividade */
+@media (max-width: 1200px) {
+    .containerDash {
+        flex-direction: column;
+    }
+    
+    .supplier-table-container {
+        height: auto;
+        margin-top: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .filter-header {
+        flex-direction: column;
+        align-items: center;
+        height: auto;
+    }
+    
+    .search-container {
+        width: 100%;
+        max-width: 100%;
+        margin-top: 10px;
+    }
+    
+    #select-Filtro, input {
+        width: 100%;
+    }
+    
+    .supplier-table th, 
+    .supplier-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}

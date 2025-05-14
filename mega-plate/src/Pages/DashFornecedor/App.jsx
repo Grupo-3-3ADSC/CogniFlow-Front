@@ -74,11 +74,11 @@ function App() {
   ];
 
   const supplierData = [
-    { name: 'Fornecedor 1', date: '28/04/2025', time: '08:30', material: 'SAE 1020' },
-    { name: 'Fornecedor 2', date: '27/04/2025', time: '14:15', material: 'SAE 1045' },
-    { name: 'Fornecedor 3', date: '26/04/2025', time: '10:45', material: 'HARDOX 450' },
-    { name: 'Fornecedor 4', date: '25/04/2025', time: '16:20', material: 'SAE 1020' },
-    { name: 'Fornecedor 5', date: '24/04/2025', time: '09:00', material: 'SAE 1045' },
+    { name: 'Fornecedor 1', date: '28/04/2025', material: 'SAE 1020' },
+    { name: 'Fornecedor 2', date: '27/04/2025', material: 'SAE 1045' },
+    { name: 'Fornecedor 3', date: '26/04/2025', material: 'HARDOX 450' },
+    { name: 'Fornecedor 4', date: '25/04/2025', material: 'SAE 1020' },
+    { name: 'Fornecedor 5', date: '24/04/2025', material: 'SAE 1045' },
   ];
 
   const parseDate = (dateString) => {
@@ -123,7 +123,7 @@ function App() {
       <div id="filtro">
         <div className="filter-header">
           <select 
-            id="select-Filtro" 
+            id="select-Filtro-Fornecedor" 
             value={selectedMaterial} 
             onChange={handleMaterialChange}
           >
@@ -232,7 +232,6 @@ function App() {
                 <th>Nome do Fornecedor</th>
                 <th>Material</th>
                 <th>Data</th>
-                <th>Hora</th>
               </tr>
             </thead>
             <tbody>
@@ -241,7 +240,6 @@ function App() {
                   <td>{supplier.name}</td>
                   <td>{supplier.material}</td>
                   <td>{supplier.date}</td>
-                  <td>{supplier.time}</td>
                 </tr>
               ))}
             </tbody>

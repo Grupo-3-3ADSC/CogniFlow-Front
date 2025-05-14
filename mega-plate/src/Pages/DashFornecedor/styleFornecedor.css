@@ -18,7 +18,7 @@
     justify-content: space-between;
 }
 
-#select-Filtro, input {
+#select-Filtro-Fornecedor, input {
     color: white;
     padding: 8px;
     border: 2px solid #ffffff;
@@ -30,7 +30,7 @@
     transition: all 0.3s ease;
 }
 
-#select-Filtro:hover, input:hover {
+#select-Filtro-Fornecedor:hover, input:hover {
     color: black;
     background-color: #ffffff;
     border: 2px solid #05314C;
