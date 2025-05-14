@@ -12,7 +12,9 @@ export function Transferencia() {
     const [showSuccessScreen, setShowSuccessScreen] = useState(false);
     const [quantidadeUMR, setQuantidadeUMR] = useState('');
     const [tipoMaterial, setTipoMaterial] = useState('');
+    const [setor, setSetor] = useState('');
     const [tipoTransferencia, setTipoTransferencia] = useState('');
+    
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
@@ -26,7 +28,7 @@ export function Transferencia() {
     }, []);
 
     function handleTransferir() {
-        if (quantidadeUMR.trim() === '' || tipoMaterial.trim() === '' || tipoTransferencia.trim() === '') {
+        if (quantidadeUMR.trim() === '' || tipoMaterial.trim() === '' || tipoTransferencia.trim() === '' || setor.trim() === '') {
             alert('Por favor, preencha todos os campos.');
             return;
         }
@@ -46,6 +48,10 @@ export function Transferencia() {
             alert('Por favor, selecione um tipo de transferência.');
             return;
         }
+        if (setor === 'Selecione uma opção') {
+            alert('Por favor, selecione um setor.');
+            return;
+        }
         setIsLoading(true);
 
         setTimeout(() => {
@@ -58,6 +64,7 @@ export function Transferencia() {
         setQuantidadeUMR('');
         setTipoMaterial('');
         setTipoTransferencia('');
+        setSetor('');
         setShowSuccessScreen(false);
     }
 
@@ -75,6 +82,7 @@ export function Transferencia() {
         doc.text(`Quantidade UMR: ${quantidadeUMR}`, 20, 70);
         doc.text(`Tipo de Material: ${tipoMaterial}`, 20, 80);
         doc.text(`Tipo de Transferência: ${tipoTransferencia}`, 20, 90);
+        doc.text(`Setor: ${setor}`, 20, 100);
 
         doc.setFontSize(10);
         doc.text('Relatório gerado automaticamente pelo sistema.', 20, 280);
@@ -133,6 +141,22 @@ export function Transferencia() {
                         </option>
                         <option value="Interna">Interna</option>
                         <option value="Externa">Externa</option>
+                    </select>
+                    
+                    <label htmlFor="setor">Setor:</label>
+                    <select
+                        id='setor'
+                        className="input-setor"
+                        value={setor}
+                        onChange={(e) => setSetor(e.target.value)}
+                        disabled={tipoTransferencia !== 'Interna'}
+                    >
+                        <option value="" disabled>
+                            Selecione uma opção
+                        </option>
+                        <option value="a1">A1</option>
+                        <option value="a2">A2</option>
+                        <option value="a3">A3</option>
                     </select>
 
                     <button className="botao-confirmar" onClick={handleTransferir} disabled={isLoading}>
