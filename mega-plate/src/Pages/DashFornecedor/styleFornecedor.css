@@ -134,10 +134,12 @@ h2 {
 
 #Kpi {
     display: flex;
-    padding: 5vh;
-    justify-content: center;
+    flex-wrap: wrap;
+    padding: 20px;
+    justify-content: space-evenly;
+    align-items: center;
     width: 100%;
-    gap: 30px;
+    gap: 20px;
 }
 
 #chart-aviso3{
@@ -171,7 +173,6 @@ h2 {
     transition: transform 0.3s ease;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     position: relative;
-    margin-left: 25px
 }
 
 #chart-aviso1{
@@ -256,10 +257,6 @@ h2 {
     width: 100%;
 }
 
-
-
-
-
 #titulo {
     text-align: center;
     margin-bottom: 10px;
@@ -320,7 +317,7 @@ h2 {
     padding: 25px;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    height: 100vh;
+    height: 105vh;
 }
 
 .supplier-table-container h3 {

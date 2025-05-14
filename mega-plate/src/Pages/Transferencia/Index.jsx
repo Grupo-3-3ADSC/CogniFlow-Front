@@ -64,22 +64,57 @@ export function Transferencia() {
     function gerarPDF() {
         const doc = new jsPDF();
 
+        // Cabeçalho
         doc.setFontSize(18);
-        doc.text('Relatório de Transferência de Material', 20, 20);
-
+        doc.setFont("helvetica", "bold");
+        doc.text('Mega Plate - Supremacia em Corte', 20, 20);
         doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.text('Relatório de Transferência de Material', 20, 30);
+
+        // Linha divisória
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.5);
+        doc.line(20, 35, 190, 35);
+
+        // Informações gerais
         const dataAtual = new Date().toLocaleString(); // Data e hora atual
-        doc.text(`Data e Hora: ${dataAtual}`, 20, 40);
+        doc.setFontSize(10);
+        doc.text(`Data e Hora: ${dataAtual}`, 20, 45);
         doc.text(`Usuário: Nome do Usuário`, 20, 50); // Substitua pelo nome do usuário, se disponível
 
-        doc.text(`Quantidade UMR: ${quantidadeUMR}`, 20, 70);
-        doc.text(`Tipo de Material: ${tipoMaterial}`, 20, 80);
-        doc.text(`Tipo de Transferência: ${tipoTransferencia}`, 20, 90);
+        // Detalhes da transferência
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text('Detalhes da Transferência:', 20, 65);
 
+        doc.setFont("helvetica", "normal");
+        doc.text(`Quantidade UMR: ${quantidadeUMR}`, 20, 75);
+        doc.text(`Tipo de Material: ${tipoMaterial}`, 20, 85);
+        doc.text(`Tipo de Transferência: ${tipoTransferencia}`, 20, 95);
+
+        // Tabela de resumo
+        doc.setFont("helvetica", "bold");
+        doc.text('Resumo:', 20, 115);
+        doc.setFont("helvetica", "normal");
+        doc.text('---------------------------------------------', 20, 120);
+        doc.text('Descrição                  Valor', 20, 130);
+        doc.text('---------------------------------------------', 20, 135);
+        doc.text('Material Transferido       R$ 500,00', 20, 145);
+        doc.text('Taxa de Transferência      R$ 50,00', 20, 155);
+        doc.text('---------------------------------------------', 20, 165);
+        doc.text('Total:                     R$ 550,00', 20, 175);
+
+        // Linha divisória
+        doc.line(20, 185, 190, 185);
+
+        // Rodapé
         doc.setFontSize(10);
+        doc.setFont("helvetica", "italic");
         doc.text('Relatório gerado automaticamente pelo sistema.', 20, 280);
         doc.text('Mega Plate - Supremacia em Corte', 20, 290);
 
+        // Salvar o PDF
         doc.save('relatorio-transferencia.pdf');
     }
 
@@ -136,8 +171,8 @@ export function Transferencia() {
                     </select>
 
                     <button className="botao-confirmar" onClick={handleTransferir} disabled={isLoading}>
-                         {isLoading ? 'Transferindo...' : 'TRANSFERIR'}
-                     </button>
+                        {isLoading ? 'Transferindo...' : 'TRANSFERIR'}
+                    </button>
 
                 </div>
 
