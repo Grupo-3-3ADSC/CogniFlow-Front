@@ -3,7 +3,7 @@ import logo from '../../assets/logo-megaplate.png';
 import olho from '../../assets/olho.png';
 import loading from '../../assets/loading.gif';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../../provider/api.js';
 
 export function Login() {
@@ -23,6 +23,10 @@ export function Login() {
             navigate('/verificacao')
         }
 
+        useEffect(() => {
+            sessionStorage.clear();
+        }, [])
+
 
         const login = () =>{
             if(!formData.email || !formData.password) {
@@ -36,8 +40,9 @@ export function Login() {
               })
               .then((response) =>{
                 if (response.status === 200 && response.data?.token) {
+                    console.log(response.data);
                     sessionStorage.setItem('authToken', response.data.token);
-                    sessionStorage.setItem('usuario', response.data.nome);
+                    sessionStorage.setItem('usuario', response.data.userId);
                 }          
                 setFormData({email:'', password: ''});
                 divLoading.style.display = 'block';

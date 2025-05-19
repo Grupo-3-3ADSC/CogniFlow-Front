@@ -28,6 +28,12 @@ const NavBar = ({ userName = "Usuário" }) => {
 
         <nav className="menu-items">
           <ul className="menu-list">
+
+          <li title="Perfil" onClick={() => navigate('/Perfil')}>
+              <img className="icons-menu" src={user} alt="Perfil de usuário" />
+              <span>Perfil</span>
+            </li>
+
             <li title="Transferência" onClick={() => navigate('/transferencia')}>
               <img className="icons-menu" src={iconTransferencia} alt="Transferência" />
               <span>Transferência</span>
@@ -78,11 +84,8 @@ const NavBar = ({ userName = "Usuário" }) => {
 
             {showFormSubmenu && (
               <ul className="submenu-list">
-                <li onClick={() => navigate('/estoque')}>Cadastrar Estoque</li>
-                <li onClick={() => navigate('/setor')}>Cadastrar de Setor</li>
                 <li onClick={() => navigate('/ordemDeCompra')}>Ordem de Compra</li>
                 <li onClick={() => navigate('/cadastro')}>Cadastrar Usuários</li>
-                <li onClick={() => navigate ('/CadastroMaterial')}>Cadastro de Material</li>
               </ul>
             )}
           </ul>
@@ -96,7 +99,8 @@ const NavBar = ({ userName = "Usuário" }) => {
 
       <div className="perfil">
         <span>Olá, {userName}!</span>
-        <img className="userPhoto" src={user} alt="Usuário" />
+        <img className="userPhoto" src={user} alt="Usuário"
+        onClick={() => navigate('/Perfil')} />
       </div>
     </header>
   );

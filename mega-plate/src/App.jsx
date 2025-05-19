@@ -9,6 +9,7 @@ import Transferencia from './Pages/Transferencia/Index';
 import Redefinicao from './Pages/Redefinicao/Index';
 import DashMaterial from './Pages/DashMaterial/AppMaterial'
 import DashFornecedor from './Pages/DashFornecedor/App'
+import Perfil from './Pages/Perfil/Index';
 
 
 
@@ -21,7 +22,7 @@ function App() {
         <Route path='/' element={<Login />} />
         <Route path='/Cadastro' element={<Cadastro />} />
         <Route path='/OrdemDeCompra' element={<OrdemDeCompra/>} />
-   
+        <Route path='/Perfil' element={<Perfil/>} />
         <Route path='/Setor' element={<Setor />} />
         <Route path='/Verificacao' element={<Verificacao />} />
         <Route path='/Transferencia' element={<Transferencia />} />
