@@ -17,6 +17,14 @@
     margin-left: var(--dashboard-margin);
     margin-right: var(--dashboard-margin);
     justify-content: space-between;
+    margin-top: 15vh;
+}
+
+#textFiltro h5 {
+    margin: 0;
+    font-size: 12px;
+    margin-top: -2.5vh;
+
 }
 
  #select-Filtro-Estoque {

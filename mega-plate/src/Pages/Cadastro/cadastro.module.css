@@ -159,7 +159,7 @@
   font-size: 12px;
   background-color: whitesmoke;
      text-decoration: none !important;
-     color: initial !important;
+     /* color: initial !important; */
 }
 
 #buttonCadastrar {
