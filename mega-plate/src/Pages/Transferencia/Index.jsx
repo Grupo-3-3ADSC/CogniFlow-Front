@@ -6,6 +6,7 @@ import jsPDF from 'jspdf';
 
 // Importando o componente NavBar reutilizável
 import NavBar from '../../components/NavBar';
+import { toastError, toastSucess } from '../../components/toastify/ToastifyService';
 
 export function Transferencia() {
     const navigate = useNavigate();
@@ -29,32 +30,33 @@ export function Transferencia() {
 
     function handleTransferir() {
         if (quantidadeUMR.trim() === '' || tipoMaterial.trim() === '' || tipoTransferencia.trim() === '' || setor.trim() === '') {
-            alert('Por favor, preencha todos os campos.');
+            toastError('Por favor, preencha todos os campos.');
             return;
         }
         if (isNaN(quantidadeUMR)) {
-            alert('A quantidade UMR deve ser um número.');
+            toastError('A quantidade UMR deve ser um número.');
             return;
         }
         if (quantidadeUMR <= 0) {
-            alert('A quantidade UMR deve ser maior que zero.');
+            toastError('A quantidade UMR deve ser maior que zero.');
             return;
         }
         if (tipoMaterial === 'Selecione uma opção') {
-            alert('Por favor, selecione um tipo de material.');
+            toastError('Por favor, selecione um tipo de material.');
             return;
         }
         if (tipoTransferencia === 'Selecione uma opção') {
-            alert('Por favor, selecione um tipo de transferência.');
+            toastError('Por favor, selecione um tipo de transferência.');
             return;
         }
         if (setor === 'Selecione uma opção') {
-            alert('Por favor, selecione um setor.');
+            toastError('Por favor, selecione um setor.');
             return;
         }
         setIsLoading(true);
 
         setTimeout(() => {
+            toastSucess('Sucesso!')
             setIsLoading(false);
             setShowSuccessScreen(true);
         }, 2000);

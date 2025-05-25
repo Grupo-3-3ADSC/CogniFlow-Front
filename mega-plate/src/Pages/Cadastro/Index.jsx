@@ -4,12 +4,15 @@ import { useState } from 'react';
 import { api } from '../../provider/api.js';
 import NavBar from '../../components/NavBar'; // Importando a NavBar
 import { useNavigate } from 'react-router-dom';
-
+import { toastSucess, toastError } from '../../components/toastify/ToastifyService.jsx';
 
 export function Cadastro() {
 
   const navigate = useNavigate();
 
+  // let mensagem = '';
+
+  
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -23,7 +26,7 @@ export function Cadastro() {
 
   const cadastrar = () => {
     if (!formData.nome || !formData.email || !formData.cargo || !formData.password) {
-      alert('Por favor, preencha todos os campos');
+      toastError('Por favor, preencha todos os campos');
       return;
     }
 
@@ -32,7 +35,7 @@ export function Cadastro() {
     // console.log('Token:', token); // verificação se o token esta sendo pego corretamente
 
     if (!token) {
-      alert('Token de autenticação não encontrado. Faça login novamente.');
+      toastError('Token de autenticação não encontrado. Faça login novamente.');
       navigate('/login')
       return;
     }
@@ -59,7 +62,7 @@ export function Cadastro() {
 
       .then((response) => {
         console.log('Resposta do servidor:', response.data);
-        alert('Usuário cadastrado com sucesso!');
+        toastSucess('Usuário cadastrado com sucesso!');
         setFormData({ nome: '', email: '', cargo: '', password: '' });
       })
       .catch((error) => {
@@ -70,16 +73,16 @@ export function Cadastro() {
 
           if (error.response.status === 400) {
 
-            alert('Dados inválidos: ' + (error.response.data.message || 'Verifique as informações'));
+            toastError('Dados inválidos: ' + (error.response.data.message || 'Verifique as informações'));
 
           } else if (error.response.status === 401) {
-            alert('Sessão expirada. Por favor, faça login novamente.');
+            toastError('Sessão expirada. Por favor, faça login novamente.');
             navigate('/login');
           } else {
-            alert('Erro ao cadastrar usuário: ' + (error.response.data?.message || 'Tente novamente mais tarde.'));
+            toastError('Erro ao cadastrar usuário: ' + (error.response.data?.message || 'Tente novamente mais tarde.'));
           }
         } else {
-          alert('Erro de conexão. Verifique sua internet e tente novamente.');
+          toastError('Erro de conexão. Verifique sua internet e tente novamente.');
         }
       });
   };

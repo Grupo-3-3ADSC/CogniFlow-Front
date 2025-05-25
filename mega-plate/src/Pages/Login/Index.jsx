@@ -5,6 +5,7 @@ import loading from '../../assets/loading.gif';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { api } from '../../provider/api.js';
+import { toastError,toastSucess } from '../../components/toastify/ToastifyService.jsx';
 
 export function Login() {
     const navigate = useNavigate();
@@ -30,7 +31,7 @@ export function Login() {
 
         const login = () =>{
             if(!formData.email || !formData.password) {
-                alert('Por favor, preencha os campos');
+                toastError('Por favor, preencha os campos');
                 return;
               }
 
@@ -43,15 +44,18 @@ export function Login() {
                     console.log(response.data);
                     sessionStorage.setItem('authToken', response.data.token);
                     sessionStorage.setItem('usuario', response.data.userId);
+                    sessionStorage.setItem('cargoUsuario', response.data.cargo.id);
+                    
                 }          
                 setFormData({email:'', password: ''});
                 divLoading.style.display = 'block';
                 setTimeout(function(){
+                    toastSucess('Sucesso! Seja Bem-vindo!')
                 navigate('/Material')},1500);
               })
               .catch((error)=>{
                 console.error('Erro no login do usuário: ', error);
-                alert('Não foi possível autenticar, email ou password inválidos.')
+                toastError('Não foi possível autenticar, email ou password inválidos.')
               });
               
         }

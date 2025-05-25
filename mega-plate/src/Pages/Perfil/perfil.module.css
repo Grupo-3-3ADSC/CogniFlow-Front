@@ -35,6 +35,7 @@ position: relative;
     object-fit: cover;
      border-radius: 50%;
   display: block;
+  opacity: 0 ;
 }
 
 .img-menor{

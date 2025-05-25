@@ -2,6 +2,7 @@ import styles from './verificacao.module.css';
 import logo from '../../assets/logo-megaplate.png';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toastError } from '../../components/toastify/ToastifyService';
 
 export function Verificacao() {
     const navigate = useNavigate();
@@ -18,7 +19,7 @@ export function Verificacao() {
     const handleSendEmail = () => {
         const email = document.querySelector('.email-input').value;
         if (!email) {
-            alert('Por favor, insira um e-mail válido.');
+            toastError('Por favor, insira um e-mail válido.');
             return;
         }
         setShowEmailScreen(false);
@@ -30,7 +31,7 @@ export function Verificacao() {
         if (isValidCode) {
             navigate('/Redefinicao');
         } else {
-            alert('Código inválido. Tente novamente.');
+            toastError('Código inválido. Tente novamente.');
         }
     };
 
