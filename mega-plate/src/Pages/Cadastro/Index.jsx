@@ -65,11 +65,11 @@ export function Cadastro() {
       .then((response) => {
         console.log('Resposta do servidor:', response.data);
         Swal.fire({
-          title: "Fornecedor cadastrado com sucesso!",
+          title: "Usuário cadastrado com sucesso!",
           icon: "success",
           confirmButtonColor: "#3085d6",
         });
-        setFormData({ nome: '', email: '', cargo: '', password: '' });
+        setFormData({ nome: '', email: '', password: '' });
       })
       .catch((error) => {
         console.error('Erro completo:', error);
