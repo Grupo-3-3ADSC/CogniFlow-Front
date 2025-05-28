@@ -27,7 +27,7 @@ export function CadastroFornecedor() {
           confirmButtonColor: "#3085d6",
         });
         
-    setFormData({ material: '', tamanhoReal: '', tamanhoTeorico: '', setor: '' });
+    setFormData({ cnpj: '', nome_fantasia: '', razao_social: '' });
   };
 
   return (
