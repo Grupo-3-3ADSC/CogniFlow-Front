@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../provider/api';
 import { jsPDF } from 'jspdf';
 import NavBar from '../../components/NavBar';
+import { toastError, toastSucess } from '../../components/toastify/ToastifyService';
 
 export function OrdemDeCompra() {
 
@@ -26,10 +27,9 @@ export function OrdemDeCompra() {
     function getMateriaPrima() {
         api.get("/materiais").then((resposta) => {
             setListaMateriais(resposta.data)
-            }).catch((erro) =>
-                {
-                    console.error("Erro ao buscar usuários", erro);
-                    });
+        }).catch((erro) => {
+            console.error("Erro ao buscar usuários", erro);
+        });
     }
 
     useEffect(() => {
@@ -41,31 +41,31 @@ export function OrdemDeCompra() {
     const etapas = {
         1: {
             inputs: [
-                { id: 'input1', titulo: 'Fornecedor', tipo: 'select', options: listaFornecedores,  optionLabel: 'nomeFantasia' },
-                { id: 'input2', titulo: 'Prazo de entrega', tipo: 'text' },
+                { id: 'input1', titulo: 'Fornecedor', tipo: 'select', options: listaFornecedores, optionLabel: 'nomeFantasia' },
+                { id: 'input2', titulo: 'Prazo de entrega', tipo: 'text', placeholder: '30 dias'},
                 { id: 'input3', titulo: 'I.E', tipo: 'text' },
-                { id: 'input4', titulo: 'Cond. Pagamento', tipo: 'text' }
+                { id: 'input4', titulo: 'Cond. Pagamento', tipo: 'text',  }
             ],
             imagem: progressoImg
         },
         2: {
             inputs: [
-                { id: 'input1', titulo: 'Valor por Kg', tipo: 'text' },
+                { id: 'input1', titulo: 'Valor por Kg', tipo: 'number' },
                 { id: 'input2', titulo: 'Rastreabilidade', tipo: 'text' },
                 { id: 'input3', titulo: 'Material', tipo: 'select', options: listaMateriais, optionLabel: 'tipoMaterial' },
-                { id: 'input4', titulo: 'Valor por peça', tipo: 'text' },
-                { id: 'input5', titulo: 'Descrição do material', tipo: 'text'}
+                { id: 'input4', titulo: 'Valor por peça', tipo: 'number' },
+                { id: 'input5', titulo: 'Descrição do material', tipo: 'text' }
 
             ],
             imagem: progressoConcluido
         },
         3: {
             inputs: [
-                { id: 'input1', titulo: 'Valor Unitário', tipo: 'text' , },
+                { id: 'input1', titulo: 'Valor Unitário', tipo: 'text', },
                 { id: 'input2', titulo: 'IPI', tipo: 'text' },
-                {id: 'input3', titulo: 'Total', tipo: 'text', disabled: true},
-                { id: 'input4', titulo: 'Quantidade', tipo: 'text'}
-                
+                { id: 'input3', titulo: 'Total', tipo: 'text', disabled: true },
+                { id: 'input4', titulo: 'Quantidade', tipo: 'text' }
+
             ],
             imagem: progresso2Concluido
         },
@@ -82,18 +82,18 @@ export function OrdemDeCompra() {
     const [nomeBotao, setNomeBotao] = useState('PRÓXIMO');
     const [valoresInput, setValoresInput] = useState({});
 
-     useEffect(() => {
+    useEffect(() => {
         const valorUnitario = parseFloat((valoresInput['Valor Unitário'] || '').replace(',', '.')) || 0;
-        const valorPorKg = parseFloat((valoresInput['Valor por Kg'] || '').replace(',','.')) || 0;
+        const valorPorKg = parseFloat((valoresInput['Valor por Kg'] || '').replace(',', '.')) || 0;
 
         const total = valorUnitario * valorPorKg;
 
-        
+
         setValoresInput((resultado) => ({
             ...resultado,
             Total: total.toFixed(2),
         }));
-       
+
     }, [valoresInput['Valor Unitário'], valoresInput['Valor por Kg']]);
 
     useEffect(() => {
@@ -106,7 +106,43 @@ export function OrdemDeCompra() {
     }
         , [progresso]);
 
+    function validarInputsVazias() {
+        const inputs = etapas[progresso].inputs;
+        for (let input of inputs) {
+            if (!input.disabled && (!valoresInput[input.titulo] || valoresInput[input.titulo].trim() === "")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function validarInputsEspeciais() {
+        const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
+        const inputs = etapas[progresso].inputs;
+        for (let input of inputs) {
+            const valor = valoresInput[input.titulo];
+            if (typeof valor === 'string' && sqlPattern.test(valor)) {
+                return false;
+            }
+            if (typeof valor === 'string' && /<script.*?>.*?<\/script>/gi.test(valor)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     function mudarProgresso() {
+
+        if (!validarInputsEspeciais()) {
+            toastError('Comando não permitido em uma das inputs');
+            return;
+        }
+
+        if (validarInputsVazias()) {
+            toastError('Por favor preencher todos os campos dessa seção!')
+            return;
+        }
+
         const novoProgresso = progresso + 1;
         if (etapas[novoProgresso]) {
             setProgresso(novoProgresso);
@@ -118,6 +154,9 @@ export function OrdemDeCompra() {
             return;
         }
 
+        if (progresso == 3){
+            toastSucess('Ordem de compra finalizada!');
+        }
         setNomeBotao('PRÓXIMO');
     }
 
@@ -137,7 +176,7 @@ export function OrdemDeCompra() {
     }
 
     function irParaDashboard() {
-        navigate('/Material') 
+        navigate('/Material')
     }
 
     function baixarPDF() {
@@ -182,27 +221,28 @@ export function OrdemDeCompra() {
                             <div key={input.id} className={style.inputGroup}>
                                 <p>{input.titulo}</p>
                                 {input.tipo === 'select' ? (
-    <select
-        value={valoresInput[input.titulo] || ''}
-        onChange={(e) => setValoresInput({ ...valoresInput, [input.titulo]: e.target.value })}>
-        <option value="">Selecione</option>
-        {input.options.map((opt, i) => (
-            <option key={i} value={opt[input.optionLabel]}>{opt[input.optionLabel]}</option>
-        ))}
-    </select>
-) : (
-    <input type="text"
-        value={valoresInput[input.titulo] || ''}
-        onChange={(e) => setValoresInput({ ...valoresInput, [input.titulo]: e.target.value })} 
-        disabled={input.disabled}   
-    />
-)}
+                                    <select
+                                        value={valoresInput[input.titulo] || ''}
+                                        onChange={(e) => setValoresInput({ ...valoresInput, [input.titulo]: e.target.value })}>
+                                        <option value="">Selecione</option>
+                                        <option value="1">1</option>
+                                        {input.options.map((opt, i) => (
+                                            <option key={i} value={opt[input.optionLabel]}>{opt[input.optionLabel]}</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <input type="text"
+                                        value={valoresInput[input.titulo] || ''}
+                                        onChange={(e) => setValoresInput({ ...valoresInput, [input.titulo]: e.target.value })}
+                                        disabled={input.disabled}
+                                    />
+                                )}
 
                             </div>
-                            
+
                         ))}
 
-                        
+
                     </div>
 
                     <div className={style.botaoPdf}>
