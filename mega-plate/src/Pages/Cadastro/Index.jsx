@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { api } from '../../provider/api.js';
 import NavBar from '../../components/NavBar'; // Importando a NavBar
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2'
 
 
 export function Cadastro() {
@@ -23,7 +24,11 @@ export function Cadastro() {
 
   const cadastrar = () => {
     if (!formData.nome || !formData.email || !formData.cargo || !formData.password) {
-      alert('Por favor, preencha todos os campos');
+      Swal.fire({
+        title: "Preencha as informações",
+        icon: "info",
+        confirmButtonColor: "#3085d6",
+      });
       return;
     }
 
@@ -59,7 +64,11 @@ export function Cadastro() {
 
       .then((response) => {
         console.log('Resposta do servidor:', response.data);
-        alert('Usuário cadastrado com sucesso!');
+        Swal.fire({
+          title: "Fornecedor cadastrado com sucesso!",
+          icon: "success",
+          confirmButtonColor: "#3085d6",
+        });
         setFormData({ nome: '', email: '', cargo: '', password: '' });
       })
       .catch((error) => {

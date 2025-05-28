@@ -86,6 +86,7 @@ const NavBar = ({ userName = "Usuário" }) => {
               <ul className="submenu-list">
                 <li onClick={() => navigate('/ordemDeCompra')}>Ordem de Compra</li>
                 <li onClick={() => navigate('/cadastro')}>Cadastrar Usuários</li>
+                <li onClick={() => navigate ('/CadastroFornecedor')}>Cadastro de Fornecedor</li>
               </ul>
             )}
           </ul>

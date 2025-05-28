@@ -1,0 +1,269 @@
+/* Base styles */
+.material {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    padding: 4rem 0 4rem 0rem;
+    z-index: 1;
+    margin-top: 2.5vh;
+}
+
+#textMaterial {
+    font-size: 12px;
+}
+
+.navbar {
+    background-color: #05314C;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 10;
+    width: 100%;
+}
+
+.navbar-left {
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.navbar-right img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.aside-material {
+    border-radius: 25px 0px 0 25px;
+    padding: 0 3rem;
+    background-color: #1D597B;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 12vw;
+    height: 60vh;
+    position: relative;
+    z-index: 1;
+    box-shadow: -10px 0px 20px rgba(0, 0, 0, 0.4);
+}
+
+.aside-material img {
+    width: 100%;
+    max-width: 80px;
+}
+
+.form-content-material {
+    background-color: #05314C;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 350px;
+    height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0px 25px 25px 0px;
+    padding: 2rem;
+    border: 3px solid #ccc;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4);
+}
+
+.tab-container {
+    display: flex;
+    gap: 5px;
+    justify-content: flex-start;
+    padding-left: 20%;
+    padding-top: 2rem;
+    width: 80%;
+    margin-top: 10vh;
+    position: relative;
+    z-index: 2;
+}
+
+.tabActiveMaterial {
+    display: flex;
+    justify-content: center;
+    padding: 10px 30px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    background-color: #1F5F7C;
+    color: white;
+    font-weight: bold;
+    font-size: 20px;
+    transition: background-color 0.3s;
+    margin-top: -20px;
+    position: relative;
+    z-index: 3;
+}
+
+.tabActiveMaterial {
+    background-color: #14425C;
+    border: 3px solid #ccc;
+}
+
+.input-group {
+    text-align: left;
+    position: relative;
+    width: 100%;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px 40px 10px 10px;
+    border-radius: 15px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-size: 12px;
+    text-decoration: none !important;
+  color: initial !important;
+  background: whitesmoke;
+}
+
+#buttonCadastrar {
+    background-color: #1D597B;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    color: white;
+    border-radius: 20px;
+    display: block;
+    text-align: center;
+    font-weight: bold;
+    border: none;
+    outline: none;
+}
+
+#buttonCadastrar:hover {
+    background-color: #1a4e6d;
+    cursor: pointer;
+}
+
+.material a {
+    color: rgb(218, 218, 218);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.material a span {
+    color: white;
+    text-decoration: underline;
+}
+
+.bloco-fundo-material {
+    background-color: #05314C;
+    width: 75vw;
+    height: 78vh;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    border-radius: 20px;
+}
+
+.aside-material,
+.form-content-material {
+    z-index: 1;
+    position: relative;
+}
+
+/* Media queries para responsividade */
+
+/* Tablets grandes e telas médias (até 1200px) */
+@media screen and (max-width: 1200px) {
+    .bloco-fundo-material {
+        width: 85vw;
+    }
+
+    .aside-material {
+        width: 15vw;
+    }
+
+    .form-content-material {
+        max-width: 320px;
+    }
+
+    .tab-container {
+        padding-left: 12%;
+    }
+}
+
+/* Tablets e telas menores (até 992px) */
+@media screen and (max-width: 992px) {
+    .material {
+        padding: 3rem 0;
+    }
+
+    .bloco-fundo-material {
+        width: 90vw;
+        height: 75vh;
+    }
+
+    .aside-material {
+        width: 18vw;
+        padding: 0 2rem;
+    }
+
+    .form-content-material {
+        max-width: 300px;
+        padding: 1.5rem;
+    }
+
+    .tab-container {
+        padding-left: 10%;
+        padding-top: 1.5rem;
+        margin-top: 8vh;
+    }
+}
+
+/* Telas menores (até 768px) */
+@media screen and (max-width: 768px) {
+    .material {
+        flex-direction: column;
+        gap: 0;
+        padding: 2rem 0;
+        align-items: center;
+    }
+
+    .bloco-fundo-material {
+        width: 95vw;
+        height: auto;
+        min-height: 95vh;
+        top: 0;
+        transform: translate(-50%, 0);
+        margin-top: 80px;
+        border-radius: 15px;
+    }
+
+    .aside-material {
+        width: 90vw;
+        max-width: 400px;
+        height: auto;
+        padding: 1.5rem;
+        border-radius: 25px 25px 0 0;
+        box-shadow: 0px -10px 20px rgba(0, 0, 0, 0.4);
+        z-index: 1;
+    }
+
+    .form-content-material {
+        max-width: 90vw;
+        width: 400px;
+        height: auto;
+        min-height: 50vh;
+        border-radius: 0 0 25px 25px;
+        padding: 1.5rem;
+    }
+
+    .tab-container {
+        width: 90%;
+        padding-left: 5%;
+        margin-top: 2vh;
+        justify-content: center;
+    }
+}

@@ -14,6 +14,7 @@ import Perfil from './Pages/Perfil/Index';
 
 
 import {Route, BrowserRouter as Router, Routes} from 'react-router-dom';
+import CadastroFornecedor from './Pages/CadastroFornecedor/Fornecedor';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route path='/Transferencia' element={<Transferencia />} />
         <Route path='/Redefinicao' element={<Redefinicao />} />
         <Route path='/Material' element={<DashMaterial />} />
+        <Route path='/CadastroFornecedor' element={<CadastroFornecedor />} />
         <Route path='/Fornecedor' element={<DashFornecedor />} />
         
       </Routes>
