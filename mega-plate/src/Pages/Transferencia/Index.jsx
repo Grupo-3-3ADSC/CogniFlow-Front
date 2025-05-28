@@ -116,7 +116,7 @@ export function Transferencia() {
 
         // Salvar o PDF
         doc.save('relatorio-transferencia.pdf');
-    }
+    }    
 
     return (
         <>
