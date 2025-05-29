@@ -2,6 +2,7 @@ import express from 'express';
 import nodemailer from 'nodemailer';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import 'dotenv/config';
 
 const app = express();
 app.use(cors());
@@ -25,7 +26,7 @@ app.post('/enviar-codigo', async (req, res) => {
         service: 'gmail',
         auth: {
             user: 'cogniflow51@gmail.com',
-            pass: 'kvhn gsox ubtx wreb'
+            pass: process.env.GMAIL_PASS
         }
     });
 
