@@ -55,6 +55,7 @@ const NavBar = ({ userName = "Usuário" }) => {
               <ul className="submenu-list">
                 <li onClick={() => navigate('/Fornecedor')}>Dashboard Fornecedor</li>
                 <li onClick={() => navigate('/Material')}>Dashboard Material</li>
+                <li onClick={() => navigate('/DashEstoque')}>Dashboard Estoque</li>
               </ul>
             )}
 

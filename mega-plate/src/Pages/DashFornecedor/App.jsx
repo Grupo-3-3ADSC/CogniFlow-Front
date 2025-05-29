@@ -22,7 +22,7 @@ const popupStyles = `
 }
 
 .popup-content {
-  background: linear-gradient(135deg, #05314C 0%, #4586AB 100%);
+  background: linear-gradient(135deg, #05314C 0%,rgb(25, 81, 114) 100%);
   border-radius: 20px;
   width: 90%;
   max-width: 800px;
@@ -167,7 +167,7 @@ const popupStyles = `
 }
 
 .financial-summary {
-  background: linear-gradient(135deg, rgba(126, 185, 217, 0.2) 0%, rgba(69, 134, 171, 0.1) 100%);
+  background: linear-gradient(135deg, #05314C; 0%, rgba(69, 134, 171, 0.1) 100%);
   padding: 20px;
   border-radius: 16px;
   border: 2px solid rgba(126, 185, 217, 0.3);
@@ -192,7 +192,7 @@ const popupStyles = `
 .financial-value {
   font-size: 1.6rem;
   font-weight: 700;
-  color: #05314C;
+  color:rgb(255, 255, 255);
   text-shadow: 0 2px 8px rgba(126, 185, 217, 0.5);
   padding: 8px 16px;
   background: rgba(255, 255, 255, 0.1);
@@ -572,7 +572,8 @@ function App() {
                     hAxis: { textStyle: { color: 'white' } },
                     vAxis: { textStyle: { color: 'white' } },
                     colors: ['#4586AB', '#05314C'],
-                    width: '100%'
+                    width: '100%',
+                    height: '40vh'
                   }}
                   width="100%"
                   height="100%"

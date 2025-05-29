@@ -446,6 +446,7 @@ function App() {
                 <div id="chart-produtos" className="chart">
                   <div id="titulo">
                     <h4 style={{ 
+                      width: '100%',
                   color: 'white', 
                   fontSize: '14px', 
                   fontWeight: '700',

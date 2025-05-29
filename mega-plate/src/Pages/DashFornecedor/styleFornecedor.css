@@ -56,13 +56,14 @@ input[type="date"] {
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
     padding: 8px 12px;
-    font-size: 13px;
+    font-size: 8px;
     font-weight: 500;
     transition: var(--transition);
     backdrop-filter: blur(10px);
     min-width: 140px;
     max-width: 160px;
     color: white;
+    font-family: "Inter", "Poppins", sans-serif;
 }
 
 #select-Filtro-Fornecedor:focus,
@@ -132,7 +133,7 @@ option {
 #textFiltro h5 {
     margin: 0;
     font-size: 12px;
-    margin-top: -2.5vh;
+    margin-top: -1.9vh;
 
 }
 
@@ -197,7 +198,7 @@ option {
     overflow: hidden;
     flex: 1;
     min-width: 180px;
-    max-width: 200px;
+    /* max-width: 200px; */
 }
 
 [id^="chart-aviso-fornecedor"]:hover {
@@ -282,7 +283,7 @@ option {
 }
 
 #bar_chart {
-    height: 320px;
+    height: 45vh;
     width: 100%;
 }
 
