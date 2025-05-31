@@ -28,11 +28,25 @@ export function Login() {
             sessionStorage.clear();
         }, [])
 
+        function validarInputsEspeciais() {
+        const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
+            if (sqlPattern.test(formData.email) || sqlPattern.test(formData.password)) {
+                return false;
+            }
+            if (/<script.*?>.*?<\/script>/gi.test(formData.email) || /<script.*?>.*?<\/script>/gi.test(formData.password)) {
+                return false;
+            }
+        return true;
+    }
 
         const login = () =>{
-            if(!formData.email || !formData.password) {
-                toastError('Por favor, preencha os campos');
-                return;
+
+            if(!validarInputsEspeciais()){
+                return toastError("Por favor não utilizar comandos no login.")
+            }
+
+            if(!formData.email || !formData.password || formData.email.trim() === "" || formData.password.trim() === "") {
+                return toastError('Por favor, preencha os campos');
               }
 
               api.post('/usuarios/login',{
@@ -74,7 +88,8 @@ export function Login() {
                     <input placeholder="marcos@email.com"  
                     type="text"
                     value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    className='input-email' />
                 </div>
 
                 <div className={style['input-group']}>

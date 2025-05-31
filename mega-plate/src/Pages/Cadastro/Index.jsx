@@ -36,7 +36,7 @@ export function Cadastro() {
 
     if (!token) {
       toastError('Token de autenticação não encontrado. Faça login novamente.');
-      navigate('/login')
+      navigate('/')
       return;
     }
 
@@ -49,6 +49,19 @@ export function Cadastro() {
       },
       password: formData.password.trim()
     };
+
+     
+        const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
+            if (sqlPattern.test(userData.email) || 
+            sqlPattern.test(userData.nome) ||
+            sqlPattern.test(userData.password)) {
+                return toastError('Por favor não cadastrar com comandos especiais...');
+            }
+            if (/<script.*?>.*?<\/script>/gi.test(userData.email) ||
+             /<script.*?>.*?<\/script>/gi.test(userData.nome) ||
+            /<script.*?>.*?<\/script>/gi.test(userData.password)) {
+                return toastError('Por favor não cadastrar com comandos especiais...');
+            }  
 
     const endpoint = formData.cargo.id === 2 ? '/usuarios/gestor' : '/usuarios';
 

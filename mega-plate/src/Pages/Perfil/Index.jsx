@@ -59,7 +59,27 @@ function Perfil() {
         if (input) input.disabled = !input.disabled;
     }
 
+    function validarInputsEspeciais() {
+        const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
+            if (sqlPattern.test(formData.email) || sqlPattern.test(formData.nome)) {
+                return false;
+            }
+            if (/<script.*?>.*?<\/script>/gi.test(formData.email) || /<script.*?>.*?<\/script>/gi.test(formData.nome)) {
+                return false;
+            }
+        return true;
+    }
+
     function editarUsuario() {
+        if(!validarInputsEspeciais()){
+            return toastError("Por favor não colocar comandos nos campos.")
+        }
+
+        if (formData.nome.trim() === "" || !formData.nome ||
+            formData.email.trim() === "" || !formData.email) {
+            return toastError("Dados de edição vázio, por favor preencher.")
+        }
+
         const userId = sessionStorage.getItem('usuario');
 
         if (token) {
@@ -71,7 +91,7 @@ function Perfil() {
                 toastSucess('O usuário foi atualizado!')
                 document.querySelectorAll('.inputNome, .inputEmail, .inputCargo')
                     .forEach(input => input.disabled = true);
-                    setBotaoDesabilitado(true);
+                setBotaoDesabilitado(true);
                 setTimeout(function () {
                     window.location.reload();
                 }, 2000)
