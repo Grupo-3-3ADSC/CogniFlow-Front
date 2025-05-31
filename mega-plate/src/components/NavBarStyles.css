@@ -43,7 +43,7 @@
     width: 250px;
 }
 
-.menu-hamburguer {
+.menu-logo{
     width: 60px;
     height: 60px;
     margin: 5px auto;
@@ -162,4 +162,48 @@
     border-radius: 50%;
     object-fit: cover;
     cursor: pointer;
+}
+
+.hamburger-icon {
+  display: none;
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  width: 35px;
+  height: 35px;
+  z-index: 2000;
+  cursor: pointer;
+}
+
+.menu-lateral.open {
+    width: 250px;
+}
+
+.menu-lateral.open .menu-list li span,
+.menu-lateral.open .logout span,
+.menu-lateral.open .submenu-list {
+    display: inline;
+}
+
+@media screen and (max-width: 520px) {
+  .menu-lateral {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    transform: translateX(-100%);
+    z-index: 1500;
+  }
+
+  .menu-lateral.open {
+    transform: translateX(0);
+  }
+
+  .menu-lateral.closed {
+    transform: translateX(-100%);
+  }
+
+  .hamburger-icon {
+    display: block;
+  }
 }

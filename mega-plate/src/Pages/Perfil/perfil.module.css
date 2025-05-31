@@ -9,6 +9,15 @@ position: relative;
   margin-top: 2.5vh;    
 } */
 
+.perfil {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+  min-height: 100vh; /* altura total da viewport */
+  box-sizing: border-box;
+}
+
 .bloco-fundo{
   background-color: #05314C;
   display: flex;
@@ -101,4 +110,38 @@ position: relative;
   right: 0.7em;
   top: 4vh;  
   cursor: pointer;
+}
+
+
+
+@media (max-width: 768px) {
+    .bloco-fundo {
+        flex-direction: column;
+        gap: 2rem;
+        padding: 1.5rem;
+    }
+    
+    .inputs {
+        grid-template-columns: 1fr;
+        width: 100%;
+    }
+}
+
+@media (max-height: 620px) {
+  .bloco-fundo{
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+    .bloco-fundo {
+        padding: 1rem;
+        gap: 1.5rem;
+    }
+    
+    .input-group input,
+    .input-group select {
+        font-size: 12px;
+        padding: 10px 35px 10px 10px;
+    }
 }

@@ -5,7 +5,7 @@ import { IconContext } from "react-icons";
 import circulo from '../../assets/circulo-foto.png';
 import User from '../../assets/logo-megaplate.png'
 import { api } from '../../provider/api.js';
-import { useState, useEffect, use } from "react";
+import { useState, useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import { toastError, toastSucess } from "../../components/toastify/ToastifyService.jsx";
 
@@ -134,8 +134,6 @@ function Perfil() {
                                     className={style['input-icon']} />
                             </IconContext.Provider>
                         </div>
-
-                        {/* CARGO BUGADO, ARRUMAR POSTERIORMENTE*/}
 
                         <div className={style['input-group']}>
                             <p>Cargo</p>
