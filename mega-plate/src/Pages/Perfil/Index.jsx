@@ -5,18 +5,18 @@ import { IconContext } from "react-icons";
 import circulo from '../../assets/circulo-foto.png';
 import User from '../../assets/logo-megaplate.png'
 import { api } from '../../provider/api.js';
-import { useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toastError, toastSucess } from "../../components/toastify/ToastifyService.jsx";
+
 
 function Perfil() {
 
 
     const token = sessionStorage.getItem('authToken');
+    const userId = sessionStorage.getItem('usuario');
 
     function getUsuarios() {
-
-        const userId = sessionStorage.getItem('usuario');
 
         if (token) {
             api.get(`/usuarios/${userId}`, {
@@ -34,18 +34,34 @@ function Perfil() {
         }
     }
 
+    function getFoto() {
+
+        if (token) {
+            api.get(`/usuarios/${userId}/foto`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }).then((resposta) => {
+                setFile(resposta.data);
+            }).catch((err) => {
+                console.log("Erro de resgatar foto:", err);
+            });
+        }
+    }
+
 
     useEffect(() => {
         getUsuarios();
+        getFoto()
     }, [])
 
     const [formData, setFormData] = useState({
         nome: '',
         email: '',
         cargo: {
-            id: ""
+            id: ''
         }
-    })
+    });
 
     const [botaoDesabilitado, setBotaoDesabilitado] = useState(false);
 
@@ -61,17 +77,17 @@ function Perfil() {
 
     function validarInputsEspeciais() {
         const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
-            if (sqlPattern.test(formData.email) || sqlPattern.test(formData.nome)) {
-                return false;
-            }
-            if (/<script.*?>.*?<\/script>/gi.test(formData.email) || /<script.*?>.*?<\/script>/gi.test(formData.nome)) {
-                return false;
-            }
+        if (sqlPattern.test(formData.email) || sqlPattern.test(formData.nome)) {
+            return false;
+        }
+        if (/<script.*?>.*?<\/script>/gi.test(formData.email) || /<script.*?>.*?<\/script>/gi.test(formData.nome)) {
+            return false;
+        }
         return true;
     }
 
     function editarUsuario() {
-        if(!validarInputsEspeciais()){
+        if (!validarInputsEspeciais()) {
             return toastError("Por favor não colocar comandos nos campos.")
         }
 
@@ -79,8 +95,6 @@ function Perfil() {
             formData.email.trim() === "" || !formData.email) {
             return toastError("Dados de edição vázio, por favor preencher.")
         }
-
-        const userId = sessionStorage.getItem('usuario');
 
         if (token) {
             api.patch(`/usuarios/${userId}`, formData, {
@@ -104,14 +118,52 @@ function Perfil() {
         }
     }
 
+    const [file, setFile] = useState(null);
+
+
+    const mudarFoto = (e) => {
+        const arquivoSelecionado = e.target.files[0];
+
+        if (!arquivoSelecionado) return;
+
+        setFile(arquivoSelecionado);
+
+        const formData = new FormData();
+        formData.append('foto', arquivoSelecionado);
+
+        api.post(`/usuarios/${userId}/upload-foto`, formData)
+            .then((response) => {
+                console.log("Sucesso:", response);
+                toastSucess('Foto enviada com sucesso! Atualizando agora.');
+                window.location.reload();
+            })
+            .catch((err) => {
+                console.log('Erro completo:', err);
+                console.log('Response data:', err.response?.data);
+                toastError('Erro ao enviar foto');
+            });
+
+    }
     return (
         <>
             <NavBar />
             <section className={style.perfil}>
                 <main className={style['bloco-fundo']}>
                     <div className={style['imagens']}>
-                        <img src={circulo} alt="" className={style['img-maior']} />
-                        <img src={User} alt="" className={style['img-menor']} />
+                        <input type="file" accept="image/*" onChange={mudarFoto} id="input-image" style={{display: "none"}}/>
+                        <div className={style['imagem-wrapper']}>
+                            <img src={circulo} alt="" className={style['img-maior']} />
+                            <img
+                                src={`http://localhost:8080/usuarios/${userId}/foto`}
+                                alt="imagem de usuário"
+                                className={style['img-menor']}
+                                onError={(e) => {
+                                    e.target.onError = null;
+                                    e.target.src = User;
+                                }}
+                            />
+                        </div>
+                        <label className={style['label-imagem']} htmlFor="input-image">clique aqui para modificar a imagem</label>
                     </div>
                     <div className={style['inputs']}>
                         <div className={style['input-group']}>
@@ -151,7 +203,7 @@ function Perfil() {
                         </div>
                         <button
                             onClick={editarUsuario}
-                            className="btnEditar"
+                            className={style['btnEditar']}
                             disabled={botaoDesabilitado}
                             style={botaoDesabilitado ? { cursor: 'not-allowed' } : {}}
                         >

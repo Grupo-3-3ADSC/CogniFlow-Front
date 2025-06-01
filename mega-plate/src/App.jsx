@@ -2,7 +2,6 @@ import React from 'react';
 import Login from './Pages/Login/Index';
 import Cadastro from './Pages/Cadastro/Index';
 import OrdemDeCompra from './Pages/OrdemDeCompra/Index';
-import Setor from './Pages/Setor/Index';
 import Verificacao from './Pages/Verificacao/Index';
 import Transferencia from './Pages/Transferencia/Index';
 import Redefinicao from './Pages/Redefinicao/Index';
@@ -25,7 +24,6 @@ function App() {
         <Route path='/Cadastro' element={<Cadastro />} />
         <Route path='/OrdemDeCompra' element={<OrdemDeCompra/>} />
         <Route path='/Perfil' element={<Perfil/>} />
-        <Route path='/Setor' element={<Setor />} />
         <Route path='/Verificacao' element={<Verificacao />} />
         <Route path='/Transferencia' element={<Transferencia />} />
         <Route path='/Redefinicao' element={<Redefinicao />} />
