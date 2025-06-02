@@ -12,23 +12,24 @@ import DashFornecedor from './Pages/DashFornecedor/App'
 import Material from './Pages/CadastroMaterial/Material';
 
 
-import {Route, BrowserRouter as Router, Routes} from 'react-router-dom';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path='/Login' element={<Login />} />
+        <Route path='/' element={<Login />} />
         <Route path='/cadastro' element={<Cadastro />} />
-        <Route path='/ordemDeCompra' element={<OrdemDeCompra/>} />
+        <Route path='/ordemDeCompra' element={<OrdemDeCompra />} />
         <Route path='/estoque' element={<Estoque />} />
         <Route path='/setor' element={<Setor />} />
         <Route path='/Verificacao' element={<Verificacao />} />
         <Route path='/Transferencia' element={<Transferencia />} />
-        <Route path='/Redefinicao' element={<Redefinicao />} />
+        <Route path="/Redefinicao/:userId" element={<Redefinicao />} />
         <Route path='/Material' element={<DashMaterial />} />
         <Route path='/Fornecedor' element={<DashFornecedor />} />
         <Route path='/CadastroMaterial' element={<Material />} />
+
       </Routes>
     </Router>
   );

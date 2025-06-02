@@ -13,7 +13,6 @@ export function Verificacao() {
     const [showModal, setShowModal] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
 
-
     const handleChange = (e, index) => {
         const value = e.target.value.replace(/[^0-9]/g, '');
         if (!value) return;
@@ -55,6 +54,24 @@ export function Verificacao() {
         }
     };
 
+    // ✅ FUNÇÃO NOVA - Buscar userId pelo email
+    const buscarUsuarioPorEmail = async (email) => {
+        try {
+            const response = await fetch(`http://localhost:8080/usuarios/buscar-por-email/${encodeURIComponent(email)}`);
+
+            if (!response.ok) {
+                throw new Error('Usuário não encontrado');
+            }
+
+            const usuario = await response.json();
+            return usuario.id;
+        } catch (error) {
+            console.error('Erro ao buscar usuário:', error);
+            throw new Error('Erro ao encontrar usuário');
+        }
+    };
+
+    // ✅ FUNÇÃO MODIFICADA - Agora busca o userId antes de navegar
     const handleVerifyCode = async () => {
         const userCode = code.join('');
         if (userCode.length < 6) {
@@ -62,15 +79,25 @@ export function Verificacao() {
             return;
         }
         setIsVerifying(true);
+
         try {
+            // Primeiro verifica o código
             const response = await fetch('http://localhost:3001/verificar-codigo', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, codigo: userCode })
             });
             const data = await response.json();
+
             if (data.success) {
-                navigate('/Redefinicao');
+                // Se código válido, busca o userId pelo email
+                try {
+                    const userId = await buscarUsuarioPorEmail(email);
+                    // Navega para redefinição com o userId
+                    navigate(`/Redefinicao/${userId}`);
+                } catch (error) {
+                    alert('Erro ao encontrar usuário. Tente novamente.');
+                }
             } else {
                 alert(data.message || 'Código inválido. Tente novamente.');
             }
@@ -97,7 +124,6 @@ export function Verificacao() {
             }
         }
     };
-
 
     return (
         <>
@@ -170,7 +196,9 @@ export function Verificacao() {
                                 />
                             ))}
                         </div>
-                        <button onClick={handleVerifyCode} disabled={isVerifying}>{isVerifying ? 'Verificando...' : 'VERIFICAR'}</button>
+                        <button onClick={handleVerifyCode} disabled={isVerifying}>
+                            {isVerifying ? 'Verificando...' : 'VERIFICAR'}
+                        </button>
                         <img src={logo} alt="" />
                     </div>
                 </div>
