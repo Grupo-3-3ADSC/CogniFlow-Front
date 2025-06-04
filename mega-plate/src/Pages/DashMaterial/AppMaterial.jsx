@@ -4,6 +4,7 @@ import { Chart } from 'react-google-charts';
 import { Search, X, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import '../DashMaterial/styleMaterial.css';
 import NavBar from '../../components/NavBar'; // Importando a NavBar
+import {api} from '../../provider/api';
 
 function App() {
   const [userPhoto, setUserPhoto] = useState('./User.png');
@@ -373,10 +374,25 @@ function App() {
       }
     ]);
   };
+
+  const [materiais, setMateriais] = useState([]);
   
+  function getEstoque(){
+    api.get("/estoque").then((resposta) => {
+      const tiposUnicos = [...new Set(resposta.data.map(item => item.tipoMaterial))];
+      console.log(tiposUnicos);
+      console.log(resposta.data);
+      setMateriais(tiposUnicos);
+    })
+    .catch((err) => {
+      console.log("erro:", err);
+    });
+  }
+
   // Aplicar filtros quando qualquer um deles mudar
   useEffect(() => {
     aplicarFiltros();
+    getEstoque();
   }, [searchTerm, selectedMaterial, selectedTransferType, startDate, endDate]);
 
   return (
@@ -391,9 +407,11 @@ function App() {
             onChange={(e) => setSelectedMaterial(e.target.value)}
           >
             <option id='select-Filtro-Material' value="" color='#FFFFFFF'>Todos Materiais</option>
-            <option value="SAE 1020">SAE 1020</option>
-            <option value="SAE 1045">SAE 1045</option>
-            <option value="HARDOX 450">HARDOX 450</option>
+            {materiais.map((material, index) => (
+      <option key={index} value={material}>
+        {material}
+      </option>
+    ))}
           </select>
 
           <select
@@ -460,8 +478,8 @@ function App() {
                   letterSpacing: '0.5px'
                 }}>Materiais em Estoque</h4>
                   </div>
-                  {produtos.length > 0 ? produtos.map((produto, index) => (
-                    <div id="Produto" key={index}>{produto}</div>
+                  {materiais.length > 0 ? materiais.map((materiais, index) => (
+                    <div id="Produto" key={index}>{materiais}</div>
                   )) : (
                     <div id="Produto">Nenhum material encontrado</div>
                   )}
@@ -479,6 +497,9 @@ function App() {
                     }}
                   >
                     ↓ HARDOX 450 abaixo do mínimo
+                    {
+                      mate
+                    }
                   </div>
                 </div>
 
