@@ -154,7 +154,7 @@ function Perfil() {
                         <div className={style['imagem-wrapper']}>
                             <img src={circulo} alt="" className={style['img-maior']} />
                             <img
-                                src={`${process.env.REACT_APP_API_URL}/usuarios/${userId}/foto`}
+                                src={`${import.meta.env.VITE_API_URL}/usuarios/${userId}/foto`}
                                 alt="imagem de usuário"
                                 className={style['img-menor']}
                                 onError={(e) => {

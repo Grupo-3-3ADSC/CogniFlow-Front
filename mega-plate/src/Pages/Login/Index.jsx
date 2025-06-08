@@ -55,7 +55,6 @@ export function Login() {
               })
               .then((response) =>{
                 if (response.status === 200 && response.data?.token) {
-                    console.log(response.data);
                     sessionStorage.setItem('authToken', response.data.token);
                     sessionStorage.setItem('usuario', response.data.userId);
                     sessionStorage.setItem('cargoUsuario', response.data.cargo.id);

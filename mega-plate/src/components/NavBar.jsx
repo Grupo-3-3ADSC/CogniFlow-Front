@@ -110,7 +110,7 @@ const NavBar = ({ userName = "Usuário" }) => {
       <div className="perfil">
         <span>Olá, {userName}!</span>
         <img
-          src={`${process.env.REACT_APP_API_URL}/usuarios/${userId}/foto`}
+          src={`${import.meta.env.VITE_API_URL}/usuarios/${userId}/foto`}
           alt="imagem de usuário"
           className="icons-menu"
           onError={(e) => {

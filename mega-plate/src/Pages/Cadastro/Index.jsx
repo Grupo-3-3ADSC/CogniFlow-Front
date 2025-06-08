@@ -1,6 +1,6 @@
 import styles from './cadastro.module.css';
 import logo from '../../assets/logo-megaplate.png';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../../provider/api.js';
 import NavBar from '../../components/NavBar'; // Importando a NavBar
 import { useNavigate } from 'react-router-dom';
@@ -24,6 +24,20 @@ export function Cadastro() {
     password: '',
   });
 
+  useEffect(() => {
+      const token = sessionStorage.getItem('authToken');
+      if(!token){
+        navigate('/');
+      }else{
+        const {exp} = jwtDecode(token)
+        if(Date.now() >= exp * 1000) {
+          sessionStorage.removeItem('authToken');
+          navigate('/');
+        }
+      }
+    }, []);
+
+
   const cadastrar = () => {
     if (!formData.nome || !formData.email || !formData.cargo || !formData.password) {
       toastError('Por favor, preencha todos os campos');
@@ -40,6 +54,7 @@ export function Cadastro() {
       return;
     }
 
+    
     const userData = {
       nome: formData.nome.trim(),
       email: formData.email.trim(),
