@@ -17,6 +17,25 @@ const NavBar = ({ userName = "Usuário" }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 520);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const token = sessionStorage.getItem('authToken');
+  const userId = sessionStorage.getItem('usuario');
+
+  function getFoto() {
+
+    if (token) {
+      api.get(`/usuarios/${userId}/foto`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }).then((resposta) => {
+        setFile(resposta.data);
+      }).catch((err) => {
+        console.log("Erro de resgatar foto:", err);
+      });
+    }
+  }
+
+
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth <= 520;
@@ -25,6 +44,7 @@ const NavBar = ({ userName = "Usuário" }) => {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+    getFoto();
   }, []);
 
   const toggleDashSubmenu = () => setShowDashSubmenu(prev => !prev);
@@ -89,7 +109,15 @@ const NavBar = ({ userName = "Usuário" }) => {
 
       <div className="perfil">
         <span>Olá, {userName}!</span>
-        <img className="userPhoto" src={user} alt="Usuário" onClick={() => navigate('/Perfil')} />
+        <img
+          src={`${process.env.REACT_APP_API_URL}/usuarios/${userId}/foto`}
+          alt="imagem de usuário"
+          className="icons-menu"
+          onError={(e) => {
+            e.target.onError = null;
+            e.target.src = user;
+          }}
+        />
       </div>
     </header>
   );
