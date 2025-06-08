@@ -1,11 +1,14 @@
 import styles from './verificacao.module.css';
 import logo from '../../assets/logo-megaplate.png';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toastError } from '../../components/toastify/ToastifyService';
 
+
 export function Verificacao() {
+
     const navigate = useNavigate();
+
     const [showEmailScreen, setShowEmailScreen] = useState(true); // Estado para alternar entre telas
     const inputsRef = Array.from({ length: 6 }, () => useRef(null));
 

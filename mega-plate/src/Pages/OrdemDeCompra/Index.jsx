@@ -11,9 +11,28 @@ import { api } from '../../provider/api';
 import { jsPDF } from 'jspdf';
 import NavBar from '../../components/NavBar';
 import { toastError, toastSucess } from '../../components/toastify/ToastifyService';
+import {jwtDecode} from "jwt-decode";
 
 export function OrdemDeCompra() {
 
+    const navigate = useNavigate();
+    const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
+
+    useEffect(() => {
+      const token = sessionStorage.getItem('authToken');
+      if(!token){
+        navigate('/');
+      }else{
+        const {exp} = jwtDecode(token)
+        if(Date.now() >= exp * 1000) {
+          sessionStorage.removeItem('authToken');
+          navigate('/');
+        }else{
+        setAutenticacaoPassou(true);
+        }
+      }
+    }, []);
+    
     const [listaFornecedores, setListaFornecedores] = useState([]);
     const [listaMateriais, setListaMateriais] = useState([]);
     function getFornecedores() {
@@ -25,7 +44,7 @@ export function OrdemDeCompra() {
     }
 
     function getMateriaPrima() {
-        api.get("/materiais").then((resposta) => {
+        api.get("/estoque").then((resposta) => {
             setListaMateriais(resposta.data)
         }).catch((erro) => {
             console.error("Erro ao buscar usuários", erro);
@@ -36,6 +55,8 @@ export function OrdemDeCompra() {
         getFornecedores();
         getMateriaPrima();
     }, []);
+
+    
 
     {/* EDITE AQUI PARA MODIFICAR AS INPUTS */ }
     const etapas = {
@@ -75,7 +96,6 @@ export function OrdemDeCompra() {
         }
     };
 
-    const navigate = useNavigate();
     const [progresso, setProgresso] = useState(1);
     const [image, setImage] = useState(etapas[1].imagem);
     const [titulo, setTitulo] = useState('ORDEM DE COMPRA');
@@ -105,6 +125,8 @@ export function OrdemDeCompra() {
 
     }
         , [progresso]);
+
+        if(!autenticacaoPassou) return null;
 
     function validarInputsVazias() {
         const inputs = etapas[progresso].inputs;

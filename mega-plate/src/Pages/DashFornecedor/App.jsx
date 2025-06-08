@@ -3,9 +3,32 @@ import { Chart } from 'react-google-charts';
 import { Search } from 'lucide-react';
 import './styleFornecedor.css';
 import NavBar from '../../components/NavBar';
+import { useNavigate } from 'react-router-dom';
+import {jwtDecode} from "jwt-decode";
 
 
 function App() {
+
+  const navigate = useNavigate();
+  const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
+
+    useEffect(() => {
+      const token = sessionStorage.getItem('authToken');
+      if(!token){
+        navigate('/');
+      }else{
+        const {exp} = jwtDecode(token)
+        if(Date.now() >= exp * 1000) {
+          sessionStorage.removeItem('authToken');
+          navigate('/');
+        }else{
+        setAutenticacaoPassou(true);
+        }
+      }
+    }, []);
+
+    
+
   const [userPhoto, setUserPhoto] = useState('/images/User.png');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMaterial, setSelectedMaterial] = useState('');
@@ -112,6 +135,8 @@ function App() {
   useEffect(() => {
     setFilteredSuppliers(supplierData);
   }, []);
+
+if(!autenticacaoPassou) return null;
 
   return (
 

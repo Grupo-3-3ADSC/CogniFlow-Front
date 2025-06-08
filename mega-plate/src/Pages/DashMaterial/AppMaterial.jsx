@@ -3,11 +3,31 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Chart } from 'react-google-charts';
 import '../DashMaterial/styleMaterial.css';
 import NavBar from '../../components/NavBar'; // Importando a NavBar
+import { useNavigate } from 'react-router-dom';
+import {jwtDecode} from "jwt-decode";
 
 function App() {
+
+const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
   const [userPhoto, setUserPhoto] = useState('./User.png');
   const fileInputRef = useRef(null);
-  
+
+  const navigate = useNavigate();
+    useEffect(() => {
+      const token = sessionStorage.getItem('authToken');
+      if(!token){
+        navigate('/');
+      }else{
+        const {exp} = jwtDecode(token)
+        if(Date.now() >= exp * 1000) {
+          sessionStorage.removeItem('authToken');
+          navigate('/');
+        }else{
+        setAutenticacaoPassou(true);
+        }
+      }
+    }, []);
+
   // Verificar se a imagem de fundo foi carregada corretamente
   useEffect(() => {
     const testImage = new Image();
@@ -19,6 +39,8 @@ function App() {
       console.log('Imagem de fundo não encontrada. Verifique o caminho: /assets/background.png');
     };
   }, []);
+
+  if(!autenticacaoPassou) return null;
 
   const handlePhotoChange = (event) => {
     const file = event.target.files[0];

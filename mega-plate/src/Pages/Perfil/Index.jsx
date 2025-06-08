@@ -8,10 +8,30 @@ import { api } from '../../provider/api.js';
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toastError, toastSucess } from "../../components/toastify/ToastifyService.jsx";
+import { jwtDecode } from 'jwt-decode';
 
 
 function Perfil() {
 
+    const navigate = useNavigate();
+    const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
+
+    useEffect(() => {
+      const token = sessionStorage.getItem('authToken');
+      if(!token){
+        navigate('/');
+      }else{
+        const {exp} = jwtDecode(token)
+        if(Date.now() >= exp * 1000) {
+          sessionStorage.removeItem('authToken');
+          navigate('/');
+        }else{
+        setAutenticacaoPassou(true);
+        }
+      }
+    }, []);
+
+    
 
     const token = sessionStorage.getItem('authToken');
     const userId = sessionStorage.getItem('usuario');
@@ -55,6 +75,8 @@ function Perfil() {
         getFoto()
     }, [])
 
+    
+    
     const [formData, setFormData] = useState({
         nome: '',
         email: '',
@@ -144,6 +166,8 @@ function Perfil() {
             });
 
     }
+
+    if(!autenticacaoPassou) return null;
     return (
         <>
             <NavBar />

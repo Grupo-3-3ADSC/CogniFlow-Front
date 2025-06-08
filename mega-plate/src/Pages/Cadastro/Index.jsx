@@ -5,6 +5,7 @@ import { api } from '../../provider/api.js';
 import NavBar from '../../components/NavBar'; // Importando a NavBar
 import { useNavigate } from 'react-router-dom';
 import { toastSucess, toastError } from '../../components/toastify/ToastifyService.jsx';
+import {jwtDecode} from "jwt-decode";
 
 export function Cadastro() {
 
@@ -24,7 +25,9 @@ export function Cadastro() {
     password: '',
   });
 
-  useEffect(() => {
+  const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
+
+    useEffect(() => {
       const token = sessionStorage.getItem('authToken');
       if(!token){
         navigate('/');
@@ -33,10 +36,13 @@ export function Cadastro() {
         if(Date.now() >= exp * 1000) {
           sessionStorage.removeItem('authToken');
           navigate('/');
+        }else{
+        setAutenticacaoPassou(true);
         }
       }
     }, []);
 
+    if(!autenticacaoPassou) return null;
 
   const cadastrar = () => {
     if (!formData.nome || !formData.email || !formData.cargo || !formData.password) {

@@ -2,7 +2,7 @@ import styles from './redefinicao.module.css';
 import logo from '../../assets/logo-megaplate.png';
 import olho from '../../assets/olho.png';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function Redefinicao() {
     const navigate = useNavigate();
