@@ -9,13 +9,15 @@ import logoMega from '../assets/logo-megaplate.png';
 import menuHamburger from '../assets/menu-hamburguer.png';
 import user from '../assets/User.png';
 import { useEffect } from 'react';
+import { api } from '../provider/api';
 
-const NavBar = ({ userName = "Usuário" }) => {
+const NavBar = () => {
   const navigate = useNavigate();
   const [showDashSubmenu, setShowDashSubmenu] = useState(false);
   const [showFormSubmenu, setShowFormSubmenu] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 520);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [nomeUsuario, setNomeUsuario] = useState("Usuario");
 
   const token = sessionStorage.getItem('authToken');
   const userId = sessionStorage.getItem('usuario');
@@ -35,6 +37,19 @@ const NavBar = ({ userName = "Usuário" }) => {
     }
   }
 
+  function getUsuario() {
+    if(token){
+      api.get(`/usuarios/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }).then((resposta) => {
+      setNomeUsuario(resposta.data.nome);
+    }).catch((err) => {
+      console.log("erro: ", err);
+    });
+  }
+  }
 
   useEffect(() => {
     const handleResize = () => {
@@ -42,9 +57,10 @@ const NavBar = ({ userName = "Usuário" }) => {
       setIsMobile(mobile);
       if (!mobile) setSidebarOpen(false); // fecha sidebar se sair do mobile
     };
+    getFoto();
+    getUsuario();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-    getFoto();
   }, []);
 
   const toggleDashSubmenu = () => setShowDashSubmenu(prev => !prev);
@@ -108,7 +124,7 @@ const NavBar = ({ userName = "Usuário" }) => {
       </div>
 
       <div className="perfil">
-        <span>Olá, {userName}!</span>
+        <span>Olá, {nomeUsuario}!</span>
         <img
           src={`${import.meta.env.VITE_API_URL}/usuarios/${userId}/foto`}
           alt="imagem de usuário"
