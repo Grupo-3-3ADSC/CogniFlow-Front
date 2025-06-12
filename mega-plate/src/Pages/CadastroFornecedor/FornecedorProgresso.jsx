@@ -1,50 +1,18 @@
 import styles from './fornecedor.module.css';
-import logo from '../../assets/logo-megaplate.png';
 import { useState } from 'react';
 import NavBar from '../../components/NavBar';
 import Swal from 'sweetalert2';
 
-export function CadastroFornecedor() {
+export function CadastroFornecedorProgresso() {
   const [progresso, setProgresso] = useState(1);
   const [formData, setFormData] = useState({
     cnpj: '',
     razao_social: '',
     nome_fantasia: '',
-    cep: '',
     endereco: '',
-    numero: '',
-    telefone: '',
-    email: '',
+    cidade: '',
+    estado: '',
   });
-
-  const cadastrarFornecedor = () => {
-    if (!formData.cnpj || !formData.nome_fantasia || !formData.razao_social) {
-      Swal.fire({
-        title: "Preencha as informações",
-        icon: "info",
-        confirmButtonColor: "#3085d6",
-      });
-      return;
-    }
-
-    Swal.fire({
-      title: "Fornecedor cadastrado com sucesso!",
-      icon: "success",
-      confirmButtonColor: "#3085d6",
-    });
-
-    setFormData({
-      cnpj: '',
-      nome_fantasia: '',
-      razao_social: '',
-      cep: '',
-      endereco: '',
-      numero: '',
-      telefone: '',
-      email: ''
-    });
-    setProgresso(1);
-  };
 
   function avancar() {
     if (progresso < 3) setProgresso(progresso + 1);
@@ -54,10 +22,34 @@ export function CadastroFornecedor() {
     if (progresso > 1) setProgresso(progresso - 1);
   }
 
+  function cadastrarFornecedor() {
+    if (!formData.cnpj || !formData.nome_fantasia || !formData.razao_social) {
+      Swal.fire({
+        title: "Preencha as informações",
+        icon: "info",
+        confirmButtonColor: "#3085d6",
+      });
+      return;
+    }
+    Swal.fire({
+      title: "Fornecedor cadastrado com sucesso!",
+      icon: "success",
+      confirmButtonColor: "#3085d6",
+    });
+    setFormData({
+      cnpj: '',
+      razao_social: '',
+      nome_fantasia: '',
+      endereco: '',
+      cidade: '',
+      estado: '',
+    });
+    setProgresso(1);
+  }
+
   return (
     <>
       <NavBar />
-
       <div className={styles['tab-container']}></div>
       <section className={styles.material}>
         <div className={styles['bloco-fundo-material']}>
@@ -65,10 +57,13 @@ export function CadastroFornecedor() {
             <div className={styles.tabActiveMaterial}>Cadastro de Fornecedor</div>
           </div>
         </div>
-        <aside className={styles['aside-material']}>
-          <img src={logo} alt="MegaPlate logo" />
-        </aside>
         <main className={styles['form-content-material']}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+            <div className={progresso >= 1 ? styles['progress-active'] : styles['progress-inactive']}>1</div>
+            <div className={progresso >= 2 ? styles['progress-active'] : styles['progress-inactive']}>2</div>
+            <div className={progresso === 3 ? styles['progress-active'] : styles['progress-inactive']}>3</div>
+          </div>
+
           {progresso === 1 && (
             <>
               <div className={styles['input-group']}>
@@ -104,56 +99,45 @@ export function CadastroFornecedor() {
           {progresso === 2 && (
             <>
               <div className={styles['input-group']}>
-                <p>CEP</p>
-                <input
-                  placeholder="Digite o CEP"
-                  type="text"
-                  value={formData.cep}
-                  onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
-                />
-              </div>
-              <div className={styles['input-group']}>
                 <p>Endereço</p>
                 <input
-                  placeholder="Digite o Endereço"
+                  placeholder="Digite o endereço"
                   type="text"
                   value={formData.endereco}
                   onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
                 />
               </div>
               <div className={styles['input-group']}>
-                <p>Número</p>
+                <p>Cidade</p>
                 <input
-                  placeholder="Digite o Número"
+                  placeholder="Digite a cidade"
                   type="text"
-                  value={formData.numero}
-                  onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+                  value={formData.cidade}
+                  onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
+                />
+              </div>
+              <div className={styles['input-group']}>
+                <p>Estado</p>
+                <input
+                  placeholder="Digite o estado"
+                  type="text"
+                  value={formData.estado}
+                  onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
                 />
               </div>
             </>
           )}
 
           {progresso === 3 && (
-            <>
-              <div className={styles['input-group']}>
-                <p>Telefone</p>
-                <input
-                  placeholder="Digite o Telefone"
-                  type="text"
-                  value={formData.telefone}
-                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                />
-              </div>
-              <div className={styles['input-group']}>
-                <p>Email</p>
-                <input
-                  placeholder="Digite o Email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-              </div>
-            </>
+            <div style={{ textAlign: 'center' }}>
+              <h3>Confirme os dados:</h3>
+              <p><b>CNPJ:</b> {formData.cnpj}</p>
+              <p><b>Razão Social:</b> {formData.razao_social}</p>
+              <p><b>Nome Fantasia:</b> {formData.nome_fantasia}</p>
+              <p><b>Endereço:</b> {formData.endereco}</p>
+              <p><b>Cidade:</b> {formData.cidade}</p>
+              <p><b>Estado:</b> {formData.estado}</p>
+            </div>
           )}
 
           <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
@@ -164,9 +148,7 @@ export function CadastroFornecedor() {
               <button onClick={avancar}>PRÓXIMO</button>
             )}
             {progresso === 3 && (
-              <button id={styles['buttonCadastrar']} onClick={cadastrarFornecedor}>
-                CADASTRAR
-              </button>
+              <button onClick={cadastrarFornecedor}>CADASTRAR</button>
             )}
           </div>
         </main>
@@ -175,4 +157,4 @@ export function CadastroFornecedor() {
   );
 }
 
-export default CadastroFornecedor;
+export default CadastroFornecedorProgresso;
