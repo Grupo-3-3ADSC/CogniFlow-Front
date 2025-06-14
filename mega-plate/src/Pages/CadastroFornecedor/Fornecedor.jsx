@@ -3,13 +3,14 @@ import logo from '../../assets/logo-megaplate.png';
 import { useState } from 'react';
 import NavBar from '../../components/NavBar';
 import Swal from 'sweetalert2';
+import { api } from '../../provider/api.js';
 
 export function CadastroFornecedor() {
   const [progresso, setProgresso] = useState(1);
   const [formData, setFormData] = useState({
     cnpj: '',
-    razao_social: '',
-    nome_fantasia: '',
+    razaoSocial: '',
+    nomeFantasia: '',
     cep: '',
     endereco: '',
     numero: '',
@@ -18,7 +19,7 @@ export function CadastroFornecedor() {
   });
 
   const cadastrarFornecedor = () => {
-    if (!formData.cnpj || !formData.nome_fantasia || !formData.razao_social) {
+    if (!formData.cnpj || !formData.nomeFantasia || !formData.razaoSocial || !formData.cep || !formData.endereco || !formData.numero || !formData.telefone || !formData.email) {
       Swal.fire({
         title: "Preencha as informações",
         icon: "info",
@@ -27,23 +28,48 @@ export function CadastroFornecedor() {
       return;
     }
 
-    Swal.fire({
-      title: "Fornecedor cadastrado com sucesso!",
-      icon: "success",
-      confirmButtonColor: "#3085d6",
-    });
+    const userData = {
+      cnpj: formData.cnpj.trim(),
+      nomeFantasia: formData.nomeFantasia.trim(),
+      razaoSocial: formData.razaoSocial.trim(),
+      cep: formData.cep.trim(),
+      endereco: formData.endereco.trim(),
+      numero: formData.numero.trim(),
+      telefone: formData.telefone.trim(),
+      email: formData.email.trim()
+    };
 
-    setFormData({
-      cnpj: '',
-      nome_fantasia: '',
-      razao_social: '',
-      cep: '',
-      endereco: '',
-      numero: '',
-      telefone: '',
-      email: ''
+    api.post('/fornecedores', userData, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then((response) => {
+      console.log('Resposta do servidor:', response.data);
+      Swal.fire({
+        title: "Fornecedor cadastrado com sucesso!",
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+      });
+      setFormData({
+        cnpj: '',
+        nomeFantasia: '',
+        razaoSocial: '',
+        cep: '',
+        endereco: '',
+        numero: '',
+        telefone: '',
+        email: ''
+      });
+      setProgresso(1);
+    }).catch((error) => {
+      console.error('Erro ao cadastrar fornecedor:', error);
+      Swal.fire({
+        title: "Erro ao cadastrar fornecedor",
+        text: "Por favor, tente novamente mais tarde.",
+        icon: "error",
+        confirmButtonColor: "#3085d6",
+      });
     });
-    setProgresso(1);
   };
 
   function avancar() {
@@ -85,8 +111,8 @@ export function CadastroFornecedor() {
                 <input
                   placeholder="Digite a razão social"
                   type="text"
-                  value={formData.razao_social}
-                  onChange={(e) => setFormData({ ...formData, razao_social: e.target.value })}
+                  value={formData.razaoSocial}
+                  onChange={(e) => setFormData({ ...formData, razaoSocial: e.target.value })}
                 />
               </div>
               <div className={styles['input-group']}>
@@ -94,8 +120,8 @@ export function CadastroFornecedor() {
                 <input
                   placeholder="Digite o Nome Fantasia"
                   type="text"
-                  value={formData.nome_fantasia}
-                  onChange={(e) => setFormData({ ...formData, nome_fantasia: e.target.value })}
+                  value={formData.nomeFantasia}
+                  onChange={(e) => setFormData({ ...formData, nomeFantasia: e.target.value })}
                 />
               </div>
             </>
