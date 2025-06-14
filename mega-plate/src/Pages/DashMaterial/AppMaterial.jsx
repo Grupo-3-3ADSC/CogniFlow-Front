@@ -4,114 +4,264 @@ import { Chart } from 'react-google-charts';
 import { Search, X, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import '../DashMaterial/styleMaterial.css';
 import NavBar from '../../components/NavBar'; // Importando a NavBar
-import {api} from '../../provider/api';
+import { api } from '../../provider/api';
 
 function App() {
   const [userPhoto, setUserPhoto] = useState('./User.png');
   const fileInputRef = useRef(null);
-  
+
   // Estados para os filtros baseados no AppEstoque
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMaterial, setSelectedMaterial] = useState('');
-  const [selectedTransferType, setSelectedTransferType] = useState(''); // Novo filtro
+  const [selectedTransferType, setSelectedTransferType] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  
+  const [estoqueData, setEstoqueData] = useState([]);
+
   // Estado para modal de detalhes do alerta
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // Estados para os dados dos gráficos
+
+  // Estados para os dados dos gráficos - inicializados com dados vazios
   const [pieData, setPieData] = useState([
     ['Tipo', 'Quantidade'],
-    ['Interna', 50],
-    ['Externa', 35],
+    ['Carregando...', 0]
   ]);
-  
+
   const [barData, setBarData] = useState([
     ['Material', 'Estoque Atual', 'Estoque Mínimo'],
-    ['SAE 1020', 550, 400],
-    ['SAE 1045', 375, 300],
-    ['HARDOX 450', 120, 150],
-    ['SAE 1046', 200, 250],
-    ['SAE 1048', 200, 180],
+    ['Carregando...', 0, 0]
   ]);
-  
+
   const [lineData, setLineData] = useState([
-    ['Data', 'Entradas'],
-    ['24/04', 200],
-    ['25/04', 300],
-    ['26/04', 120],
-    ['27/04', 175],
-    ['28/04', 250],
+    ['Data', 'Movimentações'],
+    ['Carregando...', 0]
   ]);
-  
-  // Dados do estoque expandidos com tipo de transferência
-  const stockData = [
-    { material: 'SAE 1020', quantidade: 250, largura: '1.5m', espessura: '2mm', fornecedor: 'Fornecedor 1', data: '28/04/2025', hora: '08:30', tipoTransferencia: 'Interna' },
-    { material: 'SAE 1045', quantidade: 175, largura: '2.0m', espessura: '3mm', fornecedor: 'Fornecedor 2', data: '27/04/2025', hora: '14:15', tipoTransferencia: 'Externa' },
-    { material: 'HARDOX 450', quantidade: 120, largura: '1.8m', espessura: '4mm', fornecedor: 'Fornecedor 3', data: '26/04/2025', hora: '10:45', tipoTransferencia: 'Interna' },
-    { material: 'SAE 1020', quantidade: 300, largura: '2.2m', espessura: '2.5mm', fornecedor: 'Fornecedor 4', data: '25/04/2025', hora: '16:20', tipoTransferencia: 'Externa' },
-    { material: 'SAE 1045', quantidade: 200, largura: '1.9m', espessura: '2.8mm', fornecedor: 'Fornecedor 1', data: '24/04/2025', hora: '09:15', tipoTransferencia: 'Interna' },
-    { material: 'HARDOX 450', quantidade: 150, largura: '2.1m', espessura: '3.5mm', fornecedor: 'Fornecedor 2', data: '23/04/2025', hora: '11:30', tipoTransferencia: 'Externa' },
-    { material: 'SAE 1020', quantidade: 180, largura: '1.7m', espessura: '2.2mm', fornecedor: 'Fornecedor 3', data: '22/04/2025', hora: '13:45', tipoTransferencia: 'Interna' },
-    { material: 'SAE 1045', quantidade: 220, largura: '2.3m', espessura: '3.1mm', fornecedor: 'Fornecedor 4', data: '21/04/2025', hora: '15:10', tipoTransferencia: 'Externa' },
-  ];
-  
+
   // Estado para produtos filtrados
-  const [produtos, setProdutos] = useState(['SAE 1020', 'SAE 1045', 'HARDOX 450']);
-  
+  const [produtos, setProdutos] = useState([]);
+
   // Estado para alertas com detalhes expandidos
-  const [alertas, setAlertas] = useState([
-    { 
-      id: 1, 
-      texto: 'Estoque baixo - HARDOX 450', 
-      prioridade: 'alta',
-      detalhes: {
-        material: 'HARDOX 450',
-        estoqueAtual: 120,
-        estoqueMinimo: 150,
-        ultimaReposicao: '26/04/2025',
-        fornecedor: 'Fornecedor 3',
-        previsaoFalta: '3 dias',
-        acaoRecomendada: 'Solicitar reposição urgente'
-      }
-    },
-    { 
-      id: 2, 
-      texto: 'Nova entrada - SAE 1020', 
-      prioridade: 'normal',
-      detalhes: {
-        material: 'SAE 1020',
-        quantidade: 250,
-        fornecedor: 'Fornecedor 1',
-        dataEntrada: '28/04/2025',
-        horaEntrada: '08:30',
-        notaFiscal: 'NF-123456',
-        localizacao: 'Setor A - Prateleira 15'
-      }
-    },
-    { 
-      id: 3, 
-      texto: 'Meta de estoque atingida', 
-      prioridade: 'baixa',
-      detalhes: {
-        material: 'SAE 1045',
-        metaEstoque: 300,
-        estoqueAtual: 375,
-        percentualMeta: '125%',
-        periodo: 'Abril/2025',
-        responsavel: 'Equipe de Compras',
-        proximaRevisao: '01/05/2025'
-      }
+  const [alertas, setAlertas] = useState([]);
+
+  // Estado para materiais únicos
+  const [materiais, setMateriais] = useState([]);
+
+  // Função para buscar dados do estoque e inicializar os gráficos
+  function getEstoque() {
+    api.get("/estoque").then((resposta) => {
+      const dadosEstoque = resposta.data;
+      const tiposUnicos = [...new Set(dadosEstoque.map(item => item.tipoMaterial))];
+
+      console.log("Tipos únicos estoque:", tiposUnicos);
+      console.log("Dados estoque:", dadosEstoque);
+
+      setEstoqueData(dadosEstoque);
+      setMateriais(tiposUnicos);
+      setProdutos(tiposUnicos);
+
+      // Inicializar gráficos com todos os dados
+      inicializarGraficos(dadosEstoque);
+    })
+      .catch((err) => {
+        console.log("Erro ao buscar estoque:", err);
+        // Em caso de erro, manter dados de loading
+        setPieData([['Tipo', 'Quantidade'], ['Erro ao carregar', 0]]);
+        setBarData([['Material', 'Estoque Atual', 'Estoque Mínimo'], ['Erro ao carregar', 0, 0]]);
+        setLineData([['Data', 'Movimentações'], ['Erro ao carregar', 0]]);
+      });
+  }
+
+  // Função para inicializar os gráficos com dados reais
+  const inicializarGraficos = (dadosEstoque) => {
+    if (!dadosEstoque || dadosEstoque.length === 0) {
+      setPieData([['Tipo', 'Quantidade'], ['Sem dados', 0]]);
+      setBarData([['Material', 'Estoque Atual', 'Estoque Mínimo'], ['Sem dados', 0, 0]]);
+      setLineData([['Data', 'Movimentações'], ['Sem dados', 0]]);
+      return;
     }
-  ]);
-  
+
+    // Gráfico de Pizza - Distribuição por tipo de material
+    const materialCounts = {};
+
+    dadosEstoque.forEach(item => {
+      materialCounts[item.tipoMaterial] = (materialCounts[item.tipoMaterial] || 0) + (item.quantidadeAtual || 0);
+    });
+
+    const transferenciaCounts = {};
+    dadosEstoque.forEach(item => {
+      const tipoTransf = item.tipoTransferencia;
+      if (tipoTransf === 'Interna' || tipoTransf === 'Externa') {
+        transferenciaCounts[tipoTransf] = (transferenciaCounts[tipoTransf] || 0) + 1;
+      }
+    });
+
+    const newPieData = [['Tipo de Transferência', 'Quantidade']];
+    Object.entries(transferenciaCounts).forEach(([tipo, quantidade]) => {
+      if (quantidade > 0) {
+        newPieData.push([tipo, quantidade]);
+      }
+    });
+
+    // Se não houver dados, adiciona uma fatia vazia
+    if (newPieData.length === 1) {
+      newPieData.push(['Sem transferências', 0]);
+    }
+
+    setPieData(newPieData);
+
+    // Gráfico de Barras - Estoque Atual vs Estoque Mínimo
+    const newBarData = [['Material', 'Estoque Atual', 'Estoque Mínimo']];
+    Object.entries(materialCounts).forEach(([material, quantidadeAtual]) => {
+      const materialInfo = dadosEstoque.find(item => item.tipoMaterial === material);
+      const quantidadeMinima = materialInfo ? (materialInfo.quantidadeMinima || 0) : 0;
+
+      newBarData.push([material, quantidadeAtual, quantidadeMinima]);
+    });
+
+    if (newBarData.length === 1) {
+      newBarData.push(['Sem dados', 0, 0]);
+    }
+    setBarData(newBarData);
+
+    // Gráfico de Linhas - Movimentações por data
+    const dateMovements = {};
+    dadosEstoque.forEach(item => {
+      if (item.ultimaMovimentacao) {
+        const date = new Date(item.ultimaMovimentacao);
+        const shortDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+        dateMovements[shortDate] = (dateMovements[shortDate] || 0) + (item.quantidadeAtual || 0);
+      }
+    });
+
+    const newLineData = [['Data', 'Movimentações']];
+    if (Object.keys(dateMovements).length > 0) {
+      // Ordenar por data
+      Object.entries(dateMovements)
+        .sort(([a], [b]) => {
+          const [dayA, monthA] = a.split('/');
+          const [dayB, monthB] = b.split('/');
+          return new Date(2025, monthA - 1, dayA) - new Date(2025, monthB - 1, dayB);
+        })
+        .forEach(([date, quantidade]) => {
+          newLineData.push([date, quantidade]);
+        });
+    } else {
+      newLineData.push(['Sem movimentações', 0]);
+    }
+    setLineData(newLineData);
+
+    // Gerar alertas iniciais
+    gerarAlertas(dadosEstoque, materialCounts);
+  };
+
+  // Função para gerar alertas baseados nos dados
+  const gerarAlertas = (dadosEstoque, materialCounts) => {
+    let newAlertas = [];
+
+    // Verificar estoques baixos (quantidade atual < quantidade mínima)
+    Object.entries(materialCounts).forEach(([material, quantidadeAtual]) => {
+      const materialInfo = dadosEstoque.find(item => item.tipoMaterial === material);
+      const quantidadeMinima = materialInfo ? (materialInfo.quantidadeMinima || 0) : 0;
+
+      if (quantidadeMinima > 0 && quantidadeAtual < quantidadeMinima) {
+        newAlertas.push({
+          id: `baixo_${material}`,
+          texto: `Estoque baixo - ${material}`,
+          prioridade: 'alta',
+          detalhes: {
+            material: material,
+            estoqueAtual: quantidadeAtual,
+            estoqueMinimo: quantidadeMinima,
+            ultimaMovimentacao: materialInfo?.ultimaMovimentacao ?
+              new Date(materialInfo.ultimaMovimentacao).toLocaleDateString('pt-BR') : 'N/A',
+            deficit: quantidadeMinima - quantidadeAtual,
+            percentualDisponivel: Math.round((quantidadeAtual / quantidadeMinima) * 100) + '%',
+            acaoRecomendada: 'Solicitar reposição urgente'
+          }
+        });
+      }
+    });
+
+    // Verificar estoques que atingiram/ultrapassaram a quantidade máxima
+    Object.entries(materialCounts).forEach(([material, quantidadeAtual]) => {
+      const materialInfo = dadosEstoque.find(item => item.tipoMaterial === material);
+      const quantidadeMaxima = materialInfo ? (materialInfo.quantidadeMaxima || 0) : 0;
+
+      if (quantidadeMaxima > 0 && quantidadeAtual >= quantidadeMaxima) {
+        newAlertas.push({
+          id: `meta_${material}`,
+          texto: `Estoque no limite máximo - ${material}`,
+          prioridade: 'baixa',
+          detalhes: {
+            material: material,
+            metaEstoque: quantidadeMaxima,
+            estoqueAtual: quantidadeAtual,
+            percentualMeta: Math.round((quantidadeAtual / quantidadeMaxima) * 100) + '%',
+            excesso: quantidadeAtual - quantidadeMaxima,
+            ultimaMovimentacao: materialInfo?.ultimaMovimentacao ?
+              new Date(materialInfo.ultimaMovimentacao).toLocaleDateString('pt-BR') : 'N/A',
+            observacao: 'Estoque no limite máximo recomendado'
+          }
+        });
+      }
+    });
+
+    // Alertas de movimentações recentes (últimos 7 dias)
+    const setesDiasAtras = new Date();
+    setesDiasAtras.setDate(setesDiasAtras.getDate() - 7);
+
+    dadosEstoque.forEach(item => {
+      if (item.ultimaMovimentacao) {
+        const dataMovimentacao = new Date(item.ultimaMovimentacao);
+        if (dataMovimentacao >= setesDiasAtras) {
+          newAlertas.push({
+            id: `movimentacao_${item.tipoMaterial}_${item.id}`,
+            texto: `Movimentação recente - ${item.tipoMaterial}`,
+            prioridade: 'normal',
+            detalhes: {
+              material: item.tipoMaterial,
+              quantidadeAtual: item.quantidadeAtual,
+              quantidadeMinima: item.quantidadeMinima,
+              quantidadeMaxima: item.quantidadeMaxima,
+              dataMovimentacao: new Date(item.ultimaMovimentacao).toLocaleDateString('pt-BR'),
+              horaMovimentacao: new Date(item.ultimaMovimentacao).toLocaleTimeString('pt-BR'),
+              diasAtras: Math.ceil((new Date() - dataMovimentacao) / (1000 * 60 * 60 * 24)),
+              situacaoEstoque: item.quantidadeAtual < item.quantidadeMinima ? 'Abaixo do mínimo' :
+                item.quantidadeAtual >= (item.quantidadeMaxima || 0) ? 'No limite máximo' : 'Normal'
+            }
+          });
+        }
+      }
+    });
+
+    // Se não há alertas, mostrar mensagem informativa
+    if (newAlertas.length === 0) {
+      newAlertas.push({
+        id: 'sem_alertas',
+        texto: 'Todos os estoques estão normais',
+        prioridade: 'normal',
+        detalhes: {
+          message: 'Todos os estoques estão dentro dos parâmetros estabelecidos',
+          totalMateriais: Object.keys(materialCounts).length,
+          totalRegistros: dadosEstoque.length,
+          status: 'Sistema funcionando normalmente'
+        }
+      });
+    }
+
+    setAlertas(newAlertas);
+  };
+
+  useEffect(() => {
+    getEstoque();
+  }, []);
+
   // Verificar se a imagem de fundo foi carregada corretamente
   useEffect(() => {
     const testImage = new Image();
     testImage.src = '/assets/background.png';
-    
+
     testImage.onerror = () => {
       document.body.classList.add('no-bg-image');
       console.log('Imagem de fundo não encontrada. Verifique o caminho: /assets/background.png');
@@ -132,19 +282,19 @@ function App() {
   const handleProfileClick = () => {
     fileInputRef.current.click();
   };
-  
+
   // Função para abrir modal de detalhes do alerta
   const handleAlertClick = (alerta) => {
     setSelectedAlert(alerta);
     setIsModalOpen(true);
   };
-  
+
   // Função para fechar modal
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedAlert(null);
   };
-  
+
   // Função para obter ícone do alerta
   const getAlertIcon = (prioridade) => {
     switch (prioridade) {
@@ -158,83 +308,168 @@ function App() {
         return <Info size={16} color="#4586AB" />;
     }
   };
-  
-  // Função para filtrar dados baseada nos filtros do estoque
-  const parseDate = (dateString) => {
-    const [day, month, year] = dateString.split('/');
-    return new Date(year, month - 1, day);
-  };
-  
-  const aplicarFiltros = () => {
-    // Filtrar dados do estoque
-    const filtered = stockData.filter(item => {
-      const itemDate = parseDate(item.data);
-      const startDateObj = startDate ? new Date(startDate) : null;
-      const endDateObj = endDate ? new Date(endDate) : null;
 
-      const materialMatch = !selectedMaterial || item.material === selectedMaterial;
-      // Corrigindo o filtro de tipo de transferência - se vazio, mostra todos
-      const transferTypeMatch = !selectedTransferType || item.tipoTransferencia === selectedTransferType;
-      const dateInRange = (!startDateObj || itemDate >= startDateObj) &&
-                          (!endDateObj || itemDate <= endDateObj);
+  // Função para formatar data para comparação
+  const parseDate = (dateString) => {
+    // Se a data vier como LocalDateTime do backend, converter para Date
+    if (dateString && typeof dateString === 'string') {
+      // Se for ISO string (2025-04-28T10:30:00)
+      if (dateString.includes('T')) {
+        return new Date(dateString);
+      }
+      // Se for formato DD/MM/YYYY
+      if (dateString.includes('/')) {
+        const [day, month, year] = dateString.split('/');
+        return new Date(year, month - 1, day);
+      }
+    }
+    return new Date(dateString);
+  };
+
+  const [mensagemMinimo, setMensagemMinimo] = useState('');
+  const [mensagemMeta,setMensagemMeta] = useState('');
+
+  // Função para filtrar dados baseada nos filtros do estoque
+  const aplicarFiltros = () => {
+    if (!estoqueData || estoqueData.length === 0) return;
+
+    // Filtrar dados do estoque
+    const filtered = estoqueData.filter(item => {
+      // Filtro por tipo de material
+      const materialMatch = !selectedMaterial || item.tipoMaterial === selectedMaterial;
+
+      // Filtro por tipo de transferência (se existir no objeto)
+      const transferTypeMatch = !selectedTransferType ||
+        (item.tipoTransferencia && item.tipoTransferencia === selectedTransferType);
+
+      // Filtro por data (usando ultimaMovimentacao)
+      let dateInRange = true;
+      if (item.ultimaMovimentacao && (startDate || endDate)) {
+        const itemDate = parseDate(item.ultimaMovimentacao);
+        const startDateObj = startDate ? new Date(startDate) : null;
+        const endDateObj = endDate ? new Date(endDate) : null;
+
+        dateInRange = (!startDateObj || itemDate >= startDateObj) &&
+          (!endDateObj || itemDate <= endDateObj);
+      }
+
+      // Filtro de pesquisa
       const searchMatch = !searchTerm ||
-        item.material.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.fornecedor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.tipoTransferencia.toLowerCase().includes(searchTerm.toLowerCase());
+        item.tipoMaterial.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.fornecedor && item.fornecedor.toLowerCase().includes(searchTerm.toLowerCase()));
 
       return materialMatch && transferTypeMatch && dateInRange && searchMatch;
     });
-    
+
     // Atualizar produtos baseado nos dados filtrados
-    const uniqueMaterials = [...new Set(filtered.map(item => item.material))];
+    const uniqueMaterials = [...new Set(filtered.map(item => item.tipoMaterial))];
     setProdutos(uniqueMaterials);
-    
-    // Atualizar gráfico de pizza baseado nos dados filtrados (tipo de transferência)
-    const transferTypeCounts = {};
-    filtered.forEach(item => {
-      transferTypeCounts[item.tipoTransferencia] = (transferTypeCounts[item.tipoTransferencia] || 0) + item.quantidade;
-    });
-    
-    const newPieData = [['Tipo', 'Quantidade']];
-    Object.entries(transferTypeCounts).forEach(([tipo, quantidade]) => {
-      newPieData.push([tipo, quantidade]);
-    });
-    
-    // Se não houver dados filtrados, mostrar dados padrão
-    if (newPieData.length === 1) {
-      newPieData.push(['Sem dados', 0]);
-    }
-    setPieData(newPieData);
-    
-    // Atualizar gráfico de barras
+
+    // Atualizar gráfico de pizza baseado nos dados filtrados
     const materialCounts = {};
     filtered.forEach(item => {
-      materialCounts[item.material] = (materialCounts[item.material] || 0) + item.quantidade;
+      materialCounts[item.tipoMaterial] = (materialCounts[item.tipoMaterial] || 0) + (item.quantidadeAtual || 0);
     });
-    
+
+    // Atualizar gráfico de barras (Estoque Atual vs Estoque Mínimo)
     const newBarData = [['Material', 'Estoque Atual', 'Estoque Mínimo']];
+    const materiaisAbaixoMinimo = [];
+
     if (Object.keys(materialCounts).length > 0) {
-      Object.entries(materialCounts).forEach(([material, quantidade]) => {
-        const estoqueMinimo = material === 'HARDOX 450' ? 150 : 
-                             material === 'SAE 1020' ? 400 : 
-                             material === 'SAE 1045' ? 300 : 200;
-        newBarData.push([material, quantidade, estoqueMinimo]);
+      Object.entries(materialCounts).forEach(([material, quantidadeAtual]) => {
+        const materialInfo = filtered.find(item => item.tipoMaterial === material);
+        const quantidadeMinima = materialInfo ? (materialInfo.quantidadeMinima || 0) : 0;
+
+        // Verifica se o estoque atual está abaixo do mínimo
+        if (quantidadeAtual < quantidadeMinima && quantidadeMinima > 0) {
+          materiaisAbaixoMinimo.push({
+            material: material,
+            atual: quantidadeAtual,
+            minimo: quantidadeMinima
+          });
+        }
+
+        newBarData.push([material, quantidadeAtual, quantidadeMinima]);
       });
     } else {
-      newBarData.push(['Sem dados', 0, 0]);
+      newBarData.push(['Sem dados filtrados', 0, 0]);
     }
+
+    // Atualiza o gráfico de barras
     setBarData(newBarData);
-    
-    // Atualizar gráfico de linhas baseado nas datas filtradas
-    const dateEntries = {};
-    filtered.forEach(item => {
-      const shortDate = item.data.substring(0, 5); // DD/MM
-      dateEntries[shortDate] = (dateEntries[shortDate] || 0) + item.quantidade;
+
+    // Atualiza a mensagem para o KPI
+    if (materiaisAbaixoMinimo.length > 0) {
+      const mensagemAlerta = `${materiaisAbaixoMinimo.length} material(is) abaixo do estoque mínimo: ${materiaisAbaixoMinimo.map(item =>
+        `${item.material} (${item.atual}/${item.minimo})`
+      ).join(', ')
+        }`;
+      setMensagemMinimo(mensagemAlerta);
+    } else {
+      setMensagemMinimo('Não há nenhum material abaixo do minímo');
+    }
+  
+      // Nova lógica para materiais acima da meta (75% do máximo)
+  const materiaisAcimaMeta = [];
+
+  if (Object.keys(materialCounts).length > 0) {
+    Object.entries(materialCounts).forEach(([material, quantidadeAtual]) => {
+      const materialInfo = filtered.find(item => item.tipoMaterial === material);
+      const quantidadeMaxima = materialInfo ? (materialInfo.quantidadeMaxima || 0) : 0;
+      
+      // Calcula 75% da quantidade máxima
+      const metaAlerta = quantidadeMaxima * 0.75;
+      
+      // Verifica se o estoque atual está acima de 75% do máximo
+      if (quantidadeAtual >= metaAlerta && quantidadeMaxima > 0) {
+        const porcentagem = Math.round((quantidadeAtual / quantidadeMaxima) * 100);
+        materiaisAcimaMeta.push({
+          material: material,
+          atual: quantidadeAtual,
+          maximo: quantidadeMaxima,
+          porcentagem: porcentagem
+        });
+      }
     });
-    
-    const newLineData = [['Data', 'Entradas']];
-    if (Object.keys(dateEntries).length > 0) {
-      Object.entries(dateEntries)
+  }
+
+  if (materiaisAcimaMeta.length > 0) {
+    const mensagemMeta = `${materiaisAcimaMeta.length} material(is) acima da meta (75%): ${
+      materiaisAcimaMeta.map(item => 
+        `${item.material} (${item.atual}/${item.maximo} - ${item.porcentagem}%)`
+      ).join(', ')
+    }`;
+    setMensagemMeta(mensagemMeta);
+  } else {
+    setMensagemMeta('Nenhum material está acima da meta');
+  }
+
+
+    // const newPieData = [['Tipo', 'Quantidade']];
+    // Object.entries(materialCounts).forEach(([tipo, quantidade]) => {
+    //   if (quantidade > 0) {
+    //     newPieData.push([tipo, quantidade]);
+    //   }
+    // });
+
+    // if (newPieData.length === 1) {
+    //   newPieData.push(['Sem dados filtrados', 0]);
+    // }
+    // setPieData(newPieData);
+
+    // Atualizar gráfico de linhas baseado nas movimentações filtradas
+    const dateMovements = {};
+    filtered.forEach(item => {
+      if (item.ultimaMovimentacao) {
+        const date = parseDate(item.ultimaMovimentacao);
+        const shortDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+        dateMovements[shortDate] = (dateMovements[shortDate] || 0) + (item.quantidadeAtual || 0);
+      }
+    });
+
+    const newLineData = [['Data', 'Movimentações']];
+    if (Object.keys(dateMovements).length > 0) {
+      Object.entries(dateMovements)
         .sort(([a], [b]) => {
           const [dayA, monthA] = a.split('/');
           const [dayB, monthB] = b.split('/');
@@ -244,156 +479,19 @@ function App() {
           newLineData.push([date, quantidade]);
         });
     } else {
-      newLineData.push(['Sem dados', 0]);
+      newLineData.push(['Sem movimentações', 0]);
     }
     setLineData(newLineData);
-    
-    // Atualizar alertas baseado nos dados filtrados
-    let newAlertas = [];
-    
-    // Verificar estoques baixos
-    Object.entries(materialCounts).forEach(([material, quantidade]) => {
-      const estoqueMinimo = material === 'HARDOX 450' ? 150 : 
-                           material === 'SAE 1020' ? 400 : 
-                           material === 'SAE 1045' ? 300 : 200;
-      
-      if (quantidade < estoqueMinimo) {
-        const materialInfo = filtered.find(item => item.material === material);
-        newAlertas.push({
-          id: `baixo_${material}`,
-          texto: `Estoque baixo - ${material}`,
-          prioridade: 'alta',
-          detalhes: {
-            material: material,
-            estoqueAtual: quantidade,
-            estoqueMinimo: estoqueMinimo,
-            ultimaReposicao: materialInfo?.data || 'N/A',
-            fornecedor: materialInfo?.fornecedor || 'N/A',
-            tipoTransferencia: materialInfo?.tipoTransferencia || 'N/A',
-            previsaoFalta: '3-5 dias',
-            acaoRecomendada: 'Solicitar reposição urgente'
-          }
-        });
-      }
-    });
-    
-    // Alertas de novas entradas (últimas 24h)
-    const hoje = new Date();
-    const ontem = new Date(hoje);
-    ontem.setDate(hoje.getDate() - 1);
-    
-    filtered.forEach(item => {
-      const itemDate = parseDate(item.data);
-      if (itemDate >= ontem) {
-        newAlertas.push({
-          id: `entrada_${item.material}_${item.data}_${item.hora}`,
-          texto: `Nova entrada - ${item.material} (${item.tipoTransferencia})`,
-          prioridade: 'normal',
-          detalhes: {
-            material: item.material,
-            quantidade: item.quantidade,
-            fornecedor: item.fornecedor,
-            dataEntrada: item.data,
-            horaEntrada: item.hora,
-            tipoTransferencia: item.tipoTransferencia,
-            largura: item.largura,
-            espessura: item.espessura,
-            localizacao: 'Setor A - Prateleira ' + (Math.floor(Math.random() * 20) + 1)
-          }
-        });
-      }
-    });
-    
-    // Alertas de metas atingidas
-    Object.entries(materialCounts).forEach(([material, quantidade]) => {
-      const meta = material === 'SAE 1020' ? 500 : 
-                   material === 'SAE 1045' ? 350 : 200;
-      
-      if (quantidade >= meta) {
-        newAlertas.push({
-          id: `meta_${material}`,
-          texto: `Meta de estoque atingida - ${material}`,
-          prioridade: 'baixa',
-          detalhes: {
-            material: material,
-            metaEstoque: meta,
-            estoqueAtual: quantidade,
-            percentualMeta: Math.round((quantidade / meta) * 100) + '%',
-            periodo: 'Abril/2025',
-            responsavel: 'Equipe de Compras',
-            proximaRevisao: '01/05/2025'
-          }
-        });
-      }
-    });
-    
-    // Alertas específicos por tipo de transferência
-    const transferTypeStats = {};
-    filtered.forEach(item => {
-      if (!transferTypeStats[item.tipoTransferencia]) {
-        transferTypeStats[item.tipoTransferencia] = { count: 0, total: 0 };
-      }
-      transferTypeStats[item.tipoTransferencia].count++;
-      transferTypeStats[item.tipoTransferencia].total += item.quantidade;
-    });
-    
-    Object.entries(transferTypeStats).forEach(([tipo, stats]) => {
-      if (stats.count > 3) { // Se há muitas transferências do mesmo tipo
-        newAlertas.push({
-          id: `transfer_${tipo}`,
-          texto: `Alto volume de transferências ${tipo.toLowerCase()}s`,
-          prioridade: 'normal',
-          detalhes: {
-            tipoTransferencia: tipo,
-            quantidadeTransferencias: stats.count,
-            volumeTotal: stats.total,
-            periodo: 'Últimos registros filtrados',
-            observacao: `Detectado ${stats.count} transferências do tipo ${tipo}`,
-            recomendacao: 'Verificar se o padrão está dentro do esperado'
-          }
-        });
-      }
-    });
-    
-    setAlertas(newAlertas.length > 0 ? newAlertas : [
-      { 
-        id: 'sem_dados', 
-        texto: 'Nenhum alerta para os filtros selecionados', 
-        prioridade: 'normal',
-        detalhes: {
-          message: 'Não há alertas baseados nos critérios de filtro atuais',
-          sugestao: 'Tente ajustar os filtros para ver mais informações',
-          filtrosAtivos: {
-            material: selectedMaterial || 'Todos',
-            tipoTransferencia: selectedTransferType || 'Todos',
-            dataInicio: startDate || 'Não definida',
-            dataFim: endDate || 'Não definida',
-            pesquisa: searchTerm || 'Nenhuma'
-          }
-        }
-      }
-    ]);
+
+    // Gerar alertas baseados nos dados filtrados
+    gerarAlertas(filtered, materialCounts);
   };
 
-  const [materiais, setMateriais] = useState([]);
-  
-  function getEstoque(){
-    api.get("/estoque").then((resposta) => {
-      const tiposUnicos = [...new Set(resposta.data.map(item => item.tipoMaterial))];
-      console.log(tiposUnicos);
-      console.log(resposta.data);
-      setMateriais(tiposUnicos);
-    })
-    .catch((err) => {
-      console.log("erro:", err);
-    });
-  }
 
   // Aplicar filtros quando qualquer um deles mudar
   useEffect(() => {
     aplicarFiltros();
-    getEstoque();
-  }, [searchTerm, selectedMaterial, selectedTransferType, startDate, endDate]);
+  }, [searchTerm, selectedMaterial, selectedTransferType, startDate, endDate,estoqueData]);
 
   return (
     <div className='IndexMaterial'>
@@ -402,21 +500,21 @@ function App() {
 
         <div className="filter-header">
           <select
-            id="select-Filtro-Material" 
-            value={selectedMaterial} 
+            id="select-Filtro-Material"
+            value={selectedMaterial}
             onChange={(e) => setSelectedMaterial(e.target.value)}
           >
             <option id='select-Filtro-Material' value="" color='#FFFFFFF'>Todos Materiais</option>
             {materiais.map((material, index) => (
-      <option key={index} value={material}>
-        {material}
-      </option>
-    ))}
+              <option key={index} value={material}>
+                {material}
+              </option>
+            ))}
           </select>
 
           <select
             id='select-Filtro-Trans'
-            value={selectedTransferType} 
+            value={selectedTransferType}
             onChange={(e) => setSelectedTransferType(e.target.value)}
           >
             <option value="">Todos os tipos</option>
@@ -426,9 +524,9 @@ function App() {
 
           <div id='FiltroData'>
             <span id='textFiltro'><h5>Início:</h5></span>
-            <input 
+            <input
               className='inputEstoque'
-              type="date" 
+              type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
@@ -436,9 +534,9 @@ function App() {
 
           <div id='FiltroData'>
             <span id='textFiltro'><h5>Fim:</h5></span>
-            <input 
+            <input
               className='inputEstoque'
-              type="date" 
+              type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
@@ -463,20 +561,20 @@ function App() {
               <div>
                 <div id="chart-produtos" className="chart">
                   <div id="titulo">
-                    <h4 style={{ 
+                    <h4 style={{
                       width: '100%',
-                  color: 'white', 
-                  fontSize: '14px', 
-                  fontWeight: '700',
-                  textAlign: 'center', 
-                  margin: '0 0 15px 0',
-                  padding: '8px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  borderRadius: '6px',
-                  borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
-                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
-                  letterSpacing: '0.5px'
-                }}>Materiais em Estoque</h4>
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '700',
+                      textAlign: 'center',
+                      margin: '0 0 15px 0',
+                      padding: '8px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: '6px',
+                      borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
+                      textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                      letterSpacing: '0.5px'
+                    }}>Materiais em Estoque</h4>
                   </div>
                   {materiais.length > 0 ? materiais.map((materiais, index) => (
                     <div id="Produto" key={index}>{materiais}</div>
@@ -496,10 +594,9 @@ function App() {
                       textAlign: 'center',
                     }}
                   >
-                    ↓ HARDOX 450 abaixo do mínimo
-                    {
-                      mate
-                    }
+
+                    {mensagemMinimo || 'Aguardando dados...'}
+
                   </div>
                 </div>
 
@@ -512,7 +609,7 @@ function App() {
                       textAlign: 'center',
                     }}
                   >
-                    ↑ SAE 1045 acima da meta
+                    {mensagemMeta || 'Aguardando dados...'}
                   </div>
                 </div>
 
@@ -531,11 +628,11 @@ function App() {
               </div>
 
               <div id="pie_chart1" className="chart">
-                <h1 style={{ 
-                  color: 'white', 
-                  fontSize: '14px', 
+                <h1 style={{
+                  color: 'white',
+                  fontSize: '14px',
                   fontWeight: '700',
-                  textAlign: 'center', 
+                  textAlign: 'center',
                   margin: '0 0 15px 0',
                   padding: '8px',
                   background: 'rgba(255, 255, 255, 0.05)',
@@ -557,9 +654,9 @@ function App() {
                     data={pieData}
                     options={{
                       backgroundColor: 'transparent',
-                      chartArea: { 
-                        width: '70%', 
-                        height: '75%' 
+                      chartArea: {
+                        width: '70%',
+                        height: '75%'
                       },
                       pieHole: 0.4,
                       pieSliceText: 'percentage',
@@ -568,7 +665,7 @@ function App() {
                         fontSize: 12,
                         bold: true
                       },
-                      legend: { 
+                      legend: {
                         position: 'none'
                       },
                       colors: ['#4586AB', '#7EB9D9', '#05314C', '#2E6B8A', '#1A4D6B'],
@@ -578,7 +675,7 @@ function App() {
                       pieSliceBorderColor: '#05314C',
                       tooltip: {
                         showColorCode: true,
-                        textStyle: { 
+                        textStyle: {
                           color: '#05314C',
                           fontSize: 13
                         }
@@ -598,11 +695,11 @@ function App() {
 
             <div id="charts-inferior">
               <div id="bar_chartMaterial" className="chart">
-                <h1 style={{ 
-                  color: 'white', 
-                  fontSize: '14px', 
+                <h1 style={{
+                  color: 'white',
+                  fontSize: '14px',
                   fontWeight: '700',
-                  textAlign: 'center', 
+                  textAlign: 'center',
                   margin: '0 0 15px 0',
                   padding: '8px 0',
                   background: 'rgba(255, 255, 255, 0.05)',
@@ -628,9 +725,9 @@ function App() {
                       hAxis: { textStyle: { color: 'white' } },
                       vAxis: { textStyle: { color: 'white' } },
                       colors: ['#4586AB', '#FF4C4C'],
-                      chartArea: { 
-                        width: '80%', 
-                        height: '65%' 
+                      chartArea: {
+                        width: '80%',
+                        height: '65%'
                       }
                     }}
                     width="100%"
@@ -639,11 +736,11 @@ function App() {
                 </div>
               </div>
               <div id="line_chart" className="chart">
-                <h1 style={{ 
-                  color: 'white', 
-                  fontSize: '14px', 
+                <h1 style={{
+                  color: 'white',
+                  fontSize: '14px',
                   fontWeight: '700',
-                  textAlign: 'center', 
+                  textAlign: 'center',
                   margin: '0 0 15px 0',
                   padding: '8px 0',
                   background: 'rgba(255, 255, 255, 0.05)',
@@ -669,9 +766,9 @@ function App() {
                       hAxis: { textStyle: { color: 'white' } },
                       vAxis: { textStyle: { color: 'white' } },
                       colors: ['#4586AB'],
-                      chartArea: { 
-                        width: '80%', 
-                        height: '85%' 
+                      chartArea: {
+                        width: '80%',
+                        height: '85%'
                       }
                     }}
                     width="100%"
@@ -686,8 +783,8 @@ function App() {
             <h3>Alertas do Sistema</h3>
             <ul id="alert-list">
               {alertas.map((alerta) => (
-                <li 
-                  key={alerta.id} 
+                <li
+                  key={alerta.id}
                   className={`alert-${alerta.prioridade} alert-clickable`}
                   onClick={() => handleAlertClick(alerta)}
                 >
@@ -701,7 +798,7 @@ function App() {
             </ul>
           </div>
         </div>
-        
+
         {/* Modal de detalhes do alerta */}
         {isModalOpen && selectedAlert && (
           <div className="alert-modal-overlay" onClick={closeModal}>
