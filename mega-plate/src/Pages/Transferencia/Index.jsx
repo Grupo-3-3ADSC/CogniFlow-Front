@@ -4,17 +4,28 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import NavBar from '../../components/NavBar';
+import { api } from '../../provider/api';
 
 export function Transferencia() {
     const navigate = useNavigate();
     const [showSuccessScreen, setShowSuccessScreen] = useState(false);
-    const [quantidadeUMR, setQuantidadeUMR] = useState('');
+    const [quantidadeAtual, setquantidadeAtual] = useState('');
     const [tipoMaterial, setTipoMaterial] = useState('');
+    const [materiais, setMateriais] = useState([]);
     const [tipoTransferencia, setTipoTransferencia] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
+      function getEstoque(){
+        api.get("/estoque").then((resposta) => {
+            setMateriais(resposta.data);
+        }).catch((err) =>{
+            console.log('erro:', err);
+        })
+    }
+
     useEffect(() => {
         document.body.classList.add('transferencia-body');
+        getEstoque();
         return () => document.body.classList.remove('transferencia-body');
     }, []);
 
@@ -32,7 +43,7 @@ export function Transferencia() {
         return response.json();
     }
 
-    async function handleTransferir() {
+ function handleTransferir() {
     // 1. Validação consolidada em função separada
     const validationError = validateInputs();
     if (validationError) {
@@ -42,57 +53,34 @@ export function Transferencia() {
 
     setIsLoading(true);
     
-    try {
-        // 2. Verificação do material antes da requisição
-        await verificarMaterial(tipoMaterial);
-        
-        // 3. Configuração da requisição com timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // Aumentado para 10s
-        
-        const response = await fetch(`/api/materiais/${encodeURIComponent(tipoMaterial)}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                // 'Authorization': `Bearer ${getAuthToken()}`, // Função helper para token
-            },
-            body: JSON.stringify({
-                quantidade: parseInt(quantidadeUMR, 10), // Garantir tipo inteiro
-                tipoTransferencia,
-                timestamp: new Date().toISOString() // Adicionar timestamp
-            }),
-            signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        // 4. Processamento da resposta melhorado
-        await handleResponse(response);
-        
-    } catch (error) {
-        handleError(error);
-    } finally {
-        setIsLoading(false);
-    }
+   api.put(`/estoque/retirar/${tipoMaterial}/${quantidadeAtual}`).then((resposta) =>{
+        setquantidadeAtual(quantidadeAtual);
+        resetForm();
+        setShowSuccessScreen(true);
+        showSuccessToast(resposta.data.message || 'Transferência realizada com sucesso');
+    setIsLoading(false);
+   }).catch((err)=> {
+    console.log('erro:', err)
+   });
 }
 
 // Função helper para validação
 function validateInputs() {
     const validations = [
         {
-            condition: !quantidadeUMR?.trim() || !tipoMaterial?.trim() || !tipoTransferencia?.trim(),
+            condition: !quantidadeAtual?.trim() || !tipoMaterial?.trim() || !tipoTransferencia?.trim(),
             message: 'Por favor, preencha todos os campos.'
         },
         {
-            condition: isNaN(quantidadeUMR),
+            condition: isNaN(quantidadeAtual),
             message: 'A quantidade UMR deve ser um número.'
         },
         {
-            condition: Number(quantidadeUMR) <= 0,
+            condition: Number(quantidadeAtual) <= 0,
             message: 'A quantidade UMR deve ser maior que zero.'
         },
         {
-            condition: !Number.isInteger(Number(quantidadeUMR)),
+            condition: !Number.isInteger(Number(quantidadeAtual)),
             message: 'A quantidade UMR deve ser um número inteiro.'
         },
         {
@@ -107,56 +95,6 @@ function validateInputs() {
 
     const failedValidation = validations.find(v => v.condition);
     return failedValidation?.message || null;
-}
-
-// Função helper para processar resposta
-async function handleResponse(response) {
-    const contentType = response.headers.get('content-type');
-    const rawResponse = await response.text();
-    
-    console.log('Resposta do servidor:', { 
-        status: response.status, 
-        contentType, 
-        rawResponse: rawResponse.substring(0, 200)
-    });
-
-    if (!contentType?.includes('application/json')) {
-        throw new Error(`Resposta inesperada do servidor: ${rawResponse.substring(0, 200)}`);
-    }
-
-    const data = JSON.parse(rawResponse);
-    if (response.ok) {
-        handleSuccessResponse(data, contentType);
-    } else {
-        handleErrorResponse(response, data, contentType);
-    }
-}
-// Função helper para resposta de sucesso
-function handleSuccessResponse(rawResponse, contentType) {
-    let data = {};
-    
-    try {
-        if (contentType?.includes('application/json')) {
-            data = JSON.parse(rawResponse);
-        } else {
-            data = { message: rawResponse || 'Transferência realizada com sucesso' };
-        }
-        
-        console.log('Transferência realizada:', data);
-        
-        // Resetar formulário
-        resetForm();
-        
-        // Mostrar tela de sucesso
-        setShowSuccessScreen(true);
-        
-        // Opcional: mostrar toast de sucesso
-        showSuccessToast(data.message || 'Transferência realizada com sucesso');
-        
-    } catch (parseError) {
-        console.error('Erro ao processar resposta de sucesso:', parseError);
-        alert('Transferência realizada, mas houve erro no processamento da resposta.');
-    }
 }
 
 // Função helper para resposta de erro
@@ -196,7 +134,7 @@ function handleError(error) {
     console.error('Erro na requisição:', { 
         error: error.message, 
         tipoMaterial, 
-        quantidadeUMR, 
+        quantidadeAtual, 
         tipoTransferencia 
     });
 
@@ -217,7 +155,7 @@ function handleError(error) {
 
 // Função helper para resetar formulário
 function resetForm() {
-    setQuantidadeUMR('');
+    setquantidadeAtual('');
     setTipoMaterial('');
     setTipoTransferencia('');
 }
@@ -245,7 +183,7 @@ function showSuccessToast(message) {
         doc.text(`Data e Hora: ${dataAtual}`, 20, 40);
         doc.text(`Usuário: Nome do Usuário`, 20, 50); // Substitua pelo nome real do usuário
 
-        doc.text(`Quantidade UMR: ${data.quantidade || quantidadeUMR}`, 20, 70);
+        doc.text(`Quantidade UMR: ${data.quantidade || quantidadeAtual}`, 20, 70);
         doc.text(`Tipo de Material: ${data.tipoMaterial || tipoMaterial}`, 20, 80);
         doc.text(`Tipo de Transferência: ${data.tipoTransferencia || tipoTransferencia}`, 20, 90);
 
@@ -266,15 +204,15 @@ function showSuccessToast(message) {
                 </div>
 
                 <div className="box-campos">
-                    <label htmlFor="quantidadeUMR">Quantidade UMR:</label>
+                    <label htmlFor="quantidadeAtual">Quantidade UMR:</label>
                     <input
-                        id="quantidadeUMR"
-                        className="input-quantidadeUMR"
+                        id="quantidadeAtual"
+                        className="input-quantidadeAtual"
                         type="text"
                         maxLength={10}
                         placeholder="Quantidade UMR"
-                        value={quantidadeUMR}
-                        onChange={(e) => setQuantidadeUMR(e.target.value)}
+                        value={quantidadeAtual}
+                        onChange={(e) => setquantidadeAtual(e.target.value)}
                     />
 
                     <label htmlFor="tipoMaterial">Tipo de Material:</label>
@@ -287,9 +225,11 @@ function showSuccessToast(message) {
                         <option value="" disabled>
                             Selecione uma opção
                         </option>
-                        <option value="SAE 1020">SAE 1020</option>
-                        <option value="SAE 1045">SAE 1045</option>
-                        <option value="HARDOX 450">HARDOX 450</option>
+                        {materiais && materiais.map(material => (
+                            <option key={material.id} value={material.tipoMaterial}>
+                                {material.tipoMaterial}
+                            </option>
+                        ))}
                     </select>
 
                     <label htmlFor="tipo">Tipo de Transferência:</label>
@@ -313,7 +253,7 @@ function showSuccessToast(message) {
 
                 <div className="box-sucesso">
                     <h1>TRANSFERÊNCIA REALIZADA <br /> COM SUCESSO!</h1>
-                    <button className="botao-relatorio" onClick={() => gerarPDF({ quantidade: quantidadeUMR, tipoMaterial, tipoTransferencia })}>
+                    <button className="botao-relatorio" onClick={() => gerarPDF({ quantidade: quantidadeAtual, tipoMaterial, tipoTransferencia })}>
                         BAIXAR RELATÓRIO DE TRANSFERÊNCIA
                     </button>
                 </div>
