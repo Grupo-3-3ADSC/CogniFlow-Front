@@ -53,16 +53,31 @@ export function Transferencia() {
 
     setIsLoading(true);
     
-   api.put(`/estoque/retirar/${tipoMaterial}/${quantidadeAtual}`).then((resposta) =>{
-        setquantidadeAtual(quantidadeAtual);
-        resetForm();
-        setShowSuccessScreen(true);
-        showSuccessToast(resposta.data.message || 'Transferência realizada com sucesso');
-    setIsLoading(false);
-   }).catch((err)=> {
-    console.log('erro:', err)
-   });
+    // OPÇÃO 1: Adicionando tipoTransferencia na URL (PathVariable)
+    api.put(`/estoque/retirar/${tipoMaterial}/${quantidadeAtual}/${tipoTransferencia}`)
+       .then((resposta) => {
+           setquantidadeAtual(quantidadeAtual);
+           resetForm();
+           setShowSuccessScreen(true);
+           showSuccessToast(resposta.data.message || 'Transferência realizada com sucesso');
+           setIsLoading(false);
+       })
+       .catch((err) => {
+           console.log('Erro completo:', err);
+           console.log('Status:', err.response?.status);
+           console.log('URL tentada:', err.config?.url);
+           console.log('Dados enviados:', { tipoMaterial, quantidadeAtual, tipoTransferencia });
+           
+           // Tratamento de erro melhorado
+           if (err.response) {
+               handleErrorResponse(err.response, err.response.data, err.response.headers['content-type']);
+           } else {
+               handleError(err);
+           }
+           setIsLoading(false);
+       });
 }
+
 
 // Função helper para validação
 function validateInputs() {
