@@ -84,31 +84,35 @@ function App() {
     // Gráfico de Pizza - Distribuição por tipo de material
     const materialCounts = {};
 
-    dadosEstoque.forEach(item => {
-      materialCounts[item.tipoMaterial] = (materialCounts[item.tipoMaterial] || 0) + (item.quantidadeAtual || 0);
-    });
+    
+const transferenciaInternaTotal = dadosEstoque.reduce((acc, item) => {
+  const valorInterno = item.interno || 0; 
+  return acc + valorInterno;
+}, 0);
 
-    const transferenciaCounts = {};
-    dadosEstoque.forEach(item => {
-      const tipoTransf = item.tipoTransferencia;
-      if (tipoTransf === 'Interna' || tipoTransf === 'Externa') {
-        transferenciaCounts[tipoTransf] = (transferenciaCounts[tipoTransf] || 0) + 1;
-      }
-    });
+const transferenciaExternaTotal = dadosEstoque.reduce((acc, item) => {
+  const valorExterno = item.externo || 0; 
+  return acc + valorExterno;
+}, 0);
 
-    const newPieData = [['Tipo de Transferência', 'Quantidade']];
-    Object.entries(transferenciaCounts).forEach(([tipo, quantidade]) => {
-      if (quantidade > 0) {
-        newPieData.push([tipo, quantidade]);
-      }
-    });
+console.log('Total de Transferências Internas:', transferenciaInternaTotal);
+console.log('Total de Transferências Externas:', transferenciaExternaTotal);
 
-    // Se não houver dados, adiciona uma fatia vazia
-    if (newPieData.length === 1) {
-      newPieData.push(['Sem transferências', 0]);
-    }
+const totalTransferencias = transferenciaInternaTotal + transferenciaExternaTotal;
 
-    setPieData(newPieData);
+const newPieData = [['Tipo de Transferência', 'Porcentagem']];
+
+if (totalTransferencias > 0) {
+  const porcentagemInterna = (transferenciaInternaTotal / totalTransferencias) * 100;
+  const porcentagemExterna = (transferenciaExternaTotal / totalTransferencias) * 100;
+
+  newPieData.push(['Interna', porcentagemInterna]);
+  newPieData.push(['Externa', porcentagemExterna]);
+} else {
+  newPieData.push(['Sem transferências', 100]); 
+}
+
+setPieData(newPieData);
 
     // Gráfico de Barras - Estoque Atual vs Estoque Mínimo
     const newBarData = [['Material', 'Estoque Atual', 'Estoque Mínimo']];
