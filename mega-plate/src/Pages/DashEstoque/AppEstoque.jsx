@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, Package, Calendar, Clock, User, Truck, Ruler, Layers } from 'lucide-react';
 import './styleEstoque.css';
 import NavBar from '../../components/NavBar';
+import { api } from '../../provider/api';
+
 
 // Estilos do Pop-up padronizados com o Dashboard Material
 const popupStyles = `
@@ -277,154 +279,46 @@ function App() {
     setEndDate(e.target.value);
   };
 
+
+
   // Dados expandidos de exemplo para a tabela de estoque
-  const stockData = [
-    { 
-      material: 'SAE 1020', 
-      quantidade: 250, 
-      largura: '1.5m', 
-      espessura: '2mm', 
-      fornecedor: 'Fornecedor 1', 
-      data: '28/04/2025', 
-      hora: '08:30',
-      lote: 'LOT001-2025',
-      localizacao: 'Setor A - Prateleira 1',
-      peso: '1.2 ton',
-      status: 'Em estoque',
-      qualidade: 'Excelente',
-      certificacao: 'ISO 9001:2015',
-      proximaInspecao: '15/05/2025',
-      valorUnitario: 45.50,
-      observacoes: 'Material em perfeito estado de conservação'
-    },
-    { 
-      material: 'SAE 1045', 
-      quantidade: 175, 
-      largura: '2.0m', 
-      espessura: '3mm', 
-      fornecedor: 'Fornecedor 2', 
-      data: '27/04/2025', 
-      hora: '14:15',
-      lote: 'LOT002-2025',
-      localizacao: 'Setor B - Prateleira 3',
-      peso: '2.1 ton',
-      status: 'Em estoque',
-      qualidade: 'Boa',
-      certificacao: 'ISO 14001:2015',
-      proximaInspecao: '10/05/2025',
-      valorUnitario: 52.75,
-      observacoes: 'Verificar acabamento superficial'
-    },
-    { 
-      material: 'HARDOX 450', 
-      quantidade: 120, 
-      largura: '1.8m', 
-      espessura: '4mm', 
-      fornecedor: 'Fornecedor 3', 
-      data: '26/04/2025', 
-      hora: '10:45',
-      lote: 'LOT003-2025',
-      localizacao: 'Setor C - Prateleira 2',
-      peso: '3.5 ton',
-      status: 'Estoque baixo',
-      qualidade: 'Excelente',
-      certificacao: 'ISO 45001:2018',
-      proximaInspecao: '20/05/2025',
-      valorUnitario: 89.30,
-      observacoes: 'Material de alta resistência - manusear com cuidado'
-    },
-    { 
-      material: 'SAE 1020', 
-      quantidade: 300, 
-      largura: '2.2m', 
-      espessura: '2.5mm', 
-      fornecedor: 'Fornecedor 4', 
-      data: '25/04/2025', 
-      hora: '16:20',
-      lote: 'LOT004-2025',
-      localizacao: 'Setor A - Prateleira 4',
-      peso: '1.8 ton',
-      status: 'Em estoque',
-      qualidade: 'Boa',
-      certificacao: 'OHSAS 18001',
-      proximaInspecao: '12/05/2025',
-      valorUnitario: 47.20,
-      observacoes: 'Lote recém chegado - pronto para uso'
-    },
-    { 
-      material: 'SAE 1045', 
-      quantidade: 200, 
-      largura: '1.6m', 
-      espessura: '3.5mm', 
-      fornecedor: 'Fornecedor 5', 
-      data: '24/04/2025', 
-      hora: '09:00',
-      lote: 'LOT005-2025',
-      localizacao: 'Setor B - Prateleira 1',
-      peso: '2.3 ton',
-      status: 'Em estoque',
-      qualidade: 'Regular',
-      certificacao: 'NBR ISO 9001',
-      proximaInspecao: '08/05/2025',
-      valorUnitario: 49.85,
-      observacoes: 'Aguardando aprovação de qualidade'
-    },
-    { 
-      material: 'SAE 1048', 
-      quantidade: 200, 
-      largura: '1.6m', 
-      espessura: '3.5mm', 
-      fornecedor: 'Fornecedor 5', 
-      data: '24/04/2025', 
-      hora: '09:00',
-      lote: 'LOT006-2025',
-      localizacao: 'Setor D - Prateleira 2',
-      peso: '2.4 ton',
-      status: 'Em estoque',
-      qualidade: 'Boa',
-      certificacao: 'ISO 9001:2015',
-      proximaInspecao: '18/05/2025',
-      valorUnitario: 51.40,
-      observacoes: 'Material aprovado e liberado para uso'
-    },
-    { 
-      material: 'SAE 1046', 
-      quantidade: 200, 
-      largura: '1.6m', 
-      espessura: '3.5mm', 
-      fornecedor: 'Fornecedor 5', 
-      data: '24/04/2025', 
-      hora: '09:00',
-      lote: 'LOT007-2025',
-      localizacao: 'Setor D - Prateleira 5',
-      peso: '2.2 ton',
-      status: 'Reservado',
-      qualidade: 'Excelente',
-      certificacao: 'ISO 14001:2015',
-      proximaInspecao: '25/05/2025',
-      valorUnitario: 48.90,
-      observacoes: 'Material reservado para projeto urgente'
-    },
-  ];
+  const [stockData, setStockData] = useState([]);
+  const [tipoMaterial, setTipoMaterial] = useState("");
+
+  function getEstoque() {
+    api.get('/estoque').then((resposta) => {
+      setStockData(resposta.data);
+    }).catch((err) => {
+      console.log('erro:', err);
+    });
+  }
+
+  useEffect(() => {
+    getEstoque();
+  }, []);
 
   const parseDate = (dateString) => {
-    const [day, month, year] = dateString.split('/');
-    return new Date(year, month - 1, day);
-  };
+  return new Date(dateString); // já funciona com formato YYYY-MM-DD
+};
+
 
   const handleSearch = () => {
-    const filtered = stockData.filter(item => {
-      const itemDate = parseDate(item.data);
+     const filtered = stockData.filter(item => {
+      const itemDate = parseDate(item.ultimaMovimentacao);
       const startDateObj = startDate ? new Date(startDate) : null;
       const endDateObj = endDate ? new Date(endDate) : null;
 
-      const materialMatch = !selectedMaterial || item.material === selectedMaterial;
+      // Filtro por tipo de material (select)
+      const materialMatch = !selectedMaterial || item.tipoMaterial === selectedMaterial;
+      
+      // Filtro por data
       const dateInRange = (!startDateObj || itemDate >= startDateObj) &&
-                          (!endDateObj || itemDate <= endDateObj);
+        (!endDateObj || itemDate <= endDateObj);
+      
+      // Filtro por busca de texto
       const searchMatch = !searchTerm ||
-        item.material.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.fornecedor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.lote?.toLowerCase().includes(searchTerm.toLowerCase());
+        item.tipoMaterial.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.lote && item.lote.toLowerCase().includes(searchTerm.toLowerCase()));
 
       return materialMatch && dateInRange && searchMatch;
     });
@@ -438,7 +332,7 @@ function App() {
 
   useEffect(() => {
     setFilteredStockItems(stockData);
-  }, []);
+  }, [stockData]);
 
   const handleStockItemClick = (item) => {
     setSelectedStockItem(item);
@@ -470,23 +364,23 @@ function App() {
       <div className="container">
         <div className="filter-header">
           <select
-            id="select-Filtro-Fornecedor" 
-            value={selectedMaterial} 
-            onChange={handleMaterialChange}
+            id="select-Filtro-Fornecedor"
+            value={selectedMaterial}
+            onChange={handleMaterialChange} // Usando a função correta
           >
             <option value="">Todos Materiais</option>
-            <option value="SAE 1020">SAE 1020</option>
-            <option value="SAE 1045">SAE 1045</option>
-            <option value="HARDOX 450">HARDOX 450</option>
-            <option value="SAE 1048">SAE 1048</option>
-            <option value="SAE 1046">SAE 1046</option>
+            {[...new Set(stockData.map(item => item.tipoMaterial))].map(tipo => (
+              <option key={tipo} value={tipo}>
+                {tipo}
+              </option>
+            ))}
           </select>
 
           <div id='FiltroData'>
             <span id='textFiltro'><h5>Início:</h5></span>
             <input className='inputEstoque'
-              type="date" 
-              id="dateInput" 
+              type="date"
+              id="dateInput"
               value={startDate}
               onChange={handleStartDateChange}
             />
@@ -495,8 +389,8 @@ function App() {
           <div id='FiltroData'>
             <span id='textFiltro'><h5>Fim:</h5></span>
             <input className='inputEstoque'
-              type="date" 
-              id="dateInput" 
+              type="date"
+              id="dateInput"
               value={endDate}
               onChange={handleEndDateChange}
             />
@@ -523,30 +417,26 @@ function App() {
               <thead>
                 <tr>
                   <th>Material</th>
-                  <th>Quantidade</th>
-                  <th>Largura</th>
-                  <th>Espessura</th>
-                  <th>Fornecedor</th>
-                  <th>Data</th>
-                  <th>Hora</th>
+                  <th>Quantidade mininma</th>
+                  <th>Quantidade máxima</th>
+                  <th>Qtd. Externo</th>
+                  <th>Qtd. Interno</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredStockItems.map((item, index) => (
-                  <tr 
+                  <tr
                     key={index}
                     onClick={() => handleStockItemClick(item)}
                     style={{ cursor: 'pointer' }}
                     onMouseEnter={(e) => e.target.parentElement.style.backgroundColor = 'rgba(69, 134, 171, 0.1)'}
                     onMouseLeave={(e) => e.target.parentElement.style.backgroundColor = 'transparent'}
                   >
-                    <td>{item.material}</td>
-                    <td>{item.quantidade}</td>
-                    <td>{item.largura}</td>
-                    <td>{item.espessura}</td>
-                    <td>{item.fornecedor}</td>
-                    <td>{item.data}</td>
-                    <td>{item.hora}</td>
+                    <td>{item.tipoMaterial}</td>
+                    <td>{item.quantidadeMinima}</td>
+                    <td>{item.quantidadeMaxima}</td>
+                    <td>{item.externo || 0}</td>
+                    <td>{item.interno || 0}</td>                    
                   </tr>
                 ))}
               </tbody>
@@ -571,7 +461,7 @@ function App() {
                 <X size={20} />
               </div>
             </div>
-            
+
             <div className="popup-body">
               <div className="popup-section">
                 <h4>
@@ -581,24 +471,16 @@ function App() {
                 <div className="info-grid">
                   <div className="info-item">
                     <span className="info-label">Material:</span>
-                    <span className="info-value">{selectedStockItem.material}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Lote:</span>
-                    <span className="info-value">{selectedStockItem.lote}</span>
+                    <span className="info-value">{selectedStockItem.tipoMaterial}</span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Quantidade:</span>
-                    <span className="info-value">{selectedStockItem.quantidade} unidades</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Peso Total:</span>
-                    <span className="info-value">{selectedStockItem.peso}</span>
+                    <span className="info-value">{selectedStockItem.quantidadeAtual} unidades</span>
                   </div>
                 </div>
               </div>
 
-              <div className="popup-section">
+              {/* <div className="popup-section">
                 <h4>
                   <Ruler size={20} />
                   Dimensões
@@ -621,7 +503,7 @@ function App() {
                     <span className="info-value">R$ {selectedStockItem.valorUnitario.toFixed(2)}</span>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               <div className="popup-section">
                 <h4>
@@ -631,9 +513,15 @@ function App() {
                 <div className="info-grid">
                   <div className="info-item">
                     <span className="info-label">Data de Entrada:</span>
-                    <span className="info-value">{selectedStockItem.data}</span>
+                    <span className="info-value">{selectedStockItem.ultimaMovimentacao  &&
+    new Date(selectedStockItem.ultimaMovimentacao).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+  }</span>
                   </div>
-                  <div className="info-item">
+                  {/* <div className="info-item">
                     <span className="info-label">Hora de Entrada:</span>
                     <span className="info-value">
                       <Clock size={16} style={{ display: 'inline', marginRight: '8px' }} />
@@ -649,11 +537,11 @@ function App() {
                     <span className={`info-value ${getStatusClass(selectedStockItem.status)}`}>
                       {selectedStockItem.status}
                     </span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
-              <div className="popup-section">
+              {/* <div className="popup-section">
                 <h4>
                   <User size={20} />
                   Fornecedor e Qualidade
@@ -679,9 +567,9 @@ function App() {
                     <span className="info-value">{selectedStockItem.observacoes}</span>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
-              <div className="popup-section">
+              {/* <div className="popup-section">
                 <h4>Resumo Financeiro</h4>
                 <div className="stock-summary">
                   <div className="stock-item">
@@ -691,7 +579,7 @@ function App() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

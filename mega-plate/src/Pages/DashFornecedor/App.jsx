@@ -491,7 +491,8 @@ function App() {
               <span id='textFiltro'><h5>Início:</h5></span>
               <input 
                 type="date" 
-                id="dateInput" 
+                id="dateInput"                
+                className="date-filter-input"
                 value={startDate}
                 onChange={handleStartDateChange}
               />
@@ -502,6 +503,7 @@ function App() {
               <input 
                 type="date" 
                 id="dateInput" 
+                className="date-filter-input" 
                 value={endDate}
                 onChange={handleEndDateChange}
               />

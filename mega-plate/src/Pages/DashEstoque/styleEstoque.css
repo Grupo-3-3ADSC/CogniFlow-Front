@@ -65,7 +65,7 @@
 }
 
 
-.IndexFornecedor {
+.IndexEstoque {
     /* Corrigido o caminho da imagem de fundo */
     background-image: url('../../assets/background.png'); /* Use este caminho se a imagem estiver na pasta public */
     /* Alternativa se estiver usando import: */

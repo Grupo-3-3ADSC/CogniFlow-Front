@@ -52,11 +52,13 @@
     box-shadow: var(--hover-shadow);
 }
 
-/* Form Elements */
+/* Form Elements - MUDANÇA AQUI: Agora usando IDs específicos */
 #select-Filtro-Material,
 #select-Filtro-Trans,
 #select-Filtro,
-input {
+#input-filtro-data,
+#input-filtro-search,
+#input-filtro-codigo {
     background: rgba(255, 255, 255, 0.08);
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
@@ -76,7 +78,9 @@ input {
     background-color: var(--primary-color);
 }
 
-input:focus,
+#input-filtro-data:focus,
+#input-filtro-search:focus,
+#input-filtro-codigo:focus,
 select:focus {
     outline: none;
     background: rgba(255, 255, 255, 0.95);
@@ -85,7 +89,9 @@ select:focus {
     box-shadow: 0 0 0 3px rgba(69, 134, 171, 0.2);
 }
 
-input:hover,
+#input-filtro-data:hover,
+#input-filtro-search:hover,
+#input-filtro-codigo:hover,
 select:hover {
     background: rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.4);
@@ -814,7 +820,7 @@ option {
         margin-left: 5%;
     }
     
-    #select-Filtro-Material, #select-Filtro-Trans, input {
+    #select-Filtro-Material, #select-Filtro-Trans, #input-filtro-data, #input-filtro-search, #input-filtro-codigo {
         width: 100%;
         min-width: auto;
         max-width: none;
