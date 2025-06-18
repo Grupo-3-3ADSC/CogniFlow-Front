@@ -263,10 +263,10 @@ function showSuccessToast(message) {
     doc.setFont('helvetica', 'normal');
     doc.text(dataAtual, marginLeft + 35, yPos);
     
-    doc.setFont('helvetica', 'bold');
-    doc.text('Usuário:', marginLeft + 100, yPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Nome do Usuário', marginLeft + 130, yPos);
+    // doc.setFont('helvetica', 'bold');
+    // doc.text('Usuário:', marginLeft + 100, yPos);
+    // doc.setFont('helvetica', 'normal');
+    // doc.text('Nome do Usuário', marginLeft + 130, yPos);
 
     // Details Section
     yPos += 25;
