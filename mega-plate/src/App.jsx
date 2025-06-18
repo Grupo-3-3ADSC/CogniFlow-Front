@@ -10,6 +10,8 @@ import DashFornecedor from './Pages/DashFornecedor/App'
 import Perfil from './Pages/Perfil/Index';
 import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import DashEstoque from './Pages/DashEstoque/AppEstoque'
+
 
 
 import {Route, BrowserRouter as Router, Routes} from 'react-router-dom';
@@ -28,6 +30,8 @@ function App() {
         <Route path='/Redefinicao' element={<Redefinicao />} />
         <Route path='/Material' element={<DashMaterial />} />
         <Route path='/Fornecedor' element={<DashFornecedor />} />
+        <Route path='/DashEstoque' element={<DashEstoque />} />
+
       </Routes>
     </Router>
     <ToastContainer position="top-right" autoClose={1500} closeButton={false}/>
