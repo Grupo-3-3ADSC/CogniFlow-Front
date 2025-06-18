@@ -11,7 +11,7 @@ import { api } from '../../provider/api';
 import { jsPDF } from 'jspdf';
 import NavBar from '../../components/NavBar';
 import { toastError, toastSucess } from '../../components/toastify/ToastifyService';
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 export function OrdemDeCompra() {
   const [listaFornecedores, setListaFornecedores] = useState([]);
@@ -28,22 +28,22 @@ export function OrdemDeCompra() {
   }
 
   const navigate = useNavigate();
-    const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
+  const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
 
-    useEffect(() => {
-      const token = sessionStorage.getItem('authToken');
-      if(!token){
+  useEffect(() => {
+    const token = sessionStorage.getItem('authToken');
+    if (!token) {
+      navigate('/');
+    } else {
+      const { exp } = jwtDecode(token)
+      if (Date.now() >= exp * 1000) {
+        sessionStorage.removeItem('authToken');
         navigate('/');
-      }else{
-        const {exp} = jwtDecode(token)
-        if(Date.now() >= exp * 1000) {
-          sessionStorage.removeItem('authToken');
-          navigate('/');
-        }else{
+      } else {
         setAutenticacaoPassou(true);
-        }
       }
-    }, []);
+    }
+  }, []);
 
   function getMateriaPrima() {
     api
@@ -178,36 +178,53 @@ export function OrdemDeCompra() {
     }
   }, [progresso]);
 
-        if(!autenticacaoPassou) return null;
+  if (!autenticacaoPassou) return null;
 
-    function validarInputsVazias() {
-        const inputs = etapas[progresso].inputs;
-        for (let input of inputs) {
-            if (!input.disabled && (!valoresInput[input.titulo] || valoresInput[input.titulo].trim() === "")) {
-                return true;
-            }
+  function validarInputsVazias() {
+    const inputs = etapas[progresso].inputs;
+    for (let input of inputs) {
+        
+        if (input.titulo === "Fornecedor") continue;
+
+        if (
+          !input.disabled &&
+          (!valoresInput[input.titulo] || valoresInput[input.titulo].trim() === "")
+        ) {
+            return true;
         }
+    }
+    return false;
+}
+
+  function validarInputsEspeciais() {
+    const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
+    const inputs = etapas[progresso].inputs;
+    for (let input of inputs) {
+      const valor = valoresInput[input.titulo];
+      if (typeof valor === 'string' && sqlPattern.test(valor)) {
         return false;
+      }
+      if (typeof valor === 'string' && /<script.*?>.*?<\/script>/gi.test(valor)) {
+        return false;
+      }
     }
+    return true;
+  }
 
-    function validarInputsEspeciais() {
-        const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
-        const inputs = etapas[progresso].inputs;
-        for (let input of inputs) {
-            const valor = valoresInput[input.titulo];
-            if (typeof valor === 'string' && sqlPattern.test(valor)) {
-                return false;
-            }
-            if (typeof valor === 'string' && /<script.*?>.*?<\/script>/gi.test(valor)) {
-                return false;
-            }
-        }
-        return true;
-    }
 
-   
   function mudarProgresso() {
+
+    if (!validarInputsEspeciais()) {
+      toastError('Comando não permitido em uma das inputs');
+      return;
+    }
+
+    if (validarInputsVazias()) {
+      toastError('Por favor preencher todos os campos dessa seção!')
+      return;
+    }
     const novoProgresso = progresso + 1;
+
     if (etapas[novoProgresso]) {
       setProgresso(novoProgresso);
       setImage(etapas[novoProgresso].imagem);
@@ -245,25 +262,156 @@ export function OrdemDeCompra() {
     navigate("/Material");
   }
 
-  function baixarPDF() {
-    const doc = new jsPDF();
+function baixarPDF() {
+  const doc = new jsPDF();
 
-    doc.setFontSize(18);
-    doc.text("Ordem de compra", 20, 20);
+  const corPrimaria = [41, 128, 185];
+  const corSecundaria = [149, 165, 166];
+  const corTexto = [44, 62, 80];
 
-    doc.setFontSize(12);
-    const dataAtual = new Date().toLocaleString();
-    doc.text(`Data e Hora: ${dataAtual}`, 20, 40);
+  doc.setFillColor(...corPrimaria);
+  doc.rect(0, 0, 210, 35, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text("EMPRESA LTDA", 20, 20);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text("CNPJ: 00.000.000/0001-00", 20, 28);
+  doc.text("Endereço: Rua Exemplo, 123 - Cidade/UF", 105, 20);
+  doc.text("Telefone: (11) 9999-9999", 105, 28);
 
-    let posicaoY = 50;
+  doc.setFillColor(240, 240, 240);
+  doc.rect(140, 40, 65, 25, 'F');
+  doc.setTextColor(...corTexto);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text("Ordem De Compra:", 145, 50);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  const numeroOC = Math.floor(Math.random() * 10000).toString().padStart(6, '0');
+  doc.text(`Nº ${numeroOC}`, 145, 58);
 
-    Object.keys(valoresInput).forEach((campo) => {
-      doc.text(`${campo}: ${valoresInput[campo]}`, 20, posicaoY);
-      posicaoY += 10;
-    });
+  const dataAtual = new Date();
+  const dataFormatada = dataAtual.toLocaleDateString('pt-BR');
+  const horaFormatada = dataAtual.toLocaleTimeString('pt-BR');
+  doc.text(`Data: ${dataFormatada}`, 20, 50);
+  doc.text(`Hora: ${horaFormatada}`, 20, 58);
 
-    doc.save("ordemDeCompra.pdf");
+  doc.setDrawColor(...corSecundaria);
+  doc.setLineWidth(0.5);
+  doc.line(20, 70, 190, 70);
+
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text("DADOS DO FORNECEDOR", 20, 80);
+
+  const fornecedorSelecionado = listaFornecedores.find(
+    (f) => f.id === parseInt(valoresInput["FornecedorId"])
+  );
+
+  let posicaoY = 90;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  if (fornecedorSelecionado) {
+    doc.text(`Nome: ${fornecedorSelecionado.nomeFantasia}`, 20, posicaoY);
+    posicaoY += 6;
+    if (fornecedorSelecionado.cnpj) {
+      doc.text(`CNPJ: ${fornecedorSelecionado.cnpj}`, 20, posicaoY);
+      posicaoY += 6;
+    }
+    if (fornecedorSelecionado.endereco) {
+      doc.text(`Endereço: ${fornecedorSelecionado.endereco}`, 20, posicaoY);
+      posicaoY += 6;
+    }
+  } else {
+    doc.text("Fornecedor não encontrado", 20, posicaoY);
+    posicaoY += 6;
   }
+
+  posicaoY += 10;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text("DESCRIÇÃO DOS MATERIAIS", 20, posicaoY);
+
+  posicaoY += 10;
+  doc.setFillColor(240, 240, 240);
+  doc.rect(20, posicaoY - 5, 170, 10, 'F');
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text("ITEM", 25, posicaoY);
+  doc.text("DESCRIÇÃO", 45, posicaoY);
+  doc.text("QTD", 120, posicaoY);
+  doc.text("VALOR UNIT.", 140, posicaoY);
+  doc.text("TOTAL", 170, posicaoY);
+
+  const materialSelecionado = listaMateriais.find(
+    (m) => m.id === parseInt(valoresInput["MaterialId"])
+  );
+
+  const item = "001";
+  const descricao = materialSelecionado?.tipoMaterial || "Material não encontrado";
+  const quantidade = parseFloat(valoresInput["Quantidade"]) || 0;
+  const valorUnitario = parseFloat(valoresInput["Valor Unitário"]) || 0;
+  const total = parseFloat(valoresInput["Total"]) || (valorUnitario * quantidade);
+  const ipi = parseFloat(valoresInput["IPI"]) || 0;
+
+  posicaoY += 10;
+  doc.setFont('helvetica', 'normal');
+  doc.text(item, 25, posicaoY);
+  doc.text(descricao.substring(0, 25), 45, posicaoY);
+  doc.text(quantidade.toString(), 120, posicaoY);
+  doc.text(`R$ ${valorUnitario.toFixed(2).replace('.', ',')}`, 140, posicaoY);
+  doc.text(`R$ ${total.toFixed(2).replace('.', ',')}`, 170, posicaoY);
+  doc.line(20, posicaoY + 3, 190, posicaoY + 3);
+
+  posicaoY += 15;
+  doc.setFillColor(240, 240, 240);
+  doc.rect(130, posicaoY - 5, 60, 25, 'F');
+
+  const totalGeral = total + ipi;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text("SUBTOTAL:", 135, posicaoY);
+  doc.text(`R$ ${total.toFixed(2).replace('.', ',')}`, 170, posicaoY);
+
+  doc.text(`IPI :`, 135, posicaoY + 8);
+  doc.text(`R$ ${ipi.toFixed(2).replace('.', ',')}`, 170, posicaoY + 8);
+
+  doc.setFontSize(11);
+  doc.text("TOTAL GERAL:", 135, posicaoY + 16);
+  doc.text(`R$ ${totalGeral.toFixed(2).replace('.', ',')}`, 170, posicaoY + 16);
+
+  posicaoY += 35;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text("OBSERVAÇÕES:", 20, posicaoY);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  const observacoes = [
+    "• Documento gerado automaticamente pelo sistema",
+    "• Válido como comprovante de compra",
+    "• IPI calculado conforme percentual informado",
+    "• Para dúvidas, entre em contato conosco"
+  ];
+  observacoes.forEach((obs, index) => {
+    doc.text(obs, 20, posicaoY + 8 + (index * 6));
+  });
+
+  const alturaRodape = 280;
+  doc.setFillColor(...corPrimaria);
+  doc.rect(0, alturaRodape, 210, 20, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text("Documento gerado em " + new Date().toLocaleString('pt-BR'), 20, alturaRodape + 8);
+  doc.text("www.empresa.com.br | contato@empresa.com.br", 20, alturaRodape + 15);
+
+  const nomeArquivo = `ordem_de_compra_${numeroOC}_${dataFormatada.replace(/\//g, '-')}.pdf`;
+  doc.save(nomeArquivo);
+}
 
   return (
     <>
@@ -280,10 +428,10 @@ export function OrdemDeCompra() {
             style={
               progresso == 4
                 ? {
-                    backgroundColor: "#1D597B",
-                    width: "330px",
-                    height: "200px",
-                  }
+                  backgroundColor: "#1D597B",
+                  width: "330px",
+                  height: "200px",
+                }
                 : { backgroundColor: "#05314C" }
             }
           >
@@ -293,51 +441,51 @@ export function OrdemDeCompra() {
             {etapas[progresso].inputs.map((input) => (
               <div key={input.id} className={style.inputGroup}>
                 <p>{input.titulo}</p>
-               {input.tipo === "select" ? (
-  <select
-    value={valoresInput[input.titulo + "Id"] || ""}
-    onChange={(e) => {
-      const valorSelecionado = e.target.value;
-      const campoValor = input.optionValue || "id"; // Use optionValue definido
-      
-      const selectedOption = input.options.find(
-        (opt) => String(opt[campoValor]) === valorSelecionado
-      );
-      
-      setValoresInput({
-        ...valoresInput,
-        [input.titulo]: selectedOption
-          ? selectedOption[input.optionLabel]
-          : "",
-        [input.titulo + "Id"]: valorSelecionado,
-      });
-    }}
-  >
-    <option value="">Selecione</option>
-    {input.options.map((opt, idx) => {
-      const campoValor = input.optionValue || "id";
-      const valor = opt[campoValor] || idx;
-      
-      return (
-        <option key={`${valor}`} value={valor}>
-          {opt[input.optionLabel]}
-        </option>
-      );
-    })}
-  </select>
-) : (
-  <input
-    type="text"
-    value={valoresInput[input.titulo] || ""}
-    onChange={(e) =>
-      setValoresInput({
-        ...valoresInput,
-        [input.titulo]: e.target.value,
-      })
-    }
-    disabled={input.disabled}
-  />
-)}
+                {input.tipo === "select" ? (
+                  <select
+                    value={valoresInput[input.titulo + "Id"] || ""}
+                    onChange={(e) => {
+                      const valorSelecionado = e.target.value;
+                      const campoValor = input.optionValue || "id"; // Use optionValue definido
+
+                      const selectedOption = input.options.find(
+                        (opt) => String(opt[campoValor]) === valorSelecionado
+                      );
+
+                      setValoresInput({
+                        ...valoresInput,
+                        [input.titulo]: selectedOption
+                          ? selectedOption[input.optionLabel]
+                          : "",
+                        [input.titulo + "Id"]: valorSelecionado,
+                      });
+                    }}
+                  >
+                    <option value="">Selecione</option>
+                    {input.options.map((opt, idx) => {
+                      const campoValor = input.optionValue || "id";
+                      const valor = opt[campoValor] || idx;
+
+                      return (
+                        <option key={`${valor}`} value={valor}>
+                          {opt[input.optionLabel]}
+                        </option>
+                      );
+                    })}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={valoresInput[input.titulo] || ""}
+                    onChange={(e) =>
+                      setValoresInput({
+                        ...valoresInput,
+                        [input.titulo]: e.target.value,
+                      })
+                    }
+                    disabled={input.disabled}
+                  />
+                )}
               </div>
             ))}
           </div>

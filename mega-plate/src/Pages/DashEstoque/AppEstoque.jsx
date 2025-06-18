@@ -512,7 +512,7 @@ function App() {
                 </h4>
                 <div className="info-grid">
                   <div className="info-item">
-                    <span className="info-label">Data de Entrada:</span>
+                    <span className="info-label">Ultima movimentação:</span>
                     <span className="info-value">{selectedStockItem.ultimaMovimentacao  &&
     new Date(selectedStockItem.ultimaMovimentacao).toLocaleString('pt-BR', {
       day: '2-digit',

@@ -97,8 +97,9 @@ export function Transferencia() {
 
     setIsLoading(true);
     
-   api.put(`/estoque/retirar/${tipoMaterial}/${quantidadeAtual}`).then((resposta) =>{
+   api.put(`/estoque/retirar/${tipoMaterial}/${quantidadeAtual}/${tipoTransferencia}`).then((resposta) =>{
         setquantidadeAtual(quantidadeAtual);
+        gerarPDF({quantidadeAtual,tipoMaterial,tipoTransferencia})
         resetForm();
         setShowSuccessScreen(true);
         showSuccessToast(resposta.data.message || 'Transferência realizada com sucesso');
@@ -197,13 +198,6 @@ function handleError(error) {
     alert(message);
 }
 
-// Função helper para resetar formulário
-function resetForm() {
-    setquantidadeAtual('');
-    setTipoMaterial('');
-    setTipoTransferencia('');
-}
-
 // Função helper para obter token (se necessário)
 function getAuthToken() {
     return localStorage.getItem('token') || sessionStorage.getItem('token') || '';
@@ -216,28 +210,147 @@ function showSuccessToast(message) {
     console.log('Sucesso:', message);
 }
 
-    function gerarPDF(data) {
-        const doc = new jsPDF();
+    function gerarPDF(materiais) {
+    const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+    });
 
-        doc.setFontSize(18);
-        doc.text('Relatório de Transferência de Material', 20, 20);
+    // Define colors
+    const primaryColor = [52, 58, 64];    // Dark gray
+    const secondaryColor = [0, 123, 255]; // Blue
+    const textColor = [33, 37, 41];       // Dark text
 
-        doc.setFontSize(12);
-        const dataAtual = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }); // Data e hora atual em -03
-        doc.text(`Data e Hora: ${dataAtual}`, 20, 40);
-        doc.text(`Usuário: Nome do Usuário`, 20, 50); // Substitua pelo nome real do usuário
+    // Define margins and spacing
+    const marginLeft = 20;
+    const marginTop = 20;
 
-        doc.text(`Quantidade UMR: ${data.quantidade || quantidadeAtual}`, 20, 70);
-        doc.text(`Tipo de Material: ${data.tipoMaterial || tipoMaterial}`, 20, 80);
-        doc.text(`Tipo de Transferência: ${data.tipoTransferencia || tipoTransferencia}`, 20, 90);
+    // Header Section
+    doc.setFillColor(...primaryColor);
+    doc.rect(0, 0, 210, 35, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text('RELATÓRIO DE TRANSFERÊNCIA', marginLeft, marginTop + 5);
+    doc.setFontSize(14);
+    doc.text('DE MATERIAL', marginLeft, marginTop + 12);
 
-        doc.setFontSize(10);
-        doc.text('Relatório gerado automaticamente pelo sistema.', 20, 280);
-        doc.text('Mega Plate - Supremacia em Corte', 20, 290);
+    // Reset text color
+    doc.setTextColor(...textColor);
+    
+    // Metadata Section - with styled title
+    let yPos = 45;
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...secondaryColor);
+    doc.text('Informações do Registro', marginLeft, yPos);
+    
+    // Metadata content
+    doc.setFillColor(248, 249, 250);
+    doc.rect(marginLeft - 5, yPos + 5, 170, 25, 'F');
+    
+    yPos += 15;
+    doc.setFontSize(11);
+    doc.setTextColor(...textColor);
+    
+    // Two-column layout for metadata
+    const dataAtual = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Data e Hora:', marginLeft, yPos);
+    doc.setFont('helvetica', 'normal');
+    doc.text(dataAtual, marginLeft + 35, yPos);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Usuário:', marginLeft + 100, yPos);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Nome do Usuário', marginLeft + 130, yPos);
 
-        doc.save('relatorio-transferencia.pdf');
-    }
+    // Details Section
+    yPos += 25;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(...secondaryColor);
+    doc.text('Detalhes da Movimentação', marginLeft, yPos);
 
+    // Details content box
+    doc.setFillColor(248, 249, 250);
+    doc.rect(marginLeft - 5, yPos + 5, 170, 50, 'F');
+    
+    // Details content with styled labels
+    yPos += 20;
+    doc.setFontSize(11);
+    doc.setTextColor(...textColor);
+    
+    const details = [
+        { 
+            label: 'Quantidade:', 
+            value: materiais?.quantidadeAtual || 'Não informado'  // Added null check and fallback
+        },
+        { 
+            label: 'Tipo de Material:', 
+            value: materiais?.tipoMaterial || 'Não informado'     // Added null check and fallback
+        },
+        { 
+            label: 'Tipo de Transferência:', 
+            value: materiais?.tipoTransferencia || 'Não informado' // Added null check and fallback
+        }
+    ];
+
+    details.forEach((item, index) => {
+        doc.setFont('helvetica', 'bold');
+        doc.text(item.label, marginLeft, yPos + (index * 12));
+        doc.setFont('helvetica', 'normal');
+        doc.text(String(item.value), marginLeft + 50, yPos + (index * 12));
+    });
+
+    // Additional Information Section
+    yPos += 60;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(...secondaryColor);
+    doc.text('Informações Adicionais', marginLeft, yPos);
+
+    // Add a box for additional info
+    doc.setFillColor(248, 249, 250);
+    doc.rect(marginLeft - 5, yPos + 5, 170, 30, 'F');
+    
+    yPos += 20;
+    doc.setFontSize(11);
+    doc.setTextColor(...textColor);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Este documento é gerado automaticamente e possui validade legal.', marginLeft, yPos);
+
+    // Footer
+    doc.setDrawColor(220, 220, 220);
+    doc.line(marginLeft - 5, 270, 190, 270);
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(128, 128, 128);
+    doc.text('Documento gerado automaticamente pelo sistema.', marginLeft, 280);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...primaryColor);
+    doc.text('MEGA PLATE', marginLeft, 285);
+    doc.setFont('helvetica', 'normal');
+    doc.text('- Supremacia em Corte', marginLeft + 20, 285);
+
+    // Page number
+    doc.setTextColor(128, 128, 128);
+    doc.text(`Página 1 de 1`, 180, 285);
+
+    doc.save('relatorio-transferencia.pdf');
+}
+
+// Função helper para resetar formulário
+function resetForm() {
+    setquantidadeAtual('');
+    setTipoMaterial('');
+    setTipoTransferencia('');
+}
     return (
         <>
             <NavBar userName="Usuário" />
@@ -248,7 +361,7 @@ function showSuccessToast(message) {
                 </div>
 
                 <div className="box-campos">
-                    <label htmlFor="quantidadeAtual">Quantidade UMR:</label>
+                    <label htmlFor="quantidadeAtual">Quantidade:</label>
                     <input
                         id="quantidadeAtual"
                         className="input-quantidadeAtual"
