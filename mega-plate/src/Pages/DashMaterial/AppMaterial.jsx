@@ -29,6 +29,9 @@ const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
         }
       }
     }, []);
+
+      
+
   // Estados para os filtros baseados no AppEstoque
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMaterial, setSelectedMaterial] = useState('');
@@ -291,7 +294,7 @@ setPieData(newPieData);
     };
   }, []);
 
-  if(!autenticacaoPassou) return null;
+
 
   const handlePhotoChange = (event) => {
     const file = event.target.files[0];
@@ -517,6 +520,8 @@ setPieData(newPieData);
   useEffect(() => {
     aplicarFiltros();
   }, [searchTerm, selectedMaterial, selectedTransferType, startDate, endDate,estoqueData]);
+
+  if(!autenticacaoPassou) return null;
 
   return (
     <div className='IndexMaterial'>
