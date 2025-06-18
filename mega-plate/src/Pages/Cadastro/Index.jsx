@@ -6,6 +6,8 @@ import NavBar from '../../components/NavBar'; // Importando a NavBar
 import { useNavigate } from 'react-router-dom';
 import { toastSucess, toastError } from '../../components/toastify/ToastifyService.jsx';
 import {jwtDecode} from "jwt-decode";
+import Swal from 'sweetalert2'
+
 
 export function Cadastro() {
 
@@ -46,7 +48,11 @@ export function Cadastro() {
 
   const cadastrar = () => {
     if (!formData.nome || !formData.email || !formData.cargo || !formData.password) {
-      toastError('Por favor, preencha todos os campos');
+      Swal.fire({
+        title: "Preencha as informações",
+        icon: "info",
+        confirmButtonColor: "#3085d6",
+      });
       return;
     }
 
@@ -96,8 +102,12 @@ export function Cadastro() {
 
       .then((response) => {
         console.log('Resposta do servidor:', response.data);
-        toastSucess('Usuário cadastrado com sucesso!');
-        setFormData({ nome: '', email: '', cargo: '', password: '' });
+        Swal.fire({
+          title: "Usuário cadastrado com sucesso!",
+          icon: "success",
+          confirmButtonColor: "#3085d6",
+        });
+        setFormData({ nome: '', email: '', password: '' });
       })
       .catch((error) => {
         console.error('Erro completo:', error);
