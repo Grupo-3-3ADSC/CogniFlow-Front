@@ -211,20 +211,29 @@ function Perfil() {
                             </IconContext.Provider>
                         </div>
 
+                        
                         <div className={style['input-group']}>
                             <p>Cargo</p>
+                            {formData.cargo_id == '2'?
                             <select type="text" className="inputCargo"
                                 value={formData.cargo?.id || ""}
                                 onChange={e => setFormData({ ...formData, cargo: { ...formData.cargo, id: Number(e.target.value) } })
                                 } disabled>
                                 <option value={1}>Usuário Comum</option>
                                 <option value={2}>Usuário Gestor</option>
-                            </select>
+                            </select> 
+                            : <select type="text" className="inputCargo"
+                                value={formData.cargo?.id || ""}
+                                onChange={e => setFormData({ ...formData, cargo: { ...formData.cargo, id: Number(e.target.value) } })
+                                } disabled>
+                                <option value={1}>Usuário Comum</option>
+                            </select>}
                             <IconContext.Provider value={{ color: 'black', size: '1.5em' }}>
                                 <FaPencilAlt onClick={() => desbloquearEdicao('editarCargo')}
                                     className={style['input-icon']} />
                             </IconContext.Provider>
                         </div>
+                        
                         <button
                             onClick={editarUsuario}
                             className={style['btnEditar']}
@@ -234,6 +243,7 @@ function Perfil() {
                             Editar
                         </button>
                     </div>
+                    
                 </main>
             </section>
         </>
