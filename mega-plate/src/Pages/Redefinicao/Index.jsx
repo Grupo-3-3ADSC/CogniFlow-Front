@@ -70,7 +70,7 @@ export function Redefinicao() {
         try {
             await atualizarSenha(userId, senha);
             alert('Senha atualizada com sucesso!'); // Opcional
-            navigate('/Login');
+            navigate('/');
         } catch (error) {
             setErro('Erro ao atualizar senha: ' + error.message);
         } finally {
@@ -101,7 +101,7 @@ export function Redefinicao() {
                         className='input-senha'
                         disabled={carregando}
                     />
-                    <img className='olho' src={olho} onClick={visorSenha} alt='Mostrar senha' />
+
                 </div>
 
                 <div className={styles['input-group']}>
@@ -119,7 +119,6 @@ export function Redefinicao() {
                         className='input-senha'
                         disabled={carregando}
                     />
-                    <img className='olho' src={olho} onClick={visorSenha} alt='Mostrar senha' />
                 </div>
 
                 {erro && <p style={{ color: 'red', marginBottom: 10 }}>{erro}</p>}

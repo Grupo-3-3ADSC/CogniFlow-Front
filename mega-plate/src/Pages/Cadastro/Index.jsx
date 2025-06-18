@@ -171,7 +171,7 @@ export function Cadastro() {
           <div className={styles['input-group']}>
             <p>Cargo</p>
             <select
-              value={formData.cargo.id}
+              value={formData.cargo?.id || 1}
               onChange={(e) => {
                 const selectedId = parseInt(e.target.value);
                 setFormData({
