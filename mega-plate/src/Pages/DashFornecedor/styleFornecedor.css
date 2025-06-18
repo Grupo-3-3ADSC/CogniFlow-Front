@@ -1,44 +1,19 @@
 :root {
     --primary-color: #05314C;
     --secondary-color: #4586AB;
-    --dashboard-margin: 5%;  /* Margem uniforme para todo o dashboard */
-}
-  
-.filter-header {
-    display: flex;
-    gap: 10px;
-    background: #05314C;
-    padding: 15px;
-    border-radius: 40px;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-    width: 90%;
-    height: 15%;
-    margin-left: var(--dashboard-margin);
-    margin-right: var(--dashboard-margin);
-    justify-content: space-between;
+    --accent-color: #1D597B;
+    --background-gradient: linear-gradient(135deg, #0a1929 0%, #1e3a8a 100%);
+    --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    --hover-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    --text-primary: #ffffff;
+    --text-secondary: #b0c4de;
+    --border-radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --dashboard-margin: 3%;
 }
 
-#select-Filtro, input {
-    color: white;
-    padding: 8px;
-    border: 2px solid #ffffff;
-    border-radius: 40px;
-    height: 5vh;
-    width: 30vh;
-    background-color: #05314C;
-    font-size: 16px;
-    transition: all 0.3s ease;
-}
-
-#select-Filtro:hover, input:hover {
-    color: black;
-    background-color: #ffffff;
-    border: 2px solid #05314C;
-    cursor: pointer;
-}
-
+/* Main Layout */
 .IndexFornecedor {
-    /* Corrigido o caminho da imagem de fundo */
     background-image: url('../../assets/background.png'); /* Use este caminho se a imagem estiver na pasta public */
     /* Alternativa se estiver usando import: */
     /* background-image: var(--background-image); /* E defina a variável no seu arquivo JS */
@@ -54,46 +29,251 @@
     margin-left: 5vh;
 }
 
+/* Filter Header */
+.filter-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    background: rgba(5, 49, 76, 0.95);
+    backdrop-filter: blur(20px);
+    padding: 15px 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    width: 94%;
+    margin: 15px auto;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: var(--transition);
+    flex-wrap: wrap;
+    margin-top: 15vh;
+}
+
+.filter-header:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--hover-shadow);
+}
+
+/* Form Elements - CORRIGIDO: Removido input[type="date"] global */
+#select-Filtro-Fornecedor, 
+.search-input,
+.date-filter-input {
+    background: var(--primary-color);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 8px;
+    font-weight: 500;
+    transition: var(--transition);
+    backdrop-filter: blur(10px);
+    min-width: 140px;
+    max-width: 160px;
+    color: white;
+    font-family: "Inter", "Poppins", sans-serif;
+}
+
+#select-Filtro-Fornecedor:focus,
+.search-input:focus,
+.date-filter-input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--primary-color);
+    color: white;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(69, 134, 171, 0.2);
+}
+
+#select-Filtro-Fornecedor:hover,
+.search-input:hover,
+.date-filter-input:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 400;
+}
+
+option {
+    background: var(--primary-color);
+    color: var(--text-primary);
+    padding: 6px;
+}
+
+/* Search Container */
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    right: 8px;
+    cursor: pointer;
+    padding: 3px;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.search-icon:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
+}
+
+/* Date Filter */
+#FiltroData {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#textFiltro {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    margin: 0;
+}
+
+#textFiltro h5 {
+    margin: 0;
+    font-size: 12px;
+    margin-top: -1.9vh;
+
+}
+
+/* Dashboard Container */
 .containerDash {
-    margin-top: 3vh;
     display: flex;
     gap: 20px;
-    width: 90%;
-    max-width: 100%;
-    margin-left: var(--dashboard-margin);
-    margin-right: var(--dashboard-margin);
-    justify-content: center;
-    align-items: flex-start;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--dashboard-margin);
 }
 
+/* Main Dashboard */
 .dashboard {
-    color: white;
-    flex: 3;
-    background: #05314C;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    flex: 2;
+    background: rgba(5, 49, 76, 0.95);
+    backdrop-filter: blur(20px);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: 75vh;
+}
+
+.dashboard h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 22px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffffff 0%, #87ceeb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* KPI Cards */
+#Kpi {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 25px;
+    flex-wrap: nowrap;
+    align-items: stretch;
+}
+
+[id^="chart-aviso-fornecedor"] {
+    background: linear-gradient(135deg, var(--accent-color) 0%, rgba(29, 89, 123, 0.8) 100%);
+    backdrop-filter: blur(15px);
+    width: 180px;
+    height: 130px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
-    height: 105vh;
+    text-align: center;
+    padding: 12px;
+    position: relative;
+    transition: var(--transition);
+    overflow: hidden;
+    flex: 1;
+    min-width: 180px;
+    /* max-width: 200px; */
 }
 
-/* Estilos base para todos os gráficos */
+[id^="chart-aviso-fornecedor"]:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: var(--hover-shadow);
+}
+
+[id^="chart-aviso-fornecedor"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, #00d4ff, #0099cc);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+[id^="chart-aviso-fornecedor"]::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.kpi-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.kpi-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.kpi-data {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #90ee90;
+}
+
+/* Charts */
 .chart {
-    background-color: #1D597B;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    padding: 15px;
+    background: linear-gradient(135deg, var(--accent-color) 0%, rgba(29, 89, 123, 0.9) 100%);
+    backdrop-filter: blur(15px);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 16px;
+    transition: var(--transition);
     position: relative;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.1);
     overflow: hidden;
 }
 
 .chart:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+    transform: translateY(-2px);
+    box-shadow: var(--hover-shadow);
 }
 
 .chart::before {
@@ -102,281 +282,107 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 4px;
-    border-radius: 12px 12px 0 0;
+    height: 3px;
+    background: linear-gradient(90deg, #4586AB, #87ceeb);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
-/* Gráfico de barras */
 #bar_chart {
     height: 45vh;
     width: 100%;
-    margin-bottom: 25px;
 }
 
-#bar_chart::before {
-    background: linear-gradient(90deg, #05314C, #4586AB);
-}
-
-h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    font-size: 22px;
-    color: #ffffff;
-}
-
-.charts-grid {
-    display: grid;
-    grid-template-columns: 6fr 3fr;
-    grid-template-rows: auto auto;
-    gap: 20px;
-    width: 100%;
-}
-
-#Kpi {
-    display: flex;
-    padding: 5vh;
-    justify-content: center;
-    width: 100%;
-    gap: 30px;
-}
-
-#chart-aviso3{
-    width: 246px;
-    height: 191px;
-    background-color: #1D597B;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 15px;
-    border-radius: 12px;
-    transition: transform 0.3s ease;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    position: relative;
-    margin-left: 67px;
-}
-
-#chart-aviso-fornecedor2 {
-    width: 246px;
-    height: 191px;
-    background-color: #1D597B;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 15px;
-    border-radius: 12px;
-    transition: transform 0.3s ease;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    position: relative;
-    margin-left: 25px
-}
-
-#chart-aviso1{
-    width: 246px;
-    height: 191px;
-    background-color: #1D597B;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 15px;
-    border-radius: 12px;
-    transition: transform 0.3s ease;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    position: relative;
-    margin-right: 67px;
-
-}
-
-#chart-aviso1::before, #chart-aviso2::before, #chart-aviso3::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    border-radius: 12px 12px 0 0;
-}
-
-#chart-aviso1::before {
-    background: linear-gradient(90deg, #05314C, #4586AB);
-}
-
-#chart-aviso2::before {
-    background: linear-gradient(90deg, #05314C, #4586AB);
-}
-
-#chart-aviso3::before {
-    background: linear-gradient(90deg, #05314C, #4586AB);
-}
-
-#chart-aviso1:hover, #chart-aviso2:hover, #chart-aviso3:hover {
-    transform: translateY(-5px);
-}
-
-.kpi-title {
-    color: white;
-    font-weight: bold;
-    font-size: 20px;
-    margin-bottom: 5px;
-}
-
-.kpi-subtitle {
-    color: #ccc;
-    font-size: 16px;
-    margin-bottom: 15px;
-}
-
-.kpi-data {
-    color: white;
-    font-size: 16px;
-    line-height: 1.4;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-#bar_chart1, #bar_chart2 {
-    width: 100%;
-    background-color: #1D597B;
-    margin-top: 5vh;
-}
-
-#bar_chart2 {
-    height: 45vh;
-}
-
-#multi_line_chart {
-    height: 150px;
-    background-color: #1D597B;
-    width: 100%;
-}
-
-
-
-
-
-#titulo {
-    text-align: center;
-    margin-bottom: 10px;
-}
-
-#Produto {
-    width: 100%;
-    text-align: center;
-    margin: 5px 0;
-    padding: 10px 0;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: all 0.2s ease;
-}
-
-#Produto:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    transform: scale(1.02);
-}
-
-#charts-superior {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    width: 100%;
-    margin-bottom: 20px;
-    justify-content: center;
-}
-
-#charts-inferior {
-    display: flex;
-    gap: 20px;
-    width: 100%;
-    justify-content: center;
-}
-
-.arrow-toggle {
-    position: absolute;
-    top: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 20px;
-    cursor: pointer;
-    transition: 0.3s ease;
-}
-
-.arrow-toggle:hover {
-    color: #05314C;
-}
-
-/* Supplier Table Container - Replacing Alerts */
+/* Supplier Table */
 .supplier-table-container {
     flex: 1;
-    background: #05314C;
-    color: white;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    height: 100vh;
+    background: rgba(5, 49, 76, 0.95);
+    backdrop-filter: blur(20px);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: 75vh;
 }
 
 .supplier-table-container h3 {
     text-align: center;
-    margin-bottom: 20px;
-    font-size: 18px;
-    font-weight: bold;
+    margin-bottom: 16px;
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffffff 0%, #87ceeb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     text-transform: uppercase;
-    color: white;
+    letter-spacing: 0.8px;
 }
 
 .supplier-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
-    background-color: #1D597B;
-    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent-color) 0%, rgba(29, 89, 123, 0.9) 100%);
+    border-radius: var(--border-radius);
     overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--card-shadow);
+    backdrop-filter: blur(15px);
 }
 
 .supplier-table thead {
-    background-color: #4586AB;
+    background: linear-gradient(135deg, var(--secondary-color) 0%, rgba(69, 134, 171, 0.9) 100%);
 }
 
 .supplier-table th {
-    padding: 12px 15px;
+    padding: 12px 16px;
     text-align: left;
-    font-weight: bold;
-    font-size: 14px;
-    color: white;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--text-primary);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .supplier-table td {
-    padding: 12px 15px;
+    padding: 12px 16px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 14px;
-    color: white;
-    transition: background-color 0.2s ease;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.supplier-table tbody tr {
+    transition: var(--transition);
+    cursor: pointer;
 }
 
 .supplier-table tbody tr:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    cursor: pointer;
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(3px);
 }
 
 .supplier-table tbody tr:last-child td {
     border-bottom: none;
 }
 
+.search-results {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Navbar */
 .navbar {
     width: 100%;
-    height: 70px;
-    background-color: #05314C;
+    height: 60px;
+    background: rgba(5, 49, 76, 0.95);
+    backdrop-filter: blur(20px);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -385,341 +391,160 @@ h2 {
     top: 0;
     left: 0;
     z-index: 1000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
-  
-/* .menu-lateral {
-    width: 80px;
-    height: 100vh;
-    background-color: #1D597B;
-    position: fixed;
-    left: 0;
-    top: 0;
-    border-radius: 0px 20px 20px 0px;
-    transition: width 0.3s ease;
-}
-  
-.menu-lateral img {
-    width: 10vh;
-    height: 10vh;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-top: 5%;
-    margin-left: 3%;
-}
-  
-.menu-lateral:hover {
-    width: 250px;
-}
-  
-.menu-lateral:hover img {
-    width: 15vh;
-    height: 15vh;
-    margin-left: 25%;
-} */
-  
+
 .perfil {
-    margin-left: auto;
-    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
-  
+
 .perfil img {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     object-fit: cover;
     cursor: pointer;
-    border: 2px solid white;
-    transition: transform 0.2s ease;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .perfil img:hover {
     transform: scale(1.1);
-    border: 2px solid #4586AB;
+    border-color: var(--secondary-color);
+    box-shadow: 0 4px 12px rgba(69, 134, 171, 0.4);
 }
 
-/* Para títulos internos dos gráficos */
-.chart h4, .chart h5 {
-    color: white;
-    margin-top: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    font-size: 16px;
-}
-
-/* Responsividade */
+/* Responsive Design */
 @media (max-width: 1200px) {
-    #charts-superior, #charts-inferior {
+    .containerDash {
         flex-direction: column;
-    }
-  
-    #bar_chart, #line_chart, #chart-aviso, #chart-aviso2 {
-        width: 100%;
-    }
-    
-    .dashboard {
-        height: auto;
+        gap: 15px;
+        max-width: 95%;
     }
     
     .supplier-table-container {
-        height: auto;
-        margin-top: 20px;
+        min-height: auto;
+    }
+    
+    #Kpi {
+        gap: 8px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding: 0 5px;
+    }
+    
+    [id^="chart-aviso-fornecedor"] {
+        width: 160px;
+        height: 120px;
+        min-width: 160px;
+        flex-shrink: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .IndexFornecedor {
+        padding-top: 60px;
+    }
+    
+    .filter-header {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+        width: 90%;
+    }
+    
+    #select-Filtro-Fornecedor,
+    .search-input,
+    .date-filter-input {
+        width: 100%;
+        min-width: auto;
+        max-width: none;
+    }
+    
+    #Kpi {
+        flex-direction: row;
+        align-items: stretch;
+        gap: 6px;
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding: 0 3px;
+    }
+    
+    [id^="chart-aviso-fornecedor"] {
+        width: 140px;
+        height: 110px;
+        min-width: 140px;
+        flex-shrink: 0;
+        padding: 8px;
+    }
+    
+    .supplier-table th,
+    .supplier-table td {
+        padding: 10px 12px;
+        font-size: 11px;
+    }
+    
+    .dashboard,
+    .supplier-table-container {
+        padding: 15px;
+    }
+    
+    .dashboard h2,
+    .supplier-table-container h3 {
+        font-size: 18px;
+    }
+    
+    #bar_chart {
+        height: 280px;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --dashboard-margin: 2%;
+    }
+    
+    .navbar {
+        padding: 0 15px;
+        height: 55px;
+    }
+    
+    .IndexFornecedor {
+        padding-top: 55px;
+    }
+    
+    .filter-header {
+        width: 92%;
+        margin: 10px auto;
+        padding: 12px;
+    }
+    
+    .dashboard h2,
+    .supplier-table-container h3 {
+        font-size: 16px;
     }
     
     .containerDash {
-        flex-direction: column;
+        padding: 0 2%;
+    }
+    
+    [id^="chart-aviso-fornecedor"] {
+        padding: 12px;
+    }
+    
+    .kpi-title {
+        font-size: 14px;
+    }
+    
+    .kpi-subtitle {
+        font-size: 11px;
+    }
+    
+    .kpi-data {
+        font-size: 11px;
     }
 }
-
-/* Additional responsive styling for supplier table */
-@media (max-width: 768px) {
-    .supplier-table th, 
-    .supplier-table td {
-        padding: 8px 10px;
-        font-size: 12px;
-    }
-}
-
-/* Chart Styles */
-.chart {
-    background-color: #1D597B;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    padding: 18px;
-    position: relative;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    overflow: hidden;
-}
-  
-.chart:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-  
-.chart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-}
-  
-.chart-header h4 {
-    color: white;
-    font-size: 16px;
-    font-weight: 500;
-    margin: 0;
-}
-  
-.chart-actions {
-    display: flex;
-    gap: 8px;
-}
-  
-.chart-action {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 14px;
-}
-  
-.chart-action:hover {
-    background-color: rgba(255, 255, 255, 0.25);
-    transform: scale(1.1);
-}
-  
-.chart-loader {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 14px;
-    text-align: center;
-}
-  
-.chart-animated {
-    animation: fadeIn 0.6s ease-out;
-}
-  
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-  
-  
-#bar_chart::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: linear-gradient(90deg, #7986CB, #5C6BC0);
-}
-  
-#line_chart::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: linear-gradient(90deg, #4DD0E1, #26C6DA);
-}
-  
-.google-visualization-tooltip {
-    border-radius: 8px !important;
-    border: none !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
-}
-  
-#chart-aviso, #chart-aviso2 {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-}
-  
-#chart-aviso:hover, #chart-aviso2:hover {
-    transform: translateY(-5px);
-}
-  
-#chart-aviso .kpi-value, #chart-aviso2 .kpi-value {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-  
-#chart-aviso .kpi-label, #chart-aviso2 .kpi-label {
-    font-size: 13px;
-    opacity: 0.9;
-}
-  
-#chart-aviso::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: linear-gradient(90deg, #FF5252, #FF8A80);
-}
-  
-#chart-aviso2::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: linear-gradient(90deg, #66BB6A, #A5D6A7);
-}
-  
-
-  
-#Produto {
-    background-color: rgba(255, 255, 255, 0.08);
-    padding: 12px 15px;
-    margin: 8px 0;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    border-left: 3px solid #4DB6AC;
-}
-  
-#Produto:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-    transform: translateX(3px);
-}
-
-/* Estilo para a barra de pesquisa */
-.search-container {
-    display: flex;
-    align-items: center;
-    position: relative;
-    width: 220px;
-  }
-  
-  .search-input {
-    width: 100%;
-    padding: 8px 12px;
-    padding-right: 30px;
-    border: 2px solid #ffffff;
-    border-radius: 40px;
-    font-size: 14px;
-    outline: none;
-    transition: all 0.3s ease;
-    background-color: #05314C;
-    color: white;
-  }
-  
-  .search-input:focus {
-    color: black;
-    background-color: #ffffff;
-    border: 2px solid #05314C;
-  }
-  
-  .search-input::placeholder {
-    color: rgba(255, 255, 255, 0.7);
-  }
-  
-  .search-input:focus::placeholder {
-    color: rgba(0, 0, 0, 0.5);
-  }
-  
-  .search-icon {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    transition: transform 0.2s ease;
-  }
-  
-  .search-icon:hover {
-    transform: translateY(-50%) scale(1.2);
-  }
-  
-  /* Ajuste no layout da barra de filtros para acomodar a pesquisa */
-  .filter-header {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    align-items: center;
-    padding: 15px;
-  }
-  
-  #select-Filtro, #dateInput {
-    height: 40px;
-  }
-  
-  .search-results {
-    margin-top: 15px;
-    text-align: center;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.7);
-  }
-
-  #textFiltro{
-    color: white;
-    margin-top: 2vh;
-    margin-right: 2vh;
-  }
-
-  #FiltroData{
-    display: flex;
-  }

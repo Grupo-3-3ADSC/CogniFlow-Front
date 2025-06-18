@@ -3,8 +3,9 @@ import logo from '../../assets/logo-megaplate.png';
 import olho from '../../assets/olho.png';
 import loading from '../../assets/loading.gif';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../../provider/api.js';
+import { toastError,toastSucess } from '../../components/toastify/ToastifyService.jsx';
 
 export function Login() {
     const navigate = useNavigate();
@@ -23,11 +24,29 @@ export function Login() {
             navigate('/verificacao')
         }
 
+        useEffect(() => {
+            sessionStorage.clear();
+        }, [])
+
+        function validarInputsEspeciais() {
+        const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
+            if (sqlPattern.test(formData.email) || sqlPattern.test(formData.password)) {
+                return false;
+            }
+            if (/<script.*?>.*?<\/script>/gi.test(formData.email) || /<script.*?>.*?<\/script>/gi.test(formData.password)) {
+                return false;
+            }
+        return true;
+    }
 
         const login = () =>{
-            if(!formData.email || !formData.password) {
-                alert('Por favor, preencha os campos');
-                return;
+
+            if(!validarInputsEspeciais()){
+                return toastError("Por favor não utilizar comandos no login.")
+            }
+
+            if(!formData.email || !formData.password || formData.email.trim() === "" || formData.password.trim() === "") {
+                return toastError('Por favor, preencha os campos');
               }
 
               api.post('/usuarios/login',{
@@ -37,16 +56,19 @@ export function Login() {
               .then((response) =>{
                 if (response.status === 200 && response.data?.token) {
                     sessionStorage.setItem('authToken', response.data.token);
-                    sessionStorage.setItem('usuario', response.data.nome);
+                    sessionStorage.setItem('usuario', response.data.userId);
+                    sessionStorage.setItem('cargoUsuario', response.data.cargo.id);
+                    
                 }          
                 setFormData({email:'', password: ''});
                 divLoading.style.display = 'block';
                 setTimeout(function(){
+                    toastSucess('Sucesso! Seja Bem-vindo!')
                 navigate('/Material')},1500);
               })
               .catch((error)=>{
                 console.error('Erro no login do usuário: ', error);
-                alert('Não foi possível autenticar, email ou password inválidos.')
+                toastError('Não foi possível autenticar, email ou password inválidos.')
               });
               
         }
@@ -65,7 +87,8 @@ export function Login() {
                     <input placeholder="marcos@email.com"  
                     type="text"
                     value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    className='input-email' />
                 </div>
 
                 <div className={style['input-group']}>

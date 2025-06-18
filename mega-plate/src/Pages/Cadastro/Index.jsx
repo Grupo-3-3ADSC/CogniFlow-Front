@@ -1,15 +1,21 @@
 import styles from './cadastro.module.css';
 import logo from '../../assets/logo-megaplate.png';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../../provider/api.js';
 import NavBar from '../../components/NavBar'; // Importando a NavBar
 import { useNavigate } from 'react-router-dom';
+import { toastSucess, toastError } from '../../components/toastify/ToastifyService.jsx';
+import {jwtDecode} from "jwt-decode";
+import Swal from 'sweetalert2'
 
 
 export function Cadastro() {
 
   const navigate = useNavigate();
 
+  // let mensagem = '';
+
+  
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -21,9 +27,32 @@ export function Cadastro() {
     password: '',
   });
 
+  const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
+
+    useEffect(() => {
+      const token = sessionStorage.getItem('authToken');
+      if(!token){
+        navigate('/');
+      }else{
+        const {exp} = jwtDecode(token)
+        if(Date.now() >= exp * 1000) {
+          sessionStorage.removeItem('authToken');
+          navigate('/');
+        }else{
+        setAutenticacaoPassou(true);
+        }
+      }
+    }, []);
+
+    if(!autenticacaoPassou) return null;
+
   const cadastrar = () => {
     if (!formData.nome || !formData.email || !formData.cargo || !formData.password) {
-      alert('Por favor, preencha todos os campos');
+      Swal.fire({
+        title: "Preencha as informações",
+        icon: "info",
+        confirmButtonColor: "#3085d6",
+      });
       return;
     }
 
@@ -32,11 +61,12 @@ export function Cadastro() {
     // console.log('Token:', token); // verificação se o token esta sendo pego corretamente
 
     if (!token) {
-      alert('Token de autenticação não encontrado. Faça login novamente.');
-      navigate('/login')
+      toastError('Token de autenticação não encontrado. Faça login novamente.');
+      navigate('/')
       return;
     }
 
+    
     const userData = {
       nome: formData.nome.trim(),
       email: formData.email.trim(),
@@ -46,6 +76,19 @@ export function Cadastro() {
       },
       password: formData.password.trim()
     };
+
+     
+        const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
+            if (sqlPattern.test(userData.email) || 
+            sqlPattern.test(userData.nome) ||
+            sqlPattern.test(userData.password)) {
+                return toastError('Por favor não cadastrar com comandos especiais...');
+            }
+            if (/<script.*?>.*?<\/script>/gi.test(userData.email) ||
+             /<script.*?>.*?<\/script>/gi.test(userData.nome) ||
+            /<script.*?>.*?<\/script>/gi.test(userData.password)) {
+                return toastError('Por favor não cadastrar com comandos especiais...');
+            }  
 
     const endpoint = formData.cargo.id === 2 ? '/usuarios/gestor' : '/usuarios';
 
@@ -59,8 +102,12 @@ export function Cadastro() {
 
       .then((response) => {
         console.log('Resposta do servidor:', response.data);
-        alert('Usuário cadastrado com sucesso!');
-        setFormData({ nome: '', email: '', cargo: '', password: '' });
+        Swal.fire({
+          title: "Usuário cadastrado com sucesso!",
+          icon: "success",
+          confirmButtonColor: "#3085d6",
+        });
+        setFormData({ nome: '', email: '', password: '' });
       })
       .catch((error) => {
         console.error('Erro completo:', error);
@@ -70,16 +117,16 @@ export function Cadastro() {
 
           if (error.response.status === 400) {
 
-            alert('Dados inválidos: ' + (error.response.data.message || 'Verifique as informações'));
+            toastError('Dados inválidos: ' + (error.response.data.message || 'Verifique as informações'));
 
           } else if (error.response.status === 401) {
-            alert('Sessão expirada. Por favor, faça login novamente.');
+            toastError('Sessão expirada. Por favor, faça login novamente.');
             navigate('/login');
           } else {
-            alert('Erro ao cadastrar usuário: ' + (error.response.data?.message || 'Tente novamente mais tarde.'));
+            toastError('Erro ao cadastrar usuário: ' + (error.response.data?.message || 'Tente novamente mais tarde.'));
           }
         } else {
-          alert('Erro de conexão. Verifique sua internet e tente novamente.');
+          toastError('Erro de conexão. Verifique sua internet e tente novamente.');
         }
       });
   };
@@ -124,7 +171,7 @@ export function Cadastro() {
           <div className={styles['input-group']}>
             <p>Cargo</p>
             <select
-              value={formData.cargo.id}
+              value={formData.cargo?.id || 1}
               onChange={(e) => {
                 const selectedId = parseInt(e.target.value);
                 setFormData({
