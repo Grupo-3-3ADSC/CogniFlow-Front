@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Chart } from 'react-google-charts';
-import { Search, X } from 'lucide-react';
-import './styleFornecedor.css';
-import NavBar from '../../components/NavBar';
-import { useNavigate } from 'react-router-dom';
-import {jwtDecode} from "jwt-decode";
+import React, { useState, useEffect, useRef } from "react";
+import { Chart } from "react-google-charts";
+import { Search, X } from "lucide-react";
+import "./styleFornecedor.css";
+import NavBar from "../../components/NavBar";
+import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import { api } from "../../provider/api";
 
 // Estilos do Pop-up padronizados com o Dashboard Material
 const popupStyles = `
@@ -234,43 +235,42 @@ const popupStyles = `
 `;
 
 // Adicionar estilos ao documento
-if (typeof document !== 'undefined') {
+if (typeof document !== "undefined") {
   const styleSheet = document.createElement("style");
   styleSheet.innerText = popupStyles;
   document.head.appendChild(styleSheet);
 }
 
 function App() {
-
   const navigate = useNavigate();
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
 
-    useEffect(() => {
-      const token = sessionStorage.getItem('authToken');
-      if(!token){
-        navigate('/');
-      }else{
-        const {exp} = jwtDecode(token)
-        if(Date.now() >= exp * 1000) {
-          sessionStorage.removeItem('authToken');
-          navigate('/');
-        }else{
+  useEffect(() => {
+    const token = sessionStorage.getItem("authToken");
+    if (!token) {
+      navigate("/");
+    } else {
+      const { exp } = jwtDecode(token);
+      if (Date.now() >= exp * 1000) {
+        sessionStorage.removeItem("authToken");
+        navigate("/");
+      } else {
         setAutenticacaoPassou(true);
-        }
       }
-    }, []);
+    }
+  }, []);
 
-    
-
-  const [userPhoto, setUserPhoto] = useState('/images/User.png');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMaterial, setSelectedMaterial] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [userPhoto, setUserPhoto] = useState("/images/User.png");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMaterial, setSelectedMaterial] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [filteredSuppliers, setFilteredSuppliers] = useState([]);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const fileInputRef = useRef(null);
+  const [materiais, setMateriais] = useState([]);
+  const [ordemDeCompra, setOrdemDeCompra] = useState([]);
 
   const handlePhotoChange = (event) => {
     const file = event.target.files[0];
@@ -302,121 +302,172 @@ function App() {
   const handleEndDateChange = (e) => {
     setEndDate(e.target.value);
   };
+  function getFornecedor() {
+    api
+      .get("/fornecedores/listarFornecedorCompleto")
+      .then((response) => {
+        const fornecedores = response.data;
+        setFilteredSuppliers(fornecedores);
+        console.log(fornecedores);
+      })
+      .catch((error) => {
+        console.error("Erro ao buscar fornecedores:", error);
+        // Aqui você pode lidar com o erro, como exibir uma mensagem de erro para o usuário
+      });
+  }
+  function getEstoque() {
+    api
+      .get("/estoque")
+      .then((response) => {
+         const materiais = response.data.map(item => item.tipoMaterial); // isso precisa retornar um array
+      setMateriais(materiais);
+        console.log(materiais);
+      })
+      .catch((error) => {
+        console.error("Erro ao buscar estoque:", error);
+        // Aqui você pode lidar com o erro, como exibir uma mensagem de erro para o usuário
+      });
+  }
+  function BuscarOrdemDeCompra() {
+     api
+      .get("/ordemDeCompra")
+      .then((response) => {
+        const ordens = response.data;
+        setOrdemDeCompra(ordens);
+        console.log(ordens);
+        // Aqui você pode lidar com os dados das ordens de compra, como exibir em uma tabela ou lista
+      })
+      .catch((error) => {
+        console.error("Erro ao buscar estoque:", error);
+        // Aqui você pode lidar com o erro, como exibir uma mensagem de erro para o usuário
+      });
+  }
+  useEffect(() => {
+    BuscarOrdemDeCompra();  
+  }, []);
 
   // Dados expandidos dos fornecedores
   const supplierData = [
-    { 
-      name: 'Fornecedor 1', 
-      date: '28/04/2025', 
-      material: 'SAE 1020',
-      price: 500.00,
+    {
+      name: "Fornecedor 1",
+      date: "28/04/2025",
+      material: "SAE 1020",
+      price: 500.0,
       quantity: 120,
-      delivery: 'Em dia',
-      quality: 'Excelente',
-      contact: '(11) 9999-1111',
-      email: 'contato@fornecedor1.com',
-      address: 'Rua das Indústrias, 123 - São Paulo/SP',
-      lastDelivery: '25/04/2025',
-      certification: 'ISO 9001:2015'
+      delivery: "Em dia",
+      quality: "Excelente",
+      contact: "(11) 9999-1111",
+      email: "contato@fornecedor1.com",
+      address: "Rua das Indústrias, 123 - São Paulo/SP",
+      lastDelivery: "25/04/2025",
+      certification: "ISO 9001:2015",
     },
-    { 
-      name: 'Fornecedor 2', 
-      date: '27/04/2025', 
-      material: 'SAE 1045',
-      price: 650.00,
+    {
+      name: "Fornecedor 2",
+      date: "27/04/2025",
+      material: "SAE 1045",
+      price: 650.0,
       quantity: 95,
-      delivery: 'Atrasado',
-      quality: 'Boa',
-      contact: '(11) 8888-2222',
-      email: 'vendas@fornecedor2.com',
-      address: 'Av. Industrial, 456 - Guarulhos/SP',
-      lastDelivery: '20/04/2025',
-      certification: 'ISO 14001:2015'
+      delivery: "Atrasado",
+      quality: "Boa",
+      contact: "(11) 8888-2222",
+      email: "vendas@fornecedor2.com",
+      address: "Av. Industrial, 456 - Guarulhos/SP",
+      lastDelivery: "20/04/2025",
+      certification: "ISO 14001:2015",
     },
-    { 
-      name: 'Fornecedor 3', 
-      date: '26/04/2025', 
-      material: 'HARDOX 450',
-      price: 850.00,
+    {
+      name: "Fornecedor 3",
+      date: "26/04/2025",
+      material: "HARDOX 450",
+      price: 850.0,
       quantity: 75,
-      delivery: 'Em dia',
-      quality: 'Excelente',
-      contact: '(11) 7777-3333',
-      email: 'comercial@fornecedor3.com',
-      address: 'Rod. dos Metalúrgicos, 789 - Osasco/SP',
-      lastDelivery: '24/04/2025',
-      certification: 'ISO 45001:2018'
+      delivery: "Em dia",
+      quality: "Excelente",
+      contact: "(11) 7777-3333",
+      email: "comercial@fornecedor3.com",
+      address: "Rod. dos Metalúrgicos, 789 - Osasco/SP",
+      lastDelivery: "24/04/2025",
+      certification: "ISO 45001:2018",
     },
-    { 
-      name: 'Fornecedor 4', 
-      date: '25/04/2025', 
-      material: 'SAE 1020',
-      price: 480.00,
+    {
+      name: "Fornecedor 4",
+      date: "25/04/2025",
+      material: "SAE 1020",
+      price: 480.0,
       quantity: 140,
-      delivery: 'Em dia',
-      quality: 'Boa',
-      contact: '(11) 6666-4444',
-      email: 'atendimento@fornecedor4.com',
-      address: 'Rua da Metalurgia, 321 - São Bernardo/SP',
-      lastDelivery: '23/04/2025',
-      certification: 'OHSAS 18001'
+      delivery: "Em dia",
+      quality: "Boa",
+      contact: "(11) 6666-4444",
+      email: "atendimento@fornecedor4.com",
+      address: "Rua da Metalurgia, 321 - São Bernardo/SP",
+      lastDelivery: "23/04/2025",
+      certification: "OHSAS 18001",
     },
-    { 
-      name: 'Fornecedor 5', 
-      date: '24/04/2025', 
-      material: 'SAE 1045',
-      price: 620.00,
+    {
+      name: "Fornecedor 5",
+      date: "24/04/2025",
+      material: "SAE 1045",
+      price: 620.0,
       quantity: 110,
-      delivery: 'Atrasado',
-      quality: 'Regular',
-      contact: '(11) 5555-5555',
-      email: 'suporte@fornecedor5.com',
-      address: 'Est. dos Aços, 654 - Diadema/SP',
-      lastDelivery: '18/04/2025',
-      certification: 'NBR ISO 9001'
-    }
+      delivery: "Atrasado",
+      quality: "Regular",
+      contact: "(11) 5555-5555",
+      email: "suporte@fornecedor5.com",
+      address: "Est. dos Aços, 654 - Diadema/SP",
+      lastDelivery: "18/04/2025",
+      certification: "NBR ISO 9001",
+    },
   ];
 
   // Função para gerar dados dinâmicos do gráfico de pizza
   const generatePieData = (suppliers) => {
     const materialCount = suppliers.reduce((acc, supplier) => {
-      acc[supplier.material] = (acc[supplier.material] || 0) + supplier.quantity;
+      acc[supplier.material] =
+        (acc[supplier.material] || 0) + supplier.quantity;
       return acc;
     }, {});
 
     return [
-      ['Material', 'Quantidade'],
-      ...Object.entries(materialCount).map(([material, quantity]) => [material, quantity])
+      ["Material", "Quantidade"],
+      ...Object.entries(materialCount).map(([material, quantity]) => [
+        material,
+        quantity,
+      ]),
     ];
   };
 
   // Função para gerar dados dinâmicos do gráfico de barras
   const generateBarData = (suppliers) => {
     const currentDate = new Date();
-    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
-    
+    const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"];
+
     return [
-      ['Mês', 'Produção', 'Meta'],
+      ["Mês", "Produção", "Meta"],
       ...months.map((month, index) => {
-        const baseProduction = suppliers.reduce((sum, s) => sum + s.quantity, 0);
+        const baseProduction = suppliers.reduce(
+          (sum, s) => sum + s.quantity,
+          0
+        );
         const monthlyVariation = Math.floor(Math.random() * 300) + 900;
         const production = Math.floor(baseProduction * 0.8 + monthlyVariation);
         return [month, production, 1200];
-      })
+      }),
     ];
   };
 
   // Função para gerar dados dinâmicos do gráfico de linha
   const generateLineData = (suppliers) => {
-    const days = ['01', '05', '10', '15', '20', '25', '30'];
-    const baseConsumption = suppliers.reduce((sum, s) => sum + s.quantity, 0) / 10;
-    
+    const days = ["01", "05", "10", "15", "20", "25", "30"];
+    const baseConsumption =
+      suppliers.reduce((sum, s) => sum + s.quantity, 0) / 10;
+
     return [
-      ['Dia', 'Consumo'],
+      ["Dia", "Consumo"],
       ...days.map((day, index) => {
         const variation = Math.floor(Math.random() * 40) - 20;
         return [day, Math.floor(baseConsumption + variation)];
-      })
+      }),
     ];
   };
 
@@ -427,7 +478,7 @@ function App() {
         acc[supplier.material] = {
           suppliers: [],
           totalValue: 0,
-          totalQuantity: 0
+          totalQuantity: 0,
         };
       }
       acc[supplier.material].suppliers.push(supplier);
@@ -440,20 +491,23 @@ function App() {
   };
 
   const parseDate = (dateString) => {
-    const [day, month, year] = dateString.split('/');
+    const [day, month, year] = dateString.split("/");
     return new Date(year, month - 1, day);
   };
 
   const handleSearch = () => {
-    const filtered = supplierData.filter(supplier => {
+    const filtered = supplierData.filter((supplier) => {
       const supplierDate = parseDate(supplier.date);
       const startDateObj = startDate ? new Date(startDate) : null;
       const endDateObj = endDate ? new Date(endDate) : null;
 
-      const materialMatch = !selectedMaterial || supplier.material === selectedMaterial;
-      const dateInRange = (!startDateObj || supplierDate >= startDateObj) &&
-                          (!endDateObj || supplierDate <= endDateObj);
-      const nameMatch = !searchTerm ||
+      const materialMatch =
+        !selectedMaterial || supplier.material === selectedMaterial;
+      const dateInRange =
+        (!startDateObj || supplierDate >= startDateObj) &&
+        (!endDateObj || supplierDate <= endDateObj);
+      const nameMatch =
+        !searchTerm ||
         supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         supplier.material.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -468,10 +522,11 @@ function App() {
   }, [searchTerm, selectedMaterial, startDate, endDate]);
 
   useEffect(() => {
-    setFilteredSuppliers(supplierData);
+    getFornecedor();
+    getEstoque();
   }, []);
 
-if(!autenticacaoPassou) return null;
+  if (!autenticacaoPassou) return null;
   // Dados dinâmicos dos gráficos baseados nos fornecedores filtrados
   const pieData = generatePieData(filteredSuppliers);
   const barData = generateBarData(filteredSuppliers);
@@ -494,15 +549,15 @@ if(!autenticacaoPassou) return null;
   };
 
   return (
-    <div className='IndexFornecedor'>
+    <div className="IndexFornecedor">
       <NavBar />
 
       <div className="container">
         <div id="filtro">
           <div className="filter-header">
-            <select 
-              id="select-Filtro-Fornecedor" 
-              value={selectedMaterial} 
+            <select
+              id="select-Filtro-Fornecedor"
+              value={selectedMaterial}
               onChange={handleMaterialChange}
             >
               <option value="">Todos Materiais</option>
@@ -511,23 +566,27 @@ if(!autenticacaoPassou) return null;
               <option value="HARDOX 450">HARDOX 450</option>
             </select>
 
-            <div id='FiltroData'>
-              <span id='textFiltro'><h5>Início:</h5></span>
-              <input 
-                type="date" 
-                id="dateInput"                
+            <div id="FiltroData">
+              <span id="textFiltro">
+                <h5>Início:</h5>
+              </span>
+              <input
+                type="date"
+                id="dateInput"
                 className="date-filter-input"
                 value={startDate}
                 onChange={handleStartDateChange}
               />
             </div>
 
-            <div id='FiltroData'>
-              <span id='textFiltro'><h5>Fim:</h5></span>
-              <input 
-                type="date" 
-                id="dateInput" 
-                className="date-filter-input" 
+            <div id="FiltroData">
+              <span id="textFiltro">
+                <h5>Fim:</h5>
+              </span>
+              <input
+                type="date"
+                id="dateInput"
+                className="date-filter-input"
                 value={endDate}
                 onChange={handleEndDateChange}
               />
@@ -557,10 +616,15 @@ if(!autenticacaoPassou) return null;
                 {topMaterials.map(([material, stats], index) => {
                   const avgPrice = stats.totalValue / stats.totalQuantity;
                   const maxPrice = avgPrice * 1.6;
-                  const supplierName = stats.suppliers[0]?.name || `Fornecedor ${index + 1}`;
-                  
+                  const supplierName =
+                    stats.suppliers[0]?.name || `Fornecedor ${index + 1}`;
+
                   return (
-                    <div key={material} id={`chart-aviso-fornecedor${index + 1}`} className="chart">
+                    <div
+                      key={material}
+                      id={`chart-aviso-fornecedor${index + 1}`}
+                      className="chart"
+                    >
                       <div className="kpi-title">{material}</div>
                       <div className="kpi-subtitle">{supplierName}</div>
                       <div className="kpi-data">
@@ -570,18 +634,27 @@ if(!autenticacaoPassou) return null;
                     </div>
                   );
                 })}
-                
+
                 {/* Preencher KPIs restantes se houver menos de 3 materiais */}
-                {Array.from({ length: Math.max(0, 3 - topMaterials.length) }, (_, index) => (
-                  <div key={`empty-${index}`} id={`chart-aviso-fornecedor${topMaterials.length + index + 1}`} className="chart">
-                    <div className="kpi-title">Material N/A</div>
-                    <div className="kpi-subtitle">Sem dados</div>
-                    <div className="kpi-data">
-                      <span>R$ 0,00 / cilindro</span>
-                      <span>R$ 0,00 / cilindro</span>
+                {Array.from(
+                  { length: Math.max(0, 3 - topMaterials.length) },
+                  (_, index) => (
+                    <div
+                      key={`empty-${index}`}
+                      id={`chart-aviso-fornecedor${
+                        topMaterials.length + index + 1
+                      }`}
+                      className="chart"
+                    >
+                      <div className="kpi-title">Material N/A</div>
+                      <div className="kpi-subtitle">Sem dados</div>
+                      <div className="kpi-data">
+                        <span>R$ 0,00 / cilindro</span>
+                        <span>R$ 0,00 / cilindro</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             </div>
 
@@ -592,14 +665,14 @@ if(!autenticacaoPassou) return null;
                   data={barData}
                   options={{
                     title: `Produção Mensal (${filteredSuppliers.length} fornecedores)`,
-                    backgroundColor: 'transparent',
-                    legend: 'none',
-                    titleTextStyle: { color: 'white' },
-                    hAxis: { textStyle: { color: 'white' } },
-                    vAxis: { textStyle: { color: 'white' } },
-                    colors: ['#4586AB', '#05314C'],
-                    width: '100%',
-                    height: '40vh'
+                    backgroundColor: "transparent",
+                    legend: "none",
+                    titleTextStyle: { color: "white" },
+                    hAxis: { textStyle: { color: "white" } },
+                    vAxis: { textStyle: { color: "white" } },
+                    colors: ["#4586AB", "#05314C"],
+                    width: "100%",
+                    height: "40vh",
                   }}
                   width="100%"
                   height="100%"
@@ -620,16 +693,22 @@ if(!autenticacaoPassou) return null;
               </thead>
               <tbody>
                 {filteredSuppliers.map((supplier, index) => (
-                  <tr 
+                  <tr
                     key={index}
                     onClick={() => handleSupplierClick(supplier)}
-                    style={{ cursor: 'pointer' }}
-                    onMouseEnter={(e) => e.target.parentElement.style.backgroundColor = 'rgba(69, 134, 171, 0.1)'}
-                    onMouseLeave={(e) => e.target.parentElement.style.backgroundColor = 'transparent'}
+                    style={{ cursor: "pointer" }}
+                    onMouseEnter={(e) =>
+                      (e.target.parentElement.style.backgroundColor =
+                        "rgba(69, 134, 171, 0.1)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.parentElement.style.backgroundColor =
+                        "transparent")
+                    }
                   >
-                    <td>{supplier.name}</td>
-                    <td>{supplier.material}</td>
-                    <td>{supplier.date}</td>
+                    <td>{supplier.nomeFantasia}</td>
+                    <td>{materiais[index]}</td> {/* usa o mesmo índice */}
+                    {/* <td>{supplier.data}</td> */}
                   </tr>
                 ))}
               </tbody>
@@ -651,26 +730,32 @@ if(!autenticacaoPassou) return null;
                 <X size={20} />
               </fechar>
             </div>
-            
+
             <div className="popup-body">
               <div className="popup-section">
                 <h4>Informações Básicas</h4>
                 <div className="info-grid">
                   <div className="info-item">
                     <span className="info-label">Material:</span>
-                    <span className="info-value">{selectedSupplier.material}</span>
+                    <span className="info-value">
+                      
+                    </span>
                   </div>
                   <div className="info-item">
-                    <span className="info-label">Data do Pedido:</span>
-                    <span className="info-value">{selectedSupplier.date}</span>
+                    {/* <span className="info-label">Data do Pedido:</span>
+                    <span className="info-value">{selectedSupplier.date}</span> */}
                   </div>
                   <div className="info-item">
-                    <span className="info-label">Preço Unitário:</span>
-                    <span className="info-value">R$ {selectedSupplier.price.toFixed(2)}</span>
+                    {/* <span className="info-label">Preço Unitário:</span>
+                    <span className="info-value">
+                      R$ {selectedSupplier.price.toFixed(2)} */}
+                    {/* </span> */}
                   </div>
                   <div className="info-item">
-                    <span className="info-label">Quantidade:</span>
-                    <span className="info-value">{selectedSupplier.quantity} unidades</span>
+                    {/* <span className="info-label">Quantidade:</span>
+                    <span className="info-value">
+                      {selectedSupplier.quantity} unidades
+                    </span> */}
                   </div>
                 </div>
               </div>
@@ -680,22 +765,34 @@ if(!autenticacaoPassou) return null;
                 <div className="info-grid">
                   <div className="info-item">
                     <span className="info-label">Status da Entrega:</span>
-                    <span className={`info-value status-${selectedSupplier.delivery === 'Em dia' ? 'ontime' : 'late'}`}>
+                    <span
+                      className={`info-value status-${
+                        selectedSupplier.delivery === "Em dia"
+                          ? "ontime"
+                          : "late"
+                      }`}
+                    >
                       {selectedSupplier.delivery}
                     </span>
                   </div>
-                  <div className="info-item">
+                  {/* <div className="info-item">
                     <span className="info-label">Qualidade:</span>
-                    <span className="info-value">{selectedSupplier.quality}</span>
+                    <span className="info-value">
+                      {selectedSupplier.quality}
+                    </span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Última Entrega:</span>
-                    <span className="info-value">{selectedSupplier.lastDelivery}</span>
+                    <span className="info-value">
+                      {selectedSupplier.lastDelivery}
+                    </span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Certificação:</span>
-                    <span className="info-value">{selectedSupplier.certification}</span>
-                  </div>
+                    <span className="info-value">
+                      {selectedSupplier.certification}
+                    </span>
+                  </div> */}
                 </div>
               </div>
 
@@ -704,7 +801,9 @@ if(!autenticacaoPassou) return null;
                 <div className="info-grid">
                   <div className="info-item">
                     <span className="info-label">Telefone:</span>
-                    <span className="info-value">{selectedSupplier.contact}</span>
+                    <span className="info-value">
+                      {selectedSupplier.telefone}
+                    </span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Email:</span>
@@ -712,22 +811,29 @@ if(!autenticacaoPassou) return null;
                   </div>
                   <div className="info-item full-width">
                     <span className="info-label">Endereço:</span>
-                    <span className="info-value">{selectedSupplier.address}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="popup-section">
-                <h4>Resumo Financeiro</h4>
-                <div className="financial-summary">
-                  <div className="financial-item">
-                    <span className="financial-label">Valor Total do Pedido:</span>
-                    <span className="financial-value">
-                      R$ {(selectedSupplier.price * selectedSupplier.quantity).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                    <span className="info-value">
+                      {selectedSupplier.complemento}
                     </span>
                   </div>
                 </div>
               </div>
+
+              {/* <div className="popup-section">
+                <h4>Resumo Financeiro</h4>
+                <div className="financial-summary">
+                  <div className="financial-item">
+                    <span className="financial-label">
+                      Valor Total do Pedido:
+                    </span>
+                    <span className="financial-value">
+                      R${" "}
+                      {(
+                        selectedSupplier.price * selectedSupplier.quantity
+                      ).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+              </div> */}
             </div>
           </div>
         </div>
