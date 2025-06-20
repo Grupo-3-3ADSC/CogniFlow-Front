@@ -319,8 +319,8 @@ function App() {
     api
       .get("/estoque")
       .then((response) => {
-         const materiais = response.data.map(item => item.tipoMaterial); // isso precisa retornar um array
-      setMateriais(materiais);
+        const materiais = response.data.map((item) => item.tipoMaterial); // isso precisa retornar um array
+        setMateriais(materiais);
         console.log(materiais);
       })
       .catch((error) => {
@@ -329,7 +329,7 @@ function App() {
       });
   }
   function BuscarOrdemDeCompra() {
-     api
+    api
       .get("/ordemDeCompra")
       .then((response) => {
         const ordens = response.data;
@@ -343,7 +343,7 @@ function App() {
       });
   }
   useEffect(() => {
-    BuscarOrdemDeCompra();  
+    BuscarOrdemDeCompra();
   }, []);
 
   // Dados expandidos dos fornecedores
@@ -472,20 +472,29 @@ function App() {
   };
 
   // Função para calcular estatísticas dinâmicas dos KPIs
-  const calculateKPIData = (suppliers) => {
-    const materialStats = suppliers.reduce((acc, supplier) => {
-      if (!acc[supplier.material]) {
-        acc[supplier.material] = {
-          suppliers: [],
+  const calculateKPIData = (ordens) => {
+    const materialStats = {};
+
+    ordens.forEach((ordem) => {
+      const material = ordem.estoque?.tipoMaterial || "N/A";
+      const fornecedor =
+        ordem.fornecedor?.nomeFantasia || "Fornecedor Desconhecido";
+      const valorUnitario = Number(ordem.valorUnitario || 0);
+      const quantidade = Number(ordem.quantidade || 0);
+
+      if (!materialStats[material]) {
+        materialStats[material] = {
           totalValue: 0,
           totalQuantity: 0,
+          suppliers: new Set(),
+          firstSupplier: fornecedor,
         };
       }
-      acc[supplier.material].suppliers.push(supplier);
-      acc[supplier.material].totalValue += supplier.price * supplier.quantity;
-      acc[supplier.material].totalQuantity += supplier.quantity;
-      return acc;
-    }, {});
+
+      materialStats[material].totalValue += valorUnitario * quantidade;
+      materialStats[material].totalQuantity += quantidade;
+      materialStats[material].suppliers.add(fornecedor);
+    });
 
     return materialStats;
   };
@@ -531,7 +540,7 @@ function App() {
   const pieData = generatePieData(filteredSuppliers);
   const barData = generateBarData(filteredSuppliers);
   const lineData = generateLineData(filteredSuppliers);
-  const kpiData = calculateKPIData(filteredSuppliers);
+  const kpiData = calculateKPIData(ordemDeCompra);
 
   // Obter os 3 principais materiais para os KPIs
   const topMaterials = Object.entries(kpiData)
@@ -539,7 +548,29 @@ function App() {
     .slice(0, 3);
 
   const handleSupplierClick = (supplier) => {
-    setSelectedSupplier(supplier);
+    const ordem = ordemDeCompra.find(
+      (ordem) => ordem.fornecedor?.id === supplier.id
+    );
+
+    setSelectedSupplier({
+      ...supplier,
+      // Corrigido: usando estoque.tipoMaterial em vez de tipoMaterial
+      material: ordem?.estoque?.tipoMaterial || "Não informado",
+      dataPedido: ordem?.dataDeEmissao?.split("T")[0] || "Data não disponível",
+      preco: ordem?.valorUnitario || 0,
+      quantidade: ordem?.quantidade || 0,
+      // Corrigido: prazoEntrega é uma string, não status de entrega
+      statusEntrega: ordem?.prazoEntrega
+        ? `Prazo: ${ordem.prazoEntrega} dias`
+        : "Prazo não informado",
+      // Campos adicionais que você pode querer usar:
+      descricaoMaterial: ordem?.descricaoMaterial || "Descrição não informada",
+      valorKg: ordem?.valorKg || 0,
+      valorPeca: ordem?.valorPeca || 0,
+      condPagamento: ordem?.condPagamento || "Não informada",
+      ipi: ordem?.ipi || 0,
+      rastreabilidade: ordem?.rastreabilidade || "Não informada",
+    });
     setShowPopup(true);
   };
 
@@ -614,10 +645,12 @@ function App() {
             <div id="charts-superior">
               <div id="Kpi">
                 {topMaterials.map(([material, stats], index) => {
-                  const avgPrice = stats.totalValue / stats.totalQuantity;
+                  const avgPrice =
+                    stats.totalQuantity > 0
+                      ? stats.totalValue / stats.totalQuantity
+                      : 0;
                   const maxPrice = avgPrice * 1.6;
-                  const supplierName =
-                    stats.suppliers[0]?.name || `Fornecedor ${index + 1}`;
+                  const supplierName = Array.from(stats.suppliers)[0] || `Fornecedor ${index + 1}`;
 
                   return (
                     <div
@@ -707,7 +740,11 @@ function App() {
                     }
                   >
                     <td>{supplier.nomeFantasia}</td>
-                    <td>{materiais[index]}</td> {/* usa o mesmo índice */}
+                    <td>{ordemDeCompra
+      .filter(ordem => ordem.fornecedor?.id === supplier.id)
+      .map(ordem => ordem.estoque?.tipoMaterial)
+      .filter((val, idx, arr) => val && arr.indexOf(val) === idx) // evita duplicados
+      .join(", ") || "Sem material"}</td> {/* usa o mesmo índice */}
                     {/* <td>{supplier.data}</td> */}
                   </tr>
                 ))}
@@ -726,9 +763,9 @@ function App() {
           <div className="popup-content" onClick={(e) => e.stopPropagation()}>
             <div className="popup-header">
               <h3>{selectedSupplier.name}</h3>
-              <fechar className="close-button" onClick={closePopup}>
+              <div className="close-button" onClick={closePopup}>
                 <X size={20} />
-              </fechar>
+              </div>
             </div>
 
             <div className="popup-body">
@@ -738,25 +775,24 @@ function App() {
                   <div className="info-item">
                     <span className="info-label">Material:</span>
                     <span className="info-value">
-                      
+                      {selectedSupplier.material || "Não encontrado"}
                     </span>
                   </div>
-                  <div className="info-item">
-                    {/* <span className="info-label">Data do Pedido:</span>
-                    <span className="info-value">{selectedSupplier.date}</span> */}
-                  </div>
-                  <div className="info-item">
-                    {/* <span className="info-label">Preço Unitário:</span>
-                    <span className="info-value">
-                      R$ {selectedSupplier.price.toFixed(2)} */}
-                    {/* </span> */}
-                  </div>
-                  <div className="info-item">
-                    {/* <span className="info-label">Quantidade:</span>
-                    <span className="info-value">
-                      {selectedSupplier.quantity} unidades
-                    </span> */}
-                  </div>
+                  {/* Você pode descomentar os campos abaixo se quiser mostrar mais informações */}
+                  {/* 
+            <div className="info-item">
+              <span className="info-label">Data do Pedido:</span>
+              <span className="info-value">{selectedSupplier.date}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Preço Unitário:</span>
+              <span className="info-value">R$ {selectedSupplier.price.toFixed(2)}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Quantidade:</span>
+              <span className="info-value">{selectedSupplier.quantity} unidades</span>
+            </div>
+            */}
                 </div>
               </div>
 
@@ -775,24 +811,21 @@ function App() {
                       {selectedSupplier.delivery}
                     </span>
                   </div>
-                  {/* <div className="info-item">
-                    <span className="info-label">Qualidade:</span>
-                    <span className="info-value">
-                      {selectedSupplier.quality}
-                    </span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Última Entrega:</span>
-                    <span className="info-value">
-                      {selectedSupplier.lastDelivery}
-                    </span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Certificação:</span>
-                    <span className="info-value">
-                      {selectedSupplier.certification}
-                    </span>
-                  </div> */}
+                  {/* Campos opcionais */}
+                  {/* 
+            <div className="info-item">
+              <span className="info-label">Qualidade:</span>
+              <span className="info-value">{selectedSupplier.quality}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Última Entrega:</span>
+              <span className="info-value">{selectedSupplier.lastDelivery}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Certificação:</span>
+              <span className="info-value">{selectedSupplier.certification}</span>
+            </div>
+            */}
                 </div>
               </div>
 
@@ -818,22 +851,23 @@ function App() {
                 </div>
               </div>
 
-              {/* <div className="popup-section">
-                <h4>Resumo Financeiro</h4>
-                <div className="financial-summary">
-                  <div className="financial-item">
-                    <span className="financial-label">
-                      Valor Total do Pedido:
-                    </span>
-                    <span className="financial-value">
-                      R${" "}
-                      {(
-                        selectedSupplier.price * selectedSupplier.quantity
-                      ).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                </div>
-              </div> */}
+              {/* Resumo financeiro (opcional) */}
+              {/* 
+        <div className="popup-section">
+          <h4>Resumo Financeiro</h4>
+          <div className="financial-summary">
+            <div className="financial-item">
+              <span className="financial-label">Valor Total do Pedido:</span>
+              <span className="financial-value">
+                R${" "}
+                {(
+                  selectedSupplier.price * selectedSupplier.quantity
+                ).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+          </div>
+        </div>
+        */}
             </div>
           </div>
         </div>
