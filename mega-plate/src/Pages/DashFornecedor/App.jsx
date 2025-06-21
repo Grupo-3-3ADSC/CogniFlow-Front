@@ -437,24 +437,7 @@ function App() {
     ];
   };
 
-  // Função para gerar dados dinâmicos do gráfico de barras
-  const generateBarData = (suppliers) => {
-    const currentDate = new Date();
-    const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"];
-
-    return [
-      ["Mês", "Produção", "Meta"],
-      ...months.map((month, index) => {
-        const baseProduction = suppliers.reduce(
-          (sum, s) => sum + s.quantity,
-          0
-        );
-        const monthlyVariation = Math.floor(Math.random() * 300) + 900;
-        const production = Math.floor(baseProduction * 0.8 + monthlyVariation);
-        return [month, production, 1200];
-      }),
-    ];
-  };
+  
 
   // Função para gerar dados dinâmicos do gráfico de linha
   const generateLineData = (suppliers) => {
@@ -533,12 +516,13 @@ function App() {
   useEffect(() => {
     getFornecedor();
     getEstoque();
+    BuscarOrdemDeCompra();
   }, []);
 
   if (!autenticacaoPassou) return null;
   // Dados dinâmicos dos gráficos baseados nos fornecedores filtrados
   const pieData = generatePieData(filteredSuppliers);
-  const barData = generateBarData(filteredSuppliers);
+  
   const lineData = generateLineData(filteredSuppliers);
   const kpiData = calculateKPIData(ordemDeCompra);
 
@@ -573,6 +557,64 @@ function App() {
     });
     setShowPopup(true);
   };
+
+  // Função para gerar dados dinâmicos do gráfico de barras baseado nas ordens de compra
+const generateBarData = (ordensDeCompra) => {
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"];
+  const monthsNumbers = [0, 1, 2, 3, 4, 5]; // Janeiro = 0, Junho = 5
+  
+  // Calcula a quantidade total de todas as ordens de compra
+  const totalQuantidade = ordensDeCompra.reduce((sum, ordem) => {
+    return sum + (ordem.quantidade || 0);
+  }, 0);
+  
+  console.log("Total de ordens:", ordensDeCompra.length);
+  console.log("Quantidade total das ordens:", totalQuantidade);
+  
+  // Se não houver dados, retorna zeros
+  if (totalQuantidade === 0) {
+    console.warn("Nenhuma quantidade encontrada nas ordens de compra!");
+    return [
+      ["Mês", "Produção", "Meta"],
+      ...months.map(month => [month, 0, 0])
+    ];
+  }
+  
+  // Define a meta como 75% da quantidade total (constante para todos os meses)
+  const meta = Math.floor(totalQuantidade * 0.75);
+  
+  // Inicializa array para acumular produção por mês
+  const producaoMensal = new Array(6).fill(0);
+  
+  // Distribui as quantidades pelos meses baseado na data de emissão
+  ordensDeCompra.forEach(ordem => {
+    if (ordem.dataDeEmissao && ordem.quantidade) {
+      const dataEmissao = new Date(ordem.dataDeEmissao);
+      const mesEmissao = dataEmissao.getMonth(); // 0-11
+      const anoEmissao = dataEmissao.getFullYear();
+      
+      // Verifica se a data é do ano atual e está nos primeiros 6 meses
+      if (anoEmissao === currentYear && mesEmissao >= 0 && mesEmissao <= 5) {
+        producaoMensal[mesEmissao] += ordem.quantidade;
+      }
+    }
+  });
+  
+  console.log("Produção mensal:", producaoMensal);
+  
+  return [
+    ["Mês", "Produção", "Meta"],
+    ...months.map((month, index) => {
+      return [month, producaoMensal[index], meta];
+    }),
+  ];
+};
+
+  const barData = generateBarData(ordemDeCompra);
+
+  console.log('bardata:', barData)
 
   const closePopup = () => {
     setShowPopup(false);
