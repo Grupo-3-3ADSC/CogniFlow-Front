@@ -12,6 +12,8 @@ import { jsPDF } from 'jspdf';
 import NavBar from '../../components/NavBar';
 import { toastError, toastSucess } from '../../components/toastify/ToastifyService';
 import { jwtDecode } from "jwt-decode";
+import ExcelJS from 'exceljs';
+import { saveAs } from "file-saver";
 
 export function OrdemDeCompra() {
   const [listaFornecedores, setListaFornecedores] = useState([]);
@@ -413,6 +415,129 @@ function baixarPDF() {
   doc.save(nomeArquivo);
 }
 
+async function baixarExcel() {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet('Ordem de Compra');
+
+  const corPrimaria = '2A80B9';  // Azul
+  const corSecundaria = '95A5A6'; // Cinza
+  const corTexto = '2C3E50';
+
+  // Cabeçalho da Empresa
+  sheet.mergeCells('A1:E1');
+  sheet.getCell('A1').value = 'EMPRESA LTDA';
+  sheet.getCell('A1').fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: corPrimaria },
+  };
+  sheet.getCell('A1').font = { color: { argb: 'FFFFFF' }, bold: true, size: 16 };
+  sheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'left' };
+
+  sheet.addRow([]);
+  sheet.addRow(['CNPJ: 00.000.000/0001-00', '', '', 'Endereço: Rua Exemplo, 123 - Cidade/UF']);
+  sheet.addRow(['Telefone: (11) 9999-9999']);
+
+  const numeroOC = Math.floor(Math.random() * 10000).toString().padStart(6, '0');
+  const dataAtual = new Date();
+  const dataFormatada = dataAtual.toLocaleDateString('pt-BR');
+  const horaFormatada = dataAtual.toLocaleTimeString('pt-BR');
+
+  sheet.addRow([]);
+  sheet.addRow([`Ordem de Compra Nº: ${numeroOC}`]);
+  sheet.addRow([`Data: ${dataFormatada}`, `Hora: ${horaFormatada}`]);
+
+  sheet.addRow([]);
+  sheet.addRow(['DADOS DO FORNECEDOR']);
+  sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true, size: 12 };
+
+  const fornecedor = listaFornecedores.find(f => f.id === parseInt(valoresInput["FornecedorId"]));
+  if (fornecedor) {
+    sheet.addRow([`Nome: ${fornecedor.nomeFantasia}`]);
+    if (fornecedor.cnpj) sheet.addRow([`CNPJ: ${fornecedor.cnpj}`]);
+    if (fornecedor.endereco) sheet.addRow([`Endereço: ${fornecedor.endereco}`]);
+  } else {
+    sheet.addRow(['Fornecedor não encontrado']);
+  }
+
+  sheet.addRow([]);
+  sheet.addRow(['DESCRIÇÃO DOS MATERIAIS']);
+  sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true, size: 12 };
+
+  // Cabeçalho da tabela
+  const header = ['ITEM', 'DESCRIÇÃO', 'QTD', 'VALOR UNIT.', 'TOTAL'];
+  const headerRow = sheet.addRow(header);
+  headerRow.eachCell((cell) => {
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'F0F0F0' },
+    };
+    cell.font = { bold: true };
+    cell.border = {
+      top: { style: 'thin' },
+      bottom: { style: 'thin' },
+      left: { style: 'thin' },
+      right: { style: 'thin' },
+    };
+  });
+
+  // Dados do material
+  const material = listaMateriais.find(m => m.id === parseInt(valoresInput["MaterialId"]));
+  const descricao = material?.tipoMaterial || "Material não encontrado";
+  const quantidade = parseFloat(valoresInput["Quantidade"]) || 0;
+  const valorUnit = parseFloat(valoresInput["Valor Unitário"]) || 0;
+  const total = parseFloat(valoresInput["Total"]) || (valorUnit * quantidade);
+  const ipi = parseFloat(valoresInput["IPI"]) || 0;
+  const totalGeral = total + ipi;
+
+  sheet.addRow([
+    '001',
+    descricao.substring(0, 50),
+    quantidade,
+    `R$ ${valorUnit.toFixed(2).replace('.', ',')}`,
+    `R$ ${total.toFixed(2).replace('.', ',')}`,
+  ]);
+
+  sheet.addRow([]);
+  sheet.addRow(['SUBTOTAL:', '', '', '', `R$ ${total.toFixed(2).replace('.', ',')}`]);
+  sheet.addRow(['IPI:', '', '', '', `R$ ${ipi.toFixed(2).replace('.', ',')}`]);
+  sheet.addRow(['TOTAL GERAL:', '', '', '', `R$ ${totalGeral.toFixed(2).replace('.', ',')}`]);
+
+  sheet.addRow([]);
+  sheet.addRow(['OBSERVAÇÕES:']);
+  sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true };
+  const observacoes = [
+    '• Documento gerado automaticamente pelo sistema',
+    '• Válido como comprovante de compra',
+    '• IPI calculado conforme percentual informado',
+    '• Para dúvidas, entre em contato conosco',
+  ];
+  observacoes.forEach(obs => sheet.addRow([obs]));
+
+  sheet.addRow([]);
+  sheet.addRow([
+    `Documento gerado em ${new Date().toLocaleString('pt-BR')}`,
+    '', '', '',
+    'www.empresa.com.br | contato@empresa.com.br',
+  ]);
+
+  // Ajustar largura das colunas
+  sheet.columns.forEach(col => {
+    col.width = 25;
+  });
+
+  // Gerar o arquivo
+  const buffer = await workbook.xlsx.writeBuffer();
+  const nomeArquivo = `ordem_de_compra_${numeroOC}_${dataFormatada.replace(/\//g, '-')}.xlsx`;
+  saveAs(new Blob([buffer]), nomeArquivo);
+}
+
+async function baixarDocumentos(){
+  baixarPDF();
+  await baixarExcel();
+}
+
   return (
     <>
       <NavBar />
@@ -496,7 +621,7 @@ function baixarPDF() {
               style={
                 progresso != 4 ? { display: "none" } : { display: "block" }
               }
-              onClick={baixarPDF}
+              onClick={baixarDocumentos}
             >
               BAIXAR ORDEM DE COMPRA
             </button>
