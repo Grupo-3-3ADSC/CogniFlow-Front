@@ -12,20 +12,20 @@ Olá, seja bem-vindo ao repositório da aplicação front-end
 
 ## Configuração do projeto
 
-1. Clone o nosso repositório em sua máquina 💻:
+1. Clone o nosso repositório em sua máquina 💻
 
     ```sh
     git clone https://github.com/Grupo-3-3ADSC/CogniFlow-Front.git
     ```
 
-2. Acesse o repositório no local que você clonou o projeto 📁:
+2. Acesse o repositório no local que você clonou o projeto 📁
 
     ```sh
     cd CogniFlow-Front
     cd mega-plate
     ```
 
-3. Instale as dependências em sua máquina ⬇️:
+3. Instale as dependências em sua máquina ⬇️
 
     ```sh
     npm i
