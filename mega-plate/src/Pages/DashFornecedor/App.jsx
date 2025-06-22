@@ -271,6 +271,7 @@ function App() {
   const fileInputRef = useRef(null);
   const [materiais, setMateriais] = useState([]);
   const [ordemDeCompra, setOrdemDeCompra] = useState([]);
+  const [estoque, setEstoque] = useState([]);
 
   const handlePhotoChange = (event) => {
     const file = event.target.files[0];
@@ -308,7 +309,7 @@ function App() {
       .then((response) => {
         const fornecedores = response.data;
         setFilteredSuppliers(fornecedores);
-        console.log(fornecedores);
+        // console.log(fornecedores);
       })
       .catch((error) => {
         console.error("Erro ao buscar fornecedores:", error);
@@ -320,12 +321,15 @@ function App() {
       .get("/estoque")
       .then((response) => {
         const materiais = response.data.map((item) => item.tipoMaterial); // isso precisa retornar um array
+
         setMateriais(materiais);
-        console.log(materiais);
+        //  console.log('estoque resgatou', estoque)
+        setEstoque(response.data);
+        // console.log(materiais);
+
       })
       .catch((error) => {
         console.error("Erro ao buscar estoque:", error);
-        // Aqui você pode lidar com o erro, como exibir uma mensagem de erro para o usuário
       });
   }
   function BuscarOrdemDeCompra() {
@@ -334,91 +338,16 @@ function App() {
       .then((response) => {
         const ordens = response.data;
         setOrdemDeCompra(ordens);
-        console.log(ordens);
-        // Aqui você pode lidar com os dados das ordens de compra, como exibir em uma tabela ou lista
+        // console.log(ordens);
       })
       .catch((error) => {
         console.error("Erro ao buscar estoque:", error);
-        // Aqui você pode lidar com o erro, como exibir uma mensagem de erro para o usuário
       });
   }
   useEffect(() => {
     BuscarOrdemDeCompra();
   }, []);
 
-  // Dados expandidos dos fornecedores
-  const supplierData = [
-    {
-      name: "Fornecedor 1",
-      date: "28/04/2025",
-      material: "SAE 1020",
-      price: 500.0,
-      quantity: 120,
-      delivery: "Em dia",
-      quality: "Excelente",
-      contact: "(11) 9999-1111",
-      email: "contato@fornecedor1.com",
-      address: "Rua das Indústrias, 123 - São Paulo/SP",
-      lastDelivery: "25/04/2025",
-      certification: "ISO 9001:2015",
-    },
-    {
-      name: "Fornecedor 2",
-      date: "27/04/2025",
-      material: "SAE 1045",
-      price: 650.0,
-      quantity: 95,
-      delivery: "Atrasado",
-      quality: "Boa",
-      contact: "(11) 8888-2222",
-      email: "vendas@fornecedor2.com",
-      address: "Av. Industrial, 456 - Guarulhos/SP",
-      lastDelivery: "20/04/2025",
-      certification: "ISO 14001:2015",
-    },
-    {
-      name: "Fornecedor 3",
-      date: "26/04/2025",
-      material: "HARDOX 450",
-      price: 850.0,
-      quantity: 75,
-      delivery: "Em dia",
-      quality: "Excelente",
-      contact: "(11) 7777-3333",
-      email: "comercial@fornecedor3.com",
-      address: "Rod. dos Metalúrgicos, 789 - Osasco/SP",
-      lastDelivery: "24/04/2025",
-      certification: "ISO 45001:2018",
-    },
-    {
-      name: "Fornecedor 4",
-      date: "25/04/2025",
-      material: "SAE 1020",
-      price: 480.0,
-      quantity: 140,
-      delivery: "Em dia",
-      quality: "Boa",
-      contact: "(11) 6666-4444",
-      email: "atendimento@fornecedor4.com",
-      address: "Rua da Metalurgia, 321 - São Bernardo/SP",
-      lastDelivery: "23/04/2025",
-      certification: "OHSAS 18001",
-    },
-    {
-      name: "Fornecedor 5",
-      date: "24/04/2025",
-      material: "SAE 1045",
-      price: 620.0,
-      quantity: 110,
-      delivery: "Atrasado",
-      quality: "Regular",
-      contact: "(11) 5555-5555",
-      email: "suporte@fornecedor5.com",
-      address: "Est. dos Aços, 654 - Diadema/SP",
-      lastDelivery: "18/04/2025",
-      certification: "NBR ISO 9001",
-    },
-  ];
 
   // Função para gerar dados dinâmicos do gráfico de pizza
   const generatePieData = (suppliers) => {
@@ -437,7 +366,7 @@ function App() {
     ];
   };
 
-  
+
 
   // Função para gerar dados dinâmicos do gráfico de linha
   const generateLineData = (suppliers) => {
@@ -488,20 +417,20 @@ function App() {
   };
 
   const handleSearch = () => {
-    const filtered = supplierData.filter((supplier) => {
-      const supplierDate = parseDate(supplier.date);
+    const filtered = ordemDeCompra.filter((ordem) => {
+      const supplierDate = parseDate(ordem.dataDeEmissao);
       const startDateObj = startDate ? new Date(startDate) : null;
       const endDateObj = endDate ? new Date(endDate) : null;
 
       const materialMatch =
-        !selectedMaterial || supplier.material === selectedMaterial;
+        !selectedMaterial || ordem?.estoque?.tipoMaterial === selectedMaterial;
       const dateInRange =
         (!startDateObj || supplierDate >= startDateObj) &&
         (!endDateObj || supplierDate <= endDateObj);
       const nameMatch =
         !searchTerm ||
-        supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        supplier.material.toLowerCase().includes(searchTerm.toLowerCase());
+        ordem?.fornecedor?.nomeFantasia.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ordem?.estoque?.tipoMaterial.toLowerCase().includes(searchTerm.toLowerCase());
 
       return materialMatch && dateInRange && nameMatch;
     });
@@ -522,7 +451,7 @@ function App() {
   if (!autenticacaoPassou) return null;
   // Dados dinâmicos dos gráficos baseados nos fornecedores filtrados
   const pieData = generatePieData(filteredSuppliers);
-  
+
   const lineData = generateLineData(filteredSuppliers);
   const kpiData = calculateKPIData(ordemDeCompra);
 
@@ -554,67 +483,67 @@ function App() {
       condPagamento: ordem?.condPagamento || "Não informada",
       ipi: ordem?.ipi || 0,
       rastreabilidade: ordem?.rastreabilidade || "Não informada",
+      idFornecedor: ordem?.fornecedorId || 1
     });
     setShowPopup(true);
   };
 
+
   // Função para gerar dados dinâmicos do gráfico de barras baseado nas ordens de compra
-const generateBarData = (ordensDeCompra) => {
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"];
-  const monthsNumbers = [0, 1, 2, 3, 4, 5]; // Janeiro = 0, Junho = 5
-  
-  // Calcula a quantidade total de todas as ordens de compra
-  const totalQuantidade = ordensDeCompra.reduce((sum, ordem) => {
-    return sum + (ordem.quantidade || 0);
-  }, 0);
-  
-  console.log("Total de ordens:", ordensDeCompra.length);
-  console.log("Quantidade total das ordens:", totalQuantidade);
-  
-  // Se não houver dados, retorna zeros
-  if (totalQuantidade === 0) {
-    console.warn("Nenhuma quantidade encontrada nas ordens de compra!");
+  const generateBarData = (ordensDeCompra) => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"];
+    const monthsNumbers = [0, 1, 2, 3, 4, 5]; // Janeiro = 0, Junho = 5
+
+    // Calcula a quantidade total de todas as ordens de compra
+    const totalQuantidade = ordensDeCompra.reduce((sum, ordem) => {
+      return sum + (ordem.quantidade || 0);
+    }, 0);
+
+    // console.log("Total de ordens:", ordensDeCompra.length);
+    // console.log("Quantidade total das ordens:", totalQuantidade);
+
+    // Se não houver dados, retorna zeros
+    if (totalQuantidade === 0) {
+      console.warn("Nenhuma quantidade encontrada nas ordens de compra!");
+      return [
+        ["Mês", "Produção", "Meta"],
+        ...months.map(month => [month, 0, 0])
+      ];
+    }
+
+    // Define a meta como 75% da quantidade total (constante para todos os meses)
+    const meta = Math.floor(totalQuantidade * 0.75);
+
+    // Inicializa array para acumular produção por mês
+    const producaoMensal = new Array(6).fill(0);
+
+    // Distribui as quantidades pelos meses baseado na data de emissão
+    ordensDeCompra.forEach(ordem => {
+      if (ordem.dataDeEmissao && ordem.quantidade) {
+        const dataEmissao = new Date(ordem.dataDeEmissao);
+        const mesEmissao = dataEmissao.getMonth(); // 0-11
+        const anoEmissao = dataEmissao.getFullYear();
+
+        // Verifica se a data é do ano atual e está nos primeiros 6 meses
+        if (anoEmissao === currentYear && mesEmissao >= 0 && mesEmissao <= 5) {
+          producaoMensal[mesEmissao] += ordem.quantidade;
+        }
+      }
+    });
+
+    // console.log("Produção mensal:", producaoMensal);
+
     return [
       ["Mês", "Produção", "Meta"],
-      ...months.map(month => [month, 0, 0])
+      ...months.map((month, index) => {
+        return [month, producaoMensal[index], meta];
+      }),
     ];
-  }
-  
-  // Define a meta como 75% da quantidade total (constante para todos os meses)
-  const meta = Math.floor(totalQuantidade * 0.75);
-  
-  // Inicializa array para acumular produção por mês
-  const producaoMensal = new Array(6).fill(0);
-  
-  // Distribui as quantidades pelos meses baseado na data de emissão
-  ordensDeCompra.forEach(ordem => {
-    if (ordem.dataDeEmissao && ordem.quantidade) {
-      const dataEmissao = new Date(ordem.dataDeEmissao);
-      const mesEmissao = dataEmissao.getMonth(); // 0-11
-      const anoEmissao = dataEmissao.getFullYear();
-      
-      // Verifica se a data é do ano atual e está nos primeiros 6 meses
-      if (anoEmissao === currentYear && mesEmissao >= 0 && mesEmissao <= 5) {
-        producaoMensal[mesEmissao] += ordem.quantidade;
-      }
-    }
-  });
-  
-  console.log("Produção mensal:", producaoMensal);
-  
-  return [
-    ["Mês", "Produção", "Meta"],
-    ...months.map((month, index) => {
-      return [month, producaoMensal[index], meta];
-    }),
-  ];
-};
+  };
 
   const barData = generateBarData(ordemDeCompra);
-
-  console.log('bardata:', barData)
 
   const closePopup = () => {
     setShowPopup(false);
@@ -716,9 +645,8 @@ const generateBarData = (ordensDeCompra) => {
                   (_, index) => (
                     <div
                       key={`empty-${index}`}
-                      id={`chart-aviso-fornecedor${
-                        topMaterials.length + index + 1
-                      }`}
+                      id={`chart-aviso-fornecedor${topMaterials.length + index + 1
+                        }`}
                       className="chart"
                     >
                       <div className="kpi-title">Material N/A</div>
@@ -773,21 +701,16 @@ const generateBarData = (ordensDeCompra) => {
                     onClick={() => handleSupplierClick(supplier)}
                     style={{ cursor: "pointer" }}
                     onMouseEnter={(e) =>
-                      (e.target.parentElement.style.backgroundColor =
-                        "rgba(69, 134, 171, 0.1)")
+                    (e.target.parentElement.style.backgroundColor =
+                      "rgba(69, 134, 171, 0.1)")
                     }
                     onMouseLeave={(e) =>
-                      (e.target.parentElement.style.backgroundColor =
-                        "transparent")
+                    (e.target.parentElement.style.backgroundColor =
+                      "transparent")
                     }
                   >
                     <td>{supplier.nomeFantasia}</td>
-                    <td>{ordemDeCompra
-      .filter(ordem => ordem.fornecedor?.id === supplier.id)
-      .map(ordem => ordem.estoque?.tipoMaterial)
-      .filter((val, idx, arr) => val && arr.indexOf(val) === idx) // evita duplicados
-      .join(", ") || "Sem material"}</td> {/* usa o mesmo índice */}
-                    {/* <td>{supplier.data}</td> */}
+                    <td>{materiais[index]|| "Sem material"}</td> {/* deixei aqui só para pegar um material mesmo que esteja errado */}
                   </tr>
                 ))}
               </tbody>
@@ -801,119 +724,85 @@ const generateBarData = (ordensDeCompra) => {
 
       {/* Pop-up Modal Padronizado */}
       {showPopup && selectedSupplier && (
-        <div className="popup-overlay" onClick={closePopup}>
-          <div className="popup-content" onClick={(e) => e.stopPropagation()}>
-            <div className="popup-header">
-              <h3>{selectedSupplier.name}</h3>
-              <div className="close-button" onClick={closePopup}>
-                <X size={20} />
-              </div>
-            </div>
+  <div className="popup-overlay" onClick={closePopup}>
+    <div className="popup-content" onClick={(e) => e.stopPropagation()}>
+      <div className="popup-header">
+        <h3>{selectedSupplier.nomeFantasia}</h3>
+        <div className="close-button" onClick={closePopup}>
+          <X size={20} />
+        </div>
+      </div>
 
-            <div className="popup-body">
-              <div className="popup-section">
-                <h4>Informações Básicas</h4>
-                <div className="info-grid">
-                  <div className="info-item">
-                    <span className="info-label">Material:</span>
-                    <span className="info-value">
-                      {selectedSupplier.material || "Não encontrado"}
-                    </span>
-                  </div>
-                  {/* Você pode descomentar os campos abaixo se quiser mostrar mais informações */}
-                  {/* 
-            <div className="info-item">
-              <span className="info-label">Data do Pedido:</span>
-              <span className="info-value">{selectedSupplier.date}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Preço Unitário:</span>
-              <span className="info-value">R$ {selectedSupplier.price.toFixed(2)}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Quantidade:</span>
-              <span className="info-value">{selectedSupplier.quantity} unidades</span>
-            </div>
-            */}
-                </div>
-              </div>
-
-              <div className="popup-section">
-                <h4>Status e Qualidade</h4>
-                <div className="info-grid">
-                  <div className="info-item">
-                    <span className="info-label">Status da Entrega:</span>
-                    <span
-                      className={`info-value status-${
-                        selectedSupplier.delivery === "Em dia"
-                          ? "ontime"
-                          : "late"
-                      }`}
-                    >
-                      {selectedSupplier.delivery}
-                    </span>
-                  </div>
-                  {/* Campos opcionais */}
-                  {/* 
-            <div className="info-item">
-              <span className="info-label">Qualidade:</span>
-              <span className="info-value">{selectedSupplier.quality}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Última Entrega:</span>
-              <span className="info-value">{selectedSupplier.lastDelivery}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Certificação:</span>
-              <span className="info-value">{selectedSupplier.certification}</span>
-            </div>
-            */}
-                </div>
-              </div>
-
-              <div className="popup-section">
-                <h4>Contato</h4>
-                <div className="info-grid">
-                  <div className="info-item">
-                    <span className="info-label">Telefone:</span>
-                    <span className="info-value">
-                      {selectedSupplier.telefone}
-                    </span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Email:</span>
-                    <span className="info-value">{selectedSupplier.email}</span>
-                  </div>
-                  <div className="info-item full-width">
-                    <span className="info-label">Endereço:</span>
-                    <span className="info-value">
-                      {selectedSupplier.complemento}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Resumo financeiro (opcional) */}
-              {/* 
+      <div className="popup-body">
         <div className="popup-section">
-          <h4>Resumo Financeiro</h4>
-          <div className="financial-summary">
-            <div className="financial-item">
-              <span className="financial-label">Valor Total do Pedido:</span>
-              <span className="financial-value">
-                R${" "}
-                {(
-                  selectedSupplier.price * selectedSupplier.quantity
-                ).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+          <h4>Informações Básicas</h4>
+          <div className="info-grid">
+            <div className="info-item">
+              <span className="info-label">Material:</span>
+              <span className="info-value">
+                {selectedSupplier.material || "Não encontrado"}
               </span>
             </div>
           </div>
         </div>
-        */}
+
+        {/* ORDENS DE COMPRA DO FORNECEDOR */}
+        <div className="popup-section">
+          <h4>Ordens de Compra</h4>
+          <div className="info-grid">
+            {ordemDeCompra
+              .filter((ordem) => ordem.fornecedorId === selectedSupplier.idFornecedor)
+              .map((ordem, index) => (
+                <div key={index} >
+                  <div className="info-item"> 
+                  <span className="info-label">Pedido:</span>
+                  <span className="info-value">{ordem.numeroPedido || "N/A"}</span>
+                  </div>
+                  <div className="info-item"> 
+                  <span className="info-label">Data do Pedido:</span>
+                  <span className="info-value">{ordem.dataPedido || "N/A"}</span>
+                  </div>
+                  <div className="info-item"> 
+                  <span className="info-label">Quantidade:</span>
+                  <span className="info-value">{ordem.quantidade || 0} unidades</span>
+                  </div>
+                  <div className="info-item"> 
+                  <span className="info-label">Preço Unitário:</span>
+                  <span className="info-value">
+                    R$ {ordem.preco?.toFixed(2) || "0.00"}
+                  </span>
+                  </div>
+
+                  <span className="info-label">Última Movimentação:</span>
+                  <span className="info-value">{ordem.ultimaMovimentacao || "N/A"}</span>
+                </div>
+              ))}
+          </div>
+        </div>
+
+        {/* CONTATO - segue com selectedSupplier */}
+        <div className="popup-section">
+          <h4>Contato</h4>
+          <div className="info-grid">
+            <div className="info-item">
+              <span className="info-label">Telefone:</span>
+              <span className="info-value">{selectedSupplier.telefone}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Email:</span>
+              <span className="info-value">{selectedSupplier.email}</span>
+            </div>
+            <div className="info-item full-width">
+              <span className="info-label">Endereço:</span>
+              <span className="info-value">{selectedSupplier.complemento}</span>
             </div>
           </div>
         </div>
-      )}
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
