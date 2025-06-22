@@ -3,6 +3,19 @@ import nodemailer from 'nodemailer';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import 'dotenv/config';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Servir os arquivos estáticos da build do Vite
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// Para SPA com rotas internas (React Router, por exemplo)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
 
 const PORT = process.env.PORT || 3001;
 
