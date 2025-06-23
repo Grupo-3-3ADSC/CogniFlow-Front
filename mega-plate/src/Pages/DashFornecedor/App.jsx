@@ -690,8 +690,8 @@ function App() {
               <thead>
                 <tr>
                   <th>Nome do Fornecedor</th>
-                  <th>Material</th>
-                  <th>Data</th>
+                  {/* <th>Material</th>
+                  <th>Data</th> */}
                 </tr>
               </thead>
               <tbody>
@@ -710,7 +710,7 @@ function App() {
                     }
                   >
                     <td>{supplier.nomeFantasia}</td>
-                    <td>{materiais[index]|| "Sem material"}</td> {/* deixei aqui só para pegar um material mesmo que esteja errado */}
+                    {/* <td>{materiais[index]|| "Sem material"}</td> deixei aqui só para pegar um material mesmo que esteja errado */}
                   </tr>
                 ))}
               </tbody>
@@ -740,7 +740,11 @@ function App() {
             <div className="info-item">
               <span className="info-label">Material:</span>
               <span className="info-value">
-                {selectedSupplier.material || "Não encontrado"}
+                {ordemDeCompra
+      .filter((ordem) => ordem.fornecedorId === selectedSupplier.fornecedorId)
+      .map((ordem) => ordem.estoque?.tipoMaterial)
+      .filter((mat, idx, arr) => mat && arr.indexOf(mat) === idx) // remove duplicados e vazios
+      .join(", ") || "Não encontrado"}
               </span>
             </div>
           </div>
@@ -748,37 +752,44 @@ function App() {
 
         {/* ORDENS DE COMPRA DO FORNECEDOR */}
         <div className="popup-section">
-          <h4>Ordens de Compra</h4>
-          <div className="info-grid">
-            {ordemDeCompra
-              .filter((ordem) => ordem.fornecedorId === selectedSupplier.idFornecedor)
-              .map((ordem, index) => (
-                <div key={index} >
-                  <div className="info-item"> 
-                  <span className="info-label">Pedido:</span>
-                  <span className="info-value">{ordem.numeroPedido || "N/A"}</span>
-                  </div>
-                  <div className="info-item"> 
-                  <span className="info-label">Data do Pedido:</span>
-                  <span className="info-value">{ordem.dataPedido || "N/A"}</span>
-                  </div>
-                  <div className="info-item"> 
-                  <span className="info-label">Quantidade:</span>
-                  <span className="info-value">{ordem.quantidade || 0} unidades</span>
-                  </div>
-                  <div className="info-item"> 
-                  <span className="info-label">Preço Unitário:</span>
-                  <span className="info-value">
-                    R$ {ordem.preco?.toFixed(2) || "0.00"}
-                  </span>
-                  </div>
-
-                  <span className="info-label">Última Movimentação:</span>
-                  <span className="info-value">{ordem.ultimaMovimentacao || "N/A"}</span>
-                </div>
-              ))}
+  <h4>Ordens de Compra</h4>
+  <div className="info-grid">
+    {ordemDeCompra
+      .filter((ordem) => ordem.fornecedorId === selectedSupplier.fornecedorId)
+      .map((ordem, index) => (
+        <div key={index}>
+          <div className="info-item"> 
+            <span className="info-label">ID do Pedido:</span>
+            <span className="info-value">{ordem.id || "N/A"}</span>
+          </div>
+          <div className="info-item"> 
+            <span className="info-label">Data do Pedido:</span>
+            <span className="info-value">
+              {ordem.dataDeEmissao ? ordem.dataDeEmissao.split("T")[0] : "N/A"}
+            </span>
+          </div>
+          <div className="info-item"> 
+            <span className="info-label">Quantidade:</span>
+            <span className="info-value">{ordem.quantidade || 0} unidades</span>
+          </div>
+          <div className="info-item"> 
+            <span className="info-label">Preço Unitário:</span>
+            <span className="info-value">
+              R$ {ordem.valorUnitario?.toFixed(2) || "0.00"}
+            </span>
+          </div>
+          <div className="info-item"> 
+            <span className="info-label">Material:</span>
+            <span className="info-value">{ordem.estoque?.tipoMaterial || "N/A"}</span>
+          </div>
+          <div className="info-item"> 
+            <span className="info-label">Prazo Entrega:</span>
+            <span className="info-value">{ordem.prazoEntrega || "N/A"} dias</span>
           </div>
         </div>
+      ))}
+  </div>
+</div>
 
         {/* CONTATO - segue com selectedSupplier */}
         <div className="popup-section">

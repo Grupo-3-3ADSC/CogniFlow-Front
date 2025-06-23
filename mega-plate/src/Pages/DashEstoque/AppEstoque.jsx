@@ -455,7 +455,7 @@ function App() {
             <div className="popup-header">
               <h3>
                 <Package size={24} />
-                {selectedStockItem.material} - {selectedStockItem.lote}
+                {selectedStockItem.tipoMaterial} - {selectedStockItem.id}
               </h3>
               <div className="close-button" onClick={closePopup}>
                 <X size={20} />
