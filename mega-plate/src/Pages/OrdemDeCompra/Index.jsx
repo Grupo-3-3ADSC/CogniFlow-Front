@@ -271,18 +271,31 @@ function baixarPDF() {
   const corSecundaria = [149, 165, 166];
   const corTexto = [44, 62, 80];
 
+  const fornecedorSelecionado = listaFornecedores.find(
+    (f) => f.id === parseInt(valoresInput["FornecedorId"])
+  );
+
   doc.setFillColor(...corPrimaria);
   doc.rect(0, 0, 210, 35, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text("EMPRESA LTDA", 20, 20);
+  
+  if (fornecedorSelecionado) {
+    doc.text(`${fornecedorSelecionado.nomeFantasia} LTDA`, 20, 20);
+  } else {
+    doc.text('FORNECEDOR NÃO ENCONTRADO', 20, 20);
+  }
+  
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text("CNPJ: 00.000.000/0001-00", 20, 28);
-  doc.text("Endereço: Rua Exemplo, 123 - Cidade/UF", 105, 20);
-  doc.text("Telefone: (11) 9999-9999", 105, 28);
-
+  
+  if (fornecedorSelecionado) {
+    doc.text(`CNPJ: ${fornecedorSelecionado.cnpj}`, 20, 28);
+    doc.text(`Endereço: ${fornecedorSelecionado.complemento}`, 105, 20);
+    doc.text(`Telefone: ${fornecedorSelecionado.telefone}`, 105, 28);
+  }
+  
   doc.setFillColor(240, 240, 240);
   doc.rect(140, 40, 65, 25, 'F');
   doc.setTextColor(...corTexto);
@@ -291,6 +304,7 @@ function baixarPDF() {
   doc.text("Ordem De Compra:", 145, 50);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
+  
   const numeroOC = Math.floor(Math.random() * 10000).toString().padStart(6, '0');
   doc.text(`Nº ${numeroOC}`, 145, 58);
 
@@ -308,13 +322,10 @@ function baixarPDF() {
   doc.setFont('helvetica', 'bold');
   doc.text("DADOS DO FORNECEDOR", 20, 80);
 
-  const fornecedorSelecionado = listaFornecedores.find(
-    (f) => f.id === parseInt(valoresInput["FornecedorId"])
-  );
-
   let posicaoY = 90;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
+  
   if (fornecedorSelecionado) {
     doc.text(`Nome: ${fornecedorSelecionado.nomeFantasia}`, 20, posicaoY);
     posicaoY += 6;
@@ -322,8 +333,8 @@ function baixarPDF() {
       doc.text(`CNPJ: ${fornecedorSelecionado.cnpj}`, 20, posicaoY);
       posicaoY += 6;
     }
-    if (fornecedorSelecionado.endereco) {
-      doc.text(`Endereço: ${fornecedorSelecionado.endereco}`, 20, posicaoY);
+    if (fornecedorSelecionado.complemento) {
+      doc.text(`Endereço: ${fornecedorSelecionado.complemento}`, 20, posicaoY);
       posicaoY += 6;
     }
   } else {
@@ -378,7 +389,7 @@ function baixarPDF() {
   doc.text("SUBTOTAL:", 135, posicaoY);
   doc.text(`R$ ${total.toFixed(2).replace('.', ',')}`, 170, posicaoY);
 
-  doc.text(`IPI :`, 135, posicaoY + 8);
+  doc.text(`IPI:`, 135, posicaoY + 8);
   doc.text(`R$ ${ipi.toFixed(2).replace('.', ',')}`, 170, posicaoY + 8);
 
   doc.setFontSize(11);
@@ -409,7 +420,13 @@ function baixarPDF() {
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.text("Documento gerado em " + new Date().toLocaleString('pt-BR'), 20, alturaRodape + 8);
-  doc.text("www.empresa.com.br | contato@empresa.com.br", 20, alturaRodape + 15);
+  
+  // CORREÇÃO: Separar as linhas do rodapé
+  doc.text("www.megaplate.com.br | vendas@megaplate.com.br", 20, alturaRodape + 12);
+  
+  if (fornecedorSelecionado) {
+    doc.text(`www.${fornecedorSelecionado.nomeFantasia.toLowerCase()}.com.br | contato@${fornecedorSelecionado.nomeFantasia.toLowerCase()}.com.br`, 20, alturaRodape + 16);
+  }
 
   const nomeArquivo = `ordem_de_compra_${numeroOC}_${dataFormatada.replace(/\//g, '-')}.pdf`;
   doc.save(nomeArquivo);
@@ -419,13 +436,21 @@ async function baixarExcel() {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet('Ordem de Compra');
 
+  const fornecedor = listaFornecedores.find(f => f.id === parseInt(valoresInput["FornecedorId"]));
+
   const corPrimaria = '2A80B9';  // Azul
   const corSecundaria = '95A5A6'; // Cinza
   const corTexto = '2C3E50';
 
   // Cabeçalho da Empresa
   sheet.mergeCells('A1:E1');
-  sheet.getCell('A1').value = 'EMPRESA LTDA';
+  
+  if (fornecedor) {
+    sheet.getCell('A1').value = `${fornecedor.nomeFantasia} LTDA`;
+  } else {
+    sheet.getCell('A1').value = 'FORNECEDOR NÃO ENCONTRADO';
+  }
+  
   sheet.getCell('A1').fill = {
     type: 'pattern',
     pattern: 'solid',
@@ -435,8 +460,13 @@ async function baixarExcel() {
   sheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'left' };
 
   sheet.addRow([]);
-  sheet.addRow(['CNPJ: 00.000.000/0001-00', '', '', 'Endereço: Rua Exemplo, 123 - Cidade/UF']);
-  sheet.addRow(['Telefone: (11) 9999-9999']);
+  
+  if (fornecedor) {
+    sheet.addRow([`CNPJ: ${fornecedor.cnpj || 'N/A'}`, '', '', `Endereço: ${fornecedor.complemento || 'N/A'}`]);
+    sheet.addRow([`Telefone: ${fornecedor.telefone || 'N/A'}`]);
+  } else {
+    sheet.addRow(['Dados do fornecedor não disponíveis']);
+  }
 
   const numeroOC = Math.floor(Math.random() * 10000).toString().padStart(6, '0');
   const dataAtual = new Date();
@@ -451,11 +481,10 @@ async function baixarExcel() {
   sheet.addRow(['DADOS DO FORNECEDOR']);
   sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true, size: 12 };
 
-  const fornecedor = listaFornecedores.find(f => f.id === parseInt(valoresInput["FornecedorId"]));
   if (fornecedor) {
     sheet.addRow([`Nome: ${fornecedor.nomeFantasia}`]);
     if (fornecedor.cnpj) sheet.addRow([`CNPJ: ${fornecedor.cnpj}`]);
-    if (fornecedor.endereco) sheet.addRow([`Endereço: ${fornecedor.endereco}`]);
+    if (fornecedor.complemento) sheet.addRow([`Endereço: ${fornecedor.complemento}`]);
   } else {
     sheet.addRow(['Fornecedor não encontrado']);
   }
@@ -519,7 +548,7 @@ async function baixarExcel() {
   sheet.addRow([
     `Documento gerado em ${new Date().toLocaleString('pt-BR')}`,
     '', '', '',
-    'www.empresa.com.br | contato@empresa.com.br',
+    'www.megaplate.com.br | vendas@megaplate.com.br',
   ]);
 
   // Ajustar largura das colunas
@@ -536,6 +565,7 @@ async function baixarExcel() {
 async function baixarDocumentos(){
   baixarPDF();
   await baixarExcel();
+  window.location.reload();
 }
 
   return (
