@@ -18,9 +18,11 @@ import { saveAs } from "file-saver";
 export function OrdemDeCompra() {
   const [listaFornecedores, setListaFornecedores] = useState([]);
   const [listaMateriais, setListaMateriais] = useState([]);
+  const [ordemDeCompra, setOrdemDeCompra] = useState([]);
+
   function getFornecedores() {
     api
-      .get("/fornecedores")
+      .get("/fornecedores/listarFornecedorCompleto")
       .then((resposta) => {
         setListaFornecedores(resposta.data);
       })
@@ -88,23 +90,14 @@ export function OrdemDeCompra() {
         console.log("Ordem cadastrada com sucesso", res.data);
         setProgresso(4);
         setImage(etapas[4].imagem);
+        setOrdemDeCompra(res.data);
       })
       .catch((err) => {
         console.error("Erro ao cadastrar ordem de compra:", err);
         alert("Erro ao cadastrar ordem de compra. Verifique os campos.");
       });
   }
-  //   api.post("/estoque/adicionar", dadosParaApi)
-  //   .then((res) => {
-  //     console.log("Estoque atualizado com sucesso", res.data);
-  //     })
-  //     .catch((err) => {
 
-  //         console.error("Erro ao atualizar estoque:", err);
-  //         alert("Erro ao atualizar estoque. Verifique os campos.");
-  {
-    /* EDITE AQUI PARA MODIFICAR AS INPUTS */
-  }
   const etapas = {
     1: {
       inputs: [
@@ -213,7 +206,6 @@ export function OrdemDeCompra() {
     return true;
   }
 
-
   function mudarProgresso() {
 
     if (!validarInputsEspeciais()) {
@@ -271,9 +263,11 @@ function baixarPDF() {
   const corSecundaria = [149, 165, 166];
   const corTexto = [44, 62, 80];
 
-  const fornecedorSelecionado = listaFornecedores.find(
-    (f) => f.id === parseInt(valoresInput["FornecedorId"])
-  );
+  const fornecedorSelecionado = ordemDeCompra.fornecedor;
+
+  const fornecedorDetalhes = listaFornecedores.find(
+  (f) => f.fornecedorId === parseInt(valoresInput["FornecedorId"])
+);
 
   doc.setFillColor(...corPrimaria);
   doc.rect(0, 0, 210, 35, 'F');
@@ -281,19 +275,16 @@ function baixarPDF() {
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
   
-  if (fornecedorSelecionado) {
-    doc.text(`${fornecedorSelecionado.nomeFantasia} LTDA`, 20, 20);
-  } else {
-    doc.text('FORNECEDOR NÃO ENCONTRADO', 20, 20);
-  }
+    doc.text(`MegaPlate LTDA`, 20, 20);
+  
   
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   
   if (fornecedorSelecionado) {
     doc.text(`CNPJ: ${fornecedorSelecionado.cnpj}`, 20, 28);
-    doc.text(`Endereço: ${fornecedorSelecionado.complemento}`, 105, 20);
-    doc.text(`Telefone: ${fornecedorSelecionado.telefone}`, 105, 28);
+    doc.text(`Endereço: ${fornecedorDetalhes.complemento}`, 105, 20);
+    doc.text(`Telefone: ${fornecedorDetalhes.telefone}`, 105, 28);
   }
   
   doc.setFillColor(240, 240, 240);
@@ -305,8 +296,7 @@ function baixarPDF() {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   
-  const numeroOC = Math.floor(Math.random() * 10000).toString().padStart(6, '0');
-  doc.text(`Nº ${numeroOC}`, 145, 58);
+  doc.text(`Nº ${ordemDeCompra.id}`, 145, 58);
 
   const dataAtual = new Date();
   const dataFormatada = dataAtual.toLocaleDateString('pt-BR');
@@ -333,8 +323,8 @@ function baixarPDF() {
       doc.text(`CNPJ: ${fornecedorSelecionado.cnpj}`, 20, posicaoY);
       posicaoY += 6;
     }
-    if (fornecedorSelecionado.complemento) {
-      doc.text(`Endereço: ${fornecedorSelecionado.complemento}`, 20, posicaoY);
+    if (fornecedorDetalhes.complemento) {
+      doc.text(`Endereço: ${fornecedorDetalhes.complemento}`, 20, posicaoY);
       posicaoY += 6;
     }
   } else {
@@ -421,14 +411,13 @@ function baixarPDF() {
   doc.setFont('helvetica', 'normal');
   doc.text("Documento gerado em " + new Date().toLocaleString('pt-BR'), 20, alturaRodape + 8);
   
-  // CORREÇÃO: Separar as linhas do rodapé
   doc.text("www.megaplate.com.br | vendas@megaplate.com.br", 20, alturaRodape + 12);
   
   if (fornecedorSelecionado) {
     doc.text(`www.${fornecedorSelecionado.nomeFantasia.toLowerCase()}.com.br | contato@${fornecedorSelecionado.nomeFantasia.toLowerCase()}.com.br`, 20, alturaRodape + 16);
   }
 
-  const nomeArquivo = `ordem_de_compra_${numeroOC}_${dataFormatada.replace(/\//g, '-')}.pdf`;
+  const nomeArquivo = `ordem_de_compra_${ordemDeCompra.id}_${dataFormatada.replace(/\//g, '-')}.pdf`;
   doc.save(nomeArquivo);
 }
 
@@ -436,21 +425,20 @@ async function baixarExcel() {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet('Ordem de Compra');
 
-  const fornecedor = listaFornecedores.find(f => f.id === parseInt(valoresInput["FornecedorId"]));
+  const fornecedor = ordemDeCompra.fornecedor;
+
+  const fornecedorDetalhes = listaFornecedores.find(
+  (f) => f.fornecedorId === parseInt(valoresInput["FornecedorId"])
+);
 
   const corPrimaria = '2A80B9';  // Azul
   const corSecundaria = '95A5A6'; // Cinza
   const corTexto = '2C3E50';
 
-  // Cabeçalho da Empresa
   sheet.mergeCells('A1:E1');
-  
-  if (fornecedor) {
-    sheet.getCell('A1').value = `${fornecedor.nomeFantasia} LTDA`;
-  } else {
-    sheet.getCell('A1').value = 'FORNECEDOR NÃO ENCONTRADO';
-  }
-  
+
+    sheet.getCell('A1').value = `MegaPlate LTDA`;
+ 
   sheet.getCell('A1').fill = {
     type: 'pattern',
     pattern: 'solid',
@@ -461,30 +449,29 @@ async function baixarExcel() {
 
   sheet.addRow([]);
   
-  if (fornecedor) {
-    sheet.addRow([`CNPJ: ${fornecedor.cnpj || 'N/A'}`, '', '', `Endereço: ${fornecedor.complemento || 'N/A'}`]);
-    sheet.addRow([`Telefone: ${fornecedor.telefone || 'N/A'}`]);
+  if (fornecedor || fornecedorDetalhes) {
+    sheet.addRow([`CNPJ: ${fornecedor.cnpj || 'N/A'}`, '', '', `Endereço: ${fornecedorDetalhes.complemento || 'N/A'}`]);
+    sheet.addRow([`Telefone: ${fornecedorDetalhes.telefone || 'N/A'}`]);
   } else {
     sheet.addRow(['Dados do fornecedor não disponíveis']);
   }
 
-  const numeroOC = Math.floor(Math.random() * 10000).toString().padStart(6, '0');
   const dataAtual = new Date();
   const dataFormatada = dataAtual.toLocaleDateString('pt-BR');
   const horaFormatada = dataAtual.toLocaleTimeString('pt-BR');
 
   sheet.addRow([]);
-  sheet.addRow([`Ordem de Compra Nº: ${numeroOC}`]);
+  sheet.addRow([`Ordem de Compra Nº: ${ordemDeCompra.id}`]);
   sheet.addRow([`Data: ${dataFormatada}`, `Hora: ${horaFormatada}`]);
 
   sheet.addRow([]);
   sheet.addRow(['DADOS DO FORNECEDOR']);
   sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true, size: 12 };
 
-  if (fornecedor) {
+  if (fornecedor || fornecedorDetalhes) {
     sheet.addRow([`Nome: ${fornecedor.nomeFantasia}`]);
     if (fornecedor.cnpj) sheet.addRow([`CNPJ: ${fornecedor.cnpj}`]);
-    if (fornecedor.complemento) sheet.addRow([`Endereço: ${fornecedor.complemento}`]);
+    if (fornecedorDetalhes.complemento) sheet.addRow([`Endereço: ${fornecedorDetalhes.complemento}`]);
   } else {
     sheet.addRow(['Fornecedor não encontrado']);
   }
@@ -558,7 +545,7 @@ async function baixarExcel() {
 
   // Gerar o arquivo
   const buffer = await workbook.xlsx.writeBuffer();
-  const nomeArquivo = `ordem_de_compra_${numeroOC}_${dataFormatada.replace(/\//g, '-')}.xlsx`;
+  const nomeArquivo = `ordem_de_compra_${ordemDeCompra.id}_${dataFormatada.replace(/\//g, '-')}.xlsx`;
   saveAs(new Blob([buffer]), nomeArquivo);
 }
 
