@@ -18,13 +18,57 @@ export function CadastroFornecedor() {
     email: '',
   });
 
-  const cadastrarFornecedor = () => {
-    if (!formData.cnpj || !formData.nomeFantasia || !formData.razaoSocial || !formData.cep || !formData.endereco || !formData.numero || !formData.telefone || !formData.email) {
+  const cadastrarFornecedor = async () => {
+
+    if (
+      !formData.cnpj ||
+      !formData.nomeFantasia ||
+      !formData.razaoSocial ||
+      !formData.cep ||
+      !formData.endereco ||
+      !formData.numero ||
+      !formData.telefone ||
+      !formData.email
+    ) {
       Swal.fire({
         title: "Preencha as informações",
         icon: "info",
         confirmButtonColor: "#3085d6",
       });
+      return;
+    }
+
+    const cepValido = await validarCEPExistente(formData.cep);
+    if (!cepValido) {
+      Swal.fire({
+        title: "CEP inválido ou inexistente!",
+        icon: "warning",
+        confirmButtonColor: "#3085d6"
+      });
+      return;
+    }
+
+    const cnpjLimpo = formData.cnpj.replace(/\D/g, '');
+
+    if (!validarRazaoSocial(formData.razaoSocial)) {
+      Swal.fire({ title: "Razão Social inválida", icon: "warning", confirmButtonColor: "#3085d6" });
+      return;
+    }
+    if (!validarTelefone(formData.telefone)) {
+      Swal.fire({ title: "Telefone inválido", icon: "warning", confirmButtonColor: "#3085d6" });
+      return;
+    }
+    if (!validarNumero(formData.numero)) {
+      Swal.fire({ title: "Número deve conter apenas dígitos", icon: "warning", confirmButtonColor: "#3085d6" });
+      return;
+    }
+    if (!validarEmail(formData.email)) {
+      Swal.fire({ title: "E-mail inválido", icon: "warning", confirmButtonColor: "#3085d6" });
+      return;
+    }
+
+    if (cnpjLimpo.length !== 14 || !validarCNPJ(cnpjLimpo)) {
+      Swal.fire({ title: "CNPJ inválido", icon: "warning", confirmButtonColor: "#3085d6" });
       return;
     }
 
@@ -72,8 +116,84 @@ export function CadastroFornecedor() {
     });
   };
 
+  async function validarCEPExistente(cep) {
+    const cepLimpo = cep.replace(/\D/g, '');
+    const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+    const data = await response.json();
+    return !data.erro;
+  }
+
+  function formatarCNPJ(valor) {
+    return valor
+      .replace(/\D/g, '')
+      .replace(/^(\d{2})(\d)/, '$1.$2')
+      .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+      .replace(/^(\d{2})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3/$4')
+      .replace(/^(\d{2})\.(\d{3})\.(\d{3})\/(\d{4})(\d)/, '$1.$2.$3/$4-$5')
+      .slice(0, 18);
+  }
+
+  function formatarCEP(valor) {
+    return valor
+      .replace(/\D/g, '')
+      .replace(/^(\d{5})(\d)/, '$1-$2')
+      .slice(0, 9);
+  }
+
+  function validarRazaoSocial(razao) {
+    return typeof razao === 'string' && razao.trim().length >= 3;
+  }
+
+  function apenasNumeros(str) {
+    return /^[0-9]+$/.test(str);
+  }
+
+  function validarCNPJ(cnpj) {
+    return /^[0-9]{14}$/.test(cnpj);
+  }
+
+  function validarTelefone(telefone) {
+    return apenasNumeros(telefone) && telefone.length >= 10 && telefone.length <= 11;
+  }
+
+  function validarNumero(numero) {
+    return apenasNumeros(numero);
+  }
+
+  function validarEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
   function avancar() {
-    if (progresso < 3) setProgresso(progresso + 1);
+    if (progresso === 1) {
+      if (!formData.razaoSocial || !formData.nomeFantasia || !formData.cnpj) {
+        Swal.fire({ title: "Por favor, preencha todos os campos!", icon: "warning", confirmButtonColor: "#3085d6" });
+        return;
+      }
+      if (!validarCNPJ(formData.cnpj.replace(/\D/g, ''))) {
+        Swal.fire({
+          title: "CNPJ inválido",
+          icon: "warning",
+          confirmButtonColor: "#3085d6"
+        });
+        return;
+      }
+    }
+    if (progresso === 2) {
+      if (!formData.cep) {
+        Swal.fire({ title: "CEP é obrigatório", icon: "warning", confirmButtonColor: "#3085d6" });
+        return;
+      }
+      if (!formData.endereco) {
+        Swal.fire({ title: "Endereço é obrigatório", icon: "warning", confirmButtonColor: "#3085d6" });
+        return;
+      }
+      if (!formData.numero || !validarNumero(formData.numero)) {
+        Swal.fire({ title: "Número deve conter apenas dígitos", icon: "warning", confirmButtonColor: "#3085d6" });
+        return;
+      }
+    }
+    setProgresso(progresso + 1);
   }
 
   function voltar() {
@@ -102,8 +222,10 @@ export function CadastroFornecedor() {
                 <input
                   placeholder="Digite o CNPJ"
                   type="text"
+                  inputMode='numeric'
                   value={formData.cnpj}
-                  onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, cnpj: formatarCNPJ(e.target.value) })}
+                  maxLength={18}
                 />
               </div>
               <div className={styles['input-group']}>
@@ -112,7 +234,7 @@ export function CadastroFornecedor() {
                   placeholder="Digite a razão social"
                   type="text"
                   value={formData.razaoSocial}
-                  onChange={(e) => setFormData({ ...formData, razaoSocial: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, razaoSocial: e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '') })}
                 />
               </div>
               <div className={styles['input-group']}>
@@ -121,7 +243,7 @@ export function CadastroFornecedor() {
                   placeholder="Digite o Nome Fantasia"
                   type="text"
                   value={formData.nomeFantasia}
-                  onChange={(e) => setFormData({ ...formData, nomeFantasia: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, nomeFantasia: e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '') })}
                 />
               </div>
             </>
@@ -134,8 +256,10 @@ export function CadastroFornecedor() {
                 <input
                   placeholder="Digite o CEP"
                   type="text"
+                  inputMode='numeric'
                   value={formData.cep}
-                  onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, cep: formatarCEP(e.target.value) })}
+                  maxLength={9}
                 />
               </div>
               <div className={styles['input-group']}>
@@ -144,7 +268,7 @@ export function CadastroFornecedor() {
                   placeholder="Digite o Endereço"
                   type="text"
                   value={formData.endereco}
-                  onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, endereco: e.target.value.replace(/[^a-zA-ZÀ-ÿ0-9\s]/g, '') })}
                 />
               </div>
               <div className={styles['input-group']}>
@@ -153,7 +277,8 @@ export function CadastroFornecedor() {
                   placeholder="Digite o Número"
                   type="text"
                   value={formData.numero}
-                  onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+                  inputMode='numeric'
+                  onChange={(e) => setFormData({ ...formData, numero: e.target.value.replace(/\D/g, '') })}
                 />
               </div>
             </>
@@ -166,8 +291,10 @@ export function CadastroFornecedor() {
                 <input
                   placeholder="Digite o Telefone"
                   type="text"
+                  inputMode='numeric'
+                  maxLength={11}
                   value={formData.telefone}
-                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value.replace(/\D/g, '') })}
                 />
               </div>
               <div className={styles['input-group']}>
