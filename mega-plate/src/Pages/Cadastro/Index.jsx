@@ -5,7 +5,7 @@ import { api } from '../../provider/api.js';
 import NavBar from '../../components/NavBar'; // Importando a NavBar
 import { useNavigate } from 'react-router-dom';
 import { toastSucess, toastError } from '../../components/toastify/ToastifyService.jsx';
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import Swal from 'sweetalert2'
 
 
@@ -15,7 +15,7 @@ export function Cadastro() {
 
   // let mensagem = '';
 
-  
+
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -29,30 +29,66 @@ export function Cadastro() {
 
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
 
-    useEffect(() => {
-      const token = sessionStorage.getItem('authToken');
-      if(!token){
+  useEffect(() => {
+    const token = sessionStorage.getItem('authToken');
+    if (!token) {
+      navigate('/');
+    } else {
+      const { exp } = jwtDecode(token)
+      if (Date.now() >= exp * 1000) {
+        sessionStorage.removeItem('authToken');
         navigate('/');
-      }else{
-        const {exp} = jwtDecode(token)
-        if(Date.now() >= exp * 1000) {
-          sessionStorage.removeItem('authToken');
-          navigate('/');
-        }else{
+      } else {
         setAutenticacaoPassou(true);
-        }
       }
-    }, []);
+    }
+  }, []);
 
-    if(!autenticacaoPassou) return null;
+  if (!autenticacaoPassou) return null;
+
+  function validarNome(nome) {
+    return typeof nome === 'string' && nome.trim().length >= 3 && /^[a-zA-ZÀ-ÿ\s]+$/.test(nome.trim());
+  }
+
+  function validarEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  }
+
+  function validarSenha(senha) {
+    return typeof senha === 'string' && senha.trim().length >= 6;
+  }
+
+  function validarCargo(cargo) {
+    return cargo === 1 || cargo === 2;
+  }
 
   const cadastrar = () => {
-    if (!formData.nome || !formData.email || !formData.cargo || !formData.password) {
+    if (!formData.nome || !formData.email || !formData.cargo.id || !formData.password) {
       Swal.fire({
         title: "Preencha as informações",
         icon: "info",
         confirmButtonColor: "#3085d6",
       });
+      return;
+    }
+
+    if (!validarNome(formData.nome)) {
+      Swal.fire({ title: "Nome inválido", icon: "warning", confirmButtonColor: "#3085d6" });
+      return;
+    }
+
+    if (!validarEmail(formData.email)) {
+      Swal.fire({ title: "E-mail inválido", icon: "warning", confirmButtonColor: "#3085d6" });
+      return;
+    }
+
+    if (!validarSenha(formData.password)) {
+      Swal.fire({ title: "Senha inválida", icon: "warning", confirmButtonColor: "#3085d6" });
+      return;
+    }
+
+    if (!validarCargo(formData.cargo?.id)) {
+      Swal.fire({ title: "Cargo inválido", icon: "warning", confirmButtonColor: "#3085d6" });
       return;
     }
 
@@ -66,7 +102,7 @@ export function Cadastro() {
       return;
     }
 
-    
+
     const userData = {
       nome: formData.nome.trim(),
       email: formData.email.trim(),
@@ -77,18 +113,18 @@ export function Cadastro() {
       password: formData.password.trim()
     };
 
-     
-        const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
-            if (sqlPattern.test(userData.email) || 
-            sqlPattern.test(userData.nome) ||
-            sqlPattern.test(userData.password)) {
-                return toastError('Por favor não cadastrar com comandos especiais...');
-            }
-            if (/<script.*?>.*?<\/script>/gi.test(userData.email) ||
-             /<script.*?>.*?<\/script>/gi.test(userData.nome) ||
-            /<script.*?>.*?<\/script>/gi.test(userData.password)) {
-                return toastError('Por favor não cadastrar com comandos especiais...');
-            }  
+
+    const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
+    if (sqlPattern.test(userData.email) ||
+      sqlPattern.test(userData.nome) ||
+      sqlPattern.test(userData.password)) {
+      return toastError('Por favor não cadastrar com comandos especiais...');
+    }
+    if (/<script.*?>.*?<\/script>/gi.test(userData.email) ||
+      /<script.*?>.*?<\/script>/gi.test(userData.nome) ||
+      /<script.*?>.*?<\/script>/gi.test(userData.password)) {
+      return toastError('Por favor não cadastrar com comandos especiais...');
+    }
 
     const endpoint = formData.cargo.id === 2 ? '/usuarios/gestor' : '/usuarios';
 
