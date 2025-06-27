@@ -190,7 +190,7 @@ export function Cadastro() {
               placeholder="Marcos Antonio"
               type="text"
               value={formData.nome}
-              onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, nome: e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '') })}
             />
           </div>
 

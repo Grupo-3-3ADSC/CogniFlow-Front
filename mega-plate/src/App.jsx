@@ -11,11 +11,9 @@ import Perfil from './Pages/Perfil/Index';
 import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import DashEstoque from './Pages/DashEstoque/AppEstoque'
-
-
-
 import {Route, BrowserRouter as Router, Routes} from 'react-router-dom';
 import CadastroFornecedor from './Pages/CadastroFornecedor/Fornecedor';
+import { TabelaUsuarios } from './Pages/TabelaUsuarios/TabelaUsuarios';
 
 function App() {
   return (
@@ -34,7 +32,7 @@ function App() {
         <Route path='/CadastroFornecedor' element={<CadastroFornecedor />} />
         <Route path='/Fornecedor' element={<DashFornecedor />} />
         <Route path='/DashEstoque' element={<DashEstoque />} />
-
+        <Route path='/TabelaUsuarios' element={<TabelaUsuarios />} />
       </Routes>
     </Router>
     <ToastContainer position="top-right" autoClose={1500} closeButton={false}/>

@@ -72,6 +72,15 @@ export function CadastroFornecedor() {
       return;
     }
 
+    if (todosDigitosIguais(cnpjLimpo)) {
+      Swal.fire({ title: "CNPJ inválido (todos os dígitos iguais)", icon: "warning", confirmButtonColor: "#3085d6" });
+      return;
+    }
+    if (todosDigitosIguais(formData.telefone)) {
+      Swal.fire({ title: "Telefone inválido (todos os dígitos iguais)", icon: "warning", confirmButtonColor: "#3085d6" });
+      return;
+    }
+
     const userData = {
       cnpj: formData.cnpj.trim(),
       nomeFantasia: formData.nomeFantasia.trim(),
@@ -121,6 +130,10 @@ export function CadastroFornecedor() {
     const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
     const data = await response.json();
     return !data.erro;
+  }
+
+  function todosDigitosIguais(valor) {
+    return /^(\d)\1+$/.test(valor);
   }
 
   function formatarCNPJ(valor) {

@@ -1,0 +1,138 @@
+:root {
+    --primary-color: #05314C;
+    --secondary-color: #4586AB;
+    --dashboard-margin: 5%;
+}
+
+.container {
+    margin-top: 18vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90%;
+    margin-left: var(--dashboard-margin);
+    margin-right: var(--dashboard-margin);
+    
+}
+
+.background {
+    background: var(--primary-color);
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    min-height: 70vh;
+    width: 70vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+h2 {
+    color: white;
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.tabela {
+    width: 100%;
+    max-width: 1100px;
+    border-collapse: collapse;
+    background-color: #1D597B;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    align-items: center;
+}
+
+.tabela thead {
+    background-color: var(--secondary-color);
+}
+
+.tabela th {
+    padding: 14px 18px;
+    text-align: left;
+    font-weight: bold;
+    font-size: 15px;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tabela td {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 15px;
+    color: white;
+    transition: background-color 0.2s ease;
+}
+
+.tabela tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+}
+
+.tabela tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.toggleBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    padding: 0;
+    margin: 0;
+    transition: transform 0.2s;
+}
+
+.toggleBtn:hover {
+    transform: scale(1.15);
+}
+
+@media (max-width: 900px) {
+
+    .tabela th,
+    .tabela td {
+        padding: 10px 8px;
+        font-size: 13px;
+    }
+
+    .container {
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .tabela,
+    .tabela thead,
+    .tabela tbody,
+    .tabela th,
+    .tabela td,
+    .tabela tr {
+        display: block;
+    }
+
+    .tabela th {
+        text-align: right;
+        padding-right: 30px;
+    }
+
+    .tabela td {
+        text-align: right;
+        padding-right: 30px;
+        border-bottom: 1px solid #4586AB;
+    }
+
+    .tabela tr {
+        margin-bottom: 15px;
+    }
+}
