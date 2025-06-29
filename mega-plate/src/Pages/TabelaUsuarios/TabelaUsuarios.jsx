@@ -14,7 +14,7 @@ export function TabelaUsuarios() {
 
         setIsGestor(Number(cargoUsuario) === 2);
 
-        api.get("/usuarios", {
+        api.get("/usuarios/listarTodos", {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => setUsuarios(res.data))
