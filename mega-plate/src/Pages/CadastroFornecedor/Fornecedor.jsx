@@ -1,6 +1,6 @@
 import styles from './fornecedor.module.css';
 import logo from '../../assets/logo-megaplate.png';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import NavBar from '../../components/NavBar';
 import Swal from 'sweetalert2';
 import { api } from '../../provider/api.js';
@@ -131,6 +131,45 @@ export function CadastroFornecedor() {
     const data = await response.json();
     return !data.erro;
   }
+
+  useEffect(() => {
+    const cepNumeros = formData.cep.replace(/\D/g, '');
+
+    if (cepNumeros.length === 8) {
+      preencherEnderecoPorCEP(formData.cep);
+    } else {
+     
+      setFormData((prev) => ({
+        ...prev,
+        endereco: ''
+      }));
+    }
+  }, [formData.cep]);
+
+
+  async function preencherEnderecoPorCEP(cep) {
+    const cepLimpo = cep.replace(/\D/g, '');
+    if (cepLimpo.length !== 8) return;
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        Swal.fire({ title: "CEP não encontrado!", icon: "warning", confirmButtonColor: "#3085d6" });
+        return;
+      }
+
+      const enderecoFormatado = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
+      setFormData((prev) => ({
+        ...prev,
+        endereco: enderecoFormatado
+      }));
+    } catch (error) {
+      Swal.fire({ title: "Erro ao buscar endereço", icon: "error", confirmButtonColor: "#3085d6" });
+    }
+  }
+
 
   function todosDigitosIguais(valor) {
     return /^(\d)\1+$/.test(valor);

@@ -12,7 +12,6 @@
     width: 90%;
     margin-left: var(--dashboard-margin);
     margin-right: var(--dashboard-margin);
-    
 }
 
 .background {
@@ -81,19 +80,26 @@ h2 {
     border-bottom: none;
 }
 
-.toggleBtn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    outline: none;
-    padding: 0;
-    margin: 0;
-    transition: transform 0.2s;
+.textAtivar {
+    color: #28a745;
+    font-weight: 600;
 }
 
-.toggleBtn:hover {
-    transform: scale(1.15);
+.textDesativar {
+    color: #d33;
+    font-weight: 600;
 }
+
+.statusColuna {
+    position: relative;
+    color: white;
+    font-weight: 600;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 100px;
+}
+
 
 @media (max-width: 900px) {
 
