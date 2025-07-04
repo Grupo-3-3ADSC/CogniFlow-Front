@@ -7,21 +7,30 @@ import styles from "./tabela.module.css";
 export function TabelaUsuarios() {
     const [usuarios, setUsuarios] = useState([]);
     const [isGestor, setIsGestor] = useState(false);
+    const [filtroStatus, setFiltroStatus] = useState("todos");
 
     useEffect(() => {
+        buscarUsuarios();
+    }, [filtroStatus]);
+
+    const buscarUsuarios = async () => {
         const token = sessionStorage.getItem("authToken");
         const cargoUsuario = sessionStorage.getItem("cargoUsuario");
 
         setIsGestor(Number(cargoUsuario) === 2);
 
-        api.get("/usuarios/listarTodos", {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-            .then((res) => setUsuarios(res.data))
-            .catch(() => {
-                Swal.fire("Erro ao carregar usuários", "", "error");
+        let url = "/usuarios/listarTodos";
+        if (filtroStatus === "ativos") url = "/usuarios/listarAtivos";
+
+        try {
+            const res = await api.get(url, {
+                headers: { Authorization: `Bearer ${token}` },
             });
-    }, []);
+            setUsuarios(res.data);
+        } catch (error) {
+            Swal.fire("Erro ao carregar usuários", "", "error");
+        }
+    };
     const handleToggleStatus = async (id, ativo) => {
         const result = await Swal.fire({
             title: ativo ? "Deseja desativar este usuário?" : "Deseja ativar este usuário?",
@@ -58,6 +67,13 @@ export function TabelaUsuarios() {
         }
     };
 
+    const usuariosFiltrados = usuarios.filter((u) => {
+        if (filtroStatus === "todos") return true;
+        if (filtroStatus === "ativos") return u.ativo;
+        if (filtroStatus === "inativos") return !u.ativo;
+        return true;
+    });
+
 
     return (
         <>
@@ -65,6 +81,19 @@ export function TabelaUsuarios() {
             <div className={styles.container}>
                 <div className={styles.background}>
                     <h2>Lista de Usuários</h2>
+                    <label htmlFor="filtro" className={styles.labelFiltro}>Filtrar por status: </label>
+                    <select
+                        id="filtro"
+                        value={filtroStatus}
+                        onChange={(e) => setFiltroStatus(e.target.value)}
+                        className={styles.selectFiltro}
+                    >
+                        <option value="todos">Todos</option>
+                        <option value="ativos">Ativos</option>
+                        <option value="inativos">Inativos</option>
+                    </select>
+
+                    <p>{usuariosFiltrados.length} usuário(s) encontrado(s)</p>
                     <table className={styles.tabela}>
                         <thead>
                             <tr>
@@ -75,7 +104,7 @@ export function TabelaUsuarios() {
                             </tr>
                         </thead>
                         <tbody>
-                            {usuarios.map((usuario) => (
+                            {usuariosFiltrados.map((usuario) => (
                                 <tr key={usuario.id}>
                                     <td>{usuario.nome}</td>
                                     <td>{usuario.email}</td>
