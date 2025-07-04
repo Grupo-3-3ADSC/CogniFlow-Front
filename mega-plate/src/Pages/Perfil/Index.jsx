@@ -10,34 +10,32 @@ import { useNavigate } from "react-router-dom";
 import { toastError, toastSucess } from "../../components/toastify/ToastifyService.jsx";
 import { jwtDecode } from 'jwt-decode';
 
-
 function Perfil() {
-
     const navigate = useNavigate();
     const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
-
-    useEffect(() => {
-      const token = sessionStorage.getItem('authToken');
-      if(!token){
-        navigate('/');
-      }else{
-        const {exp} = jwtDecode(token)
-        if(Date.now() >= exp * 1000) {
-          sessionStorage.removeItem('authToken');
-          navigate('/');
-        }else{
-        setAutenticacaoPassou(true);
-        }
-      }
-    }, []);
-
+    const [fotoUrl, setFotoUrl] = useState(null); // Mudança: usar fotoUrl específico
+    const [fotoError, setFotoError] = useState(false);
+    const [isUploadingFoto, setIsUploadingFoto] = useState(false);
     
+    useEffect(() => {
+        const token = sessionStorage.getItem('authToken');
+        if(!token){
+            navigate('/');
+        } else {
+            const {exp} = jwtDecode(token)
+            if(Date.now() >= exp * 1000) {
+                sessionStorage.removeItem('authToken');
+                navigate('/');
+            } else {
+                setAutenticacaoPassou(true);
+            }
+        }
+    }, [navigate]);
 
     const token = sessionStorage.getItem('authToken');
     const userId = sessionStorage.getItem('usuario');
 
     function getUsuarios() {
-
         if (token) {
             api.get(`/usuarios/${userId}`, {
                 headers: {
@@ -55,28 +53,40 @@ function Perfil() {
     }
 
     function getFoto() {
-
         if (token) {
+            setFotoError(false);
+            
             api.get(`/usuarios/${userId}/foto`, {
                 headers: {
                     Authorization: `Bearer ${token}`
-                }
+                },
+                responseType: 'blob',
+                timeout: 10000 // 10 segundos timeout
             }).then((resposta) => {
-                setFile(resposta.data);
-            }).catch((err) => {
-                console.log("Erro de resgatar foto:", err);
+                if (resposta.data && resposta.data.size > 0) {
+                    // Limpar URL anterior se existir
+                    if (fotoUrl && fotoUrl.startsWith('blob:')) {
+                        URL.revokeObjectURL(fotoUrl);
+                    }
+                    
+                    const imageUrl = URL.createObjectURL(resposta.data);
+                    setFotoUrl(imageUrl);
+                    setFotoError(false);
+                } else {
+                    console.log("Resposta vazia ou sem dados");
+                    setFotoUrl(null);
+                    setFotoError(true);
+                }
+            }).catch((err) => {  
+                setFotoUrl(null);
+                setFotoError(true);
+                if (err.response?.status !== 404) {
+                    console.error("Erro inesperado ao buscar foto:", err);
+                }
             });
         }
     }
 
-
-    useEffect(() => {
-        getUsuarios();
-        getFoto()        
-    }, [])
-
-    
-    
     const [formData, setFormData] = useState({
         nome: '',
         email: '',
@@ -87,10 +97,24 @@ function Perfil() {
 
     const [botaoDesabilitado, setBotaoDesabilitado] = useState(false);
 
+    useEffect(() => {
+        if (autenticacaoPassou) {
+            getUsuarios();
+            getFoto();
+        }
+    }, [autenticacaoPassou]);
+
+    // Cleanup da URL quando o componente for desmontado
+    useEffect(() => {
+        return () => {
+            if (fotoUrl && fotoUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(fotoUrl);
+            }
+        };
+    }, [fotoUrl]);
+
     function desbloquearEdicao(campo) {
-
         let input;
-
         if (campo === 'editarNome') input = document.querySelector('.inputNome');
         if (campo === 'editarEmail') input = document.querySelector('.inputEmail');
         if (campo === 'editarCargo') input = document.querySelector('.inputCargo');
@@ -140,54 +164,109 @@ function Perfil() {
         }
     }
 
-    const [file, setFile] = useState(null);
-
-
     const mudarFoto = (e) => {
         const arquivoSelecionado = e.target.files[0];
-
+        
         if (!arquivoSelecionado) return;
-
-        setFile(arquivoSelecionado);
-
+        
+        // Verificar se é realmente uma imagem
+        if (!arquivoSelecionado.type.startsWith('image/')) {
+            toastError('Por favor, selecione apenas arquivos de imagem');
+            return;
+        }
+        
+        // Verificar tamanho do arquivo (exemplo: máximo 5MB)
+        if (arquivoSelecionado.size > 5 * 1024 * 1024) {
+            toastError('Arquivo muito grande. Máximo 5MB');
+            return;
+        }
+        
+        setIsUploadingFoto(true);
+        
         const formData = new FormData();
         formData.append('foto', arquivoSelecionado);
-
-        api.post(`/usuarios/${userId}/upload-foto`, formData)
-            .then((response) => {
-                console.log("Sucesso:", response);
-                toastSucess('Foto enviada com sucesso! Atualizando agora.');
-                window.location.reload();
-            })
-            .catch((err) => {
-                console.log('Erro completo:', err);
-                console.log('Response data:', err.response?.data);
+        
+        console.log('FormData criado para:', `/usuarios/${userId}/upload-foto`);
+        
+        api.post(`/usuarios/${userId}/upload-foto`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            timeout: 30000
+        })
+        .then((response) => {
+            toastSucess('Foto enviada com sucesso! Atualizando...');
+            
+            // Aguardar um pouco e recarregar a foto
+            setTimeout(() => {
+                getFoto();
+                setIsUploadingFoto(false);
+            }, 1000);
+        })
+        .catch((err) => {
+            setIsUploadingFoto(false);
+            
+            if (err.code === 'ECONNABORTED') {
+                toastError('Timeout: Arquivo muito grande ou conexão lenta');
+            } else if (err.response?.status === 413) {
+                toastError('Arquivo muito grande para o servidor');
+            } else {
                 toastError('Erro ao enviar foto');
-            });
-
+            }
+        });
     }
 
+    // Função para determinar qual imagem mostrar
+    const getImageSrc = () => {
+        if (fotoUrl) {
+            return fotoUrl;
+        }
+        return User; // Imagem padrão
+    };
+
     if(!autenticacaoPassou) return null;
+    
     return (
         <>
             <NavBar />
             <section className={style.perfil}>
                 <main className={style['bloco-fundo']}>
                     <div className={style['imagens']}>
-                        <input type="file" accept="image/*" onChange={mudarFoto} id="input-image" style={{display: "none"}}/>
+                        <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={mudarFoto} 
+                            id="input-image" 
+                            style={{display: "none"}}
+                            disabled={isUploadingFoto}
+                        />
                         <div className={style['imagem-wrapper']}>
                             <img src={circulo} alt="" className={style['img-maior']} />
                             <img
-                                src={`${import.meta.env.VITE_API_URL}/usuarios/${userId}/foto`}
+                                src={getImageSrc()}
                                 alt="imagem de usuário"
                                 className={style['img-menor']}
                                 onError={(e) => {
+                                    console.log("Erro ao carregar imagem:", e.target.src);
                                     e.target.onError = null;
                                     e.target.src = User;
+                                    setFotoError(true);
+                                }}
+                                onLoad={() => {
+                                    console.log("Imagem carregada com sucesso:", getImageSrc());
                                 }}
                             />
                         </div>
-                        <label className={style['label-imagem']} htmlFor="input-image">clique aqui para modificar a imagem</label>
+                        <label 
+                            className={style['label-imagem']} 
+                            htmlFor="input-image"
+                            style={{
+                                opacity: isUploadingFoto ? 0.5 : 1,
+                                cursor: isUploadingFoto ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            {isUploadingFoto ? 'Enviando...' : 'clique aqui para modificar a imagem'}
+                        </label>
                     </div>
                     <div className={style['inputs']}>
                         <div className={style['input-group']}>
@@ -211,34 +290,33 @@ function Perfil() {
                             </IconContext.Provider>
                         </div>
 
-                        
                         <div className={style['input-group']}>
-  <p>Cargo</p>
-  <select
-    type="text"
-    className="inputCargo"
-    value={formData.cargo?.id || ""}
-    onChange={(e) =>
-      setFormData({
-        ...formData,
-        cargo: { ...formData.cargo, id: Number(e.target.value) },
-      })
-    }
-    disabled
-  >
-    <option value={1}>Usuário Comum</option>
-    {Number(formData.cargo?.id) === 2 && (
-      <option value={2}>Usuário Gestor</option>
-    )}
-  </select>
+                            <p>Cargo</p>
+                            <select
+                                type="text"
+                                className="inputCargo"
+                                value={formData.cargo?.id || ""}
+                                onChange={(e) =>
+                                    setFormData({
+                                        ...formData,
+                                        cargo: { ...formData.cargo, id: Number(e.target.value) },
+                                    })
+                                }
+                                disabled
+                            >
+                                <option value={1}>Usuário Comum</option>
+                                {Number(formData.cargo?.id) === 2 && (
+                                    <option value={2}>Usuário Gestor</option>
+                                )}
+                            </select>
 
-  <IconContext.Provider value={{ color: 'black', size: '1.5em' }}>
-    <FaPencilAlt
-      onClick={() => desbloquearEdicao('editarCargo')}
-      className={style['input-icon']}
-    />
-  </IconContext.Provider>
-</div>
+                            <IconContext.Provider value={{ color: 'black', size: '1.5em' }}>
+                                <FaPencilAlt
+                                    onClick={() => desbloquearEdicao('editarCargo')}
+                                    className={style['input-icon']}
+                                />
+                            </IconContext.Provider>
+                        </div>
 
                         <button
                             onClick={editarUsuario}
@@ -249,12 +327,10 @@ function Perfil() {
                             Editar
                         </button>
                     </div>
-                    
                 </main>
             </section>
         </>
     );
-
 }
 
 export default Perfil;

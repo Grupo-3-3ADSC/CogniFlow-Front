@@ -18,21 +18,40 @@ const NavBar = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 520);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [nomeUsuario, setNomeUsuario] = useState("Usuario");
-
+  const [fotoUrl, setFotoUrl] = useState(null); // Mudança: usar fotoUrl específico
+  const [fotoError, setFotoError] = useState(false);
+  
   const token = sessionStorage.getItem('authToken');
   const userId = sessionStorage.getItem('usuario');
 
   function getFoto() {
-
     if (token) {
+      setFotoError(false);
+      
       api.get(`/usuarios/${userId}/foto`, {
         headers: {
           Authorization: `Bearer ${token}`
-        }
+        },
+        responseType: 'blob',
+        timeout: 10000
       }).then((resposta) => {
-        setFile(resposta.data);
+        if (resposta.data && resposta.data.size > 0) {
+          if (fotoUrl && fotoUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(fotoUrl);
+          }
+          
+          const imageUrl = URL.createObjectURL(resposta.data);
+          console.log("NAVBAR: Nova URL criada:", imageUrl);
+          setFotoUrl(imageUrl);
+          setFotoError(false);
+        } else {
+          console.log("NAVBAR: Resposta vazia ou sem dados");
+          setFotoUrl(null);
+          setFotoError(true);
+        }
       }).catch((err) => {
-        console.log("Erro de resgatar foto:", err);
+        setFotoUrl(null);
+        setFotoError(true);
       });
     }
   }
@@ -63,8 +82,19 @@ const NavBar = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (fotoUrl && fotoUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(fotoUrl);
+      }
+    };
+  }, [fotoUrl]);
+
+
   const toggleDashSubmenu = () => setShowDashSubmenu(prev => !prev);
   const toggleFormSubmenu = () => setShowFormSubmenu(prev => !prev);
+
+
 
   return (
     <header className="navbar-transferencia">
@@ -132,12 +162,13 @@ const NavBar = () => {
       <div className="perfil">
         <span>Olá, {nomeUsuario}!</span>
         <img
-          src={`${import.meta.env.VITE_API_URL}/usuarios/${userId}/foto`}
+          src={fotoUrl || user}
           alt="imagem de usuário"
           className="icons-menu"
           onError={(e) => {
             e.target.onError = null;
             e.target.src = user;
+            setFotoError(true);
           }}
         />
       </div>
