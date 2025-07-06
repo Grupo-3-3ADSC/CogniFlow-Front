@@ -22,7 +22,7 @@ export function OrdemDeCompra() {
 
   function getFornecedores() {
     api
-      .get("/fornecedores/listarFornecedorCompleto")
+      .get("/fornecedores")
       .then((resposta) => {
         setListaFornecedores(resposta.data);
       })
