@@ -81,13 +81,18 @@ h2 {
 }
 
 .textAtivar {
-    color: #28a745;
-    font-weight: 600;
+    background-color: #28a745;
+    color: #fff;
+    font-weight: 560;
+    padding:8px 17px 10px 18px;
+    border-radius: 5px;
 }
 
 .textDesativar {
-    color: #d33;
-    font-weight: 600;
+   background-color: #d33;
+   font-weight: 600;
+   padding: 10px;
+   border-radius: 5px;
 }
 
 .statusColuna {

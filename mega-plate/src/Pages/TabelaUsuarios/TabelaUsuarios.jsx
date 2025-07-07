@@ -13,6 +13,7 @@ export function TabelaUsuarios() {
 useEffect(() => {
   setFade(false); // inicia fade out
   const timeout = setTimeout(() => {
+    setUsuarios([]);
     buscarUsuarios();
     setFade(true); // inicia fade in depois de buscar
   }, 200); // tempo de fade out antes de buscar
@@ -20,26 +21,26 @@ useEffect(() => {
   return () => clearTimeout(timeout);
 }, [filtroStatus]);
 
-  const buscarUsuarios = async () => {
-    const token = sessionStorage.getItem("authToken");
-    const cargoUsuario = sessionStorage.getItem("cargoUsuario");
+const buscarUsuarios = async () => {
+  const token = sessionStorage.getItem("authToken");
+  const cargoUsuario = sessionStorage.getItem("cargoUsuario");
 
-    setIsGestor(Number(cargoUsuario) === 2);
+   setIsGestor(Number(cargoUsuario) === 2);
 
-    let url = "/usuarios/listarTodos";
-    if (filtroStatus === "ativos") url = "/usuarios/listarAtivos";
-    if (filtroStatus === "inativos") url = "/usuarios/listarInativos";
+  let url = "/usuarios/listarTodos";
+  if (filtroStatus === "ativos") url = "/usuarios/listarAtivos";
+  if (filtroStatus === "inativos") url = "/usuarios/listarInativos";
    
 
     try {
-      const res = await api.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-        setUsuarios(res.data);
-    } catch (error) {
-      Swal.fire("Erro ao carregar usuários", "", "error");
-    }
-  };
+    const res = await api.get(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setUsuarios(res.data);
+  } catch (error) {
+    Swal.fire("Erro ao carregar usuários", "", "error");
+  }
+};
 
   const handleToggleStatus = async (id, ativo) => {
     const result = await Swal.fire({

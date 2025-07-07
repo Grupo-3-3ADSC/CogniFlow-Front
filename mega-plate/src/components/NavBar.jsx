@@ -5,6 +5,7 @@ import iconDash from '../assets/icon-dash.png';
 import iconLogout from '../assets/icon-logout.png';
 import iconTransferencia from '../assets/icon-transferencia.png';
 import iconFormularios from '../assets/icon-formularios.png';
+import iconGroup from '../assets/icon-group.png';
 import logoMega from '../assets/logo-megaplate.png';
 import menuHamburger from '../assets/menu-hamburguer.png';
 import user from '../assets/User.png';
@@ -116,7 +117,7 @@ const NavBar = () => {
               <span>Perfil</span>
             </li>
             <li title='Tabela de Usuários' onClick={() => navigate('/TabelaUsuarios')}>
-              <img className='icons-menu' src={user} alt="Tabela de Usuários" />
+              <img className='icons-menu' src={iconGroup} alt="Tabela de Usuários" />
               <span>Tabela de Usuários</span>
             </li>
             <li title="Transferência" onClick={() => navigate('/transferencia')}>
