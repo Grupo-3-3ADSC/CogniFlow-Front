@@ -69,13 +69,6 @@ export function Login() {
       return toastError("Por favor, preencha os campos");
     }
 
-    if (!validarEmail(formData.email)) {
-      return toastError("E-mail inválido");
-    }
-
-    if (!validarSenha(formData.password)) {
-      return toastError("A senha deve ter no mínimo 6 caracteres");
-    }
 
     api
       .post("/usuarios/login", {

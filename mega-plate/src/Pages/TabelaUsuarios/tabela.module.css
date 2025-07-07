@@ -128,6 +128,15 @@ h2 {
     box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3);
 }
 
+.fadeIn {
+  opacity: 1;
+  transition: opacity 0.3s ease-in;
+}
+
+.fadeOut {
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
 
 @media (max-width: 900px) {
 
