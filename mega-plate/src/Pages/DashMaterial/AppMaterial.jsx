@@ -779,7 +779,7 @@ setPieData(newPieData);
                   textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
                   letterSpacing: '0.5px'
                 }}>
-                  Entradas de Material
+                  Movimentações de Material
                 </h1>
                 <div style={{
                   background: 'rgba(255, 255, 255, 0.02)',
