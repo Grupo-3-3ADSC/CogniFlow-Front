@@ -95,7 +95,6 @@ const buscarUsuarios = async () => {
             <option value="ativos">Ativos</option>
             <option value="inativos">Inativos</option>
           </select>
-
           <p>{usuarios.length} usuário(s) encontrado(s)</p>
 
          <table className={`${styles.tabela} ${fade ? styles.fadeIn : styles.fadeOut}`}>
