@@ -10,37 +10,36 @@ export function TabelaUsuarios() {
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [fade, setFade] = useState(false);
 
-useEffect(() => {
-  setFade(false); // inicia fade out
-  const timeout = setTimeout(() => {
-    setUsuarios([]);
-    buscarUsuarios();
-    setFade(true); // inicia fade in depois de buscar
-  }, 200); // tempo de fade out antes de buscar
+  useEffect(() => {
+    setFade(false); // inicia fade out
+    const timeout = setTimeout(() => {
+      setUsuarios([]);
+      buscarUsuarios();
+      setFade(true); // inicia fade in depois de buscar
+    }, 200); // tempo de fade out antes de buscar
 
-  return () => clearTimeout(timeout);
-}, [filtroStatus]);
+    return () => clearTimeout(timeout);
+  }, [filtroStatus]);
 
-const buscarUsuarios = async () => {
-  const token = sessionStorage.getItem("authToken");
-  const cargoUsuario = sessionStorage.getItem("cargoUsuario");
+  const buscarUsuarios = async () => {
+    const token = sessionStorage.getItem("authToken");
+    const cargoUsuario = sessionStorage.getItem("cargoUsuario");
 
-   setIsGestor(Number(cargoUsuario) === 2);
+    setIsGestor(Number(cargoUsuario) === 2);
 
-  let url = "/usuarios/listarTodos";
-  if (filtroStatus === "ativos") url = "/usuarios/listarAtivos";
-  if (filtroStatus === "inativos") url = "/usuarios/listarInativos";
-   
+    let url = "/usuarios/listarTodos";
+    if (filtroStatus === "ativos") url = "/usuarios/listarAtivos";
+    if (filtroStatus === "inativos") url = "/usuarios/listarInativos";
 
     try {
-    const res = await api.get(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setUsuarios(res.data);
-  } catch (error) {
-    Swal.fire("Erro ao carregar usuários", "", "error");
-  }
-};
+      const res = await api.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsuarios(res.data);
+    } catch (error) {
+      Swal.fire("Erro ao carregar usuários", "", "error");
+    }
+  };
 
   const handleToggleStatus = async (id, ativo) => {
     const result = await Swal.fire({
@@ -78,7 +77,7 @@ const buscarUsuarios = async () => {
 
   return (
     <>
-      <NavBar />
+      <NavBar/>
       <div className={styles.container}>
         <div className={styles.background}>
           <h2>Lista de Usuários</h2>
@@ -97,44 +96,54 @@ const buscarUsuarios = async () => {
           </select>
           <p>{usuarios.length} usuário(s) encontrado(s)</p>
 
-         <table className={`${styles.tabela} ${fade ? styles.fadeIn : styles.fadeOut}`}>
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Email</th>
-                <th>Cargo</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {usuarios.map((usuario) => (
-                <tr key={usuario.id}>
-                  <td>{usuario.nome}</td>
-                  <td>{usuario.email}</td>
-                  <td>
-                    {Number(usuario.cargo?.id) === 2 ? "Gestor" : "Comum"}
-                  </td>
-                  <td className={styles.statusColuna}>
-                    {usuario.ativo ? "Ativo" : "Inativo"}
-                    {isGestor && (
-                      <span
-                        className={
-                          usuario.ativo
-                            ? styles.textDesativar
-                            : styles.textAtivar
-                        }
-                        onClick={() =>
-                          handleToggleStatus(usuario.id, usuario.ativo)
-                        }
-                      >
-                        {usuario.ativo ? "Desativar" : "Ativar"}
-                      </span>
-                    )}
-                  </td>
+          <div className={styles.tabelaWrapper}>
+            <table
+              className={`${styles.tabela} ${
+                fade ? styles.fadeIn : styles.fadeOut
+              }`}
+            >
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Email</th>
+                  <th>Cargo</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {usuarios.map((usuario) => (
+                  <tr key={usuario.id}>
+                    <td data-label="Nome">{usuario.nome}</td>
+                    <td data-label="Email">{usuario.email}</td>
+                    <td data-label="Cargo">
+                      {Number(usuario.cargo?.id) === 2 ? "Gestor" : "Comum"}
+                    </td>
+                    <td data-label="Status">
+                      <div className={styles.statusColuna}>
+                        <span className={styles.statusTexto}>
+                          {usuario.ativo ? "Ativo" : "Inativo"}
+                        </span>
+                        {isGestor && (
+                          <button
+                            className={
+                              usuario.ativo
+                                ? styles.textDesativar
+                                : styles.textAtivar
+                            }
+                            onClick={() =>
+                              handleToggleStatus(usuario.id, usuario.ativo)
+                            }
+                          >
+                            {usuario.ativo ? "Desativar" : "Ativar"}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </>

@@ -118,7 +118,7 @@ const NavBar = () => {
             </li>
             <li title='Tabela de Usuários' onClick={() => navigate('/TabelaUsuarios')}>
               <img className='icons-menu' src={iconGroup} alt="Tabela de Usuários" />
-              <span>Tabela de Usuários</span>
+              <span>Listagem de Usuários</span>
             </li>
             <li title="Transferência" onClick={() => navigate('/transferencia')}>
               <img className="icons-menu" src={iconTransferencia} alt="Transferência" />
