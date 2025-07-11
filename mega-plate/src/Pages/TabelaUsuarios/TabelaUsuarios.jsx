@@ -3,12 +3,32 @@ import NavBar from "../../components/NavBar";
 import { api } from "../../provider/api.js";
 import Swal from "sweetalert2";
 import styles from "./tabela.module.css";
+import { useNavigate } from "react-router-dom";
+import { jwtDecode } from 'jwt-decode';
+
 
 export function TabelaUsuarios() {
-  const [usuarios, setUsuarios] = useState([]);
-  const [isGestor, setIsGestor] = useState(false);
-  const [filtroStatus, setFiltroStatus] = useState("todos");
-  const [fade, setFade] = useState(false);
+    const [usuarios, setUsuarios] = useState([]);
+    const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
+    const [isGestor, setIsGestor] = useState(false);
+    const [filtroStatus, setFiltroStatus] = useState("todos");
+    const navigate = useNavigate();
+
+useEffect(() => {
+        const token = sessionStorage.getItem('authToken');
+        if (!token) {
+            navigate('/');
+        } else {
+            const { exp } = jwtDecode(token)
+            if (Date.now() >= exp * 1000) {
+                sessionStorage.removeItem('authToken');
+                navigate('/');
+            } else {
+                setAutenticacaoPassou(true);
+            }
+        }
+    }, [navigate]);
+
 
   useEffect(() => {
     setFade(false); // inicia fade out

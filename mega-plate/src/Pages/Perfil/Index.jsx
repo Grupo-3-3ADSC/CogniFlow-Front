@@ -16,14 +16,14 @@ function Perfil() {
     const [fotoUrl, setFotoUrl] = useState(null); // Mudança: usar fotoUrl específico
     const [fotoError, setFotoError] = useState(false);
     const [isUploadingFoto, setIsUploadingFoto] = useState(false);
-    
+
     useEffect(() => {
         const token = sessionStorage.getItem('authToken');
-        if(!token){
+        if (!token) {
             navigate('/');
         } else {
-            const {exp} = jwtDecode(token)
-            if(Date.now() >= exp * 1000) {
+            const { exp } = jwtDecode(token)
+            if (Date.now() >= exp * 1000) {
                 sessionStorage.removeItem('authToken');
                 navigate('/');
             } else {
@@ -55,7 +55,7 @@ function Perfil() {
     function getFoto() {
         if (token) {
             setFotoError(false);
-            
+
             api.get(`/usuarios/${userId}/foto`, {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -68,7 +68,7 @@ function Perfil() {
                     if (fotoUrl && fotoUrl.startsWith('blob:')) {
                         URL.revokeObjectURL(fotoUrl);
                     }
-                    
+
                     const imageUrl = URL.createObjectURL(resposta.data);
                     setFotoUrl(imageUrl);
                     setFotoError(false);
@@ -77,7 +77,7 @@ function Perfil() {
                     setFotoUrl(null);
                     setFotoError(true);
                 }
-            }).catch((err) => {  
+            }).catch((err) => {
                 setFotoUrl(null);
                 setFotoError(true);
                 if (err.response?.status !== 404) {
@@ -132,6 +132,18 @@ function Perfil() {
         return true;
     }
 
+     const [emailAlterado, setEmailAlterado] = useState(false);
+
+        const handleChange = (e) => {
+            const { name, value } = e.target;
+
+            if (name === 'email' && value !== formData.email) {
+                setEmailAlterado(true);
+            }
+            setFormData({ ...formData, [name]: value });
+        };
+
+
     function editarUsuario() {
         if (!validarInputsEspeciais()) {
             return toastError("Por favor não colocar comandos nos campos.")
@@ -152,10 +164,15 @@ function Perfil() {
                 document.querySelectorAll('.inputNome, .inputEmail, .inputCargo')
                     .forEach(input => input.disabled = true);
                 setBotaoDesabilitado(true);
-                setTimeout(function () {
-                    window.location.reload();
-                }, 2000)
                 setFormData(resposta.data)
+                setTimeout(() => {
+                    if (emailAlterado) {
+                        toastSucess('Reiniciando aplicação...');
+                        navigate('/');
+                    } else {
+                        window.location.reload();
+                    }
+                }, 2000);
             }).catch((erro) => {
                 toastError('Erro ao atualizar o usuário!')
                 setBotaoDesabilitado(false);
@@ -166,54 +183,54 @@ function Perfil() {
 
     const mudarFoto = (e) => {
         const arquivoSelecionado = e.target.files[0];
-        
+
         if (!arquivoSelecionado) return;
-        
+
         // Verificar se é realmente uma imagem
         if (!arquivoSelecionado.type.startsWith('image/')) {
             toastError('Por favor, selecione apenas arquivos de imagem');
             return;
         }
-        
+
         // Verificar tamanho do arquivo (exemplo: máximo 5MB)
         if (arquivoSelecionado.size > 5 * 1024 * 1024) {
             toastError('Arquivo muito grande. Máximo 5MB');
             return;
         }
-        
+
         setIsUploadingFoto(true);
-        
+
         const formData = new FormData();
         formData.append('foto', arquivoSelecionado);
-        
+
         console.log('FormData criado para:', `/usuarios/${userId}/upload-foto`);
-        
+
         api.post(`/usuarios/${userId}/upload-foto`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
             timeout: 30000
         })
-        .then((response) => {
-            toastSucess('Foto enviada com sucesso! Atualizando...');
-            
-            // Aguardar um pouco e recarregar a foto
-            setTimeout(() => {
-                getFoto();
+            .then((response) => {
+                toastSucess('Foto enviada com sucesso! Atualizando...');
+
+                // Aguardar um pouco e recarregar a foto
+                setTimeout(() => {
+                    getFoto();
+                    setIsUploadingFoto(false);
+                }, 1000);
+            })
+            .catch((err) => {
                 setIsUploadingFoto(false);
-            }, 1000);
-        })
-        .catch((err) => {
-            setIsUploadingFoto(false);
-            
-            if (err.code === 'ECONNABORTED') {
-                toastError('Timeout: Arquivo muito grande ou conexão lenta');
-            } else if (err.response?.status === 413) {
-                toastError('Arquivo muito grande para o servidor');
-            } else {
-                toastError('Erro ao enviar foto');
-            }
-        });
+
+                if (err.code === 'ECONNABORTED') {
+                    toastError('Timeout: Arquivo muito grande ou conexão lenta');
+                } else if (err.response?.status === 413) {
+                    toastError('Arquivo muito grande para o servidor');
+                } else {
+                    toastError('Erro ao enviar foto');
+                }
+            });
     }
 
     // Função para determinar qual imagem mostrar
@@ -224,20 +241,20 @@ function Perfil() {
         return User; // Imagem padrão
     };
 
-    if(!autenticacaoPassou) return null;
-    
+    if (!autenticacaoPassou) return null;
+
     return (
         <>
             <NavBar />
             <section className={style.perfil}>
                 <main className={style['bloco-fundo']}>
                     <div className={style['imagens']}>
-                        <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={mudarFoto} 
-                            id="input-image" 
-                            style={{display: "none"}}
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={mudarFoto}
+                            id="input-image"
+                            style={{ display: "none" }}
                             disabled={isUploadingFoto}
                         />
                         <div className={style['imagem-wrapper']}>
@@ -257,8 +274,8 @@ function Perfil() {
                                 }}
                             />
                         </div>
-                        <label 
-                            className={style['label-imagem']} 
+                        <label
+                            className={style['label-imagem']}
                             htmlFor="input-image"
                             style={{
                                 opacity: isUploadingFoto ? 0.5 : 1,
@@ -281,9 +298,13 @@ function Perfil() {
                         </div>
                         <div className={style['input-group']}>
                             <p>E-mail</p>
-                            <input type="text" className="inputEmail"
-                                value={formData.email}
-                                onChange={e => setFormData({ ...formData, email: e.target.value })} disabled />
+                            <input
+  type="email"
+  name="email"
+  className="inputEmail"
+  value={formData.email}
+  onChange={handleChange}
+ disabled />
                             <IconContext.Provider value={{ color: 'black', size: '1.5em' }}>
                                 <FaPencilAlt onClick={() => desbloquearEdicao('editarEmail')}
                                     className={style['input-icon']} />

@@ -49,6 +49,7 @@ export function CadastroFornecedor() {
     }
 
     const cnpjLimpo = formData.cnpj.replace(/\D/g, '');
+    const cepLimpo = formData.cep.replace(/-/g, '');
 
     if (!validarRazaoSocial(formData.razaoSocial)) {
       Swal.fire({ title: "Razão Social inválida", icon: "warning", confirmButtonColor: "#3085d6" });
@@ -82,10 +83,10 @@ export function CadastroFornecedor() {
     }
 
     const userData = {
-      cnpj: formData.cnpj.trim(),
+      cnpj: cnpjLimpo.trim(),
       nomeFantasia: formData.nomeFantasia.trim(),
       razaoSocial: formData.razaoSocial.trim(),
-      cep: formData.cep.trim(),
+      cep: cepLimpo.trim(),
       endereco: formData.endereco.trim(),
       numero: formData.numero.trim(),
       telefone: formData.telefone.trim(),
@@ -118,7 +119,7 @@ export function CadastroFornecedor() {
       console.error('Erro ao cadastrar fornecedor:', error);
       Swal.fire({
         title: "Erro ao cadastrar fornecedor",
-        text: "Por favor, tente novamente mais tarde.",
+        text: "Erro: " + error.response.data.message || "Tente novamente mais tarde.",
         icon: "error",
         confirmButtonColor: "#3085d6",
       });
@@ -134,7 +135,7 @@ export function CadastroFornecedor() {
 
   useEffect(() => {
     const cepNumeros = formData.cep.replace(/\D/g, '');
-
+    
     if (cepNumeros.length === 8) {
       preencherEnderecoPorCEP(formData.cep);
     } else {
