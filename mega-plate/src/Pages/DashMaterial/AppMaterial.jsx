@@ -108,12 +108,12 @@ const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
 
     
 const transferenciaInternaTotal = dadosEstoque.reduce((acc, item) => {
-  const valorInterno = item.interno || 0; 
+  const valorInterno = item.interna || 0; 
   return acc + valorInterno;
 }, 0);
 
 const transferenciaExternaTotal = dadosEstoque.reduce((acc, item) => {
-  const valorExterno = item.externo || 0; 
+  const valorExterno = item.externa || 0; 
   return acc + valorExterno;
 }, 0);
 
@@ -583,7 +583,7 @@ setPieData(newPieData);
           </div>
         </div>
 
-        <div className="containerDash">
+        <div className="containerDashMaterial">
           <div className="dashboardMaterial">
             <h2>Dashboard Material</h2>
 
@@ -614,7 +614,7 @@ setPieData(newPieData);
                 </div>
               </div>
 
-              <div className="KpiMaterial">
+              <div className="KpiMaterialDash">
                 <div id="chart-aviso" className="chart">
                   <div
                     style={{
@@ -779,7 +779,7 @@ setPieData(newPieData);
                   textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
                   letterSpacing: '0.5px'
                 }}>
-                  Entradas de Material
+                  Movimentações de Material
                 </h1>
                 <div style={{
                   background: 'rgba(255, 255, 255, 0.02)',

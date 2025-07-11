@@ -22,18 +22,19 @@
     padding: 15px;
     margin-left: 4vh;
     width: calc(100% - 4vh);
+    margin-top: -40px;
 }
 
-.container {
+/* .container {
     margin-top: 8vh;
-}
+} */
 
 /* Filter Header */
 .filter-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    
     background: rgba(5, 49, 76, 0.95);
     backdrop-filter: blur(20px);
     padding: 12px 18px;
@@ -71,6 +72,7 @@
     min-width: 120px;
     max-width: 140px;
     height: 32px;
+    border: 2px solid #ffffff;
 }
 
 #select-Filtro-Material,
@@ -120,7 +122,7 @@ option {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     backdrop-filter: blur(10px);
-    font-size: 11px;
+    font-size: 12px;
     height: 32px;
 }
 
@@ -137,14 +139,15 @@ option {
 }
 
 /* Dashboard Container */
-.containerDash {
+.containerDashMaterial {
     margin-top: 2vh;
     display: flex;
     gap: 15px;
-    width: 100%;
+    width: 90%;
     max-width: 100%;
     justify-content: center;
     align-items: flex-start;
+    margin-left: 5%;
 }
 
 /* Main Dashboard */
@@ -160,7 +163,7 @@ option {
     flex-direction: column;
     align-items: center;
     min-height: 90vh;
-    width: 50%;
+    width: 60%;
 }
 
 .dashboardMaterial h2 {
@@ -213,12 +216,12 @@ option {
 }
 
 /* KPI Cards */
-#KpiMaterial {
-    margin-right: 8vh;
+#KpiMaterialDash {
+   /* ajuste o valor conforme desejar */
 }
 
 #chart-aviso, #chart-aviso2, #chart-aviso3 {
-    width: 32vh;
+    width: 40vh;
     height: 12vh;
     background: var(--chart-gradient);
     backdrop-filter: blur(15px);
@@ -236,6 +239,8 @@ option {
     border-radius: var(--border-radius);
     box-shadow: var(--glass-shadow);
     border: 1px solid rgba(255, 255, 255, 0.15);
+      min-width: 300px;
+    min-height: 100px;
 }
 
 #chart-aviso:hover, #chart-aviso2:hover, #chart-aviso3:hover {
@@ -265,15 +270,19 @@ option {
 /* Charts Superior Layout */
 #charts-superior-material {
     display: flex;
-    gap: 18px;
+    gap: 20px;
     width: 100%;
     margin-bottom: 20px;
+    
 }
 
 /* Individual Chart Styling */
 #pie_chart1 {
-    width: 38vh;
+    width: 40vh;
     background: var(--chart-gradient);
+    margin-top: 10px;
+    
+   
 }
 
 #pie_chart1::before {
@@ -282,12 +291,13 @@ option {
 
 /* Products Chart */
 #chart-produtos {
+    margin-top: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     width: 38vh;
-    height: auto;
+    height: 318px;
     background: var(--chart-gradient);
     border-radius: var(--border-radius);
     padding: 18px;
@@ -342,7 +352,7 @@ option {
 #bar_chartMaterial, #line_chart {
     flex: 1;
     width: 100vh;
-    height: 45vh;
+    height: 55vh;
     background: var(--chart-gradient);
     backdrop-filter: blur(25px);
     border-radius: var(--border-radius);
@@ -416,7 +426,7 @@ option {
     border-radius: var(--border-radius);
     box-shadow: var(--card-shadow);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    height: 90vh;
+    height: 113.5vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;

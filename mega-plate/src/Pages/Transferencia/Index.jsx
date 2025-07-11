@@ -37,6 +37,8 @@ export function Transferencia() {
   const [materiais, setMateriais] = useState([]);
   const [tipoTransferencia, setTipoTransferencia] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [dadosUltimaTransferencia, setDadosUltimaTransferencia] =
+    useState(null);
 
   function getEstoque() {
     api
@@ -58,70 +60,41 @@ export function Transferencia() {
   if (!autenticacaoPassou) return null;
 
   function handleTransferir() {
-    if (
-      quantidadeUMR.trim() === "" ||
-      tipoMaterial.trim() === "" ||
-      tipoTransferencia.trim() === "" ||
-      setor.trim() === ""
-    ) {
-      toastError("Por favor, preencha todos os campos.");
-      return;
-    }
-    if (isNaN(quantidadeUMR)) {
-      toastError("A quantidade UMR deve ser um número.");
-      return;
-    }
-    if (quantidadeUMR <= 0) {
-      toastError("A quantidade UMR deve ser maior que zero.");
-      return;
-    }
-    if (tipoMaterial === "Selecione uma opção") {
-      toastError("Por favor, selecione um tipo de material.");
-      return;
-    }
-    if (tipoTransferencia === "Selecione uma opção") {
-      toastError("Por favor, selecione um tipo de transferência.");
-      return;
-    }
-    if (setor === "Selecione uma opção") {
-      toastError("Por favor, selecione um setor.");
-      return;
-    }
-    setIsLoading(true);
-
-    setTimeout(() => {
-      toastSucess("Sucesso!");
-      setIsLoading(false);
-      setShowSuccessScreen(true);
-    }, 2000);
-  }
-
-  function handleTransferir() {
-    // 1. Validação consolidada em função separada
-    const validationError = validateInputs();
-    if (validationError) {
-      alert(validationError);
+    const validationMessage = validateInputs();
+    if (validationMessage) {
+      toastError(validationMessage);
       return;
     }
 
     setIsLoading(true);
+
+    const dados = {
+      tipoMaterial,
+      quantidadeAtual: Number(quantidadeAtual),
+      tipoTransferencia,
+    };
 
     api
-      .put(
-        `/estoque/retirar/${tipoMaterial}/${quantidadeAtual}/${tipoTransferencia}`
-      )
+      .put("/estoque/retirar", dados)
       .then((resposta) => {
-        setquantidadeAtual(quantidadeAtual);
-        gerarPDF({ quantidadeAtual, tipoMaterial, tipoTransferencia });
+        gerarPDF(dados);
+        setDadosUltimaTransferencia(dados); // Salva os dados da última transferência
         resetForm();
         setShowSuccessScreen(true);
         showSuccessToast(
           resposta.data.message || "Transferência realizada com sucesso"
         );
-        setIsLoading(false);
       })
       .catch((err) => {
+        if (err.response && err.response.data && err.response.data.message) {
+          toastError(err.response.data.message);
+        } else {
+          toastError("Erro ao realizar transferência.");
+        }
         console.log("erro:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   }
 
@@ -407,13 +380,14 @@ export function Transferencia() {
             id="quantidadeAtual"
             className="input-quantidadeAtual"
             type="text"
-            inputMode="numeric"
             maxLength={10}
             placeholder="Quantidade UMR"
             value={quantidadeAtual}
-            onChange={(e) =>
-              setquantidadeAtual(e.target.value.replace(/\D/g, ""))
-            }
+            onChange={(e) => {
+              // Remove tudo que não for número
+              const onlyNums = e.target.value.replace(/[^0-9]/g, "");
+              setquantidadeAtual(onlyNums);
+            }}
           />
 
           <label htmlFor="tipoMaterial">Tipo de Material:</label>
@@ -428,7 +402,10 @@ export function Transferencia() {
             </option>
             {materiais &&
               materiais.map((material) => (
-                <option key={material.id} value={material.tipoMaterial}>
+                <option
+                  key={material.tipoMaterial}
+                  value={material.tipoMaterial}
+                >
                   {material.tipoMaterial}
                 </option>
               ))}
@@ -463,13 +440,7 @@ export function Transferencia() {
           </h1>
           <button
             className="botao-relatorio"
-            onClick={() =>
-              gerarPDF({
-                quantidade: quantidadeAtual,
-                tipoMaterial,
-                tipoTransferencia,
-              })
-            }
+            onClick={() => gerarPDF(dadosUltimaTransferencia)}
           >
             BAIXAR RELATÓRIO DE TRANSFERÊNCIA
           </button>
@@ -481,7 +452,12 @@ export function Transferencia() {
           className="botao-acao"
           style={{ display: showSuccessScreen ? "block" : "none" }}
         >
-          <button onClick={handleTransferir}>
+          <button
+            onClick={() => {
+              resetForm();
+              setShowSuccessScreen(false);
+            }}
+          >
             REALIZAR OUTRA TRANSFERÊNCIA
           </button>
         </div>
