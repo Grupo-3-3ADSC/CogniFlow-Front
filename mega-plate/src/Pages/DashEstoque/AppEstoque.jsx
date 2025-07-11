@@ -1,9 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, Package, Calendar, Clock, User, Truck, Ruler, Layers } from 'lucide-react';
-import './styleEstoque.css';
-import NavBar from '../../components/NavBar';
-import { api } from '../../provider/api';
-
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Search,
+  X,
+  Package,
+  Calendar,
+  Clock,
+  User,
+  Truck,
+  Ruler,
+  Layers,
+} from "lucide-react";
+import "./styleEstoque.css";
+import NavBar from "../../components/NavBar";
+import { api } from "../../provider/api";
 
 // Estilos do Pop-up padronizados com o Dashboard Material
 const popupStyles = `
@@ -248,17 +257,17 @@ const popupStyles = `
 `;
 
 // Adicionar estilos ao documento
-if (typeof document !== 'undefined') {
+if (typeof document !== "undefined") {
   const styleSheet = document.createElement("style");
   styleSheet.innerText = popupStyles;
   document.head.appendChild(styleSheet);
 }
 
 function App() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMaterial, setSelectedMaterial] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMaterial, setSelectedMaterial] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [filteredStockItems, setFilteredStockItems] = useState([]);
   const [selectedStockItem, setSelectedStockItem] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
@@ -279,18 +288,18 @@ function App() {
     setEndDate(e.target.value);
   };
 
-
-
   // Dados expandidos de exemplo para a tabela de estoque
   const [stockData, setStockData] = useState([]);
-  const [tipoMaterial, setTipoMaterial] = useState("");
 
   function getEstoque() {
-    api.get('/estoque').then((resposta) => {
-      setStockData(resposta.data);
-    }).catch((err) => {
-      console.log('erro:', err);
-    });
+    api
+      .get("/estoque")
+      .then((resposta) => {
+        setStockData(resposta.data);
+      })
+      .catch((err) => {
+        console.log("erro:", err);
+      });
   }
 
   useEffect(() => {
@@ -298,27 +307,30 @@ function App() {
   }, []);
 
   const parseDate = (dateString) => {
-  return new Date(dateString); // já funciona com formato YYYY-MM-DD
-};
-
+    return new Date(dateString); // já funciona com formato YYYY-MM-DD
+  };
 
   const handleSearch = () => {
-     const filtered = stockData.filter(item => {
+    const filtered = stockData.filter((item) => {
       const itemDate = parseDate(item.ultimaMovimentacao);
       const startDateObj = startDate ? new Date(startDate) : null;
       const endDateObj = endDate ? new Date(endDate) : null;
 
       // Filtro por tipo de material (select)
-      const materialMatch = !selectedMaterial || item.tipoMaterial === selectedMaterial;
-      
+      const materialMatch =
+        !selectedMaterial || item.tipoMaterial === selectedMaterial;
+
       // Filtro por data
-      const dateInRange = (!startDateObj || itemDate >= startDateObj) &&
+      const dateInRange =
+        (!startDateObj || itemDate >= startDateObj) &&
         (!endDateObj || itemDate <= endDateObj);
-      
+
       // Filtro por busca de texto
-      const searchMatch = !searchTerm ||
+      const searchMatch =
+        !searchTerm ||
         item.tipoMaterial.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.lote && item.lote.toLowerCase().includes(searchTerm.toLowerCase()));
+        (item.lote &&
+          item.lote.toLowerCase().includes(searchTerm.toLowerCase()));
 
       return materialMatch && dateInRange && searchMatch;
     });
@@ -346,39 +358,44 @@ function App() {
 
   const getStatusClass = (status) => {
     switch (status) {
-      case 'Em estoque':
-        return 'status-high';
-      case 'Estoque baixo':
-        return 'status-medium';
-      case 'Reservado':
-        return 'status-low';
+      case "Em estoque":
+        return "status-high";
+      case "Estoque baixo":
+        return "status-medium";
+      case "Reservado":
+        return "status-low";
       default:
-        return '';
+        return "";
     }
   };
 
   return (
-    <div className='IndexFornecedor'>
+    <div className="IndexFornecedor">
       <NavBar />
 
       <div className="container">
-        <div className="filter-header">
+        <div className="filter-headerEstoque">
           <select
             id="select-Filtro-Fornecedor"
             value={selectedMaterial}
             onChange={handleMaterialChange} // Usando a função correta
           >
             <option value="">Todos Materiais</option>
-            {[...new Set(stockData.map(item => item.tipoMaterial))].map(tipo => (
-              <option key={tipo} value={tipo}>
-                {tipo}
-              </option>
-            ))}
+            {[...new Set(stockData.map((item) => item.tipoMaterial))].map(
+              (tipo) => (
+                <option key={tipo} value={tipo}>
+                  {tipo}
+                </option>
+              )
+            )}
           </select>
 
-          <div id='FiltroData'>
-            <span id='textFiltro'><h5>Início:</h5></span>
-            <input className='inputEstoque'
+          <div id="FiltroData">
+            <span id="textFiltro">
+              <h5>Início:</h5>
+            </span>
+            <input
+              className="inputEstoque"
               type="date"
               id="dateInput"
               value={startDate}
@@ -386,9 +403,12 @@ function App() {
             />
           </div>
 
-          <div id='FiltroData'>
-            <span id='textFiltro'><h5>Fim:</h5></span>
-            <input className='inputEstoque'
+          <div id="FiltroData">
+            <span id="textFiltro">
+              <h5>Fim:</h5>
+            </span>
+            <input
+              className="inputEstoque"
               type="date"
               id="dateInput"
               value={endDate}
@@ -417,6 +437,7 @@ function App() {
               <thead>
                 <tr>
                   <th>Material</th>
+                  <th>Quantidade</th>
                   <th>Quantidade mininma</th>
                   <th>Quantidade máxima</th>
                   <th>Qtd. Externo</th>
@@ -428,15 +449,22 @@ function App() {
                   <tr
                     key={index}
                     onClick={() => handleStockItemClick(item)}
-                    style={{ cursor: 'pointer' }}
-                    onMouseEnter={(e) => e.target.parentElement.style.backgroundColor = 'rgba(69, 134, 171, 0.1)'}
-                    onMouseLeave={(e) => e.target.parentElement.style.backgroundColor = 'transparent'}
+                    style={{ cursor: "pointer" }}
+                    onMouseEnter={(e) =>
+                      (e.target.parentElement.style.backgroundColor =
+                        "rgba(69, 134, 171, 0.1)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.target.parentElement.style.backgroundColor =
+                        "transparent")
+                    }
                   >
                     <td>{item.tipoMaterial}</td>
+                    <td>{item.quantidadeAtual}</td>
                     <td>{item.quantidadeMinima}</td>
                     <td>{item.quantidadeMaxima}</td>
-                    <td>{item.externo || 0}</td>
-                    <td>{item.interno || 0}</td>                    
+                    <td>{item.externa || 0}</td>
+                    <td>{item.interna || 0}</td>
                   </tr>
                 ))}
               </tbody>
@@ -471,11 +499,15 @@ function App() {
                 <div className="info-grid">
                   <div className="info-item">
                     <span className="info-label">Material:</span>
-                    <span className="info-value">{selectedStockItem.tipoMaterial}</span>
+                    <span className="info-value">
+                      {selectedStockItem.tipoMaterial}
+                    </span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Quantidade:</span>
-                    <span className="info-value">{selectedStockItem.quantidadeAtual} unidades</span>
+                    <span className="info-value">
+                      {selectedStockItem.quantidadeAtual} unidades
+                    </span>
                   </div>
                 </div>
               </div>
@@ -512,14 +544,24 @@ function App() {
                 </h4>
                 <div className="info-grid">
                   <div className="info-item">
-                    <span className="info-label">Ultima movimentação:</span>
-                    <span className="info-value">{selectedStockItem.ultimaMovimentacao  &&
-    new Date(selectedStockItem.ultimaMovimentacao).toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    })
-  }</span>
+                    <span className="info-value">
+  {selectedStockItem.ultimaMovimentacao ? (
+    isNaN(new Date(selectedStockItem.ultimaMovimentacao)) ? (
+      "Data inválida"
+    ) : (
+      new Date(selectedStockItem.ultimaMovimentacao).toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    )
+  ) : (
+    "Sem movimentação"
+  )}
+</span>
+
                   </div>
                   {/* <div className="info-item">
                     <span className="info-label">Hora de Entrada:</span>

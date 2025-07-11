@@ -556,7 +556,7 @@ function App() {
 
       <div className="container">
         <div id="filtro">
-          <div className="filter-header">
+          <div className="filter-headerFornecedor">
             <select
               id="select-Filtro-Fornecedor"
               value={selectedMaterial}
@@ -609,8 +609,8 @@ function App() {
           </div>
         </div>
 
-        <div className="containerDash">
-          <div className="dashboard">
+        <div className="containerDashFornecedor">
+          <div className="dashboardFornecedor">
             <h2>Dashboard Fornecedor</h2>
 
             <div id="charts-superior">

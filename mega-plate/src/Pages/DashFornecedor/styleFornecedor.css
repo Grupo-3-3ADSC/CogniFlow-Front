@@ -30,22 +30,21 @@
 }
 
 /* Filter Header */
-.filter-header {
-    display: flex;
+.filter-headerFornecedor {
+   display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 15px;
+    justify-content: space-between;
     background: rgba(5, 49, 76, 0.95);
     backdrop-filter: blur(20px);
-    padding: 15px 20px;
+    padding: 12px 18px;
     border-radius: var(--border-radius);
     box-shadow: var(--card-shadow);
-    width: 94%;
-    margin: 15px auto;
+    width: 88%;
+    margin-left: 6%;
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: var(--transition);
     flex-wrap: wrap;
-    margin-top: 15vh;
+    margin-top: 8vh;
 }
 
 .filter-header:hover {
@@ -57,18 +56,32 @@
 #select-Filtro-Fornecedor, 
 .search-input,
 .date-filter-input {
-    background: var(--primary-color);
+   background: rgba(255, 255, 255, 0.08);
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 8px;
+    padding: 6px 10px;
+    color: var(--text-primary);
+    font-size: 14px;
     font-weight: 500;
     transition: var(--transition);
     backdrop-filter: blur(10px);
-    min-width: 140px;
-    max-width: 160px;
+    min-width: 120px;
+    max-width: 140px;
+    height: 32px;
+    border: 2px solid #ffffff;
+}
+.date-filter-input {
+    background: #05314C;
+    border: 2px solid #ffffff;
+    border-radius: 40px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 500;
     color: white;
-    font-family: "Inter", "Poppins", sans-serif;
+    width: 200px; /* Ajuste para largura uniforme */
+    text-align: center;
+    transition: all 0.3s ease;
+    min-width: 200px;
 }
 
 #select-Filtro-Fornecedor:focus,
@@ -76,17 +89,18 @@
 .date-filter-input:focus {
     outline: none;
     background: rgba(255, 255, 255, 0.95);
-    color: var(--primary-color);
+    color: #05314C;
     color: white;
-    border-color: var(--secondary-color);
+    border-color: #4586AB;
     box-shadow: 0 0 0 3px rgba(69, 134, 171, 0.2);
+    
 }
 
 #select-Filtro-Fornecedor:hover,
 .search-input:hover,
 .date-filter-input:hover {
     background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.4);
+    border-color: #4586AB;
 }
 
 ::placeholder {
@@ -143,16 +157,17 @@ option {
 }
 
 /* Dashboard Container */
-.containerDash {
+.containerDashFornecedor {
     display: flex;
-    gap: 20px;
-    max-width: 1200px;
+    gap: 30px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 0 var(--dashboard-margin);
+    margin-top: 10px;
 }
 
 /* Main Dashboard */
-.dashboard {
+.dashboardFornecedor {
     flex: 2;
     background: rgba(5, 49, 76, 0.95);
     backdrop-filter: blur(20px);
@@ -161,6 +176,7 @@ option {
     box-shadow: var(--card-shadow);
     border: 1px solid rgba(255, 255, 255, 0.1);
     min-height: 75vh;
+    width: 100%;
 }
 
 .dashboard h2 {
@@ -302,6 +318,7 @@ option {
     box-shadow: var(--card-shadow);
     border: 1px solid rgba(255, 255, 255, 0.1);
     min-height: 75vh;
+    width: 100%;
 }
 
 .supplier-table-container h3 {
