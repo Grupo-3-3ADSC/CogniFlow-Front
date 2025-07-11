@@ -9,6 +9,10 @@
   height: calc(100vh - 20px); 
 }
 
+#inputs{
+  color: black;
+}
+
 .navbar {
   background-color: #05314C;
   height: 60px;
@@ -94,8 +98,8 @@
   padding: 10px 40px 10px 10px;
   border-radius: 40px;
   border: 1px solid #ccc;
-  background-color: #D9D9D9;
-  color: black;
+  background-color: #05314C;
+  color: white;
   font-size: medium;
   box-sizing: border-box;
 }
