@@ -12,6 +12,7 @@ export function TabelaUsuarios() {
     const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
     const [isGestor, setIsGestor] = useState(false);
     const [filtroStatus, setFiltroStatus] = useState("todos");
+    const [fade, setFade] = useState(true);
     const navigate = useNavigate();
 
 useEffect(() => {
