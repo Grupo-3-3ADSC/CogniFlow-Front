@@ -4,32 +4,30 @@ import { api } from "../../provider/api.js";
 import Swal from "sweetalert2";
 import styles from "./tabela.module.css";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from 'jwt-decode';
-
+import { jwtDecode } from "jwt-decode";
 
 export function TabelaUsuarios() {
-    const [usuarios, setUsuarios] = useState([]);
-    const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
-    const [isGestor, setIsGestor] = useState(false);
-    const [filtroStatus, setFiltroStatus] = useState("todos");
-    const [fade, setFade] = useState(true);
-    const navigate = useNavigate();
+  const [usuarios, setUsuarios] = useState([]);
+  const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
+  const [isGestor, setIsGestor] = useState(false);
+  const [filtroStatus, setFiltroStatus] = useState("todos");
+  const [fade, setFade] = useState(true);
+  const navigate = useNavigate();
 
-useEffect(() => {
-        const token = sessionStorage.getItem('authToken');
-        if (!token) {
-            navigate('/');
-        } else {
-            const { exp } = jwtDecode(token)
-            if (Date.now() >= exp * 1000) {
-                sessionStorage.removeItem('authToken');
-                navigate('/');
-            } else {
-                setAutenticacaoPassou(true);
-            }
-        }
-    }, [navigate]);
-
+  useEffect(() => {
+    const token = sessionStorage.getItem("authToken");
+    if (!token) {
+      navigate("/");
+    } else {
+      const { exp } = jwtDecode(token);
+      if (Date.now() >= exp * 1000) {
+        sessionStorage.removeItem("authToken");
+        navigate("/");
+      } else {
+        setAutenticacaoPassou(true);
+      }
+    }
+  }, [navigate]);
 
   useEffect(() => {
     setFade(false); // inicia fade out
@@ -98,10 +96,10 @@ useEffect(() => {
 
   return (
     <>
-      <NavBar/>
+      <NavBar />
       <div className={styles.container}>
         <div className={styles.background}>
-          <h2>Lista de Usuários</h2>
+          <h1>Lista de Usuários</h1>
           <label htmlFor="filtro" className={styles.labelFiltro}>
             Filtrar por status:{" "}
           </label>
@@ -115,56 +113,68 @@ useEffect(() => {
             <option value="ativos">Ativos</option>
             <option value="inativos">Inativos</option>
           </select>
-          <p>{usuarios.length} usuário(s) encontrado(s)</p>
+          <p className={styles.qtdUsuarios}>
+            {usuarios.length} usuário(s) encontrado(s)
+          </p>
 
-          <div className={styles.tabelaWrapper}>
-            <table
-              className={`${styles.tabela} ${
-                fade ? styles.fadeIn : styles.fadeOut
-              }`}
-            >
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Email</th>
-                  <th>Cargo</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {usuarios.map((usuario) => (
-                  <tr key={usuario.id}>
-                    <td data-label="Nome">{usuario.nome}</td>
-                    <td data-label="Email">{usuario.email}</td>
-                    <td data-label="Cargo">
-                      {Number(usuario.cargo?.id) === 2 ? "Gestor" : "Comum"}
-                    </td>
-                    <td data-label="Status">
-                      <div className={styles.statusColuna}>
-                        <span className={styles.statusTexto}>
-                          {usuario.ativo ? "Ativo" : "Inativo"}
-                        </span>
-                        {isGestor && (
-                          <button
-                            className={
-                              usuario.ativo
-                                ? styles.textDesativar
-                                : styles.textAtivar
-                            }
-                            onClick={() =>
-                              handleToggleStatus(usuario.id, usuario.ativo)
-                            }
-                          >
-                            {usuario.ativo ? "Desativar" : "Ativar"}
-                          </button>
-                        )}
-                      </div>
-                    </td>
+          {usuarios.length === 0 ? (
+            <p className={styles.mensagemVazia}>
+              {filtroStatus === "ativos" && "Nenhum usuário ativo encontrado."}
+              {filtroStatus === "inativos" &&
+                "Nenhum usuário inativo encontrado."}
+              {filtroStatus === "todos" &&
+                "Nenhum usuário cadastrado no sistema."}
+            </p>
+          ) : (
+            <div className={styles.tabelaWrapper}>
+              <table
+                className={`${styles.tabela} ${
+                  fade ? styles.fadeIn : styles.fadeOut
+                }`}
+              >
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Cargo</th>
+                    <th>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {usuarios.map((usuario) => (
+                    <tr key={usuario.id}>
+                      <td data-label="Nome">{usuario.nome}</td>
+                      <td data-label="Email">{usuario.email}</td>
+                      <td data-label="Cargo">
+                        {Number(usuario.cargo?.id) === 2 ? "Gestor" : "Comum"}
+                      </td>
+                      <td data-label="Status">
+                        <div className={styles.statusColuna}>
+                          <span className={styles.statusTexto}>
+                            {usuario.ativo ? "Ativo" : "Inativo"}
+                          </span>
+                          {isGestor && (
+                            <button
+                              className={
+                                usuario.ativo
+                                  ? styles.textDesativar
+                                  : styles.textAtivar
+                              }
+                              onClick={() =>
+                                handleToggleStatus(usuario.id, usuario.ativo)
+                              }
+                            >
+                              {usuario.ativo ? "Desativar" : "Ativar"}
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </>
