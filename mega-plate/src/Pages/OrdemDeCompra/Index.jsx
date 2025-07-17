@@ -622,7 +622,6 @@ console.log("valoresInput", valoresInput);
     const corSecundaria = [149, 165, 166];
     const corTexto = [44, 62, 80];
 
-    const fornecedorSelecionado = ordemDeCompra.fornecedor;
 
     const fornecedorDetalhes = listaFornecedores.find(
       (f) => f.fornecedorId === parseInt(valoresInput["FornecedorId"])
@@ -639,8 +638,8 @@ console.log("valoresInput", valoresInput);
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
 
-    if (fornecedorSelecionado) {
-      doc.text(`CNPJ: ${fornecedorSelecionado.cnpj}`, 20, 28);
+    if (fornecedorDetalhes) {
+      doc.text(`CNPJ: ${fornecedorDetalhes.cnpj}`, 20, 28);
       doc.text(`Endereço: ${fornecedorDetalhes.complemento}`, 105, 20);
       doc.text(`Telefone: ${fornecedorDetalhes.telefone}`, 105, 28);
     }
@@ -674,11 +673,11 @@ console.log("valoresInput", valoresInput);
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
 
-    if (fornecedorSelecionado) {
-      doc.text(`Nome: ${fornecedorSelecionado.nomeFantasia}`, 20, posicaoY);
+    if (fornecedorDetalhes) {
+      doc.text(`Nome: ${fornecedorDetalhes.nomeFantasia}`, 20, posicaoY);
       posicaoY += 6;
-      if (fornecedorSelecionado.cnpj) {
-        doc.text(`CNPJ: ${fornecedorSelecionado.cnpj}`, 20, posicaoY);
+      if (fornecedorDetalhes.cnpj) {
+        doc.text(`CNPJ: ${fornecedorDetalhes.cnpj}`, 20, posicaoY);
         posicaoY += 6;
       }
       if (fornecedorDetalhes.complemento) {
@@ -785,9 +784,9 @@ console.log("valoresInput", valoresInput);
       alturaRodape + 12
     );
 
-    if (fornecedorSelecionado) {
+    if (fornecedorDetalhes) {
       doc.text(
-        `www.${fornecedorSelecionado.nomeFantasia.toLowerCase()}.com.br | contato@${fornecedorSelecionado.nomeFantasia.toLowerCase()}.com.br`,
+        `www.${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br | contato@${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br`,
         20,
         alturaRodape + 16
       );
@@ -981,7 +980,7 @@ console.log("valoresInput", valoresInput);
             { backgroundColor: "#05314C" }}>
             <h1>{titulo}</h1>
           </span>
-
+ 
           <div className={style.inputs}>
             {etapas[progresso]?.inputs.map((input) => (
               <div key={input.id} className={style.inputGroup}>
