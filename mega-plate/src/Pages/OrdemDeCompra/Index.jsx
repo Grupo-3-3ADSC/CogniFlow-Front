@@ -32,20 +32,20 @@ export function OrdemDeCompra() {
   }
 
   const navigate = useNavigate();
-   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
+  const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
 
-   function getUsuarioIdDoToken() {
-  const token = sessionStorage.getItem("authToken");
-  if (!token) return null;
+  function getUsuarioIdDoToken() {
+    const token = sessionStorage.getItem("authToken");
+    if (!token) return null;
 
-  try {
-    const decoded = jwtDecode(token);
-    return decoded.id; // ou decoded.sub ou decoded.usuarioId, dependendo do seu backend
-  } catch (err) {
-    console.error("Erro ao decodificar token:", err);
-    return null;
+    try {
+      const decoded = jwtDecode(token);
+      return decoded.id; // ou decoded.sub ou decoded.usuarioId, dependendo do seu backend
+    } catch (err) {
+      console.error("Erro ao decodificar token:", err);
+      return null;
+    }
   }
-}
 
   useEffect(() => {
     const token = sessionStorage.getItem("authToken");
@@ -77,7 +77,7 @@ export function OrdemDeCompra() {
     getFornecedores();
     getMateriaPrima();
   }, []);
-  
+
   // Lista mockada de fornecedores
   // const fornecedoresMock = [
   //   {
@@ -173,26 +173,26 @@ export function OrdemDeCompra() {
   const formatarValorMonetario = (valor) => {
     const nums = valor.replace(/[^\d]/g, '');
     if (nums.length === 0) return '';
-    
+
     // Converte para número e formata corretamente
     const numero = parseInt(nums);
     if (numero === 0) return '';
-    
+
     // Se tem apenas 1 dígito, trata como centavos
     if (nums.length === 1) return `0,0${nums}`;
     // Se tem 2 dígitos, trata como centavos
     if (nums.length === 2) return `0,${nums}`;
-    
+
     // Para mais de 2 dígitos, separa os centavos
     const inteiros = nums.slice(0, -2);
     const decimais = nums.slice(-2);
-    
+
     // Remove zeros à esquerda dos inteiros
     const inteirosLimpos = inteiros.replace(/^0+/, '') || '0';
-    
+
     // Adiciona separadores de milhares
     const inteirosFormatados = inteirosLimpos.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    
+
     return `${inteirosFormatados},${decimais}`;
   };
 
@@ -206,20 +206,19 @@ export function OrdemDeCompra() {
     const nums = valor.replace(/[^\d,]/g, '');
     if (nums.includes(',')) {
       const partes = nums.split(',');
-      return `${partes[0]},${partes[1].slice(0, 2)}%`;
+      return `${partes[0]},${partes[1].slice(0, 2)}`;
     }
-    return nums ? `${nums}%` : '';
+    return nums ? `${nums}` : '';
   };
 
   const formatarQuantidade = (valor) => {
     return valor.replace(/\D/g, '');
   };
 
-  // Função para validação condicional dos campos valor
   const validarCamposValor = (valoresInput) => {
     const valorKg = valoresInput["Valor por Kg"];
     const valorPeca = valoresInput["Valor por peça"];
-    
+
     // Se nenhum dos dois estiver preenchido, ambos são obrigatórios
     if (!valorKg && !valorPeca) {
       return {
@@ -227,9 +226,10 @@ export function OrdemDeCompra() {
         "Valor por peça": "Preencha o valor por Kg OU o valor por peça"
       };
     }
-    
+
     return {}; // Nenhum erro se pelo menos um estiver preenchido
   };
+
 
   // Configuração das etapas otimizada
   const etapas = useMemo(() => ({
@@ -349,10 +349,10 @@ export function OrdemDeCompra() {
           id: "ipi",
           titulo: "IPI",
           tipo: "text",
-          placeholder: "Percentual do imposto (Ex: 12%)",
+          placeholder: "Percentual do imposto (Ex: 12)",
           pattern: "^\\d{1,2}([,.]\\d{1,2})?%?$",
           required: true,
-          validationMessage: "IPI inválido. Use formato: 12% ou 12",
+          validationMessage: "IPI inválido. Use números",
           formatador: formatarIPI
         },
         {
@@ -391,7 +391,7 @@ export function OrdemDeCompra() {
     try {
       // Simulando carregamento da API
       console.log("Usando dados mockados...");
-      
+
       // Descomente as linhas abaixo quando quiser usar a API real:
       // const [fornecedores, materiais] = await Promise.all([
       //   api.get("/fornecedores/listarFornecedorCompleto"),
@@ -399,7 +399,7 @@ export function OrdemDeCompra() {
       // ]);
       // setListaFornecedores(fornecedores.data);
       // setListaMateriais(materiais.data);
-      
+
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     }
@@ -425,7 +425,7 @@ export function OrdemDeCompra() {
   // Validação
   const validarCampo = useCallback((input, valor) => {
     if (!input.required) return { valido: true };
-    
+
     if (!valor || valor.trim() === "") {
       return { valido: false, erro: `${input.titulo} é obrigatório` };
     }
@@ -437,11 +437,11 @@ export function OrdemDeCompra() {
     return { valido: true };
   }, []);
 
-  // Função de validação atualizada
   const validarFormulario = useCallback(() => {
     const inputs = etapas[progresso]?.inputs || [];
     const novosErros = {};
     let temErro = false;
+    let mensagensErro = []; // Array para coletar mensagens de erro
 
     // Validação especial para campos de valor na etapa 2
     if (progresso === 2) {
@@ -449,53 +449,78 @@ export function OrdemDeCompra() {
       Object.assign(novosErros, errosValor);
       if (Object.keys(errosValor).length > 0) {
         temErro = true;
+        // Adicionar mensagens de erro dos campos de valor
+        Object.values(errosValor).forEach(erro => {
+          if (erro && !mensagensErro.includes(erro)) {
+            mensagensErro.push(erro);
+          }
+        });
       }
     }
 
     for (let input of inputs) {
       if (input.titulo === "Total" && input.disabled) continue;
-      
+
       // Pula validação de obrigatoriedade para campos de valor se o outro estiver preenchido
       if (progresso === 2 && (input.titulo === "Valor por Kg" || input.titulo === "Valor por peça")) {
         const valorKg = valoresInput["Valor por Kg"];
         const valorPeca = valoresInput["Valor por peça"];
-        
+
         // Se um dos campos estiver preenchido, o outro não é obrigatório
-        if ((input.titulo === "Valor por Kg" && valorPeca) || 
-            (input.titulo === "Valor por peça" && valorKg)) {
+        if ((input.titulo === "Valor por Kg" && valorPeca) ||
+          (input.titulo === "Valor por peça" && valorKg)) {
           continue;
         }
       }
-      
-      const valor = input.tipo === "select" 
-        ? valoresInput[input.titulo + "Id"] 
+
+      const valor = input.tipo === "select"
+        ? valoresInput[input.titulo + "Id"]
         : valoresInput[input.titulo];
-      
+
       const validacao = validarCampo(input, valor);
       if (!validacao.valido && !novosErros[input.titulo]) {
         novosErros[input.titulo] = validacao.erro;
         temErro = true;
+        // Adicionar mensagem de erro única
+        if (!mensagensErro.includes(validacao.erro)) {
+          mensagensErro.push(validacao.erro);
+        }
       }
     }
 
     // Validação de segurança
     const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
     const scriptPattern = /<script.*?>.*?<\/script>/gi;
-    
+
     for (let input of inputs) {
       const valor = valoresInput[input.titulo];
       if (typeof valor === 'string') {
         if (sqlPattern.test(valor)) {
-          novosErros[input.titulo] = 'Comandos SQL não são permitidos';
+          const erroMsg = 'Comandos SQL não são permitidos';
+          novosErros[input.titulo] = erroMsg;
           temErro = true;
+          if (!mensagensErro.includes(erroMsg)) {
+            mensagensErro.push(erroMsg);
+          }
           break;
         }
         if (scriptPattern.test(valor)) {
-          novosErros[input.titulo] = 'Scripts não são permitidos';
+          const erroMsg = 'Scripts não são permitidos';
+          novosErros[input.titulo] = erroMsg;
           temErro = true;
+          if (!mensagensErro.includes(erroMsg)) {
+            mensagensErro.push(erroMsg);
+          }
           break;
         }
       }
+    }
+
+    // Exibir toastError para cada mensagem de erro única
+    if (mensagensErro.length > 0) {
+      mensagensErro.forEach(mensagem => {
+        toastError(mensagem);
+      });
     }
 
     setErrosValidacao(novosErros);
@@ -504,51 +529,52 @@ export function OrdemDeCompra() {
 
   // CORREÇÃO: Finalizar ordem - simulando sucesso para chegar na tela 4
   const finalizarOrdemDeCompra = useCallback(async () => {
-      const usuarioId = getUsuarioIdDoToken();
-const dadosApi = {
-  usuarioId: getUsuarioIdDoToken(),
-  fornecedorId: Number(valoresInput["FornecedorId"]), // ✅
-  prazoEntrega: valoresInput["Prazo de entrega"],
-  ie: valoresInput["I.E"],
-  condPagamento: valoresInput["Cond. Pagamento"],
-  valorKg: parseFloat(valoresInput["Valor por Kg"]?.replace(",", ".") || 0),
-  rastreabilidade: valoresInput["Rastreabilidade"],
- estoqueId: Number(valoresInput["MaterialId"]),
-  valorPeca: parseFloat(valoresInput["Valor por peça"]?.replace(",", ".") || 0),
-  descricaoMaterial: valoresInput["Descrição do material"],
-  valorUnitario: parseFloat(valoresInput["Valor Unitário"]?.replace(",", ".") || 0),
-  ipi: parseFloat(valoresInput["IPI"]?.replace(",", ".") || 0),
-  quantidade: parseInt(valoresInput["Quantidade"] || 0),
-};
-console.log(dadosApi)
-console.log("listaMateriais", listaMateriais);
-console.log("valoresInput", valoresInput);
+    const usuarioId = getUsuarioIdDoToken();
+    console.log(Number(valoresInput["MaterialId"]))
+    const dadosApi = {
+      usuarioId: getUsuarioIdDoToken(),
+      fornecedorId: Number(valoresInput["FornecedorId"]), // ✅
+      prazoEntrega: valoresInput["Prazo de entrega"],
+      ie: (valoresInput["I.E"] || "").replace(/\./g, ""),
+      condPagamento: valoresInput["Cond. Pagamento"],
+      valorKg: parseFloat(valoresInput["Valor por Kg"]?.replace(",", ".") || 0),
+      rastreabilidade: valoresInput["Rastreabilidade"],
+      estoqueId: Number(valoresInput["MaterialId"]),
+      valorPeca: parseFloat(valoresInput["Valor por peça"]?.replace(",", ".") || 0),
+      descricaoMaterial: valoresInput["Descrição do material"],
+      valorUnitario: parseFloat(valoresInput["Valor Unitário"]?.replace(",", ".") || 0),
+      ipi: parseFloat(valoresInput["IPI"]?.replace(",", ".") || 0),
+      quantidade: parseInt(valoresInput["Quantidade"] || 0),
+    };
+    console.log(dadosApi)
+    console.log("listaMateriais", listaMateriais);
+    console.log("valoresInput", valoresInput);
 
-      api
-    .post("/ordemDeCompra", dadosApi)
-    .then((res) => {
-      const novaId = res?.data?.id;
+    api
+      .post("/ordemDeCompra", dadosApi)
+      .then((res) => {
+        const novaId = res?.data?.id;
 
-      if (!novaId || isNaN(novaId)) {
-        console.error("ID inválido retornado:", res?.data);
-        toastError("Erro ao obter o ID da nova ordem de compra.");
-        return;
-      }
+        if (!novaId || isNaN(novaId)) {
+          console.error("ID inválido retornado:", res?.data);
+          toastError("Erro ao obter o ID da nova ordem de compra.");
+          return;
+        }
 
-      return api.get(`/ordemDeCompra/${novaId}`);
-    })
-    .then((resDetalhado) => {
-      if (!resDetalhado) return;
-      setOrdemDeCompra(resDetalhado.data);
-      toastSucess("Ordem cadastrada com sucesso!");
-      setProgresso(4);
-    })
-    .catch((err) => {
-      console.error("Erro ao criar ordem:", err);
-      toastError("Erro ao criar ordem de compra. Verifique os dados.");
-      setErrosValidacao({ geral: "Erro ao criar ordem de compra. Verifique os dados." });
-    });
-}, [valoresInput]);
+        return api.get(`/ordemDeCompra/${novaId}`);
+      })
+      .then((resDetalhado) => {
+        if (!resDetalhado) return;
+        setOrdemDeCompra(resDetalhado.data);
+        toastSucess("Ordem cadastrada com sucesso!");
+        setProgresso(4);
+      })
+      .catch((err) => {
+        console.error("Erro ao criar ordem:", err);
+        toastError("Erro ao criar ordem de compra. Verifique os dados.");
+        setErrosValidacao({ geral: "Erro ao criar ordem de compra. Verifique os dados." });
+      });
+  }, [valoresInput]);
 
   // Navegação
   const avancarProgresso = useCallback(() => {
@@ -574,45 +600,29 @@ console.log("valoresInput", valoresInput);
     setErrosValidacao({});
   }, []);
 
-  // Handler para limpar o campo oposto quando um dos valores for preenchido
   const handleInputChange = useCallback((titulo, valor, isSelect = false, formatador = null) => {
-    let valorFormatado = valor;
+  let valorFormatado = valor;
+  
+  // Aplicar formatação se existir
+  if (formatador && !isSelect) {
+    valorFormatado = formatador(valor);
+  }
+  
+  setValoresInput(prev => {
+    const newState = {
+      ...prev,
+      [titulo]: valorFormatado,
+      ...(isSelect && { [titulo + "Id"]: valor })
+    };
     
-    // Aplicar formatação se existir
-    if (formatador && !isSelect) {
-      valorFormatado = formatador(valor);
-    }
-    
-    setValoresInput(prev => {
-      const newState = {
-        ...prev,
-        [titulo]: valorFormatado,
-        ...(isSelect && { [titulo + "Id"]: valor })
-      };
-      
-      return newState;
-    });
-    
-    // Lógica para limpar erros dos campos de valor quando um for preenchido
-    if (titulo === "Valor por Kg" && valorFormatado) {
-      // Limpa erro do campo "Valor por peça" quando "Valor por Kg" for preenchido
-      setErrosValidacao(prevErros => ({
-        ...prevErros,
-        "Valor por peça": ""
-      }));
-    } else if (titulo === "Valor por peça" && valorFormatado) {
-      // Limpa erro do campo "Valor por Kg" quando "Valor por peça" for preenchido
-      setErrosValidacao(prevErros => ({
-        ...prevErros,
-        "Valor por Kg": ""
-      }));
-    }
-    
-    // Limpar erro específico do campo atual
-    if (errosValidacao[titulo]) {
-      setErrosValidacao(prev => ({ ...prev, [titulo]: '' }));
-    }
-  }, [errosValidacao]);
+    return newState;
+  });
+  
+  // Limpar erros (manter apenas para lógica interna, não para exibição)
+  if (errosValidacao[titulo]) {
+    setErrosValidacao(prev => ({ ...prev, [titulo]: '' }));
+  }
+}, [errosValidacao]);
 
   // Geração de documentos (versão simplificada)
   function baixarPDF() {
@@ -792,9 +802,8 @@ console.log("valoresInput", valoresInput);
       );
     }
 
-    const nomeArquivo = `ordem_de_compra_${
-      ordemDeCompra.id
-    }_${dataFormatada.replace(/\//g, "-")}.pdf`;
+    const nomeArquivo = `ordem_de_compra_${ordemDeCompra.id
+      }_${dataFormatada.replace(/\//g, "-")}.pdf`;
     doc.save(nomeArquivo);
   }
 
@@ -832,7 +841,7 @@ console.log("valoresInput", valoresInput);
 
     if (fornecedor || fornecedorDetalhes) {
       sheet.addRow([
-        `CNPJ: ${fornecedor.cnpj || "N/A"}`,
+        `CNPJ: ${fornecedorDetalhes?.cnpj || "N/A"}`,
         "",
         "",
         `Endereço: ${fornecedorDetalhes.complemento || "N/A"}`,
@@ -855,8 +864,8 @@ console.log("valoresInput", valoresInput);
     sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true, size: 12 };
 
     if (fornecedor || fornecedorDetalhes) {
-      sheet.addRow([`Nome: ${fornecedor.nomeFantasia}`]);
-      if (fornecedor.cnpj) sheet.addRow([`CNPJ: ${fornecedor.cnpj}`]);
+      sheet.addRow([`Nome: ${fornecedorDetalhes?.nomeFantasia}`]);
+      if (fornecedorDetalhes?.cnpj) sheet.addRow([`CNPJ: ${fornecedorDetalhes?.cnpj}`]);
       if (fornecedorDetalhes.complemento)
         sheet.addRow([`Endereço: ${fornecedorDetalhes.complemento}`]);
     } else {
@@ -954,9 +963,8 @@ console.log("valoresInput", valoresInput);
 
     // Gerar o arquivo
     const buffer = await workbook.xlsx.writeBuffer();
-    const nomeArquivo = `ordem_de_compra_${
-      ordemDeCompra.id
-    }_${dataFormatada.replace(/\//g, "-")}.xlsx`;
+    const nomeArquivo = `ordem_de_compra_${ordemDeCompra.id
+      }_${dataFormatada.replace(/\//g, "-")}.xlsx`;
     saveAs(new Blob([buffer]), nomeArquivo);
   }
 
@@ -975,34 +983,32 @@ console.log("valoresInput", valoresInput);
         </div>
 
         <main className={style.formContent}>
-          <span className={style.spanTitulo} style={progresso === 4 ? 
-            { backgroundColor: "#1D597B", width: "330px", height: "200px" } : 
-            { backgroundColor: "#05314C" }}>
+          <span className={style.spanTitulo}>
             <h1>{titulo}</h1>
           </span>
- 
+
           <div className={style.inputs}>
             {etapas[progresso]?.inputs.map((input) => (
               <div key={input.id} className={style.inputGroup}>
-                <p>{input.titulo} {input.required && <span style={{color: 'red'}}>*</span>}</p>
+                <p>{input.titulo} {input.required && <span style={{ color: 'red' }}>*</span>}</p>
                 {input.tipo === "select" ? (
-               <select
-  value={valoresInput[input.titulo + "Id"] || ""}
-  onChange={(e) => {
-    const valor = e.target.value;
-    setValoresInput(prev => ({
-      ...prev,
-      [input.titulo]: input.options.find(opt => String(opt[input.optionValue]) === valor)?.[input.optionLabel] || "",
-      [input.titulo + "Id"]: valor, // Armazena corretamente o ID
-    }));
-  }}
+                  <select
+                    value={valoresInput[input.titulo + "Id"] || ""}
+                    onChange={(e) => {
+                      const valor = e.target.value;
+                      setValoresInput(prev => ({
+                        ...prev,
+                        [input.titulo]: input.options.find(opt => String(opt[input.optionValue]) === valor)?.[input.optionLabel] || "",
+                        [input.titulo + "Id"]: valor,
+                      }));
+                    }}
                     style={errosValidacao[input.titulo] ? { borderColor: 'red' } : {}}
                   >
                     <option value="">{input.placeholder}</option>
                     {input.options.map((opt) => (
-                     <option key={opt[input.optionValue]} value={opt[input.optionValue]}>
-  {opt[input.optionLabel]}
-</option>
+                      <option key={opt[input.optionValue]} value={opt[input.optionValue]}>
+                        {opt[input.optionLabel]}
+                      </option>
                     ))}
                   </select>
                 ) : (
@@ -1014,11 +1020,6 @@ console.log("valoresInput", valoresInput);
                     disabled={input.disabled}
                     style={errosValidacao[input.titulo] ? { borderColor: 'red' } : {}}
                   />
-                )}
-                {errosValidacao[input.titulo] && (
-                  <small style={{ color: 'red', fontSize: '12px', marginTop: '5px', display: 'block' }}>
-                    {errosValidacao[input.titulo]}
-                  </small>
                 )}
               </div>
             ))}

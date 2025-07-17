@@ -96,6 +96,13 @@ h2 {
 }
 
 .textDesativar {
+  background-color: orangered;
+  font-weight: 600;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.textExcluir {
   background-color: #d33;
   font-weight: 600;
   padding: 10px;

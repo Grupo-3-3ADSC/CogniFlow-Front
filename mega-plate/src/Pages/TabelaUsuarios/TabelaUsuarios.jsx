@@ -94,6 +94,38 @@ export function TabelaUsuarios() {
     }
   };
 
+  const handleDeletarUsuario = async (id) => {
+    const result = await Swal.fire({
+      title: "Deseja excluir este usuário?",
+      text: "Essa ação é irreversível!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Excluir",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#d33",
+    });
+
+    if (result.isConfirmed) {
+      const token = sessionStorage.getItem("authToken");
+      try {
+        await api.delete(`/usuarios/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+        Swal.fire("Usuário deletado com sucesso!", "", "success");
+        buscarUsuarios();
+      }
+
+      catch (error) {
+        Swal.fire("Erro ao atualizar status", "", "error");
+      }
+
+    }
+  }
+
   return (
     <>
       <NavBar />
@@ -128,9 +160,8 @@ export function TabelaUsuarios() {
           ) : (
             <div className={styles.tabelaWrapper}>
               <table
-                className={`${styles.tabela} ${
-                  fade ? styles.fadeIn : styles.fadeOut
-                }`}
+                className={`${styles.tabela} ${fade ? styles.fadeIn : styles.fadeOut
+                  }`}
               >
                 <thead>
                   <tr>
@@ -153,7 +184,7 @@ export function TabelaUsuarios() {
                           <span className={styles.statusTexto}>
                             {usuario.ativo ? "Ativo" : "Inativo"}
                           </span>
-                          {isGestor && (
+                          {isGestor && String(sessionStorage.getItem("usuario")) !== String(usuario.id) && (
                             <button
                               className={
                                 usuario.ativo
@@ -165,6 +196,17 @@ export function TabelaUsuarios() {
                               }
                             >
                               {usuario.ativo ? "Desativar" : "Ativar"}
+                            </button>
+                          )}
+
+                          {isGestor && String(sessionStorage.getItem("usuario")) !== String(usuario.id) && (
+                            <button
+                              className={styles.textExcluir}
+                              onClick={() =>
+                                handleDeletarUsuario(usuario.id)
+                              }
+                            >
+                              Excluir
                             </button>
                           )}
                         </div>
