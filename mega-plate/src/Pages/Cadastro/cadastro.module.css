@@ -122,6 +122,10 @@
   color: initial !important;
   background: whitesmoke;
 }
+.input-group input::placeholder {
+  color: #888888; /* Substitua por qualquer cor que quiser */
+  opacity: 1; /* Garante visibilidade total em alguns navegadores */
+}
 
 #buttonCadastrar {
   background-color: #1D597B;

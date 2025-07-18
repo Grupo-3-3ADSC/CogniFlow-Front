@@ -21,6 +21,7 @@ const NavBar = () => {
   const [nomeUsuario, setNomeUsuario] = useState("Usuario");
   const [fotoUrl, setFotoUrl] = useState(null); // Mudança: usar fotoUrl específico
   const [fotoError, setFotoError] = useState(false);
+  const [usuarioLista, setUsuarioLista] = useState([]);
   
   const token = sessionStorage.getItem('authToken');
   const userId = sessionStorage.getItem('usuario');
@@ -65,6 +66,7 @@ const NavBar = () => {
       }
     }).then((resposta) => {
       setNomeUsuario(resposta.data.nome);
+      setUsuarioLista(resposta.data);
     }).catch((err) => {
       console.log("erro: ", err);
     });
@@ -148,8 +150,13 @@ const NavBar = () => {
             {showFormSubmenu && (
               <ul className="submenu-list">
                 <li onClick={() => navigate('/ordemDeCompra')}>Ordem de Compra</li>
-                <li onClick={() => navigate('/cadastro')}>Cadastrar Usuários</li>
-                <li onClick={() => navigate ('/CadastroFornecedor')}>Cadastro de Fornecedor</li>
+
+                {usuarioLista?.cargo?.id === 2 && ( // Verifica se o cargo do usuário logado é gestor (id === 2)
+  <li onClick={() => navigate('/cadastro')}>Cadastrar Usuários</li>
+)}
+                {usuarioLista?.cargo?.id === 2 && (
+  <li onClick={() => navigate('/CadastroFornecedor')}>Cadastro de Fornecedor</li>
+)}
               </ul>
             )}
           </ul>

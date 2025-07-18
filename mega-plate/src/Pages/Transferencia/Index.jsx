@@ -381,7 +381,7 @@ export function Transferencia() {
             className="input-quantidadeAtual"
             type="text"
             maxLength={10}
-            placeholder="Quantidade UMR"
+            placeholder="Quantidade: 100"
             value={quantidadeAtual}
             onChange={(e) => {
               // Remove tudo que não for número

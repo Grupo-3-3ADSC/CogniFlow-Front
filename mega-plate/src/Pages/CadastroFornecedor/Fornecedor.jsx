@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import NavBar from '../../components/NavBar';
 import Swal from 'sweetalert2';
 import { api } from '../../provider/api.js';
+import { useNavigate } from 'react-router-dom';
 
 export function CadastroFornecedor() {
+  const navigate = useNavigate();
   const [progresso, setProgresso] = useState(1);
   const [formData, setFormData] = useState({
     cnpj: '',
@@ -135,7 +137,7 @@ export function CadastroFornecedor() {
 
   useEffect(() => {
     const cepNumeros = formData.cep.replace(/\D/g, '');
-    
+    const cargo = parseInt(sessionStorage.getItem('cargoUsuario'), 10);
     if (cepNumeros.length === 8) {
       preencherEnderecoPorCEP(formData.cep);
     } else {
@@ -144,7 +146,15 @@ export function CadastroFornecedor() {
         ...prev,
         endereco: ''
       }));
-    }
+    }if (cargo !== 2) { // Verifica se o usuário não é gestor
+          Swal.fire({
+            title: "Acesso Negado",
+            text: "Você não tem permissão para acessar esta página.",
+            icon: "error",
+            confirmButtonColor: "#3085d6",
+          });
+          navigate('/material');
+      }
   }, [formData.cep]);
 
 

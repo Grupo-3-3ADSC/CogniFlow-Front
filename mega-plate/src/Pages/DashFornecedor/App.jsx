@@ -260,7 +260,7 @@ function App() {
     }
   }, []);
 
-  const [userPhoto, setUserPhoto] = useState("/images/User.png");
+ 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -305,7 +305,7 @@ function App() {
   };
   function getFornecedor() {
     api
-      .get("/fornecedores/listarFornecedorCompleto")
+      .get("/fornecedores")
       .then((response) => {
         const fornecedores = response.data;
         setFilteredSuppliers(fornecedores);
@@ -338,7 +338,7 @@ function App() {
       .then((response) => {
         const ordens = response.data;
         setOrdemDeCompra(ordens);
-        // console.log(ordens);
+        console.log(ordens);
       })
       .catch((error) => {
         console.error("Erro ao buscar estoque:", error);
@@ -350,21 +350,21 @@ function App() {
 
 
   // Função para gerar dados dinâmicos do gráfico de pizza
-  const generatePieData = (suppliers) => {
-    const materialCount = suppliers.reduce((acc, supplier) => {
-      acc[supplier.material] =
-        (acc[supplier.material] || 0) + supplier.quantity;
-      return acc;
-    }, {});
+  // const generatePieData = (suppliers) => {
+  //   const materialCount = suppliers.reduce((acc, supplier) => {
+  //     acc[supplier.material] =
+  //       (acc[supplier.material] || 0) + supplier.quantity;
+  //     return acc;
+  //   }, {});
 
-    return [
-      ["Material", "Quantidade"],
-      ...Object.entries(materialCount).map(([material, quantity]) => [
-        material,
-        quantity,
-      ]),
-    ];
-  };
+  //   return [
+  //     ["Material", "Quantidade"],
+  //     ...Object.entries(materialCount).map(([material, quantity]) => [
+  //       material,
+  //       quantity,
+  //     ]),
+  //   ];
+  // };
 
 
 
@@ -450,7 +450,7 @@ function App() {
 
   if (!autenticacaoPassou) return null;
   // Dados dinâmicos dos gráficos baseados nos fornecedores filtrados
-  const pieData = generatePieData(filteredSuppliers);
+  // const pieData = generatePieData(filteredSuppliers);
 
   const lineData = generateLineData(filteredSuppliers);
   const kpiData = calculateKPIData(ordemDeCompra);

@@ -183,6 +183,10 @@ button:hover {
     width: 100%;
     max-width: 403px;
 }
+input::placeholder {
+  color: #888888; /* Substitua por qualquer cor que quiser */
+  opacity: 1; /* Garante visibilidade total em alguns navegadores */
+}
 
 .botao-acao button:hover {
     background-color: #144a63;

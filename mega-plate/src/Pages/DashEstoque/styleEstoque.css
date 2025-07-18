@@ -164,13 +164,12 @@
     display: flex;
     align-items: center;
     position: relative;
-    width: 220px;
+
 }
   
 .search-input {
     width: 100%;
     padding: 8px 12px;
-    padding-right: 30px;
     border: 2px solid #ffffff;
     border-radius: 40px;
     font-size: 12px;
@@ -178,6 +177,7 @@
     transition: all 0.3s ease;
     background-color: #05314C;
     color: white;
+    height: 35px;
 }
   
 .search-input:focus {
