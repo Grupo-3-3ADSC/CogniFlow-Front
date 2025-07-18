@@ -154,7 +154,7 @@ function Perfil() {
         }
 
         const email = formData.email
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.com$/;
 
         if (!emailRegex.test(email)) {
             toastError("Erro, email inválido não pode ser editado.");
