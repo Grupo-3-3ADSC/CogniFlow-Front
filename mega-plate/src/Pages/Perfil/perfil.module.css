@@ -89,6 +89,7 @@
   color: initial !important;
   background: whitesmoke;
   cursor: default;
+  height: 45px;
 }
 
 .input-group select {
@@ -157,6 +158,11 @@
         grid-template-columns: 1fr;
         width: 100%;
     }
+
+    .input-group input{
+      height: 60px;
+    }      
+    
 }
 
 @media (max-height: 620px) {
@@ -175,6 +181,7 @@
     .input-group select {
         font-size: 12px;
         padding: 10px 35px 10px 10px;
+        height: 50px;
     }
 }
 

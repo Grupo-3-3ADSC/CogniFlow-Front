@@ -117,7 +117,6 @@ function Perfil() {
         let input;
         if (campo === 'editarNome') input = document.querySelector('.inputNome');
         if (campo === 'editarEmail') input = document.querySelector('.inputEmail');
-        if (campo === 'editarCargo') input = document.querySelector('.inputCargo');
         if (input) input.disabled = !input.disabled;
     }
 
@@ -132,16 +131,16 @@ function Perfil() {
         return true;
     }
 
-     const [emailAlterado, setEmailAlterado] = useState(false);
+    const [emailAlterado, setEmailAlterado] = useState(false);
 
-        const handleChange = (e) => {
-            const { name, value } = e.target;
+    const handleChange = (e) => {
+        const { name, value } = e.target;
 
-            if (name === 'email' && value !== formData.email) {
-                setEmailAlterado(true);
-            }
-            setFormData({ ...formData, [name]: value });
-        };
+        if (name === 'email' && value !== formData.email) {
+            setEmailAlterado(true);
+        }
+        setFormData({ ...formData, [name]: value });
+    };
 
 
     function editarUsuario() {
@@ -152,6 +151,14 @@ function Perfil() {
         if (formData.nome.trim() === "" || !formData.nome ||
             formData.email.trim() === "" || !formData.email) {
             return toastError("Dados de edição vázio, por favor preencher.")
+        }
+
+        const email = formData.email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.com$/;
+
+        if (!emailRegex.test(email)) {
+            toastError("Erro, email inválido não pode ser editado.");
+            return;
         }
 
         if (token) {
@@ -299,12 +306,12 @@ function Perfil() {
                         <div className={style['input-group']}>
                             <p>E-mail</p>
                             <input
-  type="email"
-  name="email"
-  className="inputEmail"
-  value={formData.email}
-  onChange={handleChange}
- disabled />
+                                type="email"
+                                name="email"
+                                className="inputEmail"
+                                value={formData.email}
+                                onChange={handleChange}
+                                disabled />
                             <IconContext.Provider value={{ color: 'black', size: '1.5em' }}>
                                 <FaPencilAlt onClick={() => desbloquearEdicao('editarEmail')}
                                     className={style['input-icon']} />
@@ -313,30 +320,13 @@ function Perfil() {
 
                         <div className={style['input-group']}>
                             <p>Cargo</p>
-                            <select
+                            <input
                                 type="text"
                                 className="inputCargo"
-                                value={formData.cargo?.id || ""}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        cargo: { ...formData.cargo, id: Number(e.target.value) },
-                                    })
-                                }
+                                value={Number(formData.cargo?.id) === 2 ? "Usuário Gestor" : "Usuário Comum"}
                                 disabled
-                            >
-                                <option value={1}>Usuário Comum</option>
-                                {Number(formData.cargo?.id) === 2 && (
-                                    <option value={2}>Usuário Gestor</option>
-                                )}
-                            </select>
-
-                            <IconContext.Provider value={{ color: 'black', size: '1.5em' }}>
-                                <FaPencilAlt
-                                    onClick={() => desbloquearEdicao('editarCargo')}
-                                    className={style['input-icon']}
-                                />
-                            </IconContext.Provider>
+                                readOnly
+                            />
                         </div>
 
                         <button
