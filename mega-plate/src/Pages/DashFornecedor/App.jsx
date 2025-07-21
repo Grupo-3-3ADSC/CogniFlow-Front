@@ -272,6 +272,7 @@ function App() {
   const [materiais, setMateriais] = useState([]);
   const [ordemDeCompra, setOrdemDeCompra] = useState([]);
   const [estoque, setEstoque] = useState([]);
+  const [kpiData, setKpiData] = useState([]);
 
   const handlePhotoChange = (event) => {
     const file = event.target.files[0];
@@ -309,64 +310,50 @@ function App() {
       .then((response) => {
         const fornecedores = response.data;
         setFilteredSuppliers(fornecedores);
-        // console.log(fornecedores);
       })
       .catch((error) => {
         console.error("Erro ao buscar fornecedores:", error);
-        // Aqui você pode lidar com o erro, como exibir uma mensagem de erro para o usuário
       });
   }
-  function getEstoque() {
-    api
-      .get("/estoque")
-      .then((response) => {
-        const materiais = response.data.map((item) => item.tipoMaterial); // isso precisa retornar um array
-
-        setMateriais(materiais);
-        //  console.log('estoque resgatou', estoque)
-        setEstoque(response.data);
-        // console.log(materiais);
-
-      })
-      .catch((error) => {
-        console.error("Erro ao buscar estoque:", error);
-      });
-  }
+  
   function BuscarOrdemDeCompra() {
     api
       .get("/ordemDeCompra")
       .then((response) => {
         const ordens = response.data;
         setOrdemDeCompra(ordens);
+        const kpiData = gerarDadosKPI(ordens);
+        setKpiData(kpiData) 
         console.log(ordens);
       })
       .catch((error) => {
         console.error("Erro ao buscar estoque:", error);
       });
   }
+  function getEstoque() {
+    api
+      .get("/estoque")
+      .then((response) => {
+        // Criar um mapeamento estoqueId -> tipoMaterial para facilitar a busca
+        const materiaisMap = {};
+        response.data.forEach(item => {
+          materiaisMap[item.id] = item.tipoMaterial; // assumindo que o estoque tem um campo 'id'
+        });
+        
+        setMateriais(materiaisMap); // Agora materiais é um objeto para lookup rápido
+        setEstoque(response.data);
+        
+        // Após carregar o estoque, buscar as ordens de compra
+        BuscarOrdemDeCompra();
+      })
+      .catch((error) => {
+        console.error("Erro ao buscar estoque:", error);
+      });
+}
   useEffect(() => {
+    getEstoque();
     BuscarOrdemDeCompra();
   }, []);
-
-
-  // Função para gerar dados dinâmicos do gráfico de pizza
-  // const generatePieData = (suppliers) => {
-  //   const materialCount = suppliers.reduce((acc, supplier) => {
-  //     acc[supplier.material] =
-  //       (acc[supplier.material] || 0) + supplier.quantity;
-  //     return acc;
-  //   }, {});
-
-  //   return [
-  //     ["Material", "Quantidade"],
-  //     ...Object.entries(materialCount).map(([material, quantity]) => [
-  //       material,
-  //       quantity,
-  //     ]),
-  //   ];
-  // };
-
-
 
   // Função para gerar dados dinâmicos do gráfico de linha
   const generateLineData = (suppliers) => {
@@ -383,34 +370,7 @@ function App() {
     ];
   };
 
-  // Função para calcular estatísticas dinâmicas dos KPIs
-  const calculateKPIData = (ordens) => {
-    const materialStats = {};
-
-    ordens.forEach((ordem) => {
-      const material = ordem.estoque?.tipoMaterial || "N/A";
-      const fornecedor =
-        ordem.fornecedor?.nomeFantasia || "Fornecedor Desconhecido";
-      const valorUnitario = Number(ordem.valorUnitario || 0);
-      const quantidade = Number(ordem.quantidade || 0);
-
-      if (!materialStats[material]) {
-        materialStats[material] = {
-          totalValue: 0,
-          totalQuantity: 0,
-          suppliers: new Set(),
-          firstSupplier: fornecedor,
-        };
-      }
-
-      materialStats[material].totalValue += valorUnitario * quantidade;
-      materialStats[material].totalQuantity += quantidade;
-      materialStats[material].suppliers.add(fornecedor);
-    });
-
-    return materialStats;
-  };
-
+  
   const parseDate = (dateString) => {
     const [day, month, year] = dateString.split("/");
     return new Date(year, month - 1, day);
@@ -449,16 +409,71 @@ function App() {
   }, []);
 
   if (!autenticacaoPassou) return null;
-  // Dados dinâmicos dos gráficos baseados nos fornecedores filtrados
-  // const pieData = generatePieData(filteredSuppliers);
+
+function gerarDadosKPI(ordens) {
+    var statsPorFornecedor = {};
+   
+    for (var i = 0; i < ordens.length; i++) {
+        var ordem = ordens[i];
+        var fornecedorId = ordem.fornecedorId;
+       
+        var fornecedorNome = ordem.nomeFornecedor || "Fornecedor " + fornecedorId;
+        var material = ordem.descricaoMaterialCompleta || "N/A";
+       
+        var valorUnitario = Number(ordem.valorUnitario || 0);
+        var quantidade = Number(ordem.quantidade || 0);
+        
+        if (!statsPorFornecedor[fornecedorId]) {
+            statsPorFornecedor[fornecedorId] = {
+                totalValue: 0,
+                totalQuantity: 0,
+                nome: fornecedorNome,
+                materiais: new Set(),
+                // Adicionar campos para rastrear a ordem com maior valor unitário
+                maiorValorUnitario: 0,
+                materialMaiorValor: "N/A",
+                estoqueIdMaiorValor: null
+            };
+        }
+        
+        statsPorFornecedor[fornecedorId].totalValue += valorUnitario * quantidade;
+        statsPorFornecedor[fornecedorId].totalQuantity += quantidade;
+        statsPorFornecedor[fornecedorId].materiais.add(material);
+        
+        // Verificar se esta ordem tem o maior valor unitário para este fornecedor
+        if (valorUnitario > statsPorFornecedor[fornecedorId].maiorValorUnitario) {
+            statsPorFornecedor[fornecedorId].maiorValorUnitario = valorUnitario;
+            statsPorFornecedor[fornecedorId].materialMaiorValor = material;
+            statsPorFornecedor[fornecedorId].estoqueIdMaiorValor = ordem.estoqueId;
+        }
+    }
+    
+    var listaFinal = [];
+    for (var fornecedorId in statsPorFornecedor) {
+        var stats = statsPorFornecedor[fornecedorId];
+        var avg = stats.totalQuantity > 0 ? stats.totalValue / stats.totalQuantity : 0;
+        var max = avg * 1.6;
+        
+        listaFinal.push({
+            fornecedorId: fornecedorId,
+            supplierName: stats.nome,
+            avgPrice: avg,
+            maxPrice: max,
+            material: stats.materialMaiorValor, // Agora mostra apenas o material da ordem com maior valor unitário
+            estoqueId: stats.estoqueIdMaiorValor, // Caso você queira usar depois
+            todosOsMateriais: Array.from(stats.materiais).join(', ') // Mantém todos os materiais caso precise depois
+        });
+    }
+    
+    const top3 = listaFinal
+        .sort((a, b) => b.maxPrice - a.maxPrice)
+        .slice(0, 3);
+        
+    return top3;
+}
 
   const lineData = generateLineData(filteredSuppliers);
-  const kpiData = calculateKPIData(ordemDeCompra);
-
-  // Obter os 3 principais materiais para os KPIs
-  const topMaterials = Object.entries(kpiData)
-    .sort((a, b) => b[1].totalQuantity - a[1].totalQuantity)
-    .slice(0, 3);
+  
 
   const handleSupplierClick = (supplier) => {
     const ordem = ordemDeCompra.find(
@@ -490,58 +505,53 @@ function App() {
 
 
   // Função para gerar dados dinâmicos do gráfico de barras baseado nas ordens de compra
-  const generateBarData = (ordensDeCompra) => {
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-    const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"];
-    const monthsNumbers = [0, 1, 2, 3, 4, 5]; // Janeiro = 0, Junho = 5
+  function generateBarData(ordensDeCompra) {
+  var currentDate = new Date();
+  var currentYear = currentDate.getFullYear();
+  var months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+  var monthsNumbers = [0, 1, 2, 3, 4, 5];
 
-    // Calcula a quantidade total de todas as ordens de compra
-    const totalQuantidade = ordensDeCompra.reduce((sum, ordem) => {
-      return sum + (ordem.quantidade || 0);
-    }, 0);
+  // Calcula a quantidade total
+  var totalQuantidade = 0;
+  for (var i = 0; i < ordensDeCompra.length; i++) {
+    var quantidade = ordensDeCompra[i].quantidade || 0;
+    totalQuantidade += quantidade;
+  }
 
-    // console.log("Total de ordens:", ordensDeCompra.length);
-    // console.log("Quantidade total das ordens:", totalQuantidade);
-
-    // Se não houver dados, retorna zeros
-    if (totalQuantidade === 0) {
-      console.warn("Nenhuma quantidade encontrada nas ordens de compra!");
-      return [
-        ["Mês", "Produção", "Meta"],
-        ...months.map(month => [month, 0, 0])
-      ];
+  if (totalQuantidade === 0) {
+    console.warn("Nenhuma quantidade encontrada nas ordens de compra!");
+    
+    var resultadoVazio = [["Mês", "Produção", "Meta"]];
+    for (var j = 0; j < months.length; j++) {
+      resultadoVazio.push([months[j], 0, 0]);
     }
+    return resultadoVazio;
+  }
 
-    // Define a meta como 75% da quantidade total (constante para todos os meses)
-    const meta = Math.floor(totalQuantidade * 0.75);
+  var meta = Math.floor(totalQuantidade * 0.75);
 
-    // Inicializa array para acumular produção por mês
-    const producaoMensal = new Array(6).fill(0);
+  var producaoMensal = new Array(12).fill(0);
 
-    // Distribui as quantidades pelos meses baseado na data de emissão
-    ordensDeCompra.forEach(ordem => {
-      if (ordem.dataDeEmissao && ordem.quantidade) {
-        const dataEmissao = new Date(ordem.dataDeEmissao);
-        const mesEmissao = dataEmissao.getMonth(); // 0-11
-        const anoEmissao = dataEmissao.getFullYear();
+  for (var k = 0; k < ordensDeCompra.length; k++) {
+    var ordem = ordensDeCompra[k];
+    if (ordem.dataDeEmissao && ordem.quantidade) {
+      var dataEmissao = new Date(ordem.dataDeEmissao);
+      var mesEmissao = dataEmissao.getMonth();
+      var anoEmissao = dataEmissao.getFullYear();
 
-        // Verifica se a data é do ano atual e está nos primeiros 6 meses
-        if (anoEmissao === currentYear && mesEmissao >= 0 && mesEmissao <= 5) {
-          producaoMensal[mesEmissao] += ordem.quantidade;
-        }
+      if (anoEmissao === currentYear && mesEmissao >= 0 && mesEmissao <= 11) {
+        producaoMensal[mesEmissao] += ordem.quantidade;
       }
-    });
+    }
+  }
 
-    // console.log("Produção mensal:", producaoMensal);
+  var resultadoFinal = [["Mês", "Produção", "Meta"]];
+  for (var m = 0; m < months.length; m++) {
+    resultadoFinal.push([months[m], producaoMensal[m], meta]);
+  }
 
-    return [
-      ["Mês", "Produção", "Meta"],
-      ...months.map((month, index) => {
-        return [month, producaoMensal[index], meta];
-      }),
-    ];
-  };
+  return resultadoFinal;
+}
 
   const barData = generateBarData(ordemDeCompra);
 
@@ -615,49 +625,21 @@ function App() {
 
             <div id="charts-superior">
               <div id="Kpi">
-                {topMaterials.map(([material, stats], index) => {
-                  const avgPrice =
-                    stats.totalQuantity > 0
-                      ? stats.totalValue / stats.totalQuantity
-                      : 0;
-                  const maxPrice = avgPrice * 1.6;
-                  const supplierName = Array.from(stats.suppliers)[0] || `Fornecedor ${index + 1}`;
+                {kpiData.map(function (item, index) {
+  return (
+  <React.Fragment key={item.fornecedorId}>
+    <div id={"chart-aviso-fornecedor" + (index + 1)} className="chart">
+      <div className="kpi-title">{item.material}</div>
+      <div className="kpi-subtitle">{item.supplierName}</div>
+      <div className="kpi-data">
+        <span>R$ {item.avgPrice.toFixed(2)}</span>
+        <span>R$ {item.maxPrice.toFixed(2)}</span>
+      </div>
+    </div>
+  </React.Fragment>
+);
+})}
 
-                  return (
-                    <div
-                      key={material}
-                      id={`chart-aviso-fornecedor${index + 1}`}
-                      className="chart"
-                    >
-                      <div className="kpi-title">{material}</div>
-                      <div className="kpi-subtitle">{supplierName}</div>
-                      <div className="kpi-data">
-                        <span>R$ {avgPrice.toFixed(2)} / cilindro</span>
-                        <span>R$ {maxPrice.toFixed(2)} / cilindro</span>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Preencher KPIs restantes se houver menos de 3 materiais */}
-                {Array.from(
-                  { length: Math.max(0, 3 - topMaterials.length) },
-                  (_, index) => (
-                    <div
-                      key={`empty-${index}`}
-                      id={`chart-aviso-fornecedor${topMaterials.length + index + 1
-                        }`}
-                      className="chart"
-                    >
-                      <div className="kpi-title">Material N/A</div>
-                      <div className="kpi-subtitle">Sem dados</div>
-                      <div className="kpi-data">
-                        <span>R$ 0,00 / cilindro</span>
-                        <span>R$ 0,00 / cilindro</span>
-                      </div>
-                    </div>
-                  )
-                )}
               </div>
             </div>
 
@@ -734,63 +716,6 @@ function App() {
       </div>
 
       <div className="popup-body">
-        <div className="popup-section">
-          <h4>Informações Básicas</h4>
-          <div className="info-grid">
-            <div className="info-item">
-              <span className="info-label">Material:</span>
-              <span className="info-value">
-                {ordemDeCompra
-      .filter((ordem) => ordem.fornecedorId === selectedSupplier.fornecedorId)
-      .map((ordem) => ordem.estoque?.tipoMaterial)
-      .filter((mat, idx, arr) => mat && arr.indexOf(mat) === idx) // remove duplicados e vazios
-      .join(", ") || "Não encontrado"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* ORDENS DE COMPRA DO FORNECEDOR */}
-        <div className="popup-section">
-  <h4>Ordens de Compra</h4>
-  <div className="info-grid">
-    {ordemDeCompra
-      .filter((ordem) => ordem.fornecedorId === selectedSupplier.fornecedorId)
-      .map((ordem, index) => (
-        <div key={index}>
-          <div className="info-item"> 
-            <span className="info-label">ID do Pedido:</span>
-            <span className="info-value">{ordem.id || "N/A"}</span>
-          </div>
-          <div className="info-item"> 
-            <span className="info-label">Data do Pedido:</span>
-            <span className="info-value">
-              {ordem.dataDeEmissao ? ordem.dataDeEmissao.split("T")[0] : "N/A"}
-            </span>
-          </div>
-          <div className="info-item"> 
-            <span className="info-label">Quantidade:</span>
-            <span className="info-value">{ordem.quantidade || 0} unidades</span>
-          </div>
-          <div className="info-item"> 
-            <span className="info-label">Preço Unitário:</span>
-            <span className="info-value">
-              R$ {ordem.valorUnitario?.toFixed(2) || "0.00"}
-            </span>
-          </div>
-          <div className="info-item"> 
-            <span className="info-label">Material:</span>
-            <span className="info-value">{ordem.estoque?.tipoMaterial || "N/A"}</span>
-          </div>
-          <div className="info-item"> 
-            <span className="info-label">Prazo Entrega:</span>
-            <span className="info-value">{ordem.prazoEntrega || "N/A"} dias</span>
-          </div>
-        </div>
-      ))}
-  </div>
-</div>
-
         {/* CONTATO - segue com selectedSupplier */}
         <div className="popup-section">
           <h4>Contato</h4>
@@ -809,6 +734,51 @@ function App() {
             </div>
           </div>
         </div>
+
+        {/* ORDENS DE COMPRA DO FORNECEDOR */}
+        <div className="popup-section">
+  <h4>Ordens de Compra</h4>
+  <div className="info-grid">
+    {ordemDeCompra
+      .filter((ordem) => ordem.fornecedorId === selectedSupplier.fornecedorId)
+      .map((ordem, index) => (
+        <div key={index}>
+          <div className="info-item"> 
+            <span className="info-label">ID do Pedido:</span>
+            <span className="info-value">{ordem.id || "N/A"}</span>
+          </div>
+          <div className="info-item"> 
+            <span className="info-label">Descrição do material:</span>
+            <span className="info-value">{ordem.descricaoMaterial || "N/A"}</span>
+          </div>
+          <div className="info-item"> 
+            <span className="info-label">Data de Emissão:</span>
+            <span className="info-value">
+              {ordem.dataDeEmissao ? ordem.dataDeEmissao.split("T")[0] : "N/A"}
+            </span>
+          </div>
+          <div className="info-item"> 
+            <span className="info-label">Quantidade:</span>
+            <span className="info-value">{ordem.quantidade || 0} unidades</span>
+          </div>
+          <div className="info-item"> 
+            <span className="info-label">Preço Unitário:</span>
+            <span className="info-value">
+              R$ {ordem.valorUnitario?.toFixed(2) || "0.00"}
+            </span>
+          </div>
+          <div className="info-item"> 
+            <span className="info-label">Prazo Entrega:</span>
+            <span className="info-value">{ordem.prazoEntrega || "N/A"}</span>
+          </div>
+          <div className="info-item"> 
+            <span className="info-label">Condição de Pagamento:</span>
+            <span className="info-value">{ordem.condPagamento || "N/A"}</span>
+          </div>
+        </div>
+      ))}
+  </div>
+</div>
       </div>
     </div>
   </div>
