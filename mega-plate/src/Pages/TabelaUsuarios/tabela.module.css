@@ -5,7 +5,7 @@
 }
 
 .container {
-  margin-top: 18vh;
+  margin-top: 15vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -40,7 +40,7 @@ h2 {
 }
 
 .tabela {
-  width: 100%;
+  width: 80%;
   border-collapse: collapse;
   background-color: #1d597b;
   border-radius: 12px;
@@ -116,7 +116,7 @@ h2 {
   user-select: none;
   display: flex;
   align-items: center;
-  gap: 100px;
+  gap: 82px;
 }
 
 .labelFiltro {
@@ -236,7 +236,7 @@ h2 {
   .statusColuna {
     flex-direction: column;
     align-items: flex-start;
-    gap: 4px; 
+    gap: 2px; 
   }
 
   .textAtivar,
