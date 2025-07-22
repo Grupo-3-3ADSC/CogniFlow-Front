@@ -292,7 +292,7 @@ export function Cadastro() {
             />
           </div>
 
-          <button id="buttonCadastrar" onClick={cadastrar}>
+          <button id="buttonCadastrar" className={styles.buttonCadastrar} onClick={cadastrar}>
             CADASTRAR
           </button>
         </main>

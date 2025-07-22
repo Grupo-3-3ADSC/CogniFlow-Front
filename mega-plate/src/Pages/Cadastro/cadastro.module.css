@@ -122,6 +122,7 @@
   color: initial !important;
   background: whitesmoke;
 }
+
 .input-group input::placeholder {
   color: #888888; /* Substitua por qualquer cor que quiser */
   opacity: 1; /* Garante visibilidade total em alguns navegadores */
@@ -129,15 +130,22 @@
 
 #buttonCadastrar {
   background-color: #1D597B;
-  padding: 10px;
+  padding: 15px 20px;
   width: 100%;
-  border: none;
+  border: none !important;
   color: white;
   border-radius: 20px;
   display: block;
   text-align: center;
   font-weight: bold;
-  outline: none;
+  outline: none !important;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+  box-shadow: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 #buttonCadastrar:hover {
@@ -174,127 +182,108 @@
   position: relative;
 }
 
-/* 1. Desktops Médios: entre 1200px e 993px */
+/* Media queries para responsividade */
+
+/* Tablets grandes e telas médias (até 1200px) */
 @media screen and (max-width: 1200px) {
-  .bloco-fundo {
-    width: 85vw;
-  }
-  
-  .aside-cadastro {
-    width: 15vw;
-  }
-  
-  .form-content {
-    max-width: 320px;
-  }
+    .bloco-fundo {
+        width: 85vw;
+    }
 
-  .tab-container {
-    padding-left: 12%;
-  }
+    .aside-cadastro {
+        width: 15vw;
+    }
 
-  .tab-container-user {
-    padding-left: 40%;
-  }
+    .form-content {
+        max-width: 320px;
+    }
+
+    .tab-container {
+        padding-left: 12%;
+    }
 }
 
-/* 2. Tablets Grandes: entre 992px e 769px */
+/* Tablets e telas menores (até 992px) */
 @media screen and (max-width: 992px) {
-  .cadastro {
-    padding: 3rem 0;
-  }
+    .cadastro {
+        padding: 3rem 0;
+    }
 
-  .bloco-fundo {
-    width: 90vw;
-    height: 75vh;
-  }
+    .bloco-fundo {
+        width: 90vw;
+        height: 75vh;
+    }
 
-  .aside-cadastro {
-    width: 18vw;
-    padding: 0 2rem;
-  }
+    .aside-cadastro {
+        width: 18vw;
+        padding: 0 2rem;
+    }
 
-  .form-content {
-    max-width: 300px;
-    padding: 1.5rem;
-  }
+    .form-content {
+        max-width: 300px;
+        padding: 1.5rem;
+    }
 
-  .tab-container {
-    padding-left: 10%;
-    padding-top: 1.5rem;
-    margin-top: 8vh;
-  }
-
-  .tab-container-user {
-    padding-left: 38%;
-  }
-
-  .tabActiveUsuario, .tabFornecedor {
-    padding: 8px 20px;
-    font-size: 0.9rem;
-  }
+    .tab-container {
+        padding-left: 10%;
+        padding-top: 1.5rem;
+        margin-top: 8vh;
+    }
 }
 
+/* Telas menores (até 768px) */
 @media screen and (max-width: 768px) {
-  .cadastro {
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem 0;
-    gap: 1rem;
-  }
+    .cadastro {
+        flex-direction: column;
+        gap: 0;
+        padding: 2rem 0;
+        align-items: center;
+    }
 
-  .bloco-fundo {
-    width: 95vw;
-    height: auto;
-    padding: 1rem 0;
-  }
+    .bloco-fundo {
+        width: 95vw;
+        height: auto;
+        min-height: 95vh;
+        top: 0;
+        transform: translate(-50%, 0);
+        margin-top: 80px;
+        border-radius: 15px;
+    }
 
-  .aside-cadastro {
-    width: 90%;
-    height: auto;
-    border-radius: 20px;
-    padding: 1rem;
-    box-shadow: none;
-  }
+    .aside-cadastro {
+        width: 90vw;
+        max-width: 400px;
+        height: auto;
+        padding: 1.5rem;
+        border-radius: 25px 25px 0 0;
+        box-shadow: 0px -10px 20px rgba(0, 0, 0, 0.4);
+        z-index: 1;
+        margin-top: 150px;
+    }
 
-  .aside-cadastro img {
-    max-width: 60px;
-  }
+    .form-content {
+        max-width: 90vw;
+        width: 400px;
+        height: auto;
+        min-height: 50vh;
+        border-radius: 0 0 25px 25px;
+        padding: 1.5rem;
+    }
 
-  .form-content {
-    width: 90%;
-    max-width: none;
-    height: auto;
-    border-radius: 20px;
-    padding: 1.5rem;
-    box-shadow: none;
-  }
+    .tab-container {
+        width: 90%;
+        padding-left: 5%;
+        margin-top: 2vh;
+        justify-content: center;
+    }
+    .buttonCadastrar {
+        font-size: 10px;
+    }
 
-  .tab-container {
-    flex-direction: column;
-    align-items: center;
-    padding: 1rem 0;
-    margin-top: 2vh;
-    width: 100%;
-  }
-
-  .tabActiveUsuario {
-    font-size: 1rem;
-    padding: 8px 20px;
-  }
-
-  .navbar {
-    flex-direction: column;
-    height: auto;
-    gap: 0.5rem;
-    padding: 0.5rem;
-  }
-
-  .navbar-left {
-    font-size: 1rem;
-  }
-
-  .navbar-right img {
-    width: 32px;
-    height: 32px;
-  }
 }
+@media screen and (min-width: 480px) and (max-width: 600px) {
+    .buttonCadastrar {
+        font-size: 10px;
+    }
+}
+  
