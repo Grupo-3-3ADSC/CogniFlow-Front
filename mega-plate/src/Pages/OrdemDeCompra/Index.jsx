@@ -304,10 +304,10 @@ export function OrdemDeCompra() {
             titulo: "Rastreabilidade",
             tipo: "text",
             placeholder: "Código de rastreamento (Max 20 caracteres)",
-            pattern: "^[A-Za-z0-9\\-\\/]{3,20}$", // CORREÇÃO: Limite ajustado para 20
+            pattern: "^[A-Za-z0-9\\-\\/]{16,20}$", // CORREÇÃO: Limite ajustado para 20
             required: true,
             validationMessage:
-              "Código inválido. Use 3-20 caracteres alfanuméricos.", // CORREÇÃO: Mensagem atualizada
+              "Código inválido. Use 16-20 caracteres alfanuméricos.", // CORREÇÃO: Mensagem atualizada
             formatador: formatarRastreio,
           },
           {
@@ -358,7 +358,7 @@ export function OrdemDeCompra() {
           },
           {
             id: "ipi",
-            titulo: "IPI",
+            titulo: "IPI(%)",
             tipo: "text",
             placeholder: "Percentual do imposto (Ex: 12)",
             pattern: "^\\d{1,2}([,.]\\d{1,2})?%?$",
@@ -700,11 +700,6 @@ export function OrdemDeCompra() {
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
 
-    if (fornecedorDetalhes) {
-      doc.text(`CNPJ: ${fornecedorDetalhes.cnpj}`, 20, 28);
-      doc.text(`Endereço: ${fornecedorDetalhes.complemento}`, 105, 20);
-      doc.text(`Telefone: ${fornecedorDetalhes.telefone}`, 105, 28);
-    }
 
     doc.setFillColor(240, 240, 240);
     doc.rect(140, 40, 65, 25, "F");
@@ -728,28 +723,52 @@ export function OrdemDeCompra() {
     doc.line(20, 70, 190, 70);
 
     doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("DADOS DO FORNECEDOR", 20, 80);
+doc.setFont("helvetica", "bold");
+doc.text("DADOS DO FORNECEDOR", 20, 80);
 
-    let posicaoY = 90;
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
+let posicaoY = 90;
+doc.setFontSize(10);
+doc.setFont("helvetica", "normal");
 
-    if (fornecedorDetalhes) {
-      doc.text(`Nome: ${fornecedorDetalhes.nomeFantasia}`, 20, posicaoY);
-      posicaoY += 6;
-      if (fornecedorDetalhes.cnpj) {
-        doc.text(`CNPJ: ${fornecedorDetalhes.cnpj}`, 20, posicaoY);
-        posicaoY += 6;
-      }
-      if (fornecedorDetalhes.complemento) {
-        doc.text(`Endereço: ${fornecedorDetalhes.complemento}`, 20, posicaoY);
-        posicaoY += 6;
-      }
-    } else {
-      doc.text("Fornecedor não encontrado", 20, posicaoY);
-      posicaoY += 6;
-    }
+if (fornecedorDetalhes) {
+  doc.text(`Nome: ${fornecedorDetalhes.nomeFantasia}`, 20, posicaoY); posicaoY += 6;
+  if (fornecedorDetalhes.cnpj) {
+    doc.text(`CNPJ: ${fornecedorDetalhes.cnpj}`, 20, posicaoY); posicaoY += 6;
+  }
+  if (fornecedorDetalhes.complemento) {
+    doc.text(`Endereço: ${fornecedorDetalhes.complemento}`, 20, posicaoY); posicaoY += 6;
+  }
+  if (valoresInput["I.E"]) {
+    doc.text(`I.E: ${valoresInput["I.E"]}`, 20, posicaoY); posicaoY += 6;
+  }
+} else {
+  doc.text("Fornecedor não encontrado", 20, posicaoY);
+  posicaoY += 6;
+}
+
+posicaoY += 10;
+doc.setFont("helvetica", "bold");
+doc.setFontSize(12);
+doc.text("DADOS DA COMPRA", 20, posicaoY);
+
+posicaoY += 8;
+doc.setFont("helvetica", "normal");
+doc.setFontSize(10);
+
+const prazoEntrega = new Date(valoresInput["Prazo de entrega"]).toLocaleDateString("pt-BR");
+doc.text(`Prazo de entrega: ${prazoEntrega}`, 20, posicaoY); posicaoY += 6;
+
+doc.text(`Condição de pagamento: ${valoresInput["Cond. Pagamento"]}`, 20, posicaoY); posicaoY += 6;
+
+const valorPeca = parseFloat(valoresInput["Valor por peça"]?.replace(",", ".") || 0);
+const valorKg = parseFloat(valoresInput["Valor por Kg"]?.replace(",", ".") || 0);
+
+if (valorPeca > 0) {
+  doc.text(`Valor por peça: R$ ${valorPeca.toFixed(2).replace(".", ",")}`, 20, posicaoY); posicaoY += 6;
+}
+if (valorKg > 0) {
+  doc.text(`Valor por Kg: R$ ${valorKg.toFixed(2).replace(".", ",")}`, 20, posicaoY); posicaoY += 6;
+}
 
     posicaoY += 10;
     doc.setFont("helvetica", "bold");
@@ -811,7 +830,19 @@ export function OrdemDeCompra() {
       posicaoY + 16
     );
 
-    posicaoY += 35;
+if (valoresInput["Rastreabilidade"]) {
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("RASTREABILIDADE", 20, posicaoY);
+  posicaoY += 8;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text(`Código: ${valoresInput["Rastreabilidade"]}`, 20, posicaoY);
+  posicaoY += 10;
+}
+
+    posicaoY += 20;
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text("OBSERVAÇÕES:", 20, posicaoY);
@@ -828,31 +859,15 @@ export function OrdemDeCompra() {
       doc.text(obs, 20, posicaoY + 8 + index * 6);
     });
 
-    const alturaRodape = 280;
+    const alturaRodape = 275;
     doc.setFillColor(...corPrimaria);
-    doc.rect(0, alturaRodape, 210, 20, "F");
+    doc.rect(0, alturaRodape, 210, 30, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
-    doc.text(
-      "Documento gerado em " + new Date().toLocaleString("pt-BR"),
-      20,
-      alturaRodape + 8
-    );
-
-    doc.text(
-      "www.megaplate.com.br | vendas@megaplate.com.br",
-      20,
-      alturaRodape + 12
-    );
-
-    if (fornecedorDetalhes) {
-      doc.text(
-        `www.${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br | contato@${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br`,
-        20,
-        alturaRodape + 16
-      );
-    }
+    doc.text("Documento gerado em " + new Date().toLocaleString("pt-BR"), 20, alturaRodape + 8);
+doc.text("www.megaplate.com.br | vendas@megaplate.com.br", 20, alturaRodape + 14);
+doc.text(`www.${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br | contato@${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br`, 20, alturaRodape + 20);
 
     const nomeArquivo = `ordem_de_compra_${
       ordemDeCompra.id
