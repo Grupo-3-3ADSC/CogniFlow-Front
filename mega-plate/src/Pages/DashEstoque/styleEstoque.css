@@ -2,10 +2,11 @@
 :root {
     --primary-color: #05314C;
     --secondary-color: #4586AB;
-    --dashboard-margin: 5%;  /* Margem uniforme para todo o dashboard */
+    --dashboard-margin: 5%;
+    /* Margem uniforme para todo o dashboard */
 }
-  
-.filter-headerEstoque{
+
+.filter-headerEstoque {
     display: flex;
     gap: 10px;
     background: #05314C;
@@ -19,7 +20,7 @@
     margin-right: var(--dashboard-margin);
     justify-content: space-between;
     margin-top: 8vh;
-    
+
 }
 
 #textFiltro h5 {
@@ -29,7 +30,7 @@
 
 }
 
- #select-Filtro-Fornecedor {
+#select-Filtro-Fornecedor {
     color: white;
     padding: 8px;
     border: 2px solid #ffffff;
@@ -38,9 +39,9 @@
     background-color: #05314C;
     font-size: 12px;
     transition: all 0.3s ease;
-} 
+}
 
-.inputEstoque{
+.inputEstoque {
     color: white;
     padding: 8px;
     border: 2px solid #ffffff;
@@ -52,16 +53,16 @@
     transition: all 0.3s ease;
 }
 
-#select-Filtro-Estoque:hover{
+#select-Filtro-Estoque:hover {
     color: rgb(255, 255, 255);
     background-color: #ffffff;
     border: 2px solid #05314C;
     cursor: pointer;
     font-size: 14px;
-    
+
 }
 
-.inputEstoque:hover{
+.inputEstoque:hover {
     color: black;
     background-color: #ffffff;
     border: 2px solid #05314C;
@@ -71,7 +72,8 @@
 
 .IndexEstoque {
     /* Corrigido o caminho da imagem de fundo */
-    background-image: url('../../assets/background.png'); /* Use este caminho se a imagem estiver na pasta public */
+    background-image: url('../../assets/background.png');
+    /* Use este caminho se a imagem estiver na pasta public */
     /* Alternativa se estiver usando import: */
     /* background-image: var(--background-image); /* E defina a variável no seu arquivo JS */
     padding: 20px;
@@ -166,7 +168,7 @@
     position: relative;
 
 }
-  
+
 .search-input {
     width: 100%;
     padding: 8px 12px;
@@ -179,21 +181,21 @@
     color: white;
     height: 35px;
 }
-  
+
 .search-input:focus {
     color: black;
     background-color: #ffffff;
     border: 2px solid #05314C;
 }
-  
+
 .search-input::placeholder {
     color: rgba(255, 255, 255, 0.7);
 }
-  
+
 .search-input:focus::placeholder {
     color: rgba(0, 0, 0, 0.5);
 }
-  
+
 .search-icon {
     position: absolute;
     right: 15px;
@@ -202,7 +204,7 @@
     cursor: pointer;
     transition: transform 0.2s ease;
 }
-  
+
 .search-icon:hover {
     transform: translateY(-50%) scale(1.2);
 }
@@ -224,38 +226,161 @@
     display: flex;
 }
 
+.table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+
+
 /* Responsividade */
 @media (max-width: 1200px) {
     .containerDash {
         flex-direction: column;
     }
-    
+
     .supplier-table-container {
         height: auto;
         margin-top: 20px;
     }
 }
 
-@media (max-width: 768px) {
-    .filter-header {
+@media (max-width: 992px) {
+    .containerDash {
         flex-direction: column;
-        align-items: center;
+        align-items: stretch;
+    }
+
+    .filter-headerEstoque {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
         height: auto;
     }
-    
+
+    #FiltroData {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    #select-Filtro-Fornecedor,
+    .inputEstoque,
+    .search-container {
+        width: 100%;
+    }
+
+    #textFiltro {
+        font-size: 14px;
+        margin-top: 1vh;
+        margin-right: 0;
+    }
+
+    .supplier-table-container {
+        padding: 20px;
+        overflow-x: auto;
+    }
+
+    .supplier-table {
+        min-width: 600px;
+    }
+}
+
+
+@media (max-width: 768px) {
+    .filter-headerEstoque {
+        flex-direction: column;
+        align-items: stretch;
+        height: auto;
+        gap: 16px;
+    }
+
     .search-container {
         width: 100%;
         max-width: 100%;
         margin-top: 10px;
     }
-    
-    #select-Filtro, input {
+
+    #select-Filtro-Fornecedor,
+    .inputEstoque,
+    .search-container {
         width: 100%;
     }
-    
-    .supplier-table th, 
-    .supplier-table td {
-        padding: 8px 10px;
+
+    #FiltroData {
+        flex-direction: column;
+    }
+
+    #textFiltro {
+        margin-top: 1vh;
+        margin-right: 0;
+        font-size: 14px;
+        text-align: left;
+    }
+
+    .search-icon {
+        right: 10px;
+    }
+
+    .supplier-table-container {
+        padding: 15px;
+        overflow: auto;
+    }
+
+    .supplier-table {
+        min-width: 600px;
+    }
+
+}
+
+@media (max-width: 576px) {
+    .filter-headerEstoque {
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .inputEstoque,
+    #select-Filtro-Fornecedor,
+    .search-container {
+        font-size: 14px;
+    }
+
+    .supplier-table-container {
+        padding: 12px;
+    }
+
+    .supplier-table {
         font-size: 12px;
+        min-width: 400px;
+    }
+
+    .filter-headerEstoque h3 {
+        font-size: 16px;
+    }
+}
+
+
+@media (max-width: 480px) {
+    .supplier-table-container h3 {
+        font-size: 16px;
+    }
+
+    .supplier-table th,
+    .supplier-table td {
+        font-size: 11px;
+        padding: 6px 8px;
+    }
+
+    .filter-headerEstoque {
+        padding: 10px;
+    }
+
+    .inputEstoque,
+    #select-Filtro-Fornecedor,
+    .search-input {
+        font-size: 11px;
+        padding: 6px 10px;
+    }
+
+    .search-icon {
+        right: 8px;
     }
 }

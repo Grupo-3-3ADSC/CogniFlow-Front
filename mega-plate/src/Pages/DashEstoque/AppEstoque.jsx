@@ -432,45 +432,47 @@ function App() {
 
         <div className="containerDash">
           <div className="supplier-table-container">
-            <h3>Tabela de Estoque</h3>
-            <table className="supplier-table">
-              <thead>
-                <tr>
-                  <th>Material</th>
-                  <th>Quantidade</th>
-                  <th>Quantidade mininma</th>
-                  <th>Quantidade máxima</th>
-                  <th>Qtd. Externo</th>
-                  <th>Qtd. Interno</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredStockItems.map((item, index) => (
-                  <tr
-                    key={index}
-                    onClick={() => handleStockItemClick(item)}
-                    style={{ cursor: "pointer" }}
-                    onMouseEnter={(e) =>
+            <div className="table-wrapper">
+              <h3>Tabela de Estoque</h3>
+              <table className="supplier-table">
+                <thead>
+                  <tr>
+                    <th>Material</th>
+                    <th>Quantidade</th>
+                    <th>Quantidade mininma</th>
+                    <th>Quantidade máxima</th>
+                    <th>Qtd. Externo</th>
+                    <th>Qtd. Interno</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredStockItems.map((item, index) => (
+                    <tr
+                      key={index}
+                      onClick={() => handleStockItemClick(item)}
+                      style={{ cursor: "pointer" }}
+                      onMouseEnter={(e) =>
                       (e.target.parentElement.style.backgroundColor =
                         "rgba(69, 134, 171, 0.1)")
-                    }
-                    onMouseLeave={(e) =>
+                      }
+                      onMouseLeave={(e) =>
                       (e.target.parentElement.style.backgroundColor =
                         "transparent")
-                    }
-                  >
-                    <td>{item.tipoMaterial}</td>
-                    <td>{item.quantidadeAtual}</td>
-                    <td>{item.quantidadeMinima}</td>
-                    <td>{item.quantidadeMaxima}</td>
-                    <td>{item.externa || 0}</td>
-                    <td>{item.interna || 0}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="search-results">
-              <p>{filteredStockItems.length} itens encontrados</p>
+                      }
+                    >
+                      <td>{item.tipoMaterial}</td>
+                      <td>{item.quantidadeAtual}</td>
+                      <td>{item.quantidadeMinima}</td>
+                      <td>{item.quantidadeMaxima}</td>
+                      <td>{item.externa || 0}</td>
+                      <td>{item.interna || 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="search-results">
+                <p>{filteredStockItems.length} itens encontrados</p>
+              </div>
             </div>
           </div>
         </div>
@@ -545,22 +547,22 @@ function App() {
                 <div className="info-grid">
                   <div className="info-item">
                     <span className="info-value">
-  {selectedStockItem.ultimaMovimentacao ? (
-    isNaN(new Date(selectedStockItem.ultimaMovimentacao)) ? (
-      "Data inválida"
-    ) : (
-      new Date(selectedStockItem.ultimaMovimentacao).toLocaleString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    )
-  ) : (
-    "Sem movimentação"
-  )}
-</span>
+                      {selectedStockItem.ultimaMovimentacao ? (
+                        isNaN(new Date(selectedStockItem.ultimaMovimentacao)) ? (
+                          "Data inválida"
+                        ) : (
+                          new Date(selectedStockItem.ultimaMovimentacao).toLocaleString("pt-BR", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        )
+                      ) : (
+                        "Sem movimentação"
+                      )}
+                    </span>
 
                   </div>
                   {/* <div className="info-item">
