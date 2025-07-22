@@ -1,24 +1,25 @@
 import style from "./ordemDeCompra.module.css";
-import progressoImg from '../../assets/progressoOrdemDeCompra.png';
-import progressoConcluido from '../../assets/progresso1Concluido.png';
-import progresso2Concluido from '../../assets/progresso2Concluido.png';
-import progresso3Concluido from '../../assets/progresso3Concluido.png';
-import { useEffect, useState, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { api } from '../../provider/api';
+import progressoImg from "../../assets/progressoOrdemDeCompra.png";
+import progressoConcluido from "../../assets/progresso1Concluido.png";
+import progresso2Concluido from "../../assets/progresso2Concluido.png";
+import progresso3Concluido from "../../assets/progresso3Concluido.png";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { api } from "../../provider/api";
 import { jwtDecode } from "jwt-decode";
-import { jsPDF } from 'jspdf';
-import NavBar from '../../components/NavBar';
-import { toastError, toastSucess } from '../../components/toastify/ToastifyService';
-import ExcelJS from 'exceljs';
+import { jsPDF } from "jspdf";
+import NavBar from "../../components/NavBar";
+import {
+  toastError,
+  toastSucess,
+} from "../../components/toastify/ToastifyService";
+import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 
 export function OrdemDeCompra() {
-
   const [listaFornecedores, setListaFornecedores] = useState([]);
   const [listaMateriais, setListaMateriais] = useState([]);
   const [ordemDeCompra, setOrdemDeCompra] = useState([]);
-
 
   function getFornecedores() {
     api
@@ -154,16 +155,20 @@ export function OrdemDeCompra() {
 
   // Funções de formatação
   const formatarIE = (valor) => {
-    const nums = valor.replace(/\D/g, '');
+    const nums = valor.replace(/\D/g, "");
     if (nums.length <= 3) return nums;
     if (nums.length <= 6) return `${nums.slice(0, 3)}.${nums.slice(3)}`;
-    if (nums.length <= 9) return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6)}`;
-    return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6, 9)}.${nums.slice(9, 12)}`;
+    if (nums.length <= 9)
+      return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6)}`;
+    return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(
+      6,
+      9
+    )}.${nums.slice(9, 12)}`;
   };
 
   const formatarPagamento = (valor) => {
-    const nums = valor.replace(/\D/g, '');
-    if (nums.length === 0) return '';
+    const nums = valor.replace(/\D/g, "");
+    if (nums.length === 0) return "";
     if (nums.length <= 2) return `${nums} dias`;
     if (nums.length <= 4) return `${nums.slice(0, 2)}/${nums.slice(2)} dias`;
     return `${nums.slice(0, 2)}/${nums.slice(2, 4)} dias`;
@@ -171,12 +176,12 @@ export function OrdemDeCompra() {
 
   // Função de formatação corrigida para valores monetários
   const formatarValorMonetario = (valor) => {
-    const nums = valor.replace(/[^\d]/g, '');
-    if (nums.length === 0) return '';
+    const nums = valor.replace(/[^\d]/g, "");
+    if (nums.length === 0) return "";
 
     // Converte para número e formata corretamente
     const numero = parseInt(nums);
-    if (numero === 0) return '';
+    if (numero === 0) return "";
 
     // Se tem apenas 1 dígito, trata como centavos
     if (nums.length === 1) return `0,0${nums}`;
@@ -188,31 +193,34 @@ export function OrdemDeCompra() {
     const decimais = nums.slice(-2);
 
     // Remove zeros à esquerda dos inteiros
-    const inteirosLimpos = inteiros.replace(/^0+/, '') || '0';
+    const inteirosLimpos = inteiros.replace(/^0+/, "") || "0";
 
     // Adiciona separadores de milhares
-    const inteirosFormatados = inteirosLimpos.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const inteirosFormatados = inteirosLimpos.replace(
+      /\B(?=(\d{3})+(?!\d))/g,
+      "."
+    );
 
     return `${inteirosFormatados},${decimais}`;
   };
 
   // CORREÇÃO: Limitando o campo de rastreabilidade a 20 caracteres
   const formatarRastreio = (valor) => {
-    const formatted = valor.toUpperCase().replace(/[^A-Z0-9\-\/]/g, '');
+    const formatted = valor.toUpperCase().replace(/[^A-Z0-9\-\/]/g, "");
     return formatted.substring(0, 20); // Limite de 20 caracteres
   };
 
   const formatarIPI = (valor) => {
-    const nums = valor.replace(/[^\d,]/g, '');
-    if (nums.includes(',')) {
-      const partes = nums.split(',');
+    const nums = valor.replace(/[^\d,]/g, "");
+    if (nums.includes(",")) {
+      const partes = nums.split(",");
       return `${partes[0]},${partes[1].slice(0, 2)}`;
     }
-    return nums ? `${nums}` : '';
+    return nums ? `${nums}` : "";
   };
 
   const formatarQuantidade = (valor) => {
-    return valor.replace(/\D/g, '');
+    return valor.replace(/\D/g, "");
   };
 
   const validarCamposValor = (valoresInput) => {
@@ -223,167 +231,174 @@ export function OrdemDeCompra() {
     if (!valorKg && !valorPeca) {
       return {
         "Valor por Kg": "Preencha o valor por Kg OU o valor por peça",
-        "Valor por peça": "Preencha o valor por Kg OU o valor por peça"
+        "Valor por peça": "Preencha o valor por Kg OU o valor por peça",
       };
     }
 
     return {}; // Nenhum erro se pelo menos um estiver preenchido
   };
 
-
   // Configuração das etapas otimizada
-  const etapas = useMemo(() => ({
-    1: {
-      inputs: [
-        {
-          id: "fornecedor",
-          titulo: "Fornecedor",
-          tipo: "select",
-          options: listaFornecedores,
-          optionLabel: "nomeFantasia",
-          optionValue: "fornecedorId",
-          required: true,
-          placeholder: "Selecione o fornecedor da lista",
-          validationMessage: "Selecione um fornecedor válido.",
-        },
-        {
-          id: "prazo",
-          titulo: "Prazo de entrega",
-          tipo: "date",
-          placeholder: "Selecione a data de entrega",
-          required: true,
-          validationMessage: "Informe uma data de entrega válida",
-        },
-        {
-          id: "ie",
-          titulo: "I.E",
-          tipo: "text",
-          placeholder: "Ex: 123.456.789.000",
-          pattern: "^\\d{3}\\.\\d{3}\\.\\d{3}\\.\\d{3}$",
-          required: true,
-          validationMessage: "Inscrição estadual inválida. Use: 123.456.789.000",
-          formatador: formatarIE
-        },
-        {
-          id: "pagamento",
-          titulo: "Cond. Pagamento",
-          tipo: "text",
-          placeholder: "Ex: 30 dias ou 30/60 dias",
-          pattern: "^\\d{1,3}(\\/\\d{1,3})?\\s?dias?$",
-          required: true,
-          validationMessage: "Use formato: 30 dias ou 30/60 dias",
-          color: "black",
-          formatador: formatarPagamento
-        },
-      ],
-      imagem: progressoImg,
-    },
-    2: {
-      inputs: [
-        {
-          id: "valorkg",
-          titulo: "Valor por Kg",
-          tipo: "double",
-          placeholder: "Digite o valor por Kg (Ex: 12,50)",
-          pattern: "^\\d+([,.]\\d{1,2})?$",
-          required: false, // Não é mais sempre obrigatório
-          validationMessage: "Valor inválido. Use formato: 12,50",
-          formatador: formatarValorMonetario
-        },
-        {
-          id: "rastreio",
-          titulo: "Rastreabilidade",
-          tipo: "text",
-          placeholder: "Código de rastreamento (Max 20 caracteres)",
-          pattern: "^[A-Za-z0-9\\-\\/]{3,20}$", // CORREÇÃO: Limite ajustado para 20
-          required: true,
-          validationMessage: "Código inválido. Use 3-20 caracteres alfanuméricos.", // CORREÇÃO: Mensagem atualizada
-          formatador: formatarRastreio
-        },
-        {
-          id: "MaterialId",
-          titulo: "Material",
-          tipo: "select",
-          options: listaMateriais,
-          optionLabel: "tipoMaterial",
-          optionValue: "id",
-          required: true,
-          placeholder: "Escolha o material desejado",
-          validationMessage: "Selecione um material válido.",
-        },
-        {
-          id: "valorpeca",
-          titulo: "Valor por peça",
-          tipo: "double",
-          placeholder: "Preço unitário da peça (Ex: 5,00)",
-          pattern: "^\\d+([,.]\\d{1,2})?$",
-          required: false, // Não é mais sempre obrigatório
-          validationMessage: "Valor inválido. Use formato: 5,00",
-          formatador: formatarValorMonetario
-        },
-        {
-          id: "descricao",
-          titulo: "Descrição do material",
-          tipo: "text",
-          placeholder: "Descreva detalhadamente o material (Ex: Parafuso galvanizado M6)",
-          pattern: "^[\\w\\s\\-\\.]{3,100}$",
-          required: true,
-          validationMessage: "Descrição deve ter entre 3 e 100 caracteres.",
-        },
-      ],
-      imagem: progressoConcluido,
-    },
-    3: {
-      inputs: [
-        {
-          id: "valorunit",
-          titulo: "Valor Unitário",
-          tipo: "text",
-          placeholder: "Valor final por unidade (Ex: 9,90)",
-          pattern: "^\\d+([,.]\\d{1,2})?$",
-          required: true,
-          validationMessage: "Valor inválido. Use formato: 9,90",
-          formatador: formatarValorMonetario
-        },
-        {
-          id: "ipi",
-          titulo: "IPI",
-          tipo: "text",
-          placeholder: "Percentual do imposto (Ex: 12)",
-          pattern: "^\\d{1,2}([,.]\\d{1,2})?%?$",
-          required: true,
-          validationMessage: "IPI inválido. Use números",
-          formatador: formatarIPI
-        },
-        {
-          id: "quantidade",
-          titulo: "Quantidade",
-          tipo: "text",
-          placeholder: "Número de peças/unidades (Ex: 100)",
-          pattern: "^\\d{1,5}$",
-          required: true,
-          validationMessage: "Quantidade inválida. Use apenas números (1-99999).",
-          formatador: formatarQuantidade
-        },
-        {
-          id: "total",
-          titulo: "Total",
-          tipo: "text",
-          placeholder: "Valor calculado automaticamente",
-          disabled: true,
-        },
-      ],
-      imagem: progresso2Concluido,
-    },
-    4: {
-      inputs: [],
-      imagem: progresso3Concluido,
-    },
-  }), [listaFornecedores, listaMateriais]);
+  const etapas = useMemo(
+    () => ({
+      1: {
+        inputs: [
+          {
+            id: "fornecedor",
+            titulo: "Fornecedor",
+            tipo: "select",
+            options: listaFornecedores,
+            optionLabel: "nomeFantasia",
+            optionValue: "fornecedorId",
+            required: true,
+            placeholder: "Selecione o fornecedor da lista",
+            validationMessage: "Selecione um fornecedor válido.",
+          },
+          {
+            id: "prazo",
+            titulo: "Prazo de entrega",
+            tipo: "date",
+            placeholder: "Selecione a data de entrega",
+            required: true,
+            validationMessage: "Informe uma data de entrega válida",
+          },
+          {
+            id: "ie",
+            titulo: "I.E",
+            tipo: "text",
+            placeholder: "Ex: 123.456.789.000",
+            pattern: "^\\d{3}\\.\\d{3}\\.\\d{3}\\.\\d{3}$",
+            required: true,
+            validationMessage:
+              "Inscrição estadual inválida. Use: 123.456.789.000",
+            formatador: formatarIE,
+          },
+          {
+            id: "pagamento",
+            titulo: "Cond. Pagamento",
+            tipo: "text",
+            placeholder: "Ex: 30 dias ou 30/60 dias",
+            pattern: "^\\d{1,3}(\\/\\d{1,3})?\\s?dias?$",
+            required: true,
+            validationMessage: "Use formato: 30 dias ou 30/60 dias",
+            color: "black",
+            formatador: formatarPagamento,
+          },
+        ],
+        imagem: progressoImg,
+      },
+      2: {
+        inputs: [
+          {
+            id: "valorkg",
+            titulo: "Valor por Kg",
+            tipo: "double",
+            placeholder: "Digite o valor por Kg (Ex: 12,50)",
+            pattern: "^\\d+([,.]\\d{1,2})?$",
+            required: false, // Não é mais sempre obrigatório
+            validationMessage: "Valor inválido. Use formato: 12,50",
+            formatador: formatarValorMonetario,
+          },
+          {
+            id: "rastreio",
+            titulo: "Rastreabilidade",
+            tipo: "text",
+            placeholder: "Código de rastreamento (Max 20 caracteres)",
+            pattern: "^[A-Za-z0-9\\-\\/]{3,20}$", // CORREÇÃO: Limite ajustado para 20
+            required: true,
+            validationMessage:
+              "Código inválido. Use 3-20 caracteres alfanuméricos.", // CORREÇÃO: Mensagem atualizada
+            formatador: formatarRastreio,
+          },
+          {
+            id: "MaterialId",
+            titulo: "Material",
+            tipo: "select",
+            options: listaMateriais,
+            optionLabel: "tipoMaterial",
+            optionValue: "id",
+            required: true,
+            placeholder: "Escolha o material desejado",
+            validationMessage: "Selecione um material válido.",
+          },
+          {
+            id: "valorpeca",
+            titulo: "Valor por peça",
+            tipo: "double",
+            placeholder: "Preço unitário da peça (Ex: 5,00)",
+            pattern: "^\\d+([,.]\\d{1,2})?$",
+            required: false, // Não é mais sempre obrigatório
+            validationMessage: "Valor inválido. Use formato: 5,00",
+            formatador: formatarValorMonetario,
+          },
+          {
+            id: "descricao",
+            titulo: "Descrição do material",
+            tipo: "text",
+            placeholder:
+              "Descreva detalhadamente o material (Ex: Parafuso galvanizado M6)",
+            pattern: "^[\\w\\s\\-\\.]{3,100}$",
+            required: true,
+            validationMessage: "Descrição deve ter entre 3 e 100 caracteres.",
+          },
+        ],
+        imagem: progressoConcluido,
+      },
+      3: {
+        inputs: [
+          {
+            id: "valorunit",
+            titulo: "Valor Unitário",
+            tipo: "text",
+            placeholder: "Valor final por unidade (Ex: 9,90)",
+            pattern: "^\\d+([,.]\\d{1,2})?$",
+            required: true,
+            validationMessage: "Valor inválido. Use formato: 9,90",
+            formatador: formatarValorMonetario,
+          },
+          {
+            id: "ipi",
+            titulo: "IPI",
+            tipo: "text",
+            placeholder: "Percentual do imposto (Ex: 12)",
+            pattern: "^\\d{1,2}([,.]\\d{1,2})?%?$",
+            required: true,
+            validationMessage: "IPI inválido. Use números",
+            formatador: formatarIPI,
+          },
+          {
+            id: "quantidade",
+            titulo: "Quantidade",
+            tipo: "text",
+            placeholder: "Número de peças/unidades (Ex: 100)",
+            pattern: "^\\d{1,5}$",
+            required: true,
+            validationMessage:
+              "Quantidade inválida. Use apenas números (1-99999).",
+            formatador: formatarQuantidade,
+          },
+          {
+            id: "total",
+            titulo: "Total",
+            tipo: "text",
+            placeholder: "Valor calculado automaticamente",
+            disabled: true,
+          },
+        ],
+        imagem: progresso2Concluido,
+      },
+      4: {
+        inputs: [],
+        imagem: progresso3Concluido,
+      },
+    }),
+    [listaFornecedores, listaMateriais]
+  );
 
   // Estados derivados
   const image = etapas[progresso]?.imagem || progressoImg;
-  const titulo = progresso === 4 ? "FORMULÁRIO FINALIZADO COM SUCESSO!" : "ORDEM DE COMPRA";
+  const titulo =
+    progresso === 4 ? "FORMULÁRIO FINALIZADO COM SUCESSO!" : "ORDEM DE COMPRA";
   const nomeBotao = progresso === 3 ? "FINALIZAR" : "PRÓXIMO";
 
   // Fetch data (comentado para usar dados mockados)
@@ -399,7 +414,6 @@ export function OrdemDeCompra() {
       // ]);
       // setListaFornecedores(fornecedores.data);
       // setListaMateriais(materiais.data);
-
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     }
@@ -411,14 +425,18 @@ export function OrdemDeCompra() {
 
   // CORREÇÃO: Cálculo automático do total incluindo quantidade
   useEffect(() => {
-    const valorUnit = parseFloat((valoresInput["Valor Unitário"] || "").replace(",", ".")) || 0;
+    const valorUnit =
+      parseFloat((valoresInput["Valor Unitário"] || "").replace(",", ".")) || 0;
     const quantidade = parseInt(valoresInput["Quantidade"] || "0") || 0;
     const total = valorUnit * quantidade;
 
     if (total > 0) {
-      setValoresInput(prev => ({ ...prev, Total: total.toFixed(2).replace(".", ",") }));
+      setValoresInput((prev) => ({
+        ...prev,
+        Total: total.toFixed(2).replace(".", ","),
+      }));
     } else {
-      setValoresInput(prev => ({ ...prev, Total: "" }));
+      setValoresInput((prev) => ({ ...prev, Total: "" }));
     }
   }, [valoresInput["Valor Unitário"], valoresInput["Quantidade"]]);
 
@@ -450,7 +468,7 @@ export function OrdemDeCompra() {
       if (Object.keys(errosValor).length > 0) {
         temErro = true;
         // Adicionar mensagens de erro dos campos de valor
-        Object.values(errosValor).forEach(erro => {
+        Object.values(errosValor).forEach((erro) => {
           if (erro && !mensagensErro.includes(erro)) {
             mensagensErro.push(erro);
           }
@@ -461,21 +479,46 @@ export function OrdemDeCompra() {
     for (let input of inputs) {
       if (input.titulo === "Total" && input.disabled) continue;
 
+      // Validação específica para prazo de entrega (não pode ser anterior a hoje)
+      if (input.titulo === "Prazo de entrega") {
+        const dataHoje = new Date();
+        dataHoje.setHours(0, 0, 0, 0); // Zera hora para comparação só da data
+
+        const dataInput = new Date(valoresInput["Prazo de entrega"]);
+        dataInput.setHours(0, 0, 0, 0);
+
+        if (dataInput < dataHoje) {
+          const erroMsg =
+            "A data do prazo de entrega não pode ser anterior a hoje.";
+          novosErros["Prazo de entrega"] = erroMsg;
+          temErro = true;
+          if (!mensagensErro.includes(erroMsg)) {
+            mensagensErro.push(erroMsg);
+          }
+        }
+      }
+
       // Pula validação de obrigatoriedade para campos de valor se o outro estiver preenchido
-      if (progresso === 2 && (input.titulo === "Valor por Kg" || input.titulo === "Valor por peça")) {
+      if (
+        progresso === 2 &&
+        (input.titulo === "Valor por Kg" || input.titulo === "Valor por peça")
+      ) {
         const valorKg = valoresInput["Valor por Kg"];
         const valorPeca = valoresInput["Valor por peça"];
 
         // Se um dos campos estiver preenchido, o outro não é obrigatório
-        if ((input.titulo === "Valor por Kg" && valorPeca) ||
-          (input.titulo === "Valor por peça" && valorKg)) {
+        if (
+          (input.titulo === "Valor por Kg" && valorPeca) ||
+          (input.titulo === "Valor por peça" && valorKg)
+        ) {
           continue;
         }
       }
 
-      const valor = input.tipo === "select"
-        ? valoresInput[input.titulo + "Id"]
-        : valoresInput[input.titulo];
+      const valor =
+        input.tipo === "select"
+          ? valoresInput[input.titulo + "Id"]
+          : valoresInput[input.titulo];
 
       const validacao = validarCampo(input, valor);
       if (!validacao.valido && !novosErros[input.titulo]) {
@@ -489,14 +532,15 @@ export function OrdemDeCompra() {
     }
 
     // Validação de segurança
-    const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
+    const sqlPattern =
+      /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
     const scriptPattern = /<script.*?>.*?<\/script>/gi;
 
     for (let input of inputs) {
       const valor = valoresInput[input.titulo];
-      if (typeof valor === 'string') {
+      if (typeof valor === "string") {
         if (sqlPattern.test(valor)) {
-          const erroMsg = 'Comandos SQL não são permitidos';
+          const erroMsg = "Comandos SQL não são permitidos";
           novosErros[input.titulo] = erroMsg;
           temErro = true;
           if (!mensagensErro.includes(erroMsg)) {
@@ -505,7 +549,7 @@ export function OrdemDeCompra() {
           break;
         }
         if (scriptPattern.test(valor)) {
-          const erroMsg = 'Scripts não são permitidos';
+          const erroMsg = "Scripts não são permitidos";
           novosErros[input.titulo] = erroMsg;
           temErro = true;
           if (!mensagensErro.includes(erroMsg)) {
@@ -518,7 +562,7 @@ export function OrdemDeCompra() {
 
     // Exibir toastError para cada mensagem de erro única
     if (mensagensErro.length > 0) {
-      mensagensErro.forEach(mensagem => {
+      mensagensErro.forEach((mensagem) => {
         toastError(mensagem);
       });
     }
@@ -530,7 +574,7 @@ export function OrdemDeCompra() {
   // CORREÇÃO: Finalizar ordem - simulando sucesso para chegar na tela 4
   const finalizarOrdemDeCompra = useCallback(async () => {
     const usuarioId = getUsuarioIdDoToken();
-    console.log(Number(valoresInput["MaterialId"]))
+    console.log(Number(valoresInput["MaterialId"]));
     const dadosApi = {
       usuarioId: getUsuarioIdDoToken(),
       fornecedorId: Number(valoresInput["FornecedorId"]), // ✅
@@ -540,13 +584,17 @@ export function OrdemDeCompra() {
       valorKg: parseFloat(valoresInput["Valor por Kg"]?.replace(",", ".") || 0),
       rastreabilidade: valoresInput["Rastreabilidade"],
       estoqueId: Number(valoresInput["MaterialId"]),
-      valorPeca: parseFloat(valoresInput["Valor por peça"]?.replace(",", ".") || 0),
+      valorPeca: parseFloat(
+        valoresInput["Valor por peça"]?.replace(",", ".") || 0
+      ),
       descricaoMaterial: valoresInput["Descrição do material"],
-      valorUnitario: parseFloat(valoresInput["Valor Unitário"]?.replace(",", ".") || 0),
+      valorUnitario: parseFloat(
+        valoresInput["Valor Unitário"]?.replace(",", ".") || 0
+      ),
       ipi: parseFloat(valoresInput["IPI"]?.replace(",", ".") || 0),
       quantidade: parseInt(valoresInput["Quantidade"] || 0),
     };
-    console.log(dadosApi)
+    console.log(dadosApi);
     console.log("listaMateriais", listaMateriais);
     console.log("valoresInput", valoresInput);
 
@@ -572,7 +620,9 @@ export function OrdemDeCompra() {
       .catch((err) => {
         console.error("Erro ao criar ordem:", err);
         toastError("Erro ao criar ordem de compra. Verifique os dados.");
-        setErrosValidacao({ geral: "Erro ao criar ordem de compra. Verifique os dados." });
+        setErrosValidacao({
+          geral: "Erro ao criar ordem de compra. Verifique os dados.",
+        });
       });
   }, [valoresInput]);
 
@@ -583,13 +633,13 @@ export function OrdemDeCompra() {
     if (progresso === 3) {
       finalizarOrdemDeCompra();
     } else {
-      setProgresso(prev => prev + 1);
+      setProgresso((prev) => prev + 1);
     }
   }, [progresso, validarFormulario, finalizarOrdemDeCompra]);
 
   const voltarProgresso = useCallback(() => {
     if (progresso > 1) {
-      setProgresso(prev => prev - 1);
+      setProgresso((prev) => prev - 1);
       setErrosValidacao({});
     }
   }, [progresso]);
@@ -600,29 +650,32 @@ export function OrdemDeCompra() {
     setErrosValidacao({});
   }, []);
 
-  const handleInputChange = useCallback((titulo, valor, isSelect = false, formatador = null) => {
-  let valorFormatado = valor;
-  
-  // Aplicar formatação se existir
-  if (formatador && !isSelect) {
-    valorFormatado = formatador(valor);
-  }
-  
-  setValoresInput(prev => {
-    const newState = {
-      ...prev,
-      [titulo]: valorFormatado,
-      ...(isSelect && { [titulo + "Id"]: valor })
-    };
-    
-    return newState;
-  });
-  
-  // Limpar erros (manter apenas para lógica interna, não para exibição)
-  if (errosValidacao[titulo]) {
-    setErrosValidacao(prev => ({ ...prev, [titulo]: '' }));
-  }
-}, [errosValidacao]);
+  const handleInputChange = useCallback(
+    (titulo, valor, isSelect = false, formatador = null) => {
+      let valorFormatado = valor;
+
+      // Aplicar formatação se existir
+      if (formatador && !isSelect) {
+        valorFormatado = formatador(valor);
+      }
+
+      setValoresInput((prev) => {
+        const newState = {
+          ...prev,
+          [titulo]: valorFormatado,
+          ...(isSelect && { [titulo + "Id"]: valor }),
+        };
+
+        return newState;
+      });
+
+      // Limpar erros (manter apenas para lógica interna, não para exibição)
+      if (errosValidacao[titulo]) {
+        setErrosValidacao((prev) => ({ ...prev, [titulo]: "" }));
+      }
+    },
+    [errosValidacao]
+  );
 
   // Geração de documentos (versão simplificada)
   function baixarPDF() {
@@ -631,7 +684,6 @@ export function OrdemDeCompra() {
     const corPrimaria = [41, 128, 185];
     const corSecundaria = [149, 165, 166];
     const corTexto = [44, 62, 80];
-
 
     const fornecedorDetalhes = listaFornecedores.find(
       (f) => f.fornecedorId === parseInt(valoresInput["FornecedorId"])
@@ -802,8 +854,9 @@ export function OrdemDeCompra() {
       );
     }
 
-    const nomeArquivo = `ordem_de_compra_${ordemDeCompra.id
-      }_${dataFormatada.replace(/\//g, "-")}.pdf`;
+    const nomeArquivo = `ordem_de_compra_${
+      ordemDeCompra.id
+    }_${dataFormatada.replace(/\//g, "-")}.pdf`;
     doc.save(nomeArquivo);
   }
 
@@ -865,7 +918,8 @@ export function OrdemDeCompra() {
 
     if (fornecedor || fornecedorDetalhes) {
       sheet.addRow([`Nome: ${fornecedorDetalhes?.nomeFantasia}`]);
-      if (fornecedorDetalhes?.cnpj) sheet.addRow([`CNPJ: ${fornecedorDetalhes?.cnpj}`]);
+      if (fornecedorDetalhes?.cnpj)
+        sheet.addRow([`CNPJ: ${fornecedorDetalhes?.cnpj}`]);
       if (fornecedorDetalhes.complemento)
         sheet.addRow([`Endereço: ${fornecedorDetalhes.complemento}`]);
     } else {
@@ -963,8 +1017,9 @@ export function OrdemDeCompra() {
 
     // Gerar o arquivo
     const buffer = await workbook.xlsx.writeBuffer();
-    const nomeArquivo = `ordem_de_compra_${ordemDeCompra.id
-      }_${dataFormatada.replace(/\//g, "-")}.xlsx`;
+    const nomeArquivo = `ordem_de_compra_${
+      ordemDeCompra.id
+    }_${dataFormatada.replace(/\//g, "-")}.xlsx`;
     saveAs(new Blob([buffer]), nomeArquivo);
   }
 
@@ -990,23 +1045,34 @@ export function OrdemDeCompra() {
           <div className={style.inputs}>
             {etapas[progresso]?.inputs.map((input) => (
               <div key={input.id} className={style.inputGroup}>
-                <p>{input.titulo} {input.required && <span style={{ color: 'red' }}>*</span>}</p>
+                <p>
+                  {input.titulo}{" "}
+                  {input.required && <span style={{ color: "red" }}>*</span>}
+                </p>
                 {input.tipo === "select" ? (
                   <select
                     value={valoresInput[input.titulo + "Id"] || ""}
                     onChange={(e) => {
                       const valor = e.target.value;
-                      setValoresInput(prev => ({
+                      setValoresInput((prev) => ({
                         ...prev,
-                        [input.titulo]: input.options.find(opt => String(opt[input.optionValue]) === valor)?.[input.optionLabel] || "",
+                        [input.titulo]:
+                          input.options.find(
+                            (opt) => String(opt[input.optionValue]) === valor
+                          )?.[input.optionLabel] || "",
                         [input.titulo + "Id"]: valor,
                       }));
                     }}
-                    style={errosValidacao[input.titulo] ? { borderColor: 'red' } : {}}
+                    style={
+                      errosValidacao[input.titulo] ? { borderColor: "red" } : {}
+                    }
                   >
                     <option value="">{input.placeholder}</option>
                     {input.options.map((opt) => (
-                      <option key={opt[input.optionValue]} value={opt[input.optionValue]}>
+                      <option
+                        key={opt[input.optionValue]}
+                        value={opt[input.optionValue]}
+                      >
                         {opt[input.optionLabel]}
                       </option>
                     ))}
@@ -1016,9 +1082,18 @@ export function OrdemDeCompra() {
                     type={input.tipo}
                     placeholder={input.placeholder}
                     value={valoresInput[input.titulo] || ""}
-                    onChange={(e) => handleInputChange(input.titulo, e.target.value, false, input.formatador)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        input.titulo,
+                        e.target.value,
+                        false,
+                        input.formatador
+                      )
+                    }
                     disabled={input.disabled}
-                    style={errosValidacao[input.titulo] ? { borderColor: 'red' } : {}}
+                    style={
+                      errosValidacao[input.titulo] ? { borderColor: "red" } : {}
+                    }
                   />
                 )}
               </div>
@@ -1027,9 +1102,7 @@ export function OrdemDeCompra() {
 
           {progresso === 4 && (
             <div className={style.botaoPdf}>
-              <button onClick={baixarDocumentos}>
-                BAIXAR ORDEM DE COMPRA
-              </button>
+              <button onClick={baixarDocumentos}>BAIXAR ORDEM DE COMPRA</button>
             </div>
           )}
         </main>
@@ -1040,16 +1113,12 @@ export function OrdemDeCompra() {
           )}
 
           {progresso < 4 && (
-            <button onClick={avancarProgresso}>
-              {nomeBotao}
-            </button>
+            <button onClick={avancarProgresso}>{nomeBotao}</button>
           )}
 
           {progresso === 4 && (
             <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={reiniciar}>
-                CRIAR NOVA ORDEM DE COMPRA
-              </button>
+              <button onClick={reiniciar}>CRIAR NOVA ORDEM DE COMPRA</button>
               <button onClick={() => navigate("/Material")}>
                 IR PARA DASHBOARD
               </button>
