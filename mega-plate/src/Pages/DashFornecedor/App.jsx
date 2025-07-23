@@ -260,19 +260,23 @@ function App() {
     }
   }, []);
 
- 
+  // Estados para filtros
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [filteredSuppliers, setFilteredSuppliers] = useState([]);
+  
+  // Estados para dados
+  const [fornecedores, setFornecedores] = useState([]); // Lista completa de fornecedores
+  const [filteredSuppliers, setFilteredSuppliers] = useState([]); // Lista filtrada
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
-  const fileInputRef = useRef(null);
   const [materiais, setMateriais] = useState([]);
   const [ordemDeCompra, setOrdemDeCompra] = useState([]);
   const [estoque, setEstoque] = useState([]);
   const [kpiData, setKpiData] = useState([]);
+  
+  const fileInputRef = useRef(null);
 
   const handlePhotoChange = (event) => {
     const file = event.target.files[0];
@@ -304,121 +308,183 @@ function App() {
   const handleEndDateChange = (e) => {
     setEndDate(e.target.value);
   };
+
+  // Função para buscar fornecedores
   function getFornecedor() {
     api
       .get("/fornecedores")
       .then((response) => {
         const fornecedores = response.data;
-        setFilteredSuppliers(fornecedores);
+        setFornecedores(fornecedores); // Guarda a lista completa
+        console.log("Fornecedores carregados:", fornecedores);
       })
       .catch((error) => {
         console.error("Erro ao buscar fornecedores:", error);
       });
   }
   
+  // Função para buscar ordens de compra
   function BuscarOrdemDeCompra() {
     api
       .get("/ordemDeCompra")
       .then((response) => {
         const ordens = response.data;
         setOrdemDeCompra(ordens);
-        const kpiData = gerarDadosKPI(ordens);
-        setKpiData(kpiData) 
-        console.log(ordens);
+        console.log("Ordens de compra carregadas:", ordens);
+      })
+      .catch((error) => {
+        console.error("Erro ao buscar ordens de compra:", error);
+      });
+  }
+
+  // Função para buscar estoque
+  function getEstoque() {
+    api
+      .get("/estoque")
+      .then((response) => {
+        const estoqueData = response.data;
+        setEstoque(estoqueData);
+        console.log("Estoque carregado:", estoqueData);
+        
+        // Criar mapeamento de materiais
+        const materiaisMap = {};
+        estoqueData.forEach(item => {
+          materiaisMap[item.id] = item.tipoMaterial;
+        });
+        setMateriais(materiaisMap);
       })
       .catch((error) => {
         console.error("Erro ao buscar estoque:", error);
       });
   }
-  function getEstoque() {
-    api
-      .get("/estoque")
-      .then((response) => {
-        // Criar um mapeamento estoqueId -> tipoMaterial para facilitar a busca
-        const materiaisMap = {};
-        response.data.forEach(item => {
-          materiaisMap[item.id] = item.tipoMaterial; // assumindo que o estoque tem um campo 'id'
-        });
-        
-        setMateriais(materiaisMap); // Agora materiais é um objeto para lookup rápido
-        setEstoque(response.data);
-        
-        // Após carregar o estoque, buscar as ordens de compra
-        BuscarOrdemDeCompra();
-      })
-      .catch((error) => {
-        console.error("Erro ao buscar estoque:", error);
-      });
-}
-  useEffect(() => {
-    getEstoque();
-    BuscarOrdemDeCompra();
-  }, []);
 
-  // Função para gerar dados dinâmicos do gráfico de linha
-  const generateLineData = (suppliers) => {
-    const days = ["01", "05", "10", "15", "20", "25", "30"];
-    const baseConsumption =
-      suppliers.reduce((sum, s) => sum + s.quantity, 0) / 10;
-
-    return [
-      ["Dia", "Consumo"],
-      ...days.map((day, index) => {
-        const variation = Math.floor(Math.random() * 40) - 20;
-        return [day, Math.floor(baseConsumption + variation)];
-      }),
-    ];
-  };
-
-  
+  // Função de parsing de data melhorada
   const parseDate = (dateString) => {
-    const [day, month, year] = dateString.split("/");
-    return new Date(year, month - 1, day);
+    if (!dateString) return null;
+    
+    // Se for formato ISO (2024-01-15T10:30:00Z)
+    if (dateString.includes('T')) {
+      return new Date(dateString);
+    }
+    
+    // Se for formato DD/MM/YYYY
+    if (dateString.includes('/')) {
+      const [day, month, year] = dateString.split("/");
+      return new Date(year, month - 1, day);
+    }
+    
+    // Tenta parsing direto
+    return new Date(dateString);
   };
 
+  // Função de filtro corrigida
   const handleSearch = () => {
-    const filtered = ordemDeCompra.filter((ordem) => {
-      const supplierDate = parseDate(ordem.dataDeEmissao);
-      const startDateObj = startDate ? new Date(startDate) : null;
-      const endDateObj = endDate ? new Date(endDate) : null;
-
-      const materialMatch =
-        !selectedMaterial || ordem?.estoque?.tipoMaterial === selectedMaterial;
-      const dateInRange =
-        (!startDateObj || supplierDate >= startDateObj) &&
-        (!endDateObj || supplierDate <= endDateObj);
-      const nameMatch =
-        !searchTerm ||
-        ordem?.fornecedor?.nomeFantasia.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ordem?.estoque?.tipoMaterial.toLowerCase().includes(searchTerm.toLowerCase());
-
-      return materialMatch && dateInRange && nameMatch;
+    console.log("Aplicando filtros:", {
+      searchTerm,
+      selectedMaterial,
+      startDate,
+      endDate,
+      totalFornecedores: fornecedores.length,
+      totalOrdens: ordemDeCompra.length
     });
 
-    setFilteredSuppliers(filtered);
+    // Se não há dados, não filtra
+    if (fornecedores.length === 0 || ordemDeCompra.length === 0) {
+      console.log("Dados ainda não carregados");
+      return;
+    }
+
+    // Primeiro, filtra as ordens de compra baseado nos critérios
+    const ordensFiltered = ordemDeCompra.filter((ordem) => {
+      // Filtro por material
+      const materialMatch = !selectedMaterial || 
+        ordem?.estoque?.tipoMaterial === selectedMaterial ||
+        ordem?.descricaoMaterialCompleta?.includes(selectedMaterial);
+
+      // filtro por data
+      let dateInRange = true;
+      if (startDate || endDate) {
+        const ordemDate = parseDate(ordem.dataDeEmissao);
+        if (ordemDate) {
+          const startDateObj = startDate ? new Date(startDate) : null;
+          const endDateObj = endDate ? new Date(endDate) : null;
+          
+          dateInRange = (!startDateObj || ordemDate >= startDateObj) &&
+                       (!endDateObj || ordemDate <= endDateObj);
+        }
+      }
+
+      return materialMatch && dateInRange;
+    });
+
+    console.log("Ordens filtradas por material e data:", ordensFiltered.length);
+
+    // Agora filtra os fornecedores baseado nas ordens filtradas e no termo de busca
+    const fornecedoresFiltrados = fornecedores.filter((fornecedor) => {
+      // Filtro por nome
+      const nameMatch = !searchTerm || 
+        fornecedor.nomeFantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        fornecedor.razaoSocial?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Verifica se o fornecedor tem ordens que passaram pelos filtros de material/data
+      const temOrdemValida = ordensFiltered.some(ordem => 
+        ordem.fornecedorId === fornecedor.id || 
+        ordem.fornecedor?.id === fornecedor.id
+      );
+
+      return nameMatch && (ordensFiltered.length === ordemDeCompra.length || temOrdemValida);
+    });
+
+    console.log("Fornecedores filtrados:", fornecedoresFiltrados.length);
+    setFilteredSuppliers(fornecedoresFiltrados);
+
+    // Atualiza KPI baseado nas ordens filtradas
+    const kpiData = gerarDadosKPI(ordensFiltered);
+    setKpiData(kpiData);
   };
 
+  // Efeito para aplicar filtros quando os critérios mudam
   useEffect(() => {
-    handleSearch();
-  }, [searchTerm, selectedMaterial, startDate, endDate]);
+    if (fornecedores.length > 0 && ordemDeCompra.length > 0) {
+      handleSearch();
+    }
+  }, [searchTerm, selectedMaterial, startDate, endDate, fornecedores, ordemDeCompra]);
 
+  // Carregamento inicial dos dados
   useEffect(() => {
-    getFornecedor();
-    getEstoque();
-    BuscarOrdemDeCompra();
-  }, []);
+    const carregarDados = async () => {
+      try {
+        await getFornecedor();
+        await getEstoque();
+        await BuscarOrdemDeCompra();
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      }
+    };
+
+    if (autenticacaoPassou) {
+      carregarDados();
+    }
+  }, [autenticacaoPassou]);
 
   if (!autenticacaoPassou) return null;
 
-function gerarDadosKPI(ordens) {
+  // Função para gerar KPI corrigida
+  function gerarDadosKPI(ordens) {
     var statsPorFornecedor = {};
    
     for (var i = 0; i < ordens.length; i++) {
         var ordem = ordens[i];
-        var fornecedorId = ordem.fornecedorId;
+        var fornecedorId = ordem.fornecedorId || ordem.fornecedor?.id;
        
-        var fornecedorNome = ordem.nomeFornecedor || "Fornecedor " + fornecedorId;
-        var material = ordem.descricaoMaterialCompleta || "N/A";
+        if (!fornecedorId) continue; // Pula se não tem ID do fornecedor
+        
+        var fornecedorNome = ordem.nomeFornecedor || 
+                           ordem.fornecedor?.nomeFantasia || 
+                           "Fornecedor " + fornecedorId;
+        var material = ordem.descricaoMaterialCompleta || 
+                      ordem.estoque?.tipoMaterial || 
+                      "N/A";
        
         var valorUnitario = Number(ordem.valorUnitario || 0);
         var quantidade = Number(ordem.quantidade || 0);
@@ -429,7 +495,6 @@ function gerarDadosKPI(ordens) {
                 totalQuantity: 0,
                 nome: fornecedorNome,
                 materiais: new Set(),
-                // Adicionar campos para rastrear a ordem com maior valor unitário
                 maiorValorUnitario: 0,
                 materialMaiorValor: "N/A",
                 estoqueIdMaiorValor: null
@@ -440,7 +505,6 @@ function gerarDadosKPI(ordens) {
         statsPorFornecedor[fornecedorId].totalQuantity += quantidade;
         statsPorFornecedor[fornecedorId].materiais.add(material);
         
-        // Verificar se esta ordem tem o maior valor unitário para este fornecedor
         if (valorUnitario > statsPorFornecedor[fornecedorId].maiorValorUnitario) {
             statsPorFornecedor[fornecedorId].maiorValorUnitario = valorUnitario;
             statsPorFornecedor[fornecedorId].materialMaiorValor = material;
@@ -459,9 +523,9 @@ function gerarDadosKPI(ordens) {
             supplierName: stats.nome,
             avgPrice: avg,
             maxPrice: max,
-            material: stats.materialMaiorValor, // Agora mostra apenas o material da ordem com maior valor unitário
-            estoqueId: stats.estoqueIdMaiorValor, // Caso você queira usar depois
-            todosOsMateriais: Array.from(stats.materiais).join(', ') // Mantém todos os materiais caso precise depois
+            material: stats.materialMaiorValor,
+            estoqueId: stats.estoqueIdMaiorValor,
+            todosOsMateriais: Array.from(stats.materiais).join(', ')
         });
     }
     
@@ -470,88 +534,96 @@ function gerarDadosKPI(ordens) {
         .slice(0, 3);
         
     return top3;
-}
+  }
+
+  // Gerar dados do gráfico de linha
+  const generateLineData = (suppliers) => {
+    const days = ["01", "05", "10", "15", "20", "25", "30"];
+    const baseConsumption = suppliers.length > 0 ? 
+      suppliers.reduce((sum, s) => sum + (s.quantity || 100), 0) / 10 : 50;
+
+    return [
+      ["Dia", "Consumo"],
+      ...days.map((day, index) => {
+        const variation = Math.floor(Math.random() * 40) - 20;
+        return [day, Math.floor(baseConsumption + variation)];
+      }),
+    ];
+  };
 
   const lineData = generateLineData(filteredSuppliers);
-  
 
+  // Função para lidar com clique no fornecedor
   const handleSupplierClick = (supplier) => {
     const ordem = ordemDeCompra.find(
-      (ordem) => ordem.fornecedor?.id === supplier.id
+      (ordem) => ordem.fornecedorId === supplier.id || ordem.fornecedor?.id === supplier.id
     );
 
     setSelectedSupplier({
       ...supplier,
-      // Corrigido: usando estoque.tipoMaterial em vez de tipoMaterial
-      material: ordem?.estoque?.tipoMaterial || "Não informado",
+      material: ordem?.estoque?.tipoMaterial || ordem?.descricaoMaterialCompleta || "Não informado",
       dataPedido: ordem?.dataDeEmissao?.split("T")[0] || "Data não disponível",
       preco: ordem?.valorUnitario || 0,
       quantidade: ordem?.quantidade || 0,
-      // Corrigido: prazoEntrega é uma string, não status de entrega
       statusEntrega: ordem?.prazoEntrega
         ? `Prazo: ${ordem.prazoEntrega} dias`
         : "Prazo não informado",
-      // Campos adicionais que você pode querer usar:
       descricaoMaterial: ordem?.descricaoMaterial || "Descrição não informada",
       valorKg: ordem?.valorKg || 0,
       valorPeca: ordem?.valorPeca || 0,
       condPagamento: ordem?.condPagamento || "Não informada",
       ipi: ordem?.ipi || 0,
       rastreabilidade: ordem?.rastreabilidade || "Não informada",
-      idFornecedor: ordem?.fornecedorId || 1
+      idFornecedor: ordem?.fornecedorId || supplier.id
     });
     setShowPopup(true);
   };
 
-
-  // Função para gerar dados dinâmicos do gráfico de barras baseado nas ordens de compra
+  // Função para gerar dados do gráfico de barras
   function generateBarData(ordensDeCompra) {
-  var currentDate = new Date();
-  var currentYear = currentDate.getFullYear();
-  var months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-  var monthsNumbers = [0, 1, 2, 3, 4, 5];
+    var currentDate = new Date();
+    var currentYear = currentDate.getFullYear();
+    var months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-  // Calcula a quantidade total
-  var totalQuantidade = 0;
-  for (var i = 0; i < ordensDeCompra.length; i++) {
-    var quantidade = ordensDeCompra[i].quantidade || 0;
-    totalQuantidade += quantidade;
-  }
-
-  if (totalQuantidade === 0) {
-    console.warn("Nenhuma quantidade encontrada nas ordens de compra!");
-    
-    var resultadoVazio = [["Mês", "Produção", "Meta"]];
-    for (var j = 0; j < months.length; j++) {
-      resultadoVazio.push([months[j], 0, 0]);
+    var totalQuantidade = 0;
+    for (var i = 0; i < ordensDeCompra.length; i++) {
+      var quantidade = ordensDeCompra[i].quantidade || 0;
+      totalQuantidade += quantidade;
     }
-    return resultadoVazio;
-  }
 
-  var meta = Math.floor(totalQuantidade * 0.75);
+    if (totalQuantidade === 0) {
+      var resultadoVazio = [["Mês", "Produção", "Meta"]];
+      for (var j = 0; j < months.length; j++) {
+        resultadoVazio.push([months[j], 0, 0]);
+      }
+      return resultadoVazio;
+    }
 
-  var producaoMensal = new Array(12).fill(0);
+    var meta = Math.floor(totalQuantidade * 0.75);
+    var producaoMensal = new Array(12).fill(0);
 
-  for (var k = 0; k < ordensDeCompra.length; k++) {
-    var ordem = ordensDeCompra[k];
-    if (ordem.dataDeEmissao && ordem.quantidade) {
-      var dataEmissao = new Date(ordem.dataDeEmissao);
-      var mesEmissao = dataEmissao.getMonth();
-      var anoEmissao = dataEmissao.getFullYear();
+    for (var k = 0; k < ordensDeCompra.length; k++) {
+      var ordem = ordensDeCompra[k];
+      if (ordem.dataDeEmissao && ordem.quantidade) {
+        var dataEmissao = parseDate(ordem.dataDeEmissao);
+        if (dataEmissao) {
+          var mesEmissao = dataEmissao.getMonth();
+          var anoEmissao = dataEmissao.getFullYear();
 
-      if (anoEmissao === currentYear && mesEmissao >= 0 && mesEmissao <= 11) {
-        producaoMensal[mesEmissao] += ordem.quantidade;
+          if (anoEmissao === currentYear && mesEmissao >= 0 && mesEmissao <= 11) {
+            producaoMensal[mesEmissao] += ordem.quantidade;
+          }
+        }
       }
     }
-  }
 
-  var resultadoFinal = [["Mês", "Produção", "Meta"]];
-  for (var m = 0; m < months.length; m++) {
-    resultadoFinal.push([months[m], producaoMensal[m], meta]);
-  }
+    var resultadoFinal = [["Mês", "Produção", "Meta"]];
+    for (var m = 0; m < months.length; m++) {
+      resultadoFinal.push([months[m], producaoMensal[m], meta]);
+    }
 
-  return resultadoFinal;
-}
+    return resultadoFinal;
+  }
 
   const barData = generateBarData(ordemDeCompra);
 
@@ -612,9 +684,6 @@ function gerarDadosKPI(ordens) {
                 onChange={handleSearchChange}
                 className="search-input"
               />
-              {/* <div className="search-icon" onClick={handleSearch}>
-                <Search size={18} color="#ffffff" />
-              </div> */}
             </div>
           </div>
         </div>
@@ -626,20 +695,19 @@ function gerarDadosKPI(ordens) {
             <div id="charts-superior">
               <div id="Kpi">
                 {kpiData.map(function (item, index) {
-  return (
-  <React.Fragment key={item.fornecedorId}>
-    <div id={"chart-aviso-fornecedor" + (index + 1)} className="chart">
-      <div className="kpi-title">{item.material}</div>
-      <div className="kpi-subtitle">{item.supplierName}</div>
-      <div className="kpi-data">
-        <span>R$ {item.avgPrice.toFixed(2)}</span>
-        <span>R$ {item.maxPrice.toFixed(2)}</span>
-      </div>
-    </div>
-  </React.Fragment>
-);
-})}
-
+                  return (
+                    <React.Fragment key={item.fornecedorId}>
+                      <div id={"chart-aviso-fornecedor" + (index + 1)} className="chart">
+                        <div className="kpi-title">{item.material}</div>
+                        <div className="kpi-subtitle">{item.supplierName}</div>
+                        <div className="kpi-data">
+                          <span>R$ {item.avgPrice.toFixed(2)}</span>
+                          <span>R$ {item.maxPrice.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
               </div>
             </div>
 
@@ -672,27 +740,24 @@ function gerarDadosKPI(ordens) {
               <thead>
                 <tr>
                   <th>Nome do Fornecedor</th>
-                  {/* <th>Material</th>
-                  <th>Data</th> */}
                 </tr>
               </thead>
               <tbody>
                 {filteredSuppliers.map((supplier, index) => (
                   <tr
-                    key={index}
+                    key={supplier.id || index}
                     onClick={() => handleSupplierClick(supplier)}
                     style={{ cursor: "pointer" }}
                     onMouseEnter={(e) =>
-                    (e.target.parentElement.style.backgroundColor =
-                      "rgba(69, 134, 171, 0.1)")
+                      (e.target.parentElement.style.backgroundColor =
+                        "rgba(69, 134, 171, 0.1)")
                     }
                     onMouseLeave={(e) =>
-                    (e.target.parentElement.style.backgroundColor =
-                      "transparent")
+                      (e.target.parentElement.style.backgroundColor =
+                        "transparent")
                     }
                   >
-                    <td>{supplier.nomeFantasia}</td>
-                    {/* <td>{materiais[index]|| "Sem material"}</td> deixei aqui só para pegar um material mesmo que esteja errado */}
+                    <td>{supplier.nomeFantasia || supplier.razaoSocial || "Nome não informado"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -703,7 +768,6 @@ function gerarDadosKPI(ordens) {
           </div>
         </div>
       </div>
-
       {/* Pop-up Modal Padronizado */}
       {showPopup && selectedSupplier && (
   <div className="popup-overlay" onClick={closePopup}>
