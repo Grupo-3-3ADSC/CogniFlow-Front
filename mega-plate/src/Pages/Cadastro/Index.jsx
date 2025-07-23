@@ -84,11 +84,7 @@ export function Cadastro() {
       !formData.cargo.id ||
       !formData.password
     ) {
-      Swal.fire({
-        title: "Preencha as informações",
-        icon: "info",
-        confirmButtonColor: "#3085d6",
-      });
+       Swal.fire({ title: "Por favor, preencha todos os campos!", icon: "warning", confirmButtonColor: "#3085d6" });
       return;
     }
 
