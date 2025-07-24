@@ -640,15 +640,7 @@ function App() {
             ))}
           </select>
 
-          <select
-            id="select-Filtro-Trans"
-            value={selectedTransferType}
-            onChange={(e) => setSelectedTransferType(e.target.value)}
-          >
-            <option value="">Todos os tipos</option>
-            <option value="Interna">Interna</option>
-            <option value="Externa">Externa</option>
-          </select>
+          
 
           <div id="FiltroData">
             <span id="textFiltro">
@@ -760,9 +752,9 @@ function App() {
                       textAlign: "center",
                     }}
                   >
-                    {selectedTransferType
-                      ? `Filtro: ${selectedTransferType}`
-                      : "Todos os tipos"}
+                    {selectedMaterial
+                      ? `Filtro: ${selectedMaterial}`
+                      : "Todos os materiais"}
                   </div>
                 </div>
               </div>
