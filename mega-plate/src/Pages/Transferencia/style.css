@@ -359,7 +359,7 @@ input::placeholder {
     
     .box-campos input,
     .box-campos select {
-        height: 42px;
+        /* height: 42px; */
         font-size: 14px;
     }
     
@@ -402,7 +402,7 @@ input::placeholder {
     
     .box-campos input,
     .box-campos select {
-        height: 38px;
+        /* height: 38px; */
         font-size: 13px;
     }
     

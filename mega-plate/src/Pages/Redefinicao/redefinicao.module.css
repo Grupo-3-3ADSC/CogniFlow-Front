@@ -93,5 +93,34 @@
     color: white;
     text-decoration: underline;
 }
+/* @media (max-width: 768px) {
+  .redefinicao {
+    flex-direction: column;
+    padding: 20px;
+    height: auto;
+  }
+
+  .aside-redefinicao {
+    border-radius: 10px 10px 0 0;
+    width: 100%;
+    height: auto;
+    padding: 2rem 1rem;
+  }
+
+  .aside-redefinicao img {
+    max-width: 50px;
+  }
+
+  .form-content-redefinicao {
+    width: 100%;
+    max-width: 100%;
+    padding: 2rem 1rem;
+    border-radius: 0 0 10px 10px;
+    height: auto;
+  }
+  p{
+    margin-top: 60px;
+  }
+} */
 
 

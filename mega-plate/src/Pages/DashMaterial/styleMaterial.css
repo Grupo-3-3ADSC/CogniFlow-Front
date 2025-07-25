@@ -163,6 +163,7 @@ option {
     justify-content: center;
     align-items: flex-start;
     margin-left: 5%;
+   
 }
 
 /* Main Dashboard */
@@ -445,6 +446,7 @@ option {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+   
 }
 
 .alerts h3 {
@@ -832,6 +834,11 @@ option {
 }
 
 @media (max-width: 768px) {
+    .container{
+        margin-top: 120px;
+    }
+
+    
     .IndexMaterial {
         margin-left: 2vh;
         padding: 8px;
@@ -841,7 +848,7 @@ option {
         flex-direction: column;
         gap: 8px;
         padding: 12px;
-        width: 90%;
+        width: 96%;
         margin-left: 5%;
     }
     
@@ -854,6 +861,7 @@ option {
     .dashboardMaterial,
     .alerts {
         padding: 12px;
+         flex-wrap: wrap;
     }
     
     .dashboardMaterial h2,
@@ -862,8 +870,9 @@ option {
     }
     
     #chart-aviso, #chart-aviso2, #chart-aviso3 {
-        width: 100%;
-        height: 10vh;
+           min-width: 100%;
+        height: auto;
+        font-size: 13px;
     }
     
     .alert-modal {
@@ -886,6 +895,32 @@ option {
     .detail-item span {
         text-align: left;
     }
+    .alerts{
+         flex-wrap: nowrap;
+    overflow-x: auto;
+    }
+    .containerDashMaterial {
+        flex-direction: column;
+        gap: 15px;
+        width: 96%;
+        margin-left: 2%;
+    }
+    
+    .dashboardMaterial {
+        width: 100%;
+        min-height: auto;
+        padding: 15px;
+    }
+    
+    .alerts {
+        width: 100%;
+        height: auto;
+        min-height: 40vh;
+        max-height: 50vh;
+        padding: 15px;
+        overflow-y: auto;
+        margin-left: 10px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -895,8 +930,8 @@ option {
     }
     
     .filter-header {
-        width: 92%;
-        margin-left: 4%;
+        width: 96%;
+        margin-left: 5%;
         padding: 10px;
     }
     
@@ -907,5 +942,8 @@ option {
     
     .containerDash {
         padding: 0 2%;
+    }
+    .alerts{
+        margin-left: 10px;
     }
 }

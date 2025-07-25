@@ -733,39 +733,33 @@ function App() {
               </div>
             </div>
           </div>
-
-          <div className="supplier-table-container">
-            <h3>Fornecedores</h3>
-            <table className="supplier-table">
-              <thead>
-                <tr>
-                  <th>Nome do Fornecedor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSuppliers.map((supplier, index) => (
-                  <tr
-                    key={supplier.id || index}
-                    onClick={() => handleSupplierClick(supplier)}
-                    style={{ cursor: "pointer" }}
-                    onMouseEnter={(e) =>
-                      (e.target.parentElement.style.backgroundColor =
-                        "rgba(69, 134, 171, 0.1)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.target.parentElement.style.backgroundColor =
-                        "transparent")
-                    }
-                  >
-                    <td>{supplier.nomeFantasia || supplier.razaoSocial || "Nome não informado"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="search-results">
-              <p>{filteredSuppliers.length} fornecedores encontrados</p>
-            </div>
-          </div>
+<div className="supplier-table-container">
+  <h3>Fornecedores</h3>
+  <div className="table-wrapper">
+    <table className="supplier-table">
+      <thead>
+        <tr>
+          <th>Nome do Fornecedor</th>
+        </tr>
+      </thead>
+      <tbody>
+        {filteredSuppliers.map((supplier, index) => (
+          <tr
+            key={supplier.id || index}
+            onClick={() => handleSupplierClick(supplier)}
+            style={{ cursor: "pointer" }}
+          >
+            <td>{supplier.nomeFantasia || supplier.razaoSocial || "Nome não informado"}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <div className="search-results">
+    <p>{filteredSuppliers.length} fornecedores encontrados</p>
+  </div>
+</div>
+          
         </div>
       </div>
       {/* Pop-up Modal Padronizado */}

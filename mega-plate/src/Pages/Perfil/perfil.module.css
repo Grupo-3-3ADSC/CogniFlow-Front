@@ -161,7 +161,10 @@
 
     .input-group input{
       height: 60px;
-    }      
+    }
+    /* svg{
+      margin-top: 70px;
+    }      */
     
 }
 
@@ -183,6 +186,7 @@
         padding: 10px 35px 10px 10px;
         height: 50px;
     }
+   
 }
 
 @media (max-width: 520px) {

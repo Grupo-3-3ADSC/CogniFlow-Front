@@ -432,7 +432,7 @@ function App() {
 
         <div className="containerDash">
           <div className="supplier-table-container">
-            <div className="table-wrapper">
+            <div className="table-wrapper2">
               <h3>Tabela de Estoque</h3>
               <table className="supplier-table">
                 <thead>

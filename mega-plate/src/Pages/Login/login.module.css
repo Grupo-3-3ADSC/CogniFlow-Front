@@ -5,7 +5,8 @@
     gap: 5px;
     overflow: hidden;
     width: 100vw; 
-    height: 100vh; 
+    height: 100vh;
+    
 }
 
 .aside-login {
@@ -101,4 +102,114 @@
 .loading-gif{
     height: 32px;
     width: 32px;
+}
+@media (max-width: 768px) {
+   .login {
+    flex-direction: column;
+    height: auto;
+    padding: 60px 10px;
+  }
+
+  .aside-login {
+    width: 80%;
+    height: auto;
+    border-radius: 10px 10px 0 0;
+    padding: 1.5rem 1rem;
+  }
+
+  .aside-login img {
+    max-width: 50px;
+    height: auto;
+  }
+
+  .form-content {
+    width: 80%;
+    max-width: 80%;
+    padding: 1.5rem 1rem;
+    border-radius: 0 0 10px 10px;
+    height: 80%;
+  }
+
+  .login h1 {
+    font-size: 1.6rem;
+    text-align: center;
+  }
+
+  .input-group {
+    text-align: start;
+  }
+
+  .input-group input {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .login button {
+    padding: 10px;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+
+  .olho {
+    top: 55%;
+    width: 20px;
+    height: 20px;
+    margin-top: 10px;
+  }
+  
+}
+
+@media (max-width: 500px) {
+  .login {
+    flex-direction: column;
+    height: auto;
+    padding: 60px 50px;
+  }
+
+  .aside-login {
+    width: 100%;
+    height: auto;
+    border-radius: 10px 10px 0 0;
+    padding: 1.5rem 1rem;
+  }
+
+  .aside-login img {
+    max-width: 50px;
+    height: auto;
+  }
+
+  .form-content {
+    width: 100%;
+    max-width: 100%;
+    padding: 1.5rem 1rem;
+    border-radius: 0 0 10px 10px;
+    height: auto;
+  }
+
+  .login h1 {
+    font-size: 1.6rem;
+    text-align: center;
+  }
+
+  .input-group {
+    text-align: start;
+  }
+
+  .input-group input {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .login button {
+    padding: 10px;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+
+  .olho {
+    top: 50%;
+    margin-top: 10px;
+    width: 20px;
+    height: 20px;
+  }
 }

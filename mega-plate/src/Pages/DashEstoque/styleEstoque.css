@@ -226,9 +226,11 @@
     display: flex;
 }
 
-.table-wrapper {
-    overflow-x: auto;
-    width: 100%;
+.table-wrapper2 {
+    height: auto;         /* Permite altura natural conforme o conteúdo */
+    max-height: none;     /* Remove limitação de altura */
+    overflow-y: hidden;   /* Remove scroll vertical */
+    overflow-x: auto;     /* Permite scroll horizontal */
 }
 
 
@@ -277,6 +279,7 @@
     .supplier-table-container {
         padding: 20px;
         overflow-x: auto;
+        background: #05314C;
     }
 
     .supplier-table {
@@ -327,6 +330,23 @@
 
     .supplier-table {
         min-width: 600px;
+    }
+     #Kpi::-webkit-scrollbar {
+        height: 4px;
+    }
+    
+    #Kpi::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+    }
+    
+    #Kpi::-webkit-scrollbar-thumb {
+        background: rgba(69, 134, 171, 0.6);
+        border-radius: 2px;
+    }
+    
+    #Kpi::-webkit-scrollbar-thumb:hover {
+        background: rgba(69, 134, 171, 0.8);
     }
 
 }
@@ -383,4 +403,23 @@
     .search-icon {
         right: 8px;
     }
+}
+.supplier-table-container {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--secondary-color) transparent;
+}
+
+.supplier-table-container::-webkit-scrollbar {
+    height: 4px;
+}
+
+.supplier-table-container::-webkit-scrollbar-thumb {
+    background: rgba(69, 134, 171, 0.6);
+    border-radius: 2px;
+}
+.supplier-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(3px);
+    transition: var(--transition);
 }
