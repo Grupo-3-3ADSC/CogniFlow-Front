@@ -90,8 +90,9 @@ export function Cadastro() {
 
     if (!validarNome(formData.nome)) {
       Swal.fire({
-        title: "Nome inválido: necessario ter nome e sobrenome",
-        icon: "warning",
+        title: "Nome inválido",
+        text:"É necessario ter nome e sobrenome",
+        icon: "error",
         confirmButtonColor: "#3085d6",
       });
       return;
@@ -99,8 +100,9 @@ export function Cadastro() {
 
     if (!validarEmail(formData.email)) {
       Swal.fire({
-        title: "E-mail inválido: deve conter @ e domínio com pelo menos 3 letras Ex: email@exemplo.com",
-        icon: "warning",
+        title: "E-mail inválido",
+        text:"Deve conter @ e domínio com pelo menos 3 letras Ex: email@exemplo.com",
+        icon: "error",
         confirmButtonColor: "#3085d6",
       });
       return;
@@ -108,8 +110,9 @@ export function Cadastro() {
 
     if (!validarSenha(formData.password)) {
       Swal.fire({
-        title: "Senha inválida: deve ter pelo menos 6 caracteres, uma letra, um número e um caractere especial",
-        icon: "warning",
+        title: "Senha inválida",
+        text:"Deve ter pelo menos 6 caracteres, uma letra, um número e um caractere especial",
+        icon: "error",
         confirmButtonColor: "#3085d6",
       });
       return;
@@ -151,14 +154,24 @@ export function Cadastro() {
       sqlPattern.test(userData.nome) ||
       sqlPattern.test(userData.password)
     ) {
-      return toastError("Por favor não cadastrar com comandos especiais...");
+      Swal.fire({
+        title: "Por favor não cadastrar com comandos especiais...",
+        icon: "error",
+        confirmButtonColor: "#3085d6",
+      });
+      return;
     }
     if (
       /<script.*?>.*?<\/script>/gi.test(userData.email) ||
       /<script.*?>.*?<\/script>/gi.test(userData.nome) ||
       /<script.*?>.*?<\/script>/gi.test(userData.password)
     ) {
-      return toastError("Por favor não cadastrar com comandos especiais...");
+      Swal.fire({
+        title: "Por favor não cadastrar com comandos especiais...",
+        icon: "error",
+        confirmButtonColor: "#3085d6",
+      });
+      return;
     }
 
     const endpoint = formData.cargo.id === 2 ? "/usuarios/gestor" : "/usuarios";
@@ -186,29 +199,41 @@ export function Cadastro() {
         });
       })
       .catch((error) => {
-        console.error("Erro completo:", error);
+        //console.error("Erro completo:", error);
         if (error.response) {
-          console.log("Status do erro:", error.response.status);
-          console.log("Dados do erro:", error.response.data);
-
+          //console.log("Status do erro:", error.response.status);
+          //console.log("Dados do erro:", error.response.data);
           if (error.response.status === 400) {
-            toastError(
-              "Dados inválidos: " +
-                (error.response.data.message || "Verifique as informações")
-            );
+            Swal.fire({
+        title: "Dados inválidos: ",
+        text:error.response.data.message || "Verifique as informações",
+        icon: "error",
+        confirmButtonColor: "#3085d6",
+      });          
           } else if (error.response.status === 401) {
-            toastError("Sessão expirada. Por favor, faça login novamente.");
+               Swal.fire({
+        title: "Sessão expirada, por favor faça login novamente!",
+        icon: "warning",
+        confirmButtonColor: "#3085d6",
+      });
             navigate("/login");
           } else {
-            toastError(
-              "Erro ao cadastrar usuário: " +
-                (error.response.data?.message || "Tente novamente mais tarde.")
-            );
+            Swal.fire({
+        title: "Erro ao cadastrar usuário",
+        text:error.response.data?.message || "Tente novamente mais tarde.",
+        icon: "error",
+        confirmButtonColor: "#3085d6",
+      });
+      return;
           }
         } else {
-          toastError(
-            "Erro de conexão. Verifique sua internet e tente novamente."
-          );
+          Swal.fire({
+        title: "Erro ao cadastrar usuário",
+        text:"Erro de conexão. Verifique sua internet e tente novamente.",
+        icon: "error",
+        confirmButtonColor: "#3085d6",
+      });
+      return;
         }
       });
   };
