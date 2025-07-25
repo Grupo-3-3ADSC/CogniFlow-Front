@@ -377,45 +377,45 @@ function App() {
     return new Date(dateString);
   };
 
-  // Função de filtro corrigida
-  const handleSearch = () => {
-    console.log("Aplicando filtros:", {
-      searchTerm,
-      selectedMaterial,
-      startDate,
-      endDate,
-      totalFornecedores: fornecedores.length,
-      totalOrdens: ordemDeCompra.length
-    });
 
-    // Se não há dados, não filtra
-    if (fornecedores.length === 0 || ordemDeCompra.length === 0) {
-      console.log("Dados ainda não carregados");
-      return;
+  const handleSearch = () => {
+  // console.log("Aplicando filtros:", {
+  //   searchTerm,
+  //   selectedMaterial,
+  //   startDate,
+  //   endDate,
+  //   totalFornecedores: fornecedores.length,
+  //   totalOrdens: ordemDeCompra.length
+  // });
+
+  // Se não há dados, não filtra
+  if (fornecedores.length === 0 || ordemDeCompra.length === 0) {
+    //console.log("Dados ainda não carregados");
+    return;
+  }
+
+  // Primeiro, filtra as ordens de compra baseado nos critérios
+  const ordensFiltered = ordemDeCompra.filter((ordem) => {
+    // Filtro por material
+    const materialMatch = !selectedMaterial || 
+      ordem?.estoque?.tipoMaterial === selectedMaterial ||
+      ordem?.descricaoMaterialCompleta?.includes(selectedMaterial);
+
+    // Filtro por data
+    let dateInRange = true;
+    if (startDate || endDate) {
+      const ordemDate = parseDate(ordem.dataDeEmissao);
+      if (ordemDate) {
+        const startDateObj = startDate ? new Date(startDate) : null;
+        const endDateObj = endDate ? new Date(endDate) : null;
+        
+        dateInRange = (!startDateObj || ordemDate >= startDateObj) &&
+                     (!endDateObj || ordemDate <= endDateObj);
+      }
     }
 
-    // Primeiro, filtra as ordens de compra baseado nos critérios
-    const ordensFiltered = ordemDeCompra.filter((ordem) => {
-      // Filtro por material
-      const materialMatch = !selectedMaterial || 
-        ordem?.estoque?.tipoMaterial === selectedMaterial ||
-        ordem?.descricaoMaterialCompleta?.includes(selectedMaterial);
-
-      // filtro por data
-      let dateInRange = true;
-      if (startDate || endDate) {
-        const ordemDate = parseDate(ordem.dataDeEmissao);
-        if (ordemDate) {
-          const startDateObj = startDate ? new Date(startDate) : null;
-          const endDateObj = endDate ? new Date(endDate) : null;
-          
-          dateInRange = (!startDateObj || ordemDate >= startDateObj) &&
-                       (!endDateObj || ordemDate <= endDateObj);
-        }
-      }
-
-      return materialMatch && dateInRange;
-    });
+    return materialMatch && dateInRange;
+  });
 
     console.log("Ordens filtradas por material e data:", ordensFiltered.length);
 
@@ -435,20 +435,48 @@ function App() {
       return nameMatch && (ordensFiltered.length === ordemDeCompra.length || temOrdemValida);
     });
 
-    console.log("Fornecedores filtrados:", fornecedoresFiltrados.length);
-    setFilteredSuppliers(fornecedoresFiltrados);
+    //console.log("Ordens filtradas por material e data:", ordensFiltered.length);
 
-    // Atualiza KPI baseado nas ordens filtradas
-    const kpiData = gerarDadosKPI(ordensFiltered);
-    setKpiData(kpiData);
-  };
+  // Agora filtra os fornecedores baseado nas ordens filtradas e no termo de busca
+  const fornecedoresFiltradosBusca = fornecedores.filter((fornecedor) => {
+    // Filtro por nome
+    const nameMatch = !searchTerm || 
+      fornecedor.nomeFantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      fornecedor.razaoSocial?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Verifica se o fornecedor tem ordens que passaram pelos filtros de material/data
+    const temOrdemValida = ordensFiltered.some(ordem => 
+      ordem.fornecedorId === fornecedor.id || 
+      ordem.fornecedor?.id === fornecedor.id
+    );
+
+    return nameMatch && (ordensFiltered.length === ordemDeCompra.length || temOrdemValida);
+  });
+
+  //console.log("Fornecedores filtrados:", fornecedoresFiltradosBusca.length);
+  setFilteredSuppliers(fornecedoresFiltradosBusca);
+
+  // *** NOVO: Salvar as ordens filtradas em um estado separado ***
+  setOrdensFiltradasParaGrafico(ordensFiltered);
+
+  // Atualiza KPI baseado nas ordens filtradas
+  const kpiData = gerarDadosKPI(ordensFiltered);
+  setKpiData(kpiData);
+};
+
+const [ordensFiltradasParaGrafico, setOrdensFiltradasParaGrafico] = useState([]);
 
   // Efeito para aplicar filtros quando os critérios mudam
-  useEffect(() => {
-    if (fornecedores.length > 0 && ordemDeCompra.length > 0) {
-      handleSearch();
+  // Efeito para aplicar filtros quando os critérios mudam
+useEffect(() => {
+  if (fornecedores.length > 0 && ordemDeCompra.length > 0) {
+    // Inicializar ordensFiltradasParaGrafico se ainda não foi inicializado
+    if (ordensFiltradasParaGrafico.length === 0) {
+      setOrdensFiltradasParaGrafico(ordemDeCompra);
     }
-  }, [searchTerm, selectedMaterial, startDate, endDate, fornecedores, ordemDeCompra]);
+    handleSearch();
+  }
+}, [searchTerm, selectedMaterial, startDate, endDate, fornecedores, ordemDeCompra]);
 
   // Carregamento inicial dos dados
   useEffect(() => {
@@ -580,52 +608,71 @@ function App() {
   };
 
   // Função para gerar dados do gráfico de barras
-  function generateBarData(ordensDeCompra) {
-    var currentDate = new Date();
-    var currentYear = currentDate.getFullYear();
-    var months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+  function generateBarData(ordensDeCompra, startDateFilter, endDateFilter) {
+  var months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+  
+  // Determinar o range de anos baseado nos filtros
+  var anoInicio, anoFim;
+  
+  if (startDateFilter || endDateFilter) {
+    anoInicio = startDateFilter ? new Date(startDateFilter).getFullYear() : new Date().getFullYear();
+    anoFim = endDateFilter ? new Date(endDateFilter).getFullYear() : new Date().getFullYear();
+  } else {
+    anoInicio = anoFim = new Date().getFullYear();
+  }
 
-    var totalQuantidade = 0;
-    for (var i = 0; i < ordensDeCompra.length; i++) {
-      var quantidade = ordensDeCompra[i].quantidade || 0;
-      totalQuantidade += quantidade;
+  var totalQuantidade = 0;
+  for (var i = 0; i < ordensDeCompra.length; i++) {
+    var quantidade = ordensDeCompra[i].quantidade || 0;
+    totalQuantidade += quantidade;
+  }
+
+  if (totalQuantidade === 0) {
+    var resultadoVazio = [["Mês", "Produção", "Meta"]];
+    for (var j = 0; j < months.length; j++) {
+      resultadoVazio.push([months[j], 0, 0]);
     }
+    return resultadoVazio;
+  }
 
-    if (totalQuantidade === 0) {
-      var resultadoVazio = [["Mês", "Produção", "Meta"]];
-      for (var j = 0; j < months.length; j++) {
-        resultadoVazio.push([months[j], 0, 0]);
-      }
-      return resultadoVazio;
-    }
+  var meta = Math.floor(totalQuantidade * 0.75);
+  var producaoMensal = new Array(12).fill(0);
 
-    var meta = Math.floor(totalQuantidade * 0.75);
-    var producaoMensal = new Array(12).fill(0);
+  for (var k = 0; k < ordensDeCompra.length; k++) {
+    var ordem = ordensDeCompra[k];
+    if (ordem.dataDeEmissao && ordem.quantidade) {
+      var dataEmissao = parseDate(ordem.dataDeEmissao);
+      if (dataEmissao) {
+        var mesEmissao = dataEmissao.getMonth();
+        var anoEmissao = dataEmissao.getFullYear();
 
-    for (var k = 0; k < ordensDeCompra.length; k++) {
-      var ordem = ordensDeCompra[k];
-      if (ordem.dataDeEmissao && ordem.quantidade) {
-        var dataEmissao = parseDate(ordem.dataDeEmissao);
-        if (dataEmissao) {
-          var mesEmissao = dataEmissao.getMonth();
-          var anoEmissao = dataEmissao.getFullYear();
-
-          if (anoEmissao === currentYear && mesEmissao >= 0 && mesEmissao <= 11) {
-            producaoMensal[mesEmissao] += ordem.quantidade;
-          }
+        // *** MODIFICADO: Aceitar qualquer ano dentro do range dos filtros ***
+        if (anoEmissao >= anoInicio && anoEmissao <= anoFim && mesEmissao >= 0 && mesEmissao <= 11) {
+          producaoMensal[mesEmissao] += ordem.quantidade;
         }
       }
     }
-
-    var resultadoFinal = [["Mês", "Produção", "Meta"]];
-    for (var m = 0; m < months.length; m++) {
-      resultadoFinal.push([months[m], producaoMensal[m], meta]);
-    }
-
-    return resultadoFinal;
   }
 
-  const barData = generateBarData(ordemDeCompra);
+  var resultadoFinal = [["Mês", "Produção", "Meta"]];
+  for (var m = 0; m < months.length; m++) {
+    // *** OPCIONAL: Adicionar indicação do ano se não for o atual ***
+    var labelMes = months[m];
+    if (anoInicio !== new Date().getFullYear() || anoFim !== new Date().getFullYear()) {
+      labelMes += ` ${anoInicio === anoFim ? anoInicio : anoInicio + '-' + anoFim}`;
+    }
+    resultadoFinal.push([labelMes, producaoMensal[m], meta]);
+  }
+
+  return resultadoFinal;
+}
+
+  const barData = generateBarData(
+  ordensFiltradasParaGrafico.length > 0 ? ordensFiltradasParaGrafico : ordemDeCompra,
+  startDate,
+  endDate
+);
+
 
   const closePopup = () => {
     setShowPopup(false);
