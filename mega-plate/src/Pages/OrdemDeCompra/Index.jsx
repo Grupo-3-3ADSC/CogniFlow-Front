@@ -358,7 +358,7 @@ export function OrdemDeCompra() {
           },
           {
             id: "ipi",
-            titulo: "IPI(%)",
+            titulo: "IPI",
             tipo: "text",
             placeholder: "Percentual do imposto (Ex: 12)",
             pattern: "^\\d{1,2}([,.]\\d{1,2})?%?$",
@@ -798,7 +798,8 @@ if (valorKg > 0) {
     const valorUnitario = parseFloat(valoresInput["Valor Unitário"]) || 0;
     const total =
       parseFloat(valoresInput["Total"]) || valorUnitario * quantidade;
-    const ipi = parseFloat(valoresInput["IPI"]) || 0;
+    const ipi = parseFloat(valoresInput["IPI"]?.replace(",", ".") || 0);
+
 
     posicaoY += 10;
     doc.setFont("helvetica", "normal");
@@ -852,7 +853,6 @@ if (valoresInput["Rastreabilidade"]) {
     const observacoes = [
       "• Documento gerado automaticamente pelo sistema",
       "• Válido como comprovante de compra",
-      "• IPI calculado conforme percentual informado",
       "• Para dúvidas, entre em contato conosco",
     ];
     observacoes.forEach((obs, index) => {

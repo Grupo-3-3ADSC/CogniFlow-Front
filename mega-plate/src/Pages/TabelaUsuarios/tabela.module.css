@@ -85,6 +85,8 @@ h2 {
   width: 100%;
   max-width: 100%;
   overflow-x: auto;
+  display: flex;
+  justify-content: center;
 }
 
 .textAtivar {
@@ -173,9 +175,75 @@ h2 {
 .fadeOut {
   opacity: 0;
   transition: opacity 0.3s ease-out;
+}@media (max-width: 1230px) {
+  .tabela {
+    border: none;
+  }
+
+  .tabela thead {
+    display: none;
+  }
+
+  .tabela tr {
+    display: block;
+    background-color: #1d597b;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 4px 6px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .tabela td {
+    display: block;
+    text-align: left;
+    padding: 10px 10px 10px 50%;
+    position: relative;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .tabela td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    font-weight: bold;
+    color: #ccc;
+    text-transform: uppercase;
+    font-size: 12px;
+  }
+
+  .tabelaWrapper {
+    min-width: 300px;
+    overflow-x: auto;
+  }
+
+  .statusColuna {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px; 
+  }
+
+  .textAtivar,
+  .textDesativar {
+    align-items: flex-start;
+  }
+
+  .container {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .background {
+    width: 95vw;
+    padding: 15px;
+    margin-left: 0;
+    width: 95vw;
+  }
 }
 
-@media (max-width: 900px){
+/* @media (max-width: 900px){
 
   .tabela th,
   .tabela td{
@@ -188,7 +256,7 @@ h2 {
     margin-left: 0;
     margin-right: 0;
 }
-}
+} */
 
 @media (max-width: 830px) {
   .tabela {
@@ -257,6 +325,7 @@ h2 {
     width: 95vw;
   }
 }
+
 
 @media (max-width: 768px) {
   .textAtivar,
