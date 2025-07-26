@@ -173,6 +173,7 @@ const NavBar = () => {
           src={fotoUrl || user}
           alt="imagem de usuário"
           className="icons-menu"
+          onClick={() => navigate('/Perfil')}
           onError={(e) => {
             e.target.onError = null;
             e.target.src = user;

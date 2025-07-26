@@ -54,7 +54,6 @@ export function Verificacao() {
         }
     };
 
-    // ✅ FUNÇÃO NOVA - Buscar userId pelo email
     const buscarUsuarioPorEmail = async (email) => {
         try {
             const response = await fetch(`http://localhost:8080/usuarios/buscar-por-email/${encodeURIComponent(email)}`);
@@ -71,7 +70,7 @@ export function Verificacao() {
         }
     };
 
-    // ✅ FUNÇÃO MODIFICADA - Agora busca o userId antes de navegar
+
     const handleVerifyCode = async () => {
         const userCode = code.join('');
         if (userCode.length < 6) {
