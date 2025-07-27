@@ -52,6 +52,8 @@ export function CadastroFornecedor() {
 
     const cnpjLimpo = formData.cnpj.replace(/\D/g, '');
     const cepLimpo = formData.cep.replace(/-/g, '');
+    const telefoneSemMascara = formData.telefone.replace(/\D/g, '');
+
 
     if (!validarRazaoSocial(formData.razaoSocial)) {
       Swal.fire({ title: "Razão Social inválida", icon: "warning", confirmButtonColor: "#3085d6" });
@@ -79,7 +81,7 @@ export function CadastroFornecedor() {
       Swal.fire({ title: "CNPJ inválido (todos os dígitos iguais)", icon: "warning", confirmButtonColor: "#3085d6" });
       return;
     }
-    if (todosDigitosIguais(formData.telefone)) {
+    if (todosDigitosIguais(telefoneSemMascara)) {
       Swal.fire({ title: "Telefone inválido (todos os dígitos iguais)", icon: "warning", confirmButtonColor: "#3085d6" });
       return;
     }
@@ -91,7 +93,7 @@ export function CadastroFornecedor() {
       cep: cepLimpo.trim(),
       endereco: formData.endereco.trim(),
       numero: formData.numero.trim(),
-      telefone: formData.telefone.trim(),
+      telefone: telefoneSemMascara.trim(),
       email: formData.email.trim()
     };
 
@@ -141,20 +143,20 @@ export function CadastroFornecedor() {
     if (cepNumeros.length === 8) {
       preencherEnderecoPorCEP(formData.cep);
     } else {
-     
+
       setFormData((prev) => ({
         ...prev,
         endereco: ''
       }));
-    }if (cargo !== 2) { // Verifica se o usuário não é gestor
-          Swal.fire({
-            title: "Acesso Negado",
-            text: "Você não tem permissão para acessar esta página.",
-            icon: "error",
-            confirmButtonColor: "#3085d6",
-          });
-          navigate('/material');
-      }
+    } if (cargo !== 2) { // Verifica se o usuário não é gestor
+      Swal.fire({
+        title: "Acesso Negado",
+        text: "Você não tem permissão para acessar esta página.",
+        icon: "error",
+        confirmButtonColor: "#3085d6",
+      });
+      navigate('/material');
+    }
   }, [formData.cep]);
 
 
@@ -203,6 +205,23 @@ export function CadastroFornecedor() {
       .slice(0, 9);
   }
 
+  function formatarTelefone(valor) {
+    const numeros = valor.replace(/\D/g, '');
+
+    if (numeros.length <= 10) {
+      return numeros
+        .replace(/^(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{4})(\d)/, '$1-$2')
+        .slice(0, 14);
+    }
+
+    return numeros
+      .replace(/^(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{5})(\d)/, '$1-$2')
+      .slice(0, 15);
+  }
+
+
   function validarRazaoSocial(razao) {
     return typeof razao === 'string' && razao.trim().length >= 3;
   }
@@ -216,8 +235,10 @@ export function CadastroFornecedor() {
   }
 
   function validarTelefone(telefone) {
-    return apenasNumeros(telefone) && telefone.length >= 10 && telefone.length <= 11;
+    const apenasNumeros = telefone.replace(/\D/g, '');
+    return apenasNumeros.length >= 10 && apenasNumeros.length <= 11;
   }
+
 
   function validarNumero(numero) {
     return apenasNumeros(numero);
@@ -355,9 +376,10 @@ export function CadastroFornecedor() {
                   placeholder="Digite o Telefone"
                   type="text"
                   inputMode='numeric'
-                  maxLength={11}
+                  maxLength={15}
                   value={formData.telefone}
-                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value.replace(/\D/g, '') })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, telefone: formatarTelefone(e.target.value) })}
                 />
               </div>
               <div className={styles['input-group']}>
