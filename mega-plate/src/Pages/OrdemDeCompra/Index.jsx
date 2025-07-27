@@ -618,8 +618,8 @@ export function OrdemDeCompra() {
         setProgresso(4);
       })
       .catch((err) => {
-        console.error("Erro ao criar ordem:", err);
-        toastError("Erro ao criar ordem de compra. Verifique os dados.");
+        // console.error("Erro ao criar ordem:", err);
+        toastError(err.response.data?.message || "Erro ao criar ordem de compra");
         setErrosValidacao({
           geral: "Erro ao criar ordem de compra. Verifique os dados.",
         });
