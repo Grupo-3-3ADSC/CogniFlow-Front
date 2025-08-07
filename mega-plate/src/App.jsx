@@ -14,6 +14,7 @@ import DashEstoque from './Pages/DashEstoque/AppEstoque'
 import {Route, BrowserRouter as Router, Routes} from 'react-router-dom';
 import CadastroFornecedor from './Pages/CadastroFornecedor/Fornecedor';
 import { TabelaUsuarios } from './Pages/TabelaUsuarios/TabelaUsuarios';
+import Relatorio, { Historicos } from './Pages/Historicos/Historicos';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
         <Route path='/Fornecedor' element={<DashFornecedor />} />
         <Route path='/DashEstoque' element={<DashEstoque />} />
         <Route path='/TabelaUsuarios' element={<TabelaUsuarios />} />
+        <Route path='/HistoricoOrdemDeCompra' element={<Historicos />} />
       </Routes>
     </Router>
     <ToastContainer position="top-right" autoClose={1500} closeButton={false}/>

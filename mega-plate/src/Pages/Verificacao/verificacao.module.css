@@ -99,7 +99,7 @@
 }
 
 
-button {
+#button-verify{
     background-color: #1A5A8A;
     border: none;
     padding: 10px 0px;
@@ -116,7 +116,7 @@ button {
 }
 
 
-button:hover {
+#button-verify :hover {
     background-color: #2E6FA8;
 }
 

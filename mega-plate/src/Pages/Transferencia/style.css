@@ -81,7 +81,7 @@
     font-family: 'Poppins';
 }
 
-button {
+#button-transferir {
     background-color: var(--secondary-color);
     border-radius: 80px;
     width: 160px;
@@ -93,7 +93,7 @@ button {
     cursor: pointer;
 }
 
-button:hover {
+#button-transferir:hover {
     background-color: #144a63;
 }
 

@@ -425,7 +425,7 @@ export function Transferencia() {
             <option value="Externa">Externa</option>
           </select>
 
-          <button
+          <button id="button-transferir"
             className="botao-confirmar"
             onClick={handleTransferir}
             disabled={isLoading}

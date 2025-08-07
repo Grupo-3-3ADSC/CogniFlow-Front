@@ -195,7 +195,7 @@ export function Verificacao() {
                                 />
                             ))}
                         </div>
-                        <button onClick={handleVerifyCode} disabled={isVerifying}>
+                        <button id='button-verify' onClick={handleVerifyCode} disabled={isVerifying}>
                             {isVerifying ? 'Verificando...' : 'VERIFICAR'}
                         </button>
                         <img src={logo} alt="" />
