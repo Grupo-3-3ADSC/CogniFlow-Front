@@ -12,6 +12,8 @@ export function TabelaUsuarios() {
   const [isGestor, setIsGestor] = useState(false);
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [fade, setFade] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredUsuarios, setFilteredUsuarios] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,6 +31,11 @@ export function TabelaUsuarios() {
     }
   }, [navigate]);
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  
   useEffect(() => {
     setFade(false); // inicia fade out
     const timeout = setTimeout(() => {
@@ -59,6 +66,28 @@ export function TabelaUsuarios() {
       Swal.fire("Erro ao carregar usuários", "", "error");
     }
   };
+
+  const handleSearch = () => {
+    const filtered = usuarios.filter((item) => {
+      // Filtro por busca de texto
+      const searchMatch =
+        !searchTerm ||
+        item.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.email &&
+          item.email.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      return searchMatch;
+    });
+    setFilteredUsuarios(filtered);
+  }
+
+  useEffect(() =>{
+    handleSearch();
+  }, [searchTerm]);
+
+  useEffect(() => {
+      setFilteredUsuarios(usuarios);
+    }, [usuarios]);
 
   const handleToggleStatus = async (id, ativo) => {
     const result = await Swal.fire({
@@ -145,6 +174,20 @@ export function TabelaUsuarios() {
             <option value="ativos">Ativos</option>
             <option value="inativos">Inativos</option>
           </select>
+
+           <label htmlFor="pesquisa" className={styles.labelPesquisa}>
+              Pesquisar por nome ou e-mail:{" "}
+              </label>
+            <div className={styles["search-container"]}>
+            <input
+              type="text"
+              placeholder="Digite aqui..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className={styles["search-input"]}
+            />
+            </div>
+
           <p className={styles.qtdUsuarios}>
             {usuarios.length} usuário(s) encontrado(s)
           </p>
@@ -172,7 +215,7 @@ export function TabelaUsuarios() {
                   </tr>
                 </thead>
                 <tbody>
-                  {usuarios.map((usuario) => (
+                  {filteredUsuarios.map((usuario) => (
                     <tr key={usuario.id}>
                       <td data-label="Nome">{usuario.nome}</td>
                       <td data-label="Email">{usuario.email}</td>

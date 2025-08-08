@@ -167,6 +167,28 @@ h2 {
   font-style: italic;
 }
 
+.search-container {
+    display: flex;
+    padding-top: 8px;
+}
+
+.labelPesquisa{
+  margin-top: 8px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #ffffff;
+    border-radius: 40px;
+    
+    outline: none;
+    transition: all 0.3s ease;
+    background: whitesmoke;
+    font-size: 8px;
+    height: 40px;
+}
+
 .fadeIn {
   opacity: 1;
   transition: opacity 0.3s ease-in;

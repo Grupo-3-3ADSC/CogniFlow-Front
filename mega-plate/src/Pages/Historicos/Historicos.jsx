@@ -14,20 +14,20 @@ export function Historicos() {
     const [fade, setFade] = useState(true);
     const navigate = useNavigate();
 
-    //   useEffect(() => {
-    //     const token = sessionStorage.getItem("authToken");
-    //     if (!token) {
-    //       navigate("/");
-    //     } else {
-    //       const { exp } = jwtDecode(token);
-    //       if (Date.now() >= exp * 1000) {
-    //         sessionStorage.removeItem("authToken");
-    //         navigate("/");
-    //       } else {
-    //         setAutenticacaoPassou(true);
-    //       }
-    //     }
-    //   }, [navigate]);
+      useEffect(() => {
+        const token = sessionStorage.getItem("authToken");
+        if (!token) {
+          navigate("/");
+        } else {
+          const { exp } = jwtDecode(token);
+          if (Date.now() >= exp * 1000) {
+            sessionStorage.removeItem("authToken");
+            navigate("/");
+          } else {
+            setAutenticacaoPassou(true);
+          }
+        }
+      }, [navigate]);
 
     useEffect(() => {
         setFade(false); // inicia fade out
