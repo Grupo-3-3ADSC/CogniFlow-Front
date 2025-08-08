@@ -125,7 +125,7 @@
   background: whitesmoke;
 }
 
-#buttonCadastrar {
+#buttonCadastrar,button {
     background-color: #1D597B;
     padding: 10px;
     width: 100%;
@@ -139,7 +139,7 @@
     outline: none;
 }
 
-#buttonCadastrar:hover {
+#buttonCadastrar:hover, button:hover {
     background-color: #1a4e6d;
     cursor: pointer;
 }

@@ -21,6 +21,7 @@ export function CadastroFornecedor() {
     responsavel: '',
     cargo: ''
   });
+  const [botaoDesativado, setBotaoDesativado] = useState(false)
 
   const cadastrarFornecedor = async () => {
 
@@ -103,6 +104,7 @@ export function CadastroFornecedor() {
       cargo: formData.cargo.trim()
     };
 
+    setBotaoDesativado(true);
     api.post('/fornecedores', userData, {
       headers: {
         'Content-Type': 'application/json'
@@ -135,7 +137,7 @@ export function CadastroFornecedor() {
         icon: "error",
         confirmButtonColor: "#3085d6",
       });
-    });
+    }).finally(() => setBotaoDesativado(false));
   };
 
   async function validarCEPExistente(cep) {
@@ -432,7 +434,8 @@ export function CadastroFornecedor() {
               <button onClick={avancar}>PRÓXIMO</button>
             )}
             {progresso === 3 && (
-              <button id={styles['buttonCadastrar']} onClick={cadastrarFornecedor}>
+              <button id={styles['buttonCadastrar']} onClick={cadastrarFornecedor}
+              disabled={botaoDesativado}>
                 CADASTRAR
               </button>
             )}
