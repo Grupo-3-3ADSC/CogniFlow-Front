@@ -79,76 +79,6 @@ export function OrdemDeCompra() {
     getMateriaPrima();
   }, []);
 
-  // Lista mockada de fornecedores
-  // const fornecedoresMock = [
-  //   {
-  //     fornecedorId: 1,
-  //     nomeFantasia: "MetalTech Indústria",
-  //     cnpj: "12.345.678/0001-90",
-  //     telefone: "(11) 3456-7890",
-  //     complemento: "Rua das Indústrias, 123 - São Paulo/SP"
-  //   },
-  //   {
-  //     fornecedorId: 2,
-  //     nomeFantasia: "SteelMax Suprimentos",
-  //     cnpj: "23.456.789/0001-80",
-  //     telefone: "(11) 9876-5432",
-  //     complemento: "Av. Industrial, 456 - Guarulhos/SP"
-  //   },
-  //   {
-  //     fornecedorId: 3,
-  //     nomeFantasia: "IronWorks Distribuidora",
-  //     cnpj: "34.567.890/0001-70",
-  //     telefone: "(11) 5555-1234",
-  //     complemento: "Rua do Ferro, 789 - Osasco/SP"
-  //   },
-  //   {
-  //     fornecedorId: 4,
-  //     nomeFantasia: "AlumCorp Materiais",
-  //     cnpj: "45.678.901/0001-60",
-  //     telefone: "(11) 2222-9999",
-  //     complemento: "Estrada dos Metais, 321 - Barueri/SP"
-  //   },
-  //   {
-  //     fornecedorId: 5,
-  //     nomeFantasia: "Bronze & Cia Ltda",
-  //     cnpj: "56.789.012/0001-50",
-  //     telefone: "(11) 7777-3333",
-  //     complemento: "Alameda Industrial, 654 - Diadema/SP"
-  //   }
-  // ];
-
-  // // Lista mockada de materiais
-  // const materiaisMock = [
-  //   {
-  //     id: 1,
-  //     tipoMaterial: "Aço Carbono 1020"
-  //   },
-  //   {
-  //     id: 2,
-  //     tipoMaterial: "Alumínio 6061"
-  //   },
-  //   {
-  //     id: 3,
-  //     tipoMaterial: "Cobre Eletrolítico"
-  //   },
-  //   {
-  //     id: 4,
-  //     tipoMaterial: "Bronze Fosforoso"
-  //   },
-  //   {
-  //     id: 5,
-  //     tipoMaterial: "Aço Inoxidável 304"
-  //   },
-  //   {
-  //     id: 6,
-  //     tipoMaterial: "Ferro Fundido Cinzento"
-  //   }
-  // ];
-
-  // const [listaFornecedores, setListaFornecedores] = useState(fornecedoresMock);
-  // const [listaMateriais, setListaMateriais] = useState(materiaisMock);
-  // const [ordemDeCompra, setOrdemDeCompra] = useState([]);
   const [progresso, setProgresso] = useState(1);
   const [valoresInput, setValoresInput] = useState({});
   const [errosValidacao, setErrosValidacao] = useState({});
@@ -401,28 +331,6 @@ export function OrdemDeCompra() {
     progresso === 4 ? "FORMULÁRIO FINALIZADO COM SUCESSO!" : "ORDEM DE COMPRA";
   const nomeBotao = progresso === 3 ? "FINALIZAR" : "PRÓXIMO";
 
-  // Fetch data (comentado para usar dados mockados)
-  const fetchData = useCallback(async () => {
-    try {
-      // Simulando carregamento da API
-      console.log("Usando dados mockados...");
-
-      // Descomente as linhas abaixo quando quiser usar a API real:
-      // const [fornecedores, materiais] = await Promise.all([
-      //   api.get("/fornecedores/listarFornecedorCompleto"),
-      //   api.get("/estoque")
-      // ]);
-      // setListaFornecedores(fornecedores.data);
-      // setListaMateriais(materiais.data);
-    } catch (error) {
-      console.error("Erro ao carregar dados:", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
   // CORREÇÃO: Cálculo automático do total incluindo quantidade
   useEffect(() => {
     const valorUnit =
@@ -574,8 +482,8 @@ export function OrdemDeCompra() {
   // CORREÇÃO: Finalizar ordem - simulando sucesso para chegar na tela 4
   const finalizarOrdemDeCompra = useCallback(async () => {
     const usuarioId = getUsuarioIdDoToken();
-    console.log(Number(valoresInput["MaterialId"]));
-    const dadosApi = {
+    //console.log(Number(valoresInput["MaterialId"]));
+    const dadosInput = {
       usuarioId: getUsuarioIdDoToken(),
       fornecedorId: Number(valoresInput["FornecedorId"]), // ✅
       prazoEntrega: valoresInput["Prazo de entrega"],
@@ -594,37 +502,36 @@ export function OrdemDeCompra() {
       ipi: parseFloat(valoresInput["IPI"]?.replace(",", ".") || 0),
       quantidade: parseInt(valoresInput["Quantidade"] || 0),
     };
-    console.log(dadosApi);
-    console.log("listaMateriais", listaMateriais);
-    console.log("valoresInput", valoresInput);
 
-    api
-      .post("/ordemDeCompra", dadosApi)
-      .then((res) => {
-        const novaId = res?.data?.id;
+    // console.log("listaMateriais", listaMateriais);
+    // console.log("valoresInput", valoresInput);
 
-        if (!novaId || isNaN(novaId)) {
-          console.error("ID inválido retornado:", res?.data);
-          toastError("Erro ao obter o ID da nova ordem de compra.");
-          return;
-        }
+  api
+    .post("/ordemDeCompra", dadosInput)
+    .then((res) => {
+      const novaId = res?.data?.id;
 
-        return api.get(`/ordemDeCompra/${novaId}`);
-      })
-      .then((resDetalhado) => {
-        if (!resDetalhado) return;
-        setOrdemDeCompra(resDetalhado.data);
-        toastSucess("Ordem cadastrada com sucesso!");
-        setProgresso(4);
-      })
-      .catch((err) => {
-        // console.error("Erro ao criar ordem:", err);
-        toastError(err.response.data?.message || "Erro ao criar ordem de compra");
-        setErrosValidacao({
-          geral: "Erro ao criar ordem de compra. Verifique os dados.",
+      if (!novaId || isNaN(novaId)) {
+        console.error("ID inválido retornado:", res?.data);
+        toastError("Erro ao obter o ID da nova ordem de compra.");
+        return;
+      }
+      toastSucess("Ordem cadastrada com sucesso!");
+
+      api.get(`/ordemDeCompra/${novaId}`)
+        .then((resDetalhado) => {
+          if (!resDetalhado) return;
+          setOrdemDeCompra(resDetalhado.data);
+          setProgresso(4);
         });
+    })
+    .catch((err) => {
+      toastError(err.response?.data?.message || "Erro ao criar ordem de compra");
+      setErrosValidacao({
+        geral: "Erro ao criar ordem de compra. Verifique os dados.",
       });
-  }, [valoresInput]);
+    });
+}, [valoresInput]);
 
   // Navegação
   const avancarProgresso = useCallback(() => {
@@ -678,7 +585,7 @@ export function OrdemDeCompra() {
   );
 
   // Geração de documentos (versão simplificada)
-  function baixarPDF() {
+function baixarPDF() {
     const doc = new jsPDF();
 
     const corPrimaria = [41, 128, 185];
@@ -686,7 +593,7 @@ export function OrdemDeCompra() {
     const corTexto = [44, 62, 80];
 
     const fornecedorDetalhes = listaFornecedores.find(
-      (f) => f.fornecedorId === parseInt(valoresInput["FornecedorId"])
+      (f) => f.fornecedorId === parseInt(ordemDeCompra.fornecedorId)
     );
 
     doc.setFillColor(...corPrimaria);
@@ -699,7 +606,6 @@ export function OrdemDeCompra() {
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-
 
     doc.setFillColor(240, 240, 240);
     doc.rect(140, 40, 65, 25, "F");
@@ -723,52 +629,52 @@ export function OrdemDeCompra() {
     doc.line(20, 70, 190, 70);
 
     doc.setFontSize(12);
-doc.setFont("helvetica", "bold");
-doc.text("DADOS DO FORNECEDOR", 20, 80);
+    doc.setFont("helvetica", "bold");
+    doc.text("DADOS DO FORNECEDOR", 20, 80);
 
-let posicaoY = 90;
-doc.setFontSize(10);
-doc.setFont("helvetica", "normal");
+    let posicaoY = 90;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
 
-if (fornecedorDetalhes) {
-  doc.text(`Nome: ${fornecedorDetalhes.nomeFantasia}`, 20, posicaoY); posicaoY += 6;
-  if (fornecedorDetalhes.cnpj) {
-    doc.text(`CNPJ: ${fornecedorDetalhes.cnpj}`, 20, posicaoY); posicaoY += 6;
-  }
-  if (fornecedorDetalhes.complemento) {
-    doc.text(`Endereço: ${fornecedorDetalhes.complemento}`, 20, posicaoY); posicaoY += 6;
-  }
-  if (valoresInput["I.E"]) {
-    doc.text(`I.E: ${valoresInput["I.E"]}`, 20, posicaoY); posicaoY += 6;
-  }
-} else {
-  doc.text("Fornecedor não encontrado", 20, posicaoY);
-  posicaoY += 6;
-}
+    if (fornecedorDetalhes) {
+      doc.text(`Nome: ${fornecedorDetalhes.nomeFantasia}`, 20, posicaoY); posicaoY += 6;
+      if (fornecedorDetalhes.cnpj) {
+        doc.text(`CNPJ: ${fornecedorDetalhes.cnpj}`, 20, posicaoY); posicaoY += 6;
+      }
+      if (fornecedorDetalhes.complemento) {
+        doc.text(`Endereço: ${fornecedorDetalhes.complemento}`, 20, posicaoY); posicaoY += 6;
+      }
+      if (ordemDeCompra.ie) {
+        doc.text(`I.E: ${ordemDeCompra.ie}`, 20, posicaoY); posicaoY += 6;
+      }
+    } else {
+      doc.text("Fornecedor não encontrado", 20, posicaoY);
+      posicaoY += 6;
+    }
 
-posicaoY += 10;
-doc.setFont("helvetica", "bold");
-doc.setFontSize(12);
-doc.text("DADOS DA COMPRA", 20, posicaoY);
+    posicaoY += 10;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("DADOS DA COMPRA", 20, posicaoY);
 
-posicaoY += 8;
-doc.setFont("helvetica", "normal");
-doc.setFontSize(10);
+    posicaoY += 8;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
 
-const prazoEntrega = new Date(valoresInput["Prazo de entrega"]).toLocaleDateString("pt-BR");
-doc.text(`Prazo de entrega: ${prazoEntrega}`, 20, posicaoY); posicaoY += 6;
+    const prazoEntrega = new Date(ordemDeCompra.prazoEntrega).toLocaleDateString("pt-BR");
+    doc.text(`Prazo de entrega: ${prazoEntrega}`, 20, posicaoY); posicaoY += 6;
 
-doc.text(`Condição de pagamento: ${valoresInput["Cond. Pagamento"]}`, 20, posicaoY); posicaoY += 6;
+    doc.text(`Condição de pagamento: ${ordemDeCompra.condPagamento}`, 20, posicaoY); posicaoY += 6;
 
-const valorPeca = parseFloat(valoresInput["Valor por peça"]?.replace(",", ".") || 0);
-const valorKg = parseFloat(valoresInput["Valor por Kg"]?.replace(",", ".") || 0);
+    const valorPeca = parseFloat(ordemDeCompra.valorPeca || 0);
+    const valorKg = parseFloat(ordemDeCompra.valorKg || 0);
 
-if (valorPeca > 0) {
-  doc.text(`Valor por peça: R$ ${valorPeca.toFixed(2).replace(".", ",")}`, 20, posicaoY); posicaoY += 6;
-}
-if (valorKg > 0) {
-  doc.text(`Valor por Kg: R$ ${valorKg.toFixed(2).replace(".", ",")}`, 20, posicaoY); posicaoY += 6;
-}
+    if (valorPeca > 0) {
+      doc.text(`Valor por peça: R$ ${valorPeca.toFixed(2).replace(".", ",")}`, 20, posicaoY); posicaoY += 6;
+    }
+    if (valorKg > 0) {
+      doc.text(`Valor por Kg: R$ ${valorKg.toFixed(2).replace(".", ",")}`, 20, posicaoY); posicaoY += 6;
+    }
 
     posicaoY += 10;
     doc.setFont("helvetica", "bold");
@@ -788,18 +694,16 @@ if (valorKg > 0) {
     doc.text("TOTAL", 170, posicaoY);
 
     const materialSelecionado = listaMateriais.find(
-      (m) => m.id === parseInt(valoresInput["MaterialId"])
+      (m) => m.id === parseInt(ordemDeCompra.estoqueId)
     );
 
     const item = "001";
     const descricao =
       materialSelecionado?.tipoMaterial || "Material não encontrado";
-    const quantidade = parseFloat(valoresInput["Quantidade"]) || 0;
-    const valorUnitario = parseFloat(valoresInput["Valor Unitário"]) || 0;
-    const total =
-      parseFloat(valoresInput["Total"]) || valorUnitario * quantidade;
-    const ipi = parseFloat(valoresInput["IPI"]?.replace(",", ".") || 0);
-
+    const quantidade = parseFloat(ordemDeCompra.quantidade) || 0;
+    const valorUnitario = parseFloat(ordemDeCompra.valorUnitario) || 0;
+    const total = valorUnitario * quantidade;
+    const ipi = parseFloat(ordemDeCompra.ipi || 0);
 
     posicaoY += 10;
     doc.setFont("helvetica", "normal");
@@ -831,17 +735,17 @@ if (valorKg > 0) {
       posicaoY + 16
     );
 
-if (valoresInput["Rastreabilidade"]) {
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text("RASTREABILIDADE", 20, posicaoY);
-  posicaoY += 8;
+    if (ordemDeCompra.rastreabilidade) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("RASTREABILIDADE", 20, posicaoY);
+      posicaoY += 8;
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.text(`Código: ${valoresInput["Rastreabilidade"]}`, 20, posicaoY);
-  posicaoY += 10;
-}
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(`Código: ${ordemDeCompra.rastreabilidade}`, 20, posicaoY);
+      posicaoY += 10;
+    }
 
     posicaoY += 20;
     doc.setFontSize(10);
@@ -866,8 +770,14 @@ if (valoresInput["Rastreabilidade"]) {
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.text("Documento gerado em " + new Date().toLocaleString("pt-BR"), 20, alturaRodape + 8);
-doc.text("www.megaplate.com.br | vendas@megaplate.com.br", 20, alturaRodape + 14);
-doc.text(`www.${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br | contato@${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br`, 20, alturaRodape + 20);
+    doc.text("www.megaplate.com.br | vendas@megaplate.com.br", 20, alturaRodape + 14);
+    doc.text(
+      fornecedorDetalhes
+        ? `www.${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br | contato@${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br`
+        : "",
+      20,
+      alturaRodape + 20
+    );
 
     const nomeArquivo = `ordem_de_compra_${
       ordemDeCompra.id
@@ -882,7 +792,7 @@ doc.text(`www.${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br | contato@
     const fornecedor = ordemDeCompra.fornecedor;
 
     const fornecedorDetalhes = listaFornecedores.find(
-      (f) => f.fornecedorId === parseInt(valoresInput["FornecedorId"])
+      (f) => f.fornecedorId === parseInt(ordemDeCompra.fornecedorId)
     );
 
     const corPrimaria = "2A80B9"; // Azul
@@ -965,13 +875,13 @@ doc.text(`www.${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br | contato@
 
     // Dados do material
     const material = listaMateriais.find(
-      (m) => m.id === parseInt(valoresInput["MaterialId"])
+      (m) => m.id === parseInt(ordemDeCompra.estoqueId)
     );
     const descricao = material?.tipoMaterial || "Material não encontrado";
-    const quantidade = parseFloat(valoresInput["Quantidade"]) || 0;
-    const valorUnit = parseFloat(valoresInput["Valor Unitário"]) || 0;
-    const total = parseFloat(valoresInput["Total"]) || valorUnit * quantidade;
-    const ipi = parseFloat(valoresInput["IPI"]) || 0;
+    const quantidade = parseFloat(ordemDeCompra.quantidade) || 0;
+    const valorUnit = parseFloat(ordemDeCompra.valorUnitario) || 0;
+    const total = valorUnit * quantidade;
+    const ipi = parseFloat(ordemDeCompra.ipi) || 0;
     const totalGeral = total + ipi;
 
     sheet.addRow([
@@ -1038,10 +948,10 @@ doc.text(`www.${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br | contato@
     saveAs(new Blob([buffer]), nomeArquivo);
   }
 
+
   async function baixarDocumentos() {
     baixarPDF();
     await baixarExcel();
-    window.location.reload();
   }
 
   return (
