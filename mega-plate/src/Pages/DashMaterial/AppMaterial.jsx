@@ -881,7 +881,7 @@ function App() {
                   />
                 </div>
               </div>
-              <div id="line_chart" className="chart">
+              {/* <div id="line_chart" className="chart">
                 <h1
                   style={{
                     color: "white",
@@ -925,7 +925,7 @@ function App() {
                     height="280px"
                   />
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
 

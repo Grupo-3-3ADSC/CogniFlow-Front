@@ -1,3 +1,20 @@
+#chart-produtos::-webkit-scrollbar {
+    width: 6px;
+}
+
+#chart-produtos::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+#chart-produtos::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--secondary-color), var(--accent-color));
+    border-radius: 3px;
+}
+
+#chart-produtos::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #7EB9D9, var(--secondary-color));
+}
 :root {
     --primary-color: #05314C;
     --secondary-color: #4586AB;
@@ -308,10 +325,7 @@ option {
 /* Products Chart */
 #chart-produtos {
     margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    display: block;
     width: 38vh;
     height: 318px;
     background: var(--chart-gradient);
@@ -320,6 +334,7 @@ option {
     box-shadow: var(--glass-shadow);
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.15);
+    overflow-y: auto;
 }
 
 #chart-produtos::before {
@@ -367,7 +382,7 @@ option {
 
 #bar_chartMaterial, #line_chart {
     flex: 1;
-    width: 100vh;
+    width: 120vh;
     height: 55vh;
     background: var(--chart-gradient);
     backdrop-filter: blur(25px);

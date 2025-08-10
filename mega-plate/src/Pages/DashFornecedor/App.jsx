@@ -501,6 +501,7 @@ useEffect(() => {
   function gerarDadosKPI(ordens) {
     var statsPorFornecedor = {};
    
+    // Processa todas as ordens de compra
     for (var i = 0; i < ordens.length; i++) {
         var ordem = ordens[i];
         var fornecedorId = ordem.fornecedorId || ordem.fornecedor?.id;
@@ -516,23 +517,29 @@ useEffect(() => {
        
         var valorUnitario = Number(ordem.valorUnitario || 0);
         var quantidade = Number(ordem.quantidade || 0);
+        var valorTotalOrdem = valorUnitario * quantidade; // Valor total desta ordem específica
         
+        // Inicializa o fornecedor se não existir
         if (!statsPorFornecedor[fornecedorId]) {
             statsPorFornecedor[fornecedorId] = {
-                totalValue: 0,
+                valorTotalAcumulado: 0, // Soma de TODAS as ordens deste fornecedor
                 totalQuantity: 0,
                 nome: fornecedorNome,
-                materiais: new Set(),
+                materiais: new Set(), // Todos os tipos de material deste fornecedor
                 maiorValorUnitario: 0,
                 materialMaiorValor: "N/A",
-                estoqueIdMaiorValor: null
+                estoqueIdMaiorValor: null,
+                numeroOrdens: 0 // Contador de ordens
             };
         }
         
-        statsPorFornecedor[fornecedorId].totalValue += valorUnitario * quantidade;
+        // Acumula o valor total de TODAS as ordens deste fornecedor
+        statsPorFornecedor[fornecedorId].valorTotalAcumulado += valorTotalOrdem;
         statsPorFornecedor[fornecedorId].totalQuantity += quantidade;
         statsPorFornecedor[fornecedorId].materiais.add(material);
+        statsPorFornecedor[fornecedorId].numeroOrdens++;
         
+        // Verifica se é o maior valor unitário deste fornecedor
         if (valorUnitario > statsPorFornecedor[fornecedorId].maiorValorUnitario) {
             statsPorFornecedor[fornecedorId].maiorValorUnitario = valorUnitario;
             statsPorFornecedor[fornecedorId].materialMaiorValor = material;
@@ -540,29 +547,32 @@ useEffect(() => {
         }
     }
     
+    // Converte para array e prepara dados finais
     var listaFinal = [];
     for (var fornecedorId in statsPorFornecedor) {
         var stats = statsPorFornecedor[fornecedorId];
-        var avg = stats.totalQuantity > 0 ? stats.totalValue / stats.totalQuantity : 0;
-        var max = avg * 1.6;
         
         listaFinal.push({
             fornecedorId: fornecedorId,
             supplierName: stats.nome,
-            avgPrice: avg,
-            maxPrice: max,
-            material: stats.materialMaiorValor,
+            valorTotalAcumulado: stats.valorTotalAcumulado, // Total acumulado de TODAS as ordens
+            maiorValorUnitario: stats.maiorValorUnitario,
+            quantidadeTotal: stats.totalQuantity,
+            materialMaiorValor: stats.materialMaiorValor,
             estoqueId: stats.estoqueIdMaiorValor,
-            todosOsMateriais: Array.from(stats.materiais).join(', ')
+            tiposMateriais: Array.from(stats.materiais), // Array com todos os tipos de material
+            tiposMateriaisString: Array.from(stats.materiais).join(', '), // String formatada
+            numeroOrdens: stats.numeroOrdens
         });
     }
     
+    // Ordena pelo valor total acumulado (maior para menor) e pega os top 3
     const top3 = listaFinal
-        .sort((a, b) => b.maxPrice - a.maxPrice)
+        .sort((a, b) => b.valorTotalAcumulado - a.valorTotalAcumulado)
         .slice(0, 3);
         
     return top3;
-  }
+}
 
   // Gerar dados do gráfico de linha
   const generateLineData = (suppliers) => {
@@ -745,11 +755,10 @@ useEffect(() => {
                   return (
                     <React.Fragment key={item.fornecedorId}>
                       <div id={"chart-aviso-fornecedor" + (index + 1)} className="chart">
-                        <div className="kpi-title">{item.material}</div>
-                        <div className="kpi-subtitle">{item.supplierName}</div>
+                        <div className="kpi-title">{item.supplierName}</div>
+                        <div className="kpi-subtitle">{item.tiposMateriaisString}</div>
                         <div className="kpi-data">
-                          <span>R$ {item.avgPrice.toFixed(2)}</span>
-                          <span>R$ {item.maxPrice.toFixed(2)}</span>
+                         <span>Receita Total: R$ {item.valorTotalAcumulado.toFixed(2)}</span>
                         </div>
                       </div>
                     </React.Fragment>
