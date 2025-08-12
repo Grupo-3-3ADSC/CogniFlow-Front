@@ -5,8 +5,10 @@ import Swal from "sweetalert2";
 import styles from "./historicos.module.css";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import iconbaixar from "../../assets/icon-baixar.png";
 
 export function Historicos() {
+    const [ordens, setOrdens] = useState([]);
     const [usuarios, setUsuarios] = useState([]);
     const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
     const [isGestor, setIsGestor] = useState(false);
@@ -14,117 +16,131 @@ export function Historicos() {
     const [fade, setFade] = useState(true);
     const navigate = useNavigate();
 
-    //   useEffect(() => {
-    //     const token = sessionStorage.getItem("authToken");
-    //     if (!token) {
-    //       navigate("/");
-    //     } else {
-    //       const { exp } = jwtDecode(token);
-    //       if (Date.now() >= exp * 1000) {
-    //         sessionStorage.removeItem("authToken");
-    //         navigate("/");
-    //       } else {
-    //         setAutenticacaoPassou(true);
-    //       }
-    //     }
-    //   }, [navigate]);
+    useEffect(() => {
+        const token = sessionStorage.getItem("authToken");
+        if (!token) {
+            navigate("/");
+        } else {
+            const { exp } = jwtDecode(token);
+            if (Date.now() >= exp * 1000) {
+                sessionStorage.removeItem("authToken");
+                navigate("/");
+            } else {
+                setAutenticacaoPassou(true);
+            }
+        }
+    }, [navigate]);
 
     useEffect(() => {
         setFade(false); // inicia fade out
         const timeout = setTimeout(() => {
             setUsuarios([]);
-            buscarUsuarios();
+            buscarOrdensDeCompra();
             setFade(true); // inicia fade in depois de buscar
         }, 200); // tempo de fade out antes de buscar
 
         return () => clearTimeout(timeout);
     }, [filtroStatus]);
 
-    const buscarUsuarios = async () => {
+    const buscarOrdensDeCompra = async () => {
         const token = sessionStorage.getItem("authToken");
         const cargoUsuario = sessionStorage.getItem("cargoUsuario");
 
         setIsGestor(Number(cargoUsuario) === 2);
 
-        let url = "/usuarios/listarTodos";
-        if (filtroStatus === "ativos") url = "/usuarios/listarAtivos";
-        if (filtroStatus === "inativos") url = "/usuarios/listarInativos";
+        let url = "/ordemDeCompra";
 
         try {
             const res = await api.get(url, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            setUsuarios(res.data);
+            setOrdens(res.data);
         } catch (error) {
-            Swal.fire("Erro ao carregar usuários", "", "error");
+            Swal.fire("Erro ao carregar ordens de compra", "", "error");
         }
     };
 
-    //   const handleToggleStatus = async (id, ativo) => {
-    //     const result = await Swal.fire({
-    //       title: ativo
-    //         ? "Deseja desativar este usuário?"
-    //         : "Deseja ativar este usuário?",
-    //       icon: "warning",
-    //       showCancelButton: true,
-    //       confirmButtonText: ativo ? "Desativar" : "Ativar",
-    //       cancelButtonText: "Cancelar",
-    //       confirmButtonColor: ativo ? "#d33" : "#28a745",
-    //     });
+    function formatarDataBrasileira(dataISO) {
+        if (!dataISO) return "N/A";
 
-    //     if (result.isConfirmed) {
-    //       const token = sessionStorage.getItem("authToken");
-    //       try {
-    //         await api.patch(
-    //           `/usuarios/desativarUsuario/${id}`,
-    //           { ativo: !ativo },
-    //           {
-    //             headers: {
-    //               Authorization: `Bearer ${token}`,
-    //             },
-    //           }
-    //         );
+        // Pega só a parte da data, ignorando a hora
+        const [ano, mes, dia] = dataISO.split("T")[0].split("-");
 
-    //         Swal.fire("Status atualizado com sucesso!", "", "success");
-    //         buscarUsuarios(); // Recarrega a lista do banco
-    //       } catch (error) {
-    //         console.error("Erro ao atualizar status:", error);
-    //         Swal.fire("Erro ao atualizar status", "", "error");
-    //       }
-    //     }
-    //   };
+        return `${dia}/${mes}/${ano}`;
+    }
 
-    // const handleDeletarUsuario = async (id) => {
-    //     const result = await Swal.fire({
-    //         title: "Deseja excluir este usuário?",
-    //         text: "Essa ação é irreversível!",
-    //         icon: "warning",
-    //         showCancelButton: true,
-    //         confirmButtonText: "Excluir",
-    //         cancelButtonText: "Cancelar",
-    //         confirmButtonColor: "#d33",
-    //     });
 
-    //     if (result.isConfirmed) {
-    //         const token = sessionStorage.getItem("authToken");
-    //         try {
-    //             await api.delete(`/usuarios/${id}`,
-    //                 {
-    //                     headers: {
-    //                         Authorization: `Bearer ${token}`,
-    //                     },
-    //                 }
-    //             )
-    //             Swal.fire("Usuário deletado com sucesso!", "", "success");
-    //             buscarUsuarios();
-    //         }
+    const confirmarEntrega = async (id, entregaConfirmada) => {
+        const result = await Swal.fire({
+            title: entregaConfirmada
+                ? "Deseja confirmar esta entrega?"
+                : "Deseja cancelar esta entrega?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: entregaConfirmada ? "Cancelar" : "Confirmar",
+            cancelButtonText: "Cancelar",
+            confirmButtonColor: entregaConfirmada ? "#ff0000" : "#28a745",
+        });
 
-    //         catch (error) {
-    //             Swal.fire("Erro ao atualizar status", "", "error");
-    //         }
+        if (result.isConfirmed) {
+            const token = sessionStorage.getItem("authToken");
+            try {
+                await api.patch(
+                    `/ordemDeCompra/${id}`,
+                    { entregaConfirmada: !entregaConfirmada },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
 
-    //     }
-    // }
+                Swal.fire("Status atualizado com sucesso!", "", "success");
+                buscarOrdensDeCompra(); // chama função certa que você tem
+            } catch (error) {
+                console.error("Erro ao atualizar status:", error);
+                Swal.fire("Erro ao atualizar status", "", "error");
+            }
+        }
+    };
+
+
+    const cancelarEntrega = async (id) => {
+        const result = await Swal.fire({
+            title: "Deseja cancelar esta entrega?",
+            text: "Essa ação é irreversível!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Cancelar entrega",
+            cancelButtonText: "Cancelar ação",
+            confirmButtonColor: "#d33",
+        });
+
+        if (result.isConfirmed) {
+            const token = sessionStorage.getItem("authToken");
+            try {
+                await api.delete(`/ordemDeCompra/${id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                Swal.fire("Ordem de compra excluída com sucesso!", "", "success");
+                buscarOrdensDeCompra();
+            } catch (error) {
+                console.error("Erro ao excluir ordem de compra:", error);
+                Swal.fire("Erro ao excluir ordem de compra", "", "error");
+            }
+        }
+    };
+
+    const ordensFiltradas = ordens.filter((ordem) => {
+        if (filtroStatus === "todas") return true;
+        if (filtroStatus === "pendentes") return ordem.status === "Pendente"; // ajuste conforme seu status real
+        if (filtroStatus === "confirmadas") return ordem.status === "Confirmada";
+        return true;
+    });
+
+
 
     return (
         <>
@@ -141,56 +157,58 @@ export function Historicos() {
                         onChange={(e) => setFiltroStatus(e.target.value)}
                         className={styles.selectFiltro}
                     >
-                        <option value="todos">Todos</option>
-                        <option value="ativos">Ativos</option>
-                        <option value="inativos">Inativos</option>
+                        <option value="todas">Todas</option>
+                        <option value="pendentes">Pendentes</option>
+                        <option value="confirmadas">Confirmadas</option>
                     </select>
                     <p className={styles.qtdUsuarios}>
-                        {usuarios.length} usuário(s) encontrado(s)
+                        {ordens.length} ordem(s) de compra encontrada(s)
                     </p>
 
-                    {usuarios.length === 0 ? (
+                    {ordensFiltradas.length === 0 ? (
                         <p className={styles.mensagemVazia}>
-                            {filtroStatus === "ativos" && "Nenhum usuário ativo encontrado."}
-                            {filtroStatus === "inativos" &&
-                                "Nenhum usuário inativo encontrado."}
-                            {filtroStatus === "todos" &&
-                                "Nenhum usuário cadastrado no sistema."}
+                            {filtroStatus === "pendentes" && "Nenhuma ordem de compra pendente encontrada."}
+
+                            {filtroStatus === "confirmadas" && "Nenhuma ordem de compra confirmada encontrada."}
+                        
+                            {filtroStatus === "todas" && "Nenhuma ordem de compra cadastrada no sistema."}
                         </p>
                     ) : (
                         <div className={styles.tabelaWrapper}>
                             <table className={`${styles.tabela} ${fade ? styles.fadeIn : styles.fadeOut}`}>
-                               
+
                                 <tbody>
-                                    {usuarios.map((ordem) => (
+                                    {ordensFiltradas.map((ordem) => (
                                         <tr key={ordem.id}>
-                                            <td><b><h4>Ordem de Compra</h4></b> <p>ID 1</p>{ordem.numeroOrdem || ordem.ordem}</td>
-                                            <td><b><h4>Dia:</h4></b> <p>12/07</p> { ordem.dia || ordem.dataCriacao}</td>
-                                            <td><b><h4>Hora:</h4></b> <p>17:47</p> {ordem.hora || ordem.horaCriacao}</td>
-                                            <td><b><h4>Prazo de Entrega:</h4></b> <p>17/07/2025</p> {ordem.prazoEntrega}</td>
-                                            <td><b><h4>Status</h4></b> <p>Pendende</p>{ordem.status}</td>
+                                            <td><b><h4>Ordem de Compra</h4></b> <p>ID: {ordem.id}</p></td>
+                                            <td><b><h4>Dia da emissão:</h4></b> <p>{formatarDataBrasileira(ordem.dataDeEmissao)}</p> </td>
+                                            <td><b><h4>Hora:</h4></b> <p>{ordem.hora || ordem.horaCriacao}</p> </td>
+                                            <td><b><h4>Prazo de Entrega:</h4></b> <p>{formatarDataBrasileira(ordem.prazoEntrega)}</p> </td>
+                                            <td><b><h4>Status</h4></b> <p>{ordem.status}</p></td>
                                             <td>
                                                 <button className={styles.ativar}
-                                                    onClick={() => confirmarEntrega(ordem.id)}
+                                                    onClick={() => confirmarEntrega(ordem.id, ordem.entregaConfirmada)}
                                                 >
-                                                    Confirmar
+                                                    <b>CONFIRMAR ENTREGA</b>
                                                 </button>
                                             </td>
                                             <td>
                                                 <button className={styles.cancelar}
-                                                    onClick={() => cancelarOrdem(ordem.id)}
+                                                    onClick={() => cancelarEntrega(ordem.id)}
                                                 >
-                                                    Cancelar
+                                                    <b>CANCELAR ENTREGA</b>
                                                 </button>
                                             </td>
                                             <td >
                                                 <button className={styles.baixar}
                                                     onClick={() => baixarOrdem(ordem.id)}
+
                                                 >
-                                                    Baixar
+                                                    <img src={iconbaixar} alt="Baixar" />
+
                                                 </button>
                                             </td>
-                                            <div><br /><br /></div>
+
                                         </tr>
                                     ))}
                                 </tbody>
