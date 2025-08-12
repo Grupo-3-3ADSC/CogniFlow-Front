@@ -1,0 +1,149 @@
+:root {
+    --primary-color: #05314c;
+    --secondary-color: #1D597B;
+    --dashboard-margin: 5%;
+}
+
+.container {
+    margin-top: 15vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90%;
+    margin-left: var(--dashboard-margin);
+    margin-right: var(--dashboard-margin);
+   
+}
+
+.background {
+    background: var(--primary-color);
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    min-height: 70vh;
+    width: 90%;
+    max-width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+h3 {
+    color: white;
+    margin-bottom: 20px;
+    font-size: 21px;
+    font-weight: bold;
+    padding: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.relatorios {
+    width: 110%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-collapse: collapse;
+    padding: 50px;
+    gap: 20px;
+    border-radius: 12px;
+    overflow: hidden;
+
+    align-items: center;
+}
+
+.relatorio {
+    flex: 1;
+    padding: 12px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 230px;
+    margin: 5px;
+    border-collapse: collapse;
+    background-color: #1D597B;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    align-items: center;
+    text-align: justify;
+}
+
+
+.botão {
+
+    background-color: var(--primary-color);
+    width: 100%;
+
+    margin-top: 20px;
+
+}
+
+
+.filtro {
+    width: 80%;
+    display: flex;
+    flex-direction: row;
+    padding-top: 10px;
+    justify-content: space-between;
+}
+
+.filtroAno {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 800px;
+}
+.listaAnos {
+    display: flex;
+    overflow: hidden;
+    gap: 8px;
+    flex: 1; /* ocupa todo o espaço entre as setas */
+}
+
+.anoContent {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.seta {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.ano {
+    padding: 6px 14px;
+    border-radius: 20px;
+    background-color: var(--secondary-color);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+}
+
+.ano:hover {
+    background-color: #25719c; /* tom mais claro ao passar o mouse */
+}
+
+.ativo {
+    background-color: #00bfff; /* cor de destaque */
+    color: var(--primary-color);
+}
+
+.seta {
+    cursor: pointer;
+    padding: 4px;
+    transition: transform 0.2s;
+}
+
+.seta:hover {
+    transform: scale(1.1);
+}

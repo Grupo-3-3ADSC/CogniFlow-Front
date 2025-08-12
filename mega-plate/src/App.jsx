@@ -2,6 +2,7 @@ import React from 'react';
 import Login from './Pages/Login/Index';
 import Cadastro from './Pages/Cadastro/Index';
 import OrdemDeCompra from './Pages/OrdemDeCompra/Index';
+import Relatorios from './Pages/Relatorios/Index';
 import Verificacao from './Pages/Verificacao/Index';
 import Transferencia from './Pages/Transferencia/Index';
 import Redefinicao from './Pages/Redefinicao/Index';
@@ -33,6 +34,7 @@ function App() {
         <Route path='/Fornecedor' element={<DashFornecedor />} />
         <Route path='/DashEstoque' element={<DashEstoque />} />
         <Route path='/TabelaUsuarios' element={<TabelaUsuarios />} />
+        <Route path='/Relatorios' element={<Relatorios />} />
       </Routes>
     </Router>
     <ToastContainer position="top-right" autoClose={1500} closeButton={false}/>

@@ -22,7 +22,7 @@ export function Cadastro() {
 
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
 
-  useEffect(() => {
+/*   useEffect(() => {
     const token = sessionStorage.getItem("authToken");
     const cargo = parseInt(sessionStorage.getItem("cargoUsuario"), 10); // Converte para número
     console.log(cargo);
@@ -48,7 +48,7 @@ export function Cadastro() {
     }
   }, []);
 
-  if (!autenticacaoPassou) return null;
+  if (!autenticacaoPassou) return null; */
 
   // Funções de validação
   function validarNome(nome) {
