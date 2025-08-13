@@ -10,7 +10,7 @@ import setaRightImg from "../../assets/setaRight.png";
 
 export function Relatorios() {
     const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
-    const [filtroRelatorio, setFiltroRelatorio] = useState(" ");
+   const [filtroRelatorio, setFiltroRelatorio] = useState("todos");
     const todosAnos = [2025, 2026, 2027, 2028, 2029, 2030];
     const [inicio, setInicio] = useState(0);
     const [anoSelecionado, setAnoSelecionado] = useState(todosAnos[0]);
@@ -49,6 +49,40 @@ export function Relatorios() {
         }
     };
 
+    const listaRelatorios = [
+        {
+            tipo: "entradas",
+            titulo: "Relatório Geral de Entradas",
+            descricao: "Análise anual geral de preços com foco em fornecedores, sazonalidades e oscilações críticas que impactaram os custos.",
+            botao: "BAIXAR RELATÓRIO COMPARATIVO ANUAL"
+        },
+        {
+            tipo: "saidas",
+            titulo: "Relatório Geral de Saídas",
+            descricao: "Análise anual geral de saídas com comparativo de saídas internas e externas.",
+            botao: "BAIXAR RELATÓRIO COMPARATIVO ANUAL"
+        },
+        {
+            tipo: "fornecedores",
+            titulo: "Relatório Comparativo de Fornecedores",
+            descricao: "Análise anual geral dos fornecedores, com matérias mais comprados e comparativo de preços.",
+            botao: "FORNECEDORES"
+        },
+        {
+            tipo: "material",
+            titulo: "Relatório de Saídas por Material",
+            descricao: "Análise anual geral de saídas com comparativo de saídas por produto.",
+            botao: "MATERIAIS"
+        }
+    ];
+
+    // Filtragem antes do return
+    const relatoriosFiltrados = listaRelatorios.filter((relatorio) => {
+        if (filtroRelatorio === "todos") return true; // mostra todos
+        return relatorio.tipo === filtroRelatorio;
+    });
+    
+
 
     return (
         <>
@@ -58,16 +92,14 @@ export function Relatorios() {
                 <div className={styles.background}>
                     <h1>RELATÓRIOS DE DESEMPENHO</h1>
                     <div className={styles.filtro}>
-                        <label htmlFor="filtro" className={styles.labelFiltro}>
-                            Relatório: {" "}
-                        </label>
+
                         <select
                             id="filtro"
                             value={filtroRelatorio}
                             onChange={(e) => setFiltroRelatorio(e.target.value)}
                             className={styles.selectFiltro}
                         >
-                            <option value=" "></option>
+                            <option value="todos">Todos os Relatórios</option>
                             <option value="entradas">Relatório Geral de Entradas</option>
                             <option value="saidas">Relatório Geral de Saídas</option>
                             <option value="material">Relatório de Saídas por Material</option>
@@ -101,29 +133,18 @@ export function Relatorios() {
                         </div>
                     </div>
                     <div className={styles.relatorios}>
-                        <div className={styles.relatorio}>
-                            <h3>Relatório Geral de Entradas</h3>
-                            <p>Análise anual geral de preços com foco em fornecedores, sazonalidades e oscilações críticas que impactaram os custos.</p>
-                            <button className={styles.botão}>BAIXAR RELATÓRIO COMPARATIVO ANUAL</button>
-                        </div>
-
-                        <div className={styles.relatorio}>
-                            <h3>Relatório Geral de Saídas</h3>
-                            <p>Análise anual geral de saídas com comparativo de saídas internas e externas.</p>
-                            <button className={styles.botão}>BAIXAR RELATÓRIO COMPARATIVO ANUAL</button>
-                        </div>
-
-                        <div className={styles.relatorio}>
-                            <h3>Relatório Comparativo de Fornecedores</h3>
-                            <p>Análise anual geral de os fornecedores, com materias mais comprados e comparativo de preços.</p>
-                            <button className={styles.botão}>FORNECEDORES</button>
-                        </div>
-
-                        <div className={styles.relatorio}>
-                            <h3>Relatório  de Saídas por Material</h3>
-                            <p>Análise anual geral de saídas com comparativo de saídas por produto.</p>
-                            <button className={styles.botão}>MATERIAIS</button>
-                        </div>
+                        {relatoriosFiltrados.map((relatorio, index) => (
+                            <div key={index} className={styles.relatorio}>
+                                <h3>{relatorio.titulo} - {anoSelecionado}</h3>
+                                <p>{relatorio.descricao}</p>
+                                <button className={styles.botao}>
+                                    {relatorio.botao}
+                                    {(relatorio.tipo === "fornecedores" || relatorio.tipo === "material") && (
+                                        <img src={setaRightImg} alt="Seta" className={styles.iconeBotao} />
+                                    )}
+                                </button>
+                            </div>
+                        ))}
                     </div>
 
                 </div>

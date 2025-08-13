@@ -12,7 +12,27 @@
     width: 90%;
     margin-left: var(--dashboard-margin);
     margin-right: var(--dashboard-margin);
-   
+
+}
+
+.selectFiltro {
+    padding: 10px 14px;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 8px;
+    border: none;
+    margin-right: 20px;
+    outline: none;
+    background-color: var(--secondary-color);
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    appearance: none; /* remove seta padrão */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23ffffff' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
 .background {
@@ -75,13 +95,25 @@ h3 {
 }
 
 
-.botão {
-
-    background-color: var(--primary-color);
+.botao {
     width: 100%;
+    display: flex;
+    justify-content: center; /* centraliza horizontalmente */
+    align-items: center;     /* centraliza verticalmente */
+    gap: 7px; /* espaço entre texto e ícone */
+    background-color: #05314c;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-weight: bold;
+    text-align: center;
+}
 
-    margin-top: 20px;
-
+.iconeBotao {
+    width: 18px;
+    height: auto;
 }
 
 
@@ -99,11 +131,13 @@ h3 {
     gap: 8px;
     width: 800px;
 }
+
 .listaAnos {
     display: flex;
     overflow: hidden;
     gap: 8px;
-    flex: 1; /* ocupa todo o espaço entre as setas */
+    flex: 1;
+    /* ocupa todo o espaço entre as setas */
 }
 
 .anoContent {
@@ -130,11 +164,13 @@ h3 {
 }
 
 .ano:hover {
-    background-color: #25719c; /* tom mais claro ao passar o mouse */
+    background-color: #25719c;
+    /* tom mais claro ao passar o mouse */
 }
 
 .ativo {
-    background-color: #00bfff; /* cor de destaque */
+    background-color: #00bfff;
+    /* cor de destaque */
     color: var(--primary-color);
 }
 
@@ -146,4 +182,45 @@ h3 {
 
 .seta:hover {
     transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+    h3 {
+        font-size: 18px;
+    }
+
+    .filtroAno {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .seta {
+        width: 30px;
+        height: 30px;
+    }
+
+    .ano {
+        font-size: 14px;
+        padding: 5px 10px;
+    }
+
+    .relatorio {
+        height: auto;
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .selectFiltro {
+        font-size: 14px;
+        padding: 8px 12px;
+        background-position: right 8px center;
+        background-size: 14px;
+    }
+
+    .botao {
+        font-size: 14px;
+        padding: 8px;
+    }
 }

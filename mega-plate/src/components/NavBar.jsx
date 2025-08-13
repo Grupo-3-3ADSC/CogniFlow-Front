@@ -126,6 +126,10 @@ const NavBar = () => {
               <img className="icons-menu" src={iconTransferencia} alt="Transferência" />
               <span>Transferência</span>
             </li>
+             <li title="Relatórios" onClick={() => navigate('/relatorios')}>
+              <img className="icons-menu" src={iconFormularios} alt="Relatórios" />
+              <span>Relatórios</span>
+            </li>
             <li className="has-submenu" title="Dashboards" onClick={toggleDashSubmenu}>
               <img className="icons-menu" src={iconDash} alt="Dashboards" />
               <span>Dashboards</span>
