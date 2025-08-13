@@ -64,40 +64,42 @@ h2 {
   min-width: 130px;
 }
 
-.baixar{
+.baixar {
   background-color: #05314c;
-    color: white;
-    width: 6vh;
-    height: 6vh;
-    border-radius: 15px;
-    font-size: 10px;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
+  color: white;
+  width: 6vh;
+  height: 6vh;
+  border-radius: 15px;
+  font-size: 10px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
 }
 
-.cancelar{
+.cancelar {
   background-color: #af1414;
-    color: white;
-    width: 16vh;
-    height: 6vh;
-    border-radius: 30px;
-    font-size: 14px;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
+  color: white;
+  width: 18vh;
+  height: 6vh;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: bold;
+  font-family: 'Poppins';
+  border: none;
+  cursor: pointer;
 }
 
-.ativar{
+.ativar {
   background-color: #029600;
-    color: white;
-    width: 16vh;
-    height: 6vh;
-    border-radius: 30px;
-    font-size: 14px;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
+  color: white;
+  width: 18vh;
+  height: 6vh;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: bold;
+  font-family: 'Poppins';
+  border: none;
+  cursor: pointer;
 }
 
 .tabela td {
@@ -191,7 +193,9 @@ h2 {
 .fadeOut {
   opacity: 0;
   transition: opacity 0.3s ease-out;
-}@media (max-width: 1230px) {
+}
+
+@media (max-width: 1230px) {
   .tabela {
     border: none;
   }
@@ -237,7 +241,7 @@ h2 {
   .statusColuna {
     flex-direction: column;
     align-items: flex-start;
-    gap: 2px; 
+    gap: 2px;
   }
 
   .textAtivar,
@@ -320,7 +324,7 @@ h2 {
   .statusColuna {
     flex-direction: column;
     align-items: flex-start;
-    gap: 2px; 
+    gap: 2px;
   }
 
   .textAtivar,
@@ -344,6 +348,7 @@ h2 {
 
 
 @media (max-width: 768px) {
+
   .textAtivar,
   .textDesativar {
     font-size: 13px;
@@ -354,7 +359,8 @@ h2 {
 /* 🖥️ MENU LATERAL (a partir de 601px) */
 @media (min-width: 601px) {
   .background {
-    width: calc(100% - 280px); /* ocupa o restante da tela com uma folguinha */
+    width: calc(100% - 280px);
+    /* ocupa o restante da tela com uma folguinha */
     margin-left: auto;
     margin-right: auto;
     padding: 25px;

@@ -69,12 +69,20 @@ export function Historicos() {
         return `${dia}/${mes}/${ano}`;
     }
 
+    const formatarHora = (isoString) => {
+        const data = new Date(isoString);
+        return data.toLocaleTimeString("pt-BR", {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    };
+
 
     const confirmarEntrega = async (id, entregaConfirmada) => {
         const result = await Swal.fire({
             title: entregaConfirmada
-                ? "Deseja confirmar esta entrega?"
-                : "Deseja cancelar esta entrega?",
+                ? "Deseja cancelar esta entrega?"
+                : "Deseja confirmar esta entrega?",
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: entregaConfirmada ? "Cancelar" : "Confirmar",
@@ -167,10 +175,10 @@ export function Historicos() {
 
                     {ordensFiltradas.length === 0 ? (
                         <p className={styles.mensagemVazia}>
-                            {filtroStatus === "pendentes" && "Nenhuma ordem de compra pendente encontrada."}
+                            {filtroStatus === "pendentes" && "Nenhuma ordem de compra pendente foi encontrada."}
 
-                            {filtroStatus === "confirmadas" && "Nenhuma ordem de compra confirmada encontrada."}
-                        
+                            {filtroStatus === "confirmadas" && "Nenhuma ordem de compra confirmada foi encontrada."}
+
                             {filtroStatus === "todas" && "Nenhuma ordem de compra cadastrada no sistema."}
                         </p>
                     ) : (
@@ -180,11 +188,11 @@ export function Historicos() {
                                 <tbody>
                                     {ordensFiltradas.map((ordem) => (
                                         <tr key={ordem.id}>
-                                            <td><b><h4>Ordem de Compra</h4></b> <p>ID: {ordem.id}</p></td>
-                                            <td><b><h4>Dia da emissão:</h4></b> <p>{formatarDataBrasileira(ordem.dataDeEmissao)}</p> </td>
-                                            <td><b><h4>Hora:</h4></b> <p>{ordem.hora || ordem.horaCriacao}</p> </td>
-                                            <td><b><h4>Prazo de Entrega:</h4></b> <p>{formatarDataBrasileira(ordem.prazoEntrega)}</p> </td>
-                                            <td><b><h4>Status</h4></b> <p>{ordem.status}</p></td>
+                                            <td><b><h4>ORDEM DE COMPRA</h4></b> <p>ID: {ordem.id}</p></td>
+                                            <td><b><h4>DIA</h4></b> <p>{formatarDataBrasileira(ordem.dataDeEmissao)}</p> </td>
+                                            <td><b><h4>HORA</h4></b> <p>{formatarHora(ordem.dataDeEmissao)}</p> </td>
+                                            <td><b><h4>PRAZO DE ENTREGA</h4></b> <p>{formatarDataBrasileira(ordem.prazoEntrega)}</p> </td>
+                                            <td><b><h4>STATUS</h4></b> <p>{ordem.status}</p></td>
                                             <td>
                                                 <button className={styles.ativar}
                                                     onClick={() => confirmarEntrega(ordem.id, ordem.entregaConfirmada)}

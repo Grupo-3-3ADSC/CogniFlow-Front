@@ -128,7 +128,7 @@
   opacity: 1; /* Garante visibilidade total em alguns navegadores */
 }
 
-#buttonCadastrar {
+.buttonCadastrar {
   background-color: #1D597B;
   padding: 15px 20px;
   width: 100%;
@@ -148,7 +148,7 @@
   appearance: none;
 }
 
-#buttonCadastrar:hover {
+.buttonCadastrar:hover {
   background-color: #1a4e6d;
   cursor: pointer;
 }
