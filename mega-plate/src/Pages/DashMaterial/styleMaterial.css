@@ -57,12 +57,13 @@
     padding: 12px 18px;
     border-radius: var(--border-radius);
     box-shadow: var(--card-shadow);
-    width: 88%;
+    width: 90%;
     margin-left: 6%;
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: var(--transition);
     flex-wrap: wrap;
     margin-top: 15vh;
+    margin-left: 6.8%;
 }
 
 .filter-header:hover {
@@ -179,7 +180,8 @@ option {
     max-width: 100%;
     justify-content: center;
     align-items: flex-start;
-    margin-left: 5%;
+    margin-left: 6.8%;
+
    
 }
 

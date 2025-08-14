@@ -26,6 +26,7 @@
     min-width: 90vw;
     margin-top: 10vh;
     min-height: 80vh;
+    margin-left: 80px;
     flex-wrap: wrap; /* Permite que os elementos se reorganizem em telas menores */
 }
 

@@ -12,6 +12,8 @@
   width: 100%;
   margin-left: var(--dashboard-margin);
   margin-right: var(--dashboard-margin);
+  margin-left: 40px;
+  padding-bottom: 42px;
 }
 
 .background {
@@ -27,6 +29,7 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  
 }
 
 .filtro{

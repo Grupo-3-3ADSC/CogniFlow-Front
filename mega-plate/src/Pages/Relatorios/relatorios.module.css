@@ -12,7 +12,8 @@
     width: 90%;
     margin-left: var(--dashboard-margin);
     margin-right: var(--dashboard-margin);
-
+    margin-left: 7.5vw;
+    margin-bottom: 5vh;
 }
 
 .selectFiltro {

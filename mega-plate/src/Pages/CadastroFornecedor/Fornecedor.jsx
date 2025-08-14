@@ -310,7 +310,10 @@ export function CadastroFornecedor() {
           {progresso === 1 && (
             <>
               <div className={styles['input-group']}>
-                <p>CNPJ</p>
+                <p>CNPJ
+                   <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span>
+                </p>
                 <input
                   placeholder="Digite o CNPJ"
                   type="text"
@@ -321,7 +324,10 @@ export function CadastroFornecedor() {
                 />
               </div>
               <div className={styles['input-group']}>
-                <p>Razão Social</p>
+                <p>Razão Social
+                   <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span>
+                </p>
                 <input
                   placeholder="Digite a razão social"
                   type="text"
@@ -330,7 +336,10 @@ export function CadastroFornecedor() {
                 />
               </div>
               <div className={styles['input-group']}>
-                <p>Nome fantasia</p>
+                <p>Nome fantasia
+                   <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span>
+                </p>
                 <input
                   placeholder="Digite o Nome Fantasia"
                   type="text"
@@ -344,7 +353,10 @@ export function CadastroFornecedor() {
           {progresso === 2 && (
             <>
               <div className={styles['input-group']}>
-                <p>CEP</p>
+                <p>CEP
+                   <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span>
+                </p>
                 <input
                   placeholder="Digite o CEP"
                   type="text"
@@ -364,7 +376,9 @@ export function CadastroFornecedor() {
                 />
               </div>
               <div className={styles['input-group']}>
-                <p>Número</p>
+                <p>Número 
+                  <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span></p>
                 <input
                   placeholder="Digite o Número"
                   type="text"
@@ -379,7 +393,8 @@ export function CadastroFornecedor() {
           {progresso === 3 && (
             <>
               <div className={styles['input-group']}>
-                <p>Responsável</p>
+                <p>Responsável <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span></p>
                 <input
                   placeholder="Digite o nome do Responsável"
                   type="text"
@@ -390,7 +405,8 @@ export function CadastroFornecedor() {
                 />
               </div>
               <div className={styles['input-group']}>
-                <p>Cargo</p>
+                <p>Cargo <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span></p>
                 <input
                   placeholder="Digite o cargo do Responsável"
                   type="text"
@@ -401,7 +417,8 @@ export function CadastroFornecedor() {
                 />
               </div>
               <div className={styles['input-group']}>
-                <p>Telefone</p>
+                <p>Telefone <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span></p>
                 <input
                   placeholder="Digite o Telefone"
                   type="text"
@@ -413,7 +430,8 @@ export function CadastroFornecedor() {
                 />
               </div>
               <div className={styles['input-group']}>
-                <p>Email</p>
+                <p>Email <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span></p>
                 <input
                   placeholder="Digite o Email"
                   type="email"
