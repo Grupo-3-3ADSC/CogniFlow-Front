@@ -60,6 +60,13 @@ export function Historicos() {
         }
     };
 
+    
+        
+
+    function handleMudancaQuantidadeAtual(){
+        
+    }
+
     function formatarDataBrasileira(dataISO) {
         if (!dataISO) return "N/A";
 
@@ -78,7 +85,7 @@ export function Historicos() {
     };
 
 
-    const confirmarEntrega = async (id, entregaConfirmada) => {
+    const alternarEntrega = async (entregaConfirmada) => {
         const result = await Swal.fire({
             title: entregaConfirmada
                 ? "Deseja cancelar esta entrega?"
@@ -91,55 +98,57 @@ export function Historicos() {
         });
 
         if (result.isConfirmed) {
-            const token = sessionStorage.getItem("authToken");
-            try {
-                await api.patch(
-                    `/ordemDeCompra/${id}`,
-                    { entregaConfirmada: !entregaConfirmada },
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
+             const idUsuario = sessionStorage.getItem("usuario");
+  
+        const [resposta, setResposta] = useState({
+            id:"",
+            pendentes:"",
+            pendenciaAlterada:""
+        })
 
-                Swal.fire("Status atualizado com sucesso!", "", "success");
-                buscarOrdensDeCompra(); // chama função certa que você tem
-            } catch (error) {
-                console.error("Erro ao atualizar status:", error);
-                Swal.fire("Erro ao atualizar status", "", "error");
+        for(i = 0; i <= ordens.length; i++){
+                let ordemAtual = ordens[i];
+
+                if(ordemAtual.usuarioId == idUsuario){
+                    if(ordemAtual.pendenciaAlterada == 0){
+                    setResposta({
+                        id: parseInt(ordemAtual.id),
+                        pendentes: ordemAtual.quantidade,
+                        pendenciaAlterada: true
+                    });
+                    break;           
+                }
+                
+                setResposta({
+                        id: parseInt(ordemAtual.id),
+                        pendentes: ordemAtual.pendentes,
+                        pendenciaAlterada: false
+                    });
+                    break;
             }
         }
-    };
 
-
-    const cancelarEntrega = async (id) => {
-        const result = await Swal.fire({
-            title: "Deseja cancelar esta entrega?",
-            text: "Essa ação é irreversível!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Cancelar entrega",
-            cancelButtonText: "Cancelar ação",
-            confirmButtonColor: "#d33",
+        api.patch(`/ordemDeCompra/${idUsuario}` , resposta, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((requisicao) => {
+            //console.log(requisicao.data);
+            setResposta({
+                id:"",
+            pendentes:"",
+            pendenciaAlterada:""
+            });
+            Swal.fire("Sucesso na entrega da ordem de compra!", "", "success");
+    })
+        .catch((err) => {
+            console.error("erro na mudança de quantidade atual: ", err);
+            Swal.fire("Erro ao confirmar entrega da ordem de compra", "", "error");
         });
-
-        if (result.isConfirmed) {
-            const token = sessionStorage.getItem("authToken");
-            try {
-                await api.delete(`/ordemDeCompra/${id}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                Swal.fire("Ordem de compra excluída com sucesso!", "", "success");
-                buscarOrdensDeCompra();
-            } catch (error) {
-                console.error("Erro ao excluir ordem de compra:", error);
-                Swal.fire("Erro ao excluir ordem de compra", "", "error");
-            }
         }
-    };
+    }
 
     const ordensFiltradas = ordens.filter((ordem) => {
         if (filtroStatus === "todas") return true;
@@ -195,14 +204,14 @@ export function Historicos() {
                                             <td><b><h4>STATUS</h4></b> <p>{ordem.status}</p></td>
                                             <td>
                                                 <button className={styles.ativar}
-                                                    onClick={() => confirmarEntrega(ordem.id, ordem.entregaConfirmada)}
+                                                    onClick={() => alternarEntrega(ordem.id, ordem.entregaConfirmada)}
                                                 >
                                                     <b>CONFIRMAR ENTREGA</b>
                                                 </button>
                                             </td>
                                             <td>
                                                 <button className={styles.cancelar}
-                                                    onClick={() => cancelarEntrega(ordem.id)}
+                                                    onClick={() => alternarEntrega(ordem.id)}
                                                 >
                                                     <b>CANCELAR ENTREGA</b>
                                                 </button>
