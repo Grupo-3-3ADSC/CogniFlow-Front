@@ -76,6 +76,18 @@ h2 {
   cursor: pointer;
 }
 
+.baixarRelatorio {
+  background-color: #05314c;
+  color: white;
+  width: 25vh;
+  height: 6vh;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
 .cancelar {
   background-color: #af1414;
   color: white;
