@@ -3,6 +3,8 @@ import Login from './Pages/Login/Index';
 import Cadastro from './Pages/Cadastro/Index';
 import OrdemDeCompra from './Pages/OrdemDeCompra/Index';
 import Relatorios from './Pages/Relatorios/Index';
+import RelatorioMaterial from './Pages/RelatorioMaterial/index';
+import RelatorioFornecedor from './Pages/RelatorioFornecedor/index';
 import Verificacao from './Pages/Verificacao/Index';
 import Transferencia from './Pages/Transferencia/Index';
 import Redefinicao from './Pages/Redefinicao/Index';
@@ -15,6 +17,7 @@ import DashEstoque from './Pages/DashEstoque/AppEstoque'
 import {Route, BrowserRouter as Router, Routes} from 'react-router-dom';
 import CadastroFornecedor from './Pages/CadastroFornecedor/Fornecedor';
 import { TabelaUsuarios } from './Pages/TabelaUsuarios/TabelaUsuarios';
+
 
 function App() {
   return (
@@ -35,6 +38,9 @@ function App() {
         <Route path='/DashEstoque' element={<DashEstoque />} />
         <Route path='/TabelaUsuarios' element={<TabelaUsuarios />} />
         <Route path='/Relatorios' element={<Relatorios />} />
+        <Route path='/RelatorioMaterial' element={<RelatorioMaterial />} />
+        <Route path='/RelatorioFornecedor' element={<RelatorioFornecedor />} />
+
       </Routes>
     </Router>
     <ToastContainer position="top-right" autoClose={1500} closeButton={false}/>

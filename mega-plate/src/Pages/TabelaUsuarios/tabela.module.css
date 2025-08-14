@@ -193,7 +193,11 @@ h2 {
 .fadeOut {
   opacity: 0;
   transition: opacity 0.3s ease-out;
-}@media (max-width: 1230px) {
+
+
+}
+
+@media (max-width: 1230px) {
   .tabela {
     border: none;
   }
