@@ -79,76 +79,6 @@ export function OrdemDeCompra() {
     getMateriaPrima();
   }, []);
 
-  // Lista mockada de fornecedores
-  // const fornecedoresMock = [
-  //   {
-  //     fornecedorId: 1,
-  //     nomeFantasia: "MetalTech Indústria",
-  //     cnpj: "12.345.678/0001-90",
-  //     telefone: "(11) 3456-7890",
-  //     complemento: "Rua das Indústrias, 123 - São Paulo/SP"
-  //   },
-  //   {
-  //     fornecedorId: 2,
-  //     nomeFantasia: "SteelMax Suprimentos",
-  //     cnpj: "23.456.789/0001-80",
-  //     telefone: "(11) 9876-5432",
-  //     complemento: "Av. Industrial, 456 - Guarulhos/SP"
-  //   },
-  //   {
-  //     fornecedorId: 3,
-  //     nomeFantasia: "IronWorks Distribuidora",
-  //     cnpj: "34.567.890/0001-70",
-  //     telefone: "(11) 5555-1234",
-  //     complemento: "Rua do Ferro, 789 - Osasco/SP"
-  //   },
-  //   {
-  //     fornecedorId: 4,
-  //     nomeFantasia: "AlumCorp Materiais",
-  //     cnpj: "45.678.901/0001-60",
-  //     telefone: "(11) 2222-9999",
-  //     complemento: "Estrada dos Metais, 321 - Barueri/SP"
-  //   },
-  //   {
-  //     fornecedorId: 5,
-  //     nomeFantasia: "Bronze & Cia Ltda",
-  //     cnpj: "56.789.012/0001-50",
-  //     telefone: "(11) 7777-3333",
-  //     complemento: "Alameda Industrial, 654 - Diadema/SP"
-  //   }
-  // ];
-
-  // // Lista mockada de materiais
-  // const materiaisMock = [
-  //   {
-  //     id: 1,
-  //     tipoMaterial: "Aço Carbono 1020"
-  //   },
-  //   {
-  //     id: 2,
-  //     tipoMaterial: "Alumínio 6061"
-  //   },
-  //   {
-  //     id: 3,
-  //     tipoMaterial: "Cobre Eletrolítico"
-  //   },
-  //   {
-  //     id: 4,
-  //     tipoMaterial: "Bronze Fosforoso"
-  //   },
-  //   {
-  //     id: 5,
-  //     tipoMaterial: "Aço Inoxidável 304"
-  //   },
-  //   {
-  //     id: 6,
-  //     tipoMaterial: "Ferro Fundido Cinzento"
-  //   }
-  // ];
-
-  // const [listaFornecedores, setListaFornecedores] = useState(fornecedoresMock);
-  // const [listaMateriais, setListaMateriais] = useState(materiaisMock);
-  // const [ordemDeCompra, setOrdemDeCompra] = useState([]);
   const [progresso, setProgresso] = useState(1);
   const [valoresInput, setValoresInput] = useState({});
   const [errosValidacao, setErrosValidacao] = useState({});
@@ -594,9 +524,9 @@ export function OrdemDeCompra() {
       ipi: parseFloat(valoresInput["IPI"]?.replace(",", ".") || 0),
       quantidade: parseInt(valoresInput["Quantidade"] || 0),
     };
-    console.log(dadosApi);
-    console.log("listaMateriais", listaMateriais);
-    console.log("valoresInput", valoresInput);
+    // console.log(dadosApi);
+    // console.log("listaMateriais", listaMateriais);
+    // console.log("valoresInput", valoresInput);
 
     api
       .post("/ordemDeCompra", dadosApi)

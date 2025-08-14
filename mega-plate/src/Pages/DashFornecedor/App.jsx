@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Chart } from "react-google-charts";
 import { Search, X } from "lucide-react";
 import "./styleFornecedor.css";
@@ -263,9 +263,10 @@ function App() {
   // Estados para filtros
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState("");
+  const [selectedFornecedor, setSelectedFornecedor] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  
+
   // Estados para dados
   const [fornecedores, setFornecedores] = useState([]); // Lista completa de fornecedores
   const [filteredSuppliers, setFilteredSuppliers] = useState([]); // Lista filtrada
@@ -275,7 +276,7 @@ function App() {
   const [ordemDeCompra, setOrdemDeCompra] = useState([]);
   const [estoque, setEstoque] = useState([]);
   const [kpiData, setKpiData] = useState([]);
-  
+
   const fileInputRef = useRef(null);
 
   const handlePhotoChange = (event) => {
@@ -322,7 +323,7 @@ function App() {
         console.error("Erro ao buscar fornecedores:", error);
       });
   }
-  
+
   // Função para buscar ordens de compra
   function BuscarOrdemDeCompra() {
     api
@@ -345,10 +346,10 @@ function App() {
         const estoqueData = response.data;
         setEstoque(estoqueData);
         console.log("Estoque carregado:", estoqueData);
-        
+
         // Criar mapeamento de materiais
         const materiaisMap = {};
-        estoqueData.forEach(item => {
+        estoqueData.forEach((item) => {
           materiaisMap[item.id] = item.tipoMaterial;
         });
         setMateriais(materiaisMap);
@@ -361,122 +362,192 @@ function App() {
   // Função de parsing de data melhorada
   const parseDate = (dateString) => {
     if (!dateString) return null;
-    
+
     // Se for formato ISO (2024-01-15T10:30:00Z)
-    if (dateString.includes('T')) {
+    if (dateString.includes("T")) {
       return new Date(dateString);
     }
-    
+
     // Se for formato DD/MM/YYYY
-    if (dateString.includes('/')) {
+    if (dateString.includes("/")) {
       const [day, month, year] = dateString.split("/");
       return new Date(year, month - 1, day);
     }
-    
+
     // Tenta parsing direto
     return new Date(dateString);
   };
 
+  // Função para agrupar dados por fornecedor e especificação
+  const groupedData = useMemo(() => {
+    const filtered = selectedFornecedor
+      ? fornecedores.filter(
+          (f) =>
+            (f.nomeFantasia || f.razaoSocial || f.id) === selectedFornecedor
+        )
+      : fornecedores;
+
+    if (selectedFornecedor) {
+      // Se um fornecedor específico está selecionado, agrupa por especificação
+      const grouped = filtered.reduce((acc, item) => {
+        const key = item.especificacao;
+        if (!acc[key]) {
+          acc[key] = {
+            especificacao: key,
+            receita: 0,
+            fornecedor: selectedFornecedor,
+          };
+        }
+        acc[key].receita += item.receita;
+        return acc;
+      }, {});
+
+      return Object.values(grouped);
+    } else {
+      // Se nenhum fornecedor específico, agrupa por fornecedor
+      const grouped = filtered.reduce((acc, item) => {
+        const key = item.nomeFantasia || item.razaoSocial || item.id;
+        if (!acc[key]) {
+          acc[key] = {
+            fornecedor: key,
+            receita: 0,
+            especificacoes: new Set(),
+          };
+        }
+        acc[key].receita += item.receita;
+        acc[key].especificacoes.add(item.especificacao);
+        return acc;
+      }, {});
+
+      return Object.values(grouped).map((item) => ({
+        ...item,
+        especificacoes: Array.from(item.especificacoes),
+      }));
+    }
+  }, [selectedFornecedor, fornecedores]);
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+  };
 
   const handleSearch = () => {
-  // console.log("Aplicando filtros:", {
-  //   searchTerm,
-  //   selectedMaterial,
-  //   startDate,
-  //   endDate,
-  //   totalFornecedores: fornecedores.length,
-  //   totalOrdens: ordemDeCompra.length
-  // });
-
-  // Se não há dados, não filtra
-  if (fornecedores.length === 0 || ordemDeCompra.length === 0) {
-    //console.log("Dados ainda não carregados");
-    return;
-  }
-
-  // Primeiro, filtra as ordens de compra baseado nos critérios
-  const ordensFiltered = ordemDeCompra.filter((ordem) => {
-    // Filtro por material
-    const materialMatch = !selectedMaterial || 
-      ordem?.estoque?.tipoMaterial === selectedMaterial ||
-      ordem?.descricaoMaterialCompleta?.includes(selectedMaterial);
-
-    // Filtro por data
-    let dateInRange = true;
-    if (startDate || endDate) {
-      const ordemDate = parseDate(ordem.dataDeEmissao);
-      if (ordemDate) {
-        const startDateObj = startDate ? new Date(startDate) : null;
-        const endDateObj = endDate ? new Date(endDate) : null;
-        
-        dateInRange = (!startDateObj || ordemDate >= startDateObj) &&
-                     (!endDateObj || ordemDate <= endDateObj);
-      }
+    // Se não há dados, não filtra
+    if (fornecedores.length === 0 || ordemDeCompra.length === 0) {
+      return;
     }
 
-    return materialMatch && dateInRange;
-  });
+    // Primeiro, filtra as ordens de compra baseado nos critérios
+    const ordensFiltered = ordemDeCompra.filter((ordem) => {
+      // Filtro por material
+      const materialMatch =
+        !selectedMaterial ||
+        ordem?.estoque?.tipoMaterial === selectedMaterial ||
+        ordem?.descricaoMaterialCompleta?.includes(selectedMaterial);
+
+      // Filtro por data
+      let dateInRange = true;
+      if (startDate || endDate) {
+        const ordemDate = parseDate(ordem.dataDeEmissao);
+        if (ordemDate) {
+          const startDateObj = startDate ? new Date(startDate) : null;
+          const endDateObj = endDate ? new Date(endDate) : null;
+
+          dateInRange =
+            (!startDateObj || ordemDate >= startDateObj) &&
+            (!endDateObj || ordemDate <= endDateObj);
+        }
+      }
+
+      return materialMatch && dateInRange;
+    });
 
     console.log("Ordens filtradas por material e data:", ordensFiltered.length);
 
     // Agora filtra os fornecedores baseado nas ordens filtradas e no termo de busca
     const fornecedoresFiltrados = fornecedores.filter((fornecedor) => {
       // Filtro por nome
-      const nameMatch = !searchTerm || 
-        fornecedor.nomeFantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        fornecedor.razaoSocial?.toLowerCase().includes(searchTerm.toLowerCase());
+      const nameMatch =
+        !searchTerm ||
+        fornecedor.nomeFantasia
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        fornecedor.razaoSocial
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase());
 
       // Verifica se o fornecedor tem ordens que passaram pelos filtros de material/data
-      const temOrdemValida = ordensFiltered.some(ordem => 
-        ordem.fornecedorId === fornecedor.id || 
-        ordem.fornecedor?.id === fornecedor.id
+      const temOrdemValida = ordensFiltered.some(
+        (ordem) =>
+          ordem.fornecedorId === fornecedor.id ||
+          ordem.fornecedor?.id === fornecedor.id
       );
 
-      return nameMatch && (ordensFiltered.length === ordemDeCompra.length || temOrdemValida);
+      return (
+        nameMatch &&
+        (ordensFiltered.length === ordemDeCompra.length || temOrdemValida)
+      );
     });
 
-    //console.log("Ordens filtradas por material e data:", ordensFiltered.length);
+    // Agora filtra os fornecedores baseado nas ordens filtradas e no termo de busca
+    const fornecedoresFiltradosBusca = fornecedores.filter((fornecedor) => {
+      // Filtro por nome
+      const nameMatch =
+        !searchTerm ||
+        fornecedor.nomeFantasia
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        fornecedor.razaoSocial
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase());
 
-  // Agora filtra os fornecedores baseado nas ordens filtradas e no termo de busca
-  const fornecedoresFiltradosBusca = fornecedores.filter((fornecedor) => {
-    // Filtro por nome
-    const nameMatch = !searchTerm || 
-      fornecedor.nomeFantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      fornecedor.razaoSocial?.toLowerCase().includes(searchTerm.toLowerCase());
+      // Verifica se o fornecedor tem ordens que passaram pelos filtros de material/data
+      const temOrdemValida = ordensFiltered.some(
+        (ordem) =>
+          ordem.fornecedorId === fornecedor.id ||
+          ordem.fornecedor?.id === fornecedor.id
+      );
 
-    // Verifica se o fornecedor tem ordens que passaram pelos filtros de material/data
-    const temOrdemValida = ordensFiltered.some(ordem => 
-      ordem.fornecedorId === fornecedor.id || 
-      ordem.fornecedor?.id === fornecedor.id
-    );
+      return (
+        nameMatch &&
+        (ordensFiltered.length === ordemDeCompra.length || temOrdemValida)
+      );
+    });
 
-    return nameMatch && (ordensFiltered.length === ordemDeCompra.length || temOrdemValida);
-  });
+    setFilteredSuppliers(fornecedoresFiltradosBusca);
 
-  //console.log("Fornecedores filtrados:", fornecedoresFiltradosBusca.length);
-  setFilteredSuppliers(fornecedoresFiltradosBusca);
+    // Salvar as ordens filtradas em um estado separado
+    setOrdensFiltradasParaGrafico(ordensFiltered);
 
-  // *** NOVO: Salvar as ordens filtradas em um estado separado ***
-  setOrdensFiltradasParaGrafico(ordensFiltered);
+    // Atualiza KPI baseado nas ordens filtradas
+    const kpiData = gerarDadosKPI(ordensFiltered);
+    setKpiData(kpiData);
+  };
 
-  // Atualiza KPI baseado nas ordens filtradas
-  const kpiData = gerarDadosKPI(ordensFiltered);
-  setKpiData(kpiData);
-};
-
-const [ordensFiltradasParaGrafico, setOrdensFiltradasParaGrafico] = useState([]);
+  const [ordensFiltradasParaGrafico, setOrdensFiltradasParaGrafico] = useState(
+    []
+  );
 
   // Efeito para aplicar filtros quando os critérios mudam
-  // Efeito para aplicar filtros quando os critérios mudam
-useEffect(() => {
-  if (fornecedores.length > 0 && ordemDeCompra.length > 0) {
-    // Inicializar ordensFiltradasParaGrafico se ainda não foi inicializado
-    if (ordensFiltradasParaGrafico.length === 0) {
-      setOrdensFiltradasParaGrafico(ordemDeCompra);
+  useEffect(() => {
+    if (fornecedores.length > 0 && ordemDeCompra.length > 0) {
+      // Inicializar ordensFiltradasParaGrafico se ainda não foi inicializado
+      if (ordensFiltradasParaGrafico.length === 0) {
+        setOrdensFiltradasParaGrafico(ordemDeCompra);
+      }
+      handleSearch();
     }
-    handleSearch();
-  }
-}, [searchTerm, selectedMaterial, startDate, endDate, fornecedores, ordemDeCompra]);
+  }, [
+    searchTerm,
+    selectedMaterial,
+    selectedFornecedor,
+    startDate,
+    endDate,
+    fornecedores,
+    ordemDeCompra,
+  ]);
 
   // Carregamento inicial dos dados
   useEffect(() => {
@@ -497,78 +568,182 @@ useEffect(() => {
 
   if (!autenticacaoPassou) return null;
 
-  // Função para gerar KPI corrigida
+  // Função para gerar KPI CORRIGIDA - agora considera os filtros aplicados
   function gerarDadosKPI(ordens) {
     var statsPorFornecedor = {};
-   
+
+    // Processa todas as ordens de compra
     for (var i = 0; i < ordens.length; i++) {
-        var ordem = ordens[i];
-        var fornecedorId = ordem.fornecedorId || ordem.fornecedor?.id;
-       
-        if (!fornecedorId) continue; // Pula se não tem ID do fornecedor
-        
-        var fornecedorNome = ordem.nomeFornecedor || 
-                           ordem.fornecedor?.nomeFantasia || 
-                           "Fornecedor " + fornecedorId;
-        var material = ordem.descricaoMaterialCompleta || 
-                      ordem.estoque?.tipoMaterial || 
-                      "N/A";
-       
-        var valorUnitario = Number(ordem.valorUnitario || 0);
-        var quantidade = Number(ordem.quantidade || 0);
-        
-        if (!statsPorFornecedor[fornecedorId]) {
-            statsPorFornecedor[fornecedorId] = {
-                totalValue: 0,
-                totalQuantity: 0,
-                nome: fornecedorNome,
-                materiais: new Set(),
-                maiorValorUnitario: 0,
-                materialMaiorValor: "N/A",
-                estoqueIdMaiorValor: null
-            };
-        }
-        
-        statsPorFornecedor[fornecedorId].totalValue += valorUnitario * quantidade;
-        statsPorFornecedor[fornecedorId].totalQuantity += quantidade;
-        statsPorFornecedor[fornecedorId].materiais.add(material);
-        
-        if (valorUnitario > statsPorFornecedor[fornecedorId].maiorValorUnitario) {
-            statsPorFornecedor[fornecedorId].maiorValorUnitario = valorUnitario;
-            statsPorFornecedor[fornecedorId].materialMaiorValor = material;
-            statsPorFornecedor[fornecedorId].estoqueIdMaiorValor = ordem.estoqueId;
-        }
+      var ordem = ordens[i];
+      var fornecedorId = ordem.fornecedorId || ordem.fornecedor?.id;
+
+      if (!fornecedorId) continue; // Pula se não tem ID do fornecedor
+
+      var fornecedorNome =
+        ordem.nomeFornecedor ||
+        ordem.fornecedor?.nomeFantasia ||
+        "Fornecedor " + fornecedorId;
+      var material =
+        ordem.descricaoMaterialCompleta || ordem.estoque?.tipoMaterial || "N/A";
+
+      var valorUnitario = Number(ordem.valorUnitario || 0);
+      var quantidade = Number(ordem.quantidade || 0);
+      var valorTotalOrdem = valorUnitario * quantidade; // Valor total desta ordem específica
+
+      // Inicializa o fornecedor se não existir
+      if (!statsPorFornecedor[fornecedorId]) {
+        statsPorFornecedor[fornecedorId] = {
+          valorTotalAcumulado: 0, // Soma de TODAS as ordens deste fornecedor
+          totalQuantity: 0,
+          nome: fornecedorNome,
+          materiais: new Set(), // Todos os tipos de material deste fornecedor
+          maiorValorUnitario: 0,
+          materialMaiorValor: "N/A",
+          estoqueIdMaiorValor: null,
+          numeroOrdens: 0, // Contador de ordens
+        };
+      }
+
+      // Acumula o valor total de TODAS as ordens deste fornecedor
+      statsPorFornecedor[fornecedorId].valorTotalAcumulado += valorTotalOrdem;
+      statsPorFornecedor[fornecedorId].totalQuantity += quantidade;
+      statsPorFornecedor[fornecedorId].materiais.add(material);
+      statsPorFornecedor[fornecedorId].numeroOrdens++;
+
+      // Verifica se é o maior valor unitário deste fornecedor
+      if (valorUnitario > statsPorFornecedor[fornecedorId].maiorValorUnitario) {
+        statsPorFornecedor[fornecedorId].maiorValorUnitario = valorUnitario;
+        statsPorFornecedor[fornecedorId].materialMaiorValor = material;
+        statsPorFornecedor[fornecedorId].estoqueIdMaiorValor = ordem.estoqueId;
+      }
     }
-    
-    var listaFinal = [];
-    for (var fornecedorId in statsPorFornecedor) {
+
+    // NOVA LÓGICA: Verificar se há filtro por fornecedor específico
+    if (selectedFornecedor) {
+      // Filtro por fornecedor: Retornar KPIs separados por material
+      var kpisPorMaterial = [];
+      var fornecedorSelecionado = null;
+
+      // Encontrar o fornecedor selecionado
+      for (var fornecedorId in statsPorFornecedor) {
         var stats = statsPorFornecedor[fornecedorId];
-        var avg = stats.totalQuantity > 0 ? stats.totalValue / stats.totalQuantity : 0;
-        var max = avg * 1.6;
-        
-        listaFinal.push({
+        if (stats.nome === selectedFornecedor) {
+          fornecedorSelecionado = stats;
+          break;
+        }
+      }
+
+      if (fornecedorSelecionado) {
+        // Criar um KPI para cada material deste fornecedor
+        Array.from(fornecedorSelecionado.materiais).forEach(function (
+          material
+        ) {
+          // Calcular valor específico para este material
+          var valorMaterial = 0;
+          var quantidadeMaterial = 0;
+
+          for (var j = 0; j < ordens.length; j++) {
+            var ordem = ordens[j];
+            var ordemMaterial =
+              ordem.descricaoMaterialCompleta ||
+              ordem.estoque?.tipoMaterial ||
+              "N/A";
+            var ordemFornecedor =
+              ordem.nomeFornecedor || ordem.fornecedor?.nomeFantasia;
+
+            if (
+              ordemMaterial === material &&
+              ordemFornecedor === selectedFornecedor
+            ) {
+              valorMaterial +=
+                Number(ordem.valorUnitario || 0) *
+                Number(ordem.quantidade || 0);
+              quantidadeMaterial += Number(ordem.quantidade || 0);
+            }
+          }
+
+          kpisPorMaterial.push({
+            fornecedorId: fornecedorId + "_" + material,
+            supplierName: selectedFornecedor,
+            materialIndividual: material, // Material individual
+            valorTotalAcumulado: valorMaterial,
+            quantidadeTotal: quantidadeMaterial,
+            numeroOrdens: fornecedorSelecionado.numeroOrdens,
+          });
+        });
+      }
+
+      return kpisPorMaterial.slice(0, 3); // Retorna até 3 materiais
+    }
+    // Filtro por material: Retornar fornecedores agrupados com materiais em vírgulas
+    else if (selectedMaterial) {
+      var listaFinal = [];
+      for (var fornecedorId in statsPorFornecedor) {
+        var stats = statsPorFornecedor[fornecedorId];
+
+        // Verificar se este fornecedor tem o material filtrado
+        var temMaterialFiltrado = Array.from(stats.materiais).some(function (
+          material
+        ) {
+          return (
+            material.includes(selectedMaterial) ||
+            selectedMaterial.includes(material)
+          );
+        });
+
+        if (temMaterialFiltrado) {
+          listaFinal.push({
             fornecedorId: fornecedorId,
             supplierName: stats.nome,
-            avgPrice: avg,
-            maxPrice: max,
-            material: stats.materialMaiorValor,
+            valorTotalAcumulado: stats.valorTotalAcumulado,
+            maiorValorUnitario: stats.maiorValorUnitario,
+            quantidadeTotal: stats.totalQuantity,
+            materialMaiorValor: stats.materialMaiorValor,
             estoqueId: stats.estoqueIdMaiorValor,
-            todosOsMateriais: Array.from(stats.materiais).join(', ')
-        });
-    }
-    
-    const top3 = listaFinal
-        .sort((a, b) => b.maxPrice - a.maxPrice)
+            tiposMateriais: Array.from(stats.materiais),
+            tiposMateriaisString: Array.from(stats.materiais).join(", "), // String formatada
+            numeroOrdens: stats.numeroOrdens,
+          });
+        }
+      }
+
+      return listaFinal
+        .sort((a, b) => b.valorTotalAcumulado - a.valorTotalAcumulado)
         .slice(0, 3);
-        
-    return top3;
+    }
+    // Sem filtros específicos: Comportamento padrão
+    else {
+      var listaFinal = [];
+      for (var fornecedorId in statsPorFornecedor) {
+        var stats = statsPorFornecedor[fornecedorId];
+
+        listaFinal.push({
+          fornecedorId: fornecedorId,
+          supplierName: stats.nome,
+          valorTotalAcumulado: stats.valorTotalAcumulado,
+          maiorValorUnitario: stats.maiorValorUnitario,
+          quantidadeTotal: stats.totalQuantity,
+          materialMaiorValor: stats.materialMaiorValor,
+          estoqueId: stats.estoqueIdMaiorValor,
+          tiposMateriais: Array.from(stats.materiais),
+          tiposMateriaisString: Array.from(stats.materiais).join(", "), // String formatada
+          numeroOrdens: stats.numeroOrdens,
+        });
+      }
+
+      return listaFinal
+        .sort((a, b) => b.valorTotalAcumulado - a.valorTotalAcumulado)
+        .slice(0, 3);
+    }
   }
 
   // Gerar dados do gráfico de linha
   const generateLineData = (suppliers) => {
     const days = ["01", "05", "10", "15", "20", "25", "30"];
-    const baseConsumption = suppliers.length > 0 ? 
-      suppliers.reduce((sum, s) => sum + (s.quantity || 100), 0) / 10 : 50;
+    const baseConsumption =
+      suppliers.length > 0
+        ? suppliers.reduce((sum, s) => sum + (s.quantity || 100), 0) / 10
+        : 50;
 
     return [
       ["Dia", "Consumo"],
@@ -584,12 +759,17 @@ useEffect(() => {
   // Função para lidar com clique no fornecedor
   const handleSupplierClick = (supplier) => {
     const ordem = ordemDeCompra.find(
-      (ordem) => ordem.fornecedorId === supplier.id || ordem.fornecedor?.id === supplier.id
+      (ordem) =>
+        ordem.fornecedorId === supplier.id ||
+        ordem.fornecedor?.id === supplier.id
     );
 
     setSelectedSupplier({
       ...supplier,
-      material: ordem?.estoque?.tipoMaterial || ordem?.descricaoMaterialCompleta || "Não informado",
+      material:
+        ordem?.estoque?.tipoMaterial ||
+        ordem?.descricaoMaterialCompleta ||
+        "Não informado",
       dataPedido: ordem?.dataDeEmissao?.split("T")[0] || "Data não disponível",
       preco: ordem?.valorUnitario || 0,
       quantidade: ordem?.quantidade || 0,
@@ -602,77 +782,103 @@ useEffect(() => {
       condPagamento: ordem?.condPagamento || "Não informada",
       ipi: ordem?.ipi || 0,
       rastreabilidade: ordem?.rastreabilidade || "Não informada",
-      idFornecedor: ordem?.fornecedorId || supplier.id
+      idFornecedor: ordem?.fornecedorId || supplier.id,
     });
     setShowPopup(true);
   };
 
   // Função para gerar dados do gráfico de barras
   function generateBarData(ordensDeCompra, startDateFilter, endDateFilter) {
-  var months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-  
-  // Determinar o range de anos baseado nos filtros
-  var anoInicio, anoFim;
-  
-  if (startDateFilter || endDateFilter) {
-    anoInicio = startDateFilter ? new Date(startDateFilter).getFullYear() : new Date().getFullYear();
-    anoFim = endDateFilter ? new Date(endDateFilter).getFullYear() : new Date().getFullYear();
-  } else {
-    anoInicio = anoFim = new Date().getFullYear();
-  }
+    var months = [
+      "Jan",
+      "Fev",
+      "Mar",
+      "Abr",
+      "Mai",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Set",
+      "Out",
+      "Nov",
+      "Dez",
+    ];
 
-  var totalQuantidade = 0;
-  for (var i = 0; i < ordensDeCompra.length; i++) {
-    var quantidade = ordensDeCompra[i].quantidade || 0;
-    totalQuantidade += quantidade;
-  }
+    // Determinar o range de anos baseado nos filtros
+    var anoInicio, anoFim;
 
-  if (totalQuantidade === 0) {
-    var resultadoVazio = [["Mês", "Produção", "Meta"]];
-    for (var j = 0; j < months.length; j++) {
-      resultadoVazio.push([months[j], 0, 0]);
+    if (startDateFilter || endDateFilter) {
+      anoInicio = startDateFilter
+        ? new Date(startDateFilter).getFullYear()
+        : new Date().getFullYear();
+      anoFim = endDateFilter
+        ? new Date(endDateFilter).getFullYear()
+        : new Date().getFullYear();
+    } else {
+      anoInicio = anoFim = new Date().getFullYear();
     }
-    return resultadoVazio;
-  }
 
-  var meta = Math.floor(totalQuantidade * 0.75);
-  var producaoMensal = new Array(12).fill(0);
+    var totalQuantidade = 0;
+    for (var i = 0; i < ordensDeCompra.length; i++) {
+      var quantidade = ordensDeCompra[i].quantidade || 0;
+      totalQuantidade += quantidade;
+    }
 
-  for (var k = 0; k < ordensDeCompra.length; k++) {
-    var ordem = ordensDeCompra[k];
-    if (ordem.dataDeEmissao && ordem.quantidade) {
-      var dataEmissao = parseDate(ordem.dataDeEmissao);
-      if (dataEmissao) {
-        var mesEmissao = dataEmissao.getMonth();
-        var anoEmissao = dataEmissao.getFullYear();
+    if (totalQuantidade === 0) {
+      var resultadoVazio = [["Mês", "Produção", "Meta"]];
+      for (var j = 0; j < months.length; j++) {
+        resultadoVazio.push([months[j], 0, 0]);
+      }
+      return resultadoVazio;
+    }
 
-        // *** MODIFICADO: Aceitar qualquer ano dentro do range dos filtros ***
-        if (anoEmissao >= anoInicio && anoEmissao <= anoFim && mesEmissao >= 0 && mesEmissao <= 11) {
-          producaoMensal[mesEmissao] += ordem.quantidade;
+    var meta = Math.floor(totalQuantidade * 0.75);
+    var producaoMensal = new Array(12).fill(0);
+
+    for (var k = 0; k < ordensDeCompra.length; k++) {
+      var ordem = ordensDeCompra[k];
+      if (ordem.dataDeEmissao && ordem.quantidade) {
+        var dataEmissao = parseDate(ordem.dataDeEmissao);
+        if (dataEmissao) {
+          var mesEmissao = dataEmissao.getMonth();
+          var anoEmissao = dataEmissao.getFullYear();
+
+          if (
+            anoEmissao >= anoInicio &&
+            anoEmissao <= anoFim &&
+            mesEmissao >= 0 &&
+            mesEmissao <= 11
+          ) {
+            producaoMensal[mesEmissao] += ordem.quantidade;
+          }
         }
       }
     }
-  }
 
-  var resultadoFinal = [["Mês", "Produção", "Meta"]];
-  for (var m = 0; m < months.length; m++) {
-    // *** OPCIONAL: Adicionar indicação do ano se não for o atual ***
-    var labelMes = months[m];
-    if (anoInicio !== new Date().getFullYear() || anoFim !== new Date().getFullYear()) {
-      labelMes += ` ${anoInicio === anoFim ? anoInicio : anoInicio + '-' + anoFim}`;
+    var resultadoFinal = [["Mês", "Produção", "Meta"]];
+    for (var m = 0; m < months.length; m++) {
+      var labelMes = months[m];
+      if (
+        anoInicio !== new Date().getFullYear() ||
+        anoFim !== new Date().getFullYear()
+      ) {
+        labelMes += ` ${
+          anoInicio === anoFim ? anoInicio : anoInicio + "-" + anoFim
+        }`;
+      }
+      resultadoFinal.push([labelMes, producaoMensal[m], meta]);
     }
-    resultadoFinal.push([labelMes, producaoMensal[m], meta]);
-  }
 
-  return resultadoFinal;
-}
+    return resultadoFinal;
+  }
 
   const barData = generateBarData(
-  ordensFiltradasParaGrafico.length > 0 ? ordensFiltradasParaGrafico : ordemDeCompra,
-  startDate,
-  endDate
-);
-
+    ordensFiltradasParaGrafico.length > 0
+      ? ordensFiltradasParaGrafico
+      : ordemDeCompra,
+    startDate,
+    endDate
+  );
 
   const closePopup = () => {
     setShowPopup(false);
@@ -692,9 +898,31 @@ useEffect(() => {
               onChange={handleMaterialChange}
             >
               <option value="">Todos Materiais</option>
-              <option value="SAE 1020">SAE 1020</option>
-              <option value="SAE 1045">SAE 1045</option>
-              <option value="HARDOX 450">HARDOX 450</option>
+              {[...new Set(estoque.map((item) => item.tipoMaterial))].map(
+                (tipo) => (
+                  <option key={tipo} value={tipo}>
+                    {tipo}
+                  </option>
+                )
+              )}
+            </select>
+            <select
+              id="select-Filtro-Fornecedor"
+              value={selectedFornecedor}
+              onChange={(e) => setSelectedFornecedor(e.target.value)}
+            >
+              <option value="">Todos fornecedores</option>
+              {[
+                ...new Set(
+                  fornecedores.map(
+                    (f) => f.nomeFantasia || f.razaoSocial || f.id
+                  )
+                ),
+              ].map((nome, idx) => (
+                <option key={nome + idx} value={nome}>
+                  {nome}
+                </option>
+              ))}
             </select>
 
             <div id="FiltroData">
@@ -744,12 +972,24 @@ useEffect(() => {
                 {kpiData.map(function (item, index) {
                   return (
                     <React.Fragment key={item.fornecedorId}>
-                      <div id={"chart-aviso-fornecedor" + (index + 1)} className="chart">
-                        <div className="kpi-title">{item.material}</div>
-                        <div className="kpi-subtitle">{item.supplierName}</div>
+                      <div
+                        id={"chart-aviso-fornecedor" + (index + 1)}
+                        className="chart"
+                      >
+                        <div className="kpi-title">{item.supplierName}</div>
+                        <div className="kpi-subtitle">
+                          {/* Renderização condicional baseada no tipo de filtro */}
+                          {
+                            selectedFornecedor && item.materialIndividual
+                              ? item.materialIndividual // Filtro por fornecedor: mostra material individual
+                              : item.tiposMateriaisString // Filtro por material ou padrão: mostra materiais separados por vírgula
+                          }
+                        </div>
                         <div className="kpi-data">
-                          <span>R$ {item.avgPrice.toFixed(2)}</span>
-                          <span>R$ {item.maxPrice.toFixed(2)}</span>
+                          <span>
+                            Receita Total: R${" "}
+                            {item.valorTotalAcumulado.toFixed(2)}
+                          </span>
                         </div>
                       </div>
                     </React.Fragment>
@@ -780,115 +1020,141 @@ useEffect(() => {
               </div>
             </div>
           </div>
-<div className="supplier-table-container">
-  <h3>Fornecedores</h3>
-  <div className="table-wrapper">
-    <table className="supplier-table">
-      <thead>
-        <tr>
-          <th>Nome do Fornecedor</th>
-        </tr>
-      </thead>
-      <tbody>
-        {filteredSuppliers.map((supplier, index) => (
-          <tr
-            key={supplier.id || index}
-            onClick={() => handleSupplierClick(supplier)}
-            style={{ cursor: "pointer" }}
-          >
-            <td>{supplier.nomeFantasia || supplier.razaoSocial || "Nome não informado"}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-  <div className="search-results">
-    <p>{filteredSuppliers.length} fornecedores encontrados</p>
-  </div>
-</div>
-          
+          <div className="supplier-table-container">
+            <h3>Fornecedores</h3>
+            <div className="table-wrapper">
+              <table className="supplier-table">
+                <thead>
+                  <tr>
+                    <th>Nome do Fornecedor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSuppliers.map((supplier, index) => (
+                    <tr
+                      key={supplier.id || index}
+                      onClick={() => handleSupplierClick(supplier)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <td>
+                        {supplier.nomeFantasia ||
+                          supplier.razaoSocial ||
+                          "Nome não informado"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="search-results">
+              <p>{filteredSuppliers.length} fornecedores encontrados</p>
+            </div>
+          </div>
         </div>
       </div>
-      {/* Pop-up Modal Padronizado */}
+
+      {/* Pop-up Modal */}
       {showPopup && selectedSupplier && (
-  <div className="popup-overlay" onClick={closePopup}>
-    <div className="popup-content" onClick={(e) => e.stopPropagation()}>
-      <div className="popup-header">
-        <h3>{selectedSupplier.nomeFantasia}</h3>
-        <div className="close-button" onClick={closePopup}>
-          <X size={20} />
-        </div>
-      </div>
-
-      <div className="popup-body">
-        {/* CONTATO - segue com selectedSupplier */}
-        <div className="popup-section">
-          <h4>Contato</h4>
-          <div className="info-grid">
-            <div className="info-item">
-              <span className="info-label">Telefone:</span>
-              <span className="info-value">{selectedSupplier.telefone}</span>
+        <div className="popup-overlay" onClick={closePopup}>
+          <div className="popup-content" onClick={(e) => e.stopPropagation()}>
+            <div className="popup-header">
+              <h3>{selectedSupplier.nomeFantasia}</h3>
+              <div className="close-button" onClick={closePopup}>
+                <X size={20} />
+              </div>
             </div>
-            <div className="info-item">
-              <span className="info-label">Email:</span>
-              <span className="info-value">{selectedSupplier.email}</span>
-            </div>
-            <div className="info-item full-width">
-              <span className="info-label">Endereço:</span>
-              <span className="info-value">{selectedSupplier.complemento}</span>
+
+            <div className="popup-body">
+              {/* CONTATO - segue com selectedSupplier */}
+              <div className="popup-section">
+                <h4>Contato</h4>
+                <div className="info-grid">
+                  <div className="info-item">
+                    <span className="info-label">Telefone:</span>
+                    <span className="info-value">
+                      {selectedSupplier.telefone}
+                    </span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Email:</span>
+                    <span className="info-value">{selectedSupplier.email}</span>
+                  </div>
+                  <div className="info-item full-width">
+                    <span className="info-label">Endereço:</span>
+                    <span className="info-value">
+                      {selectedSupplier.complemento}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ORDENS DE COMPRA DO FORNECEDOR */}
+              <div className="popup-section">
+                <h4>Ordens de Compra</h4>
+                <div className="info-grid">
+                  {ordemDeCompra
+                    .filter(
+                      (ordem) =>
+                        ordem.fornecedorId === selectedSupplier.fornecedorId
+                    )
+                    .map((ordem, index) => (
+                      <div key={index}>
+                        <div className="info-item">
+                          <span className="info-label">ID do Pedido:</span>
+                          <span className="info-value">
+                            {ordem.id || "N/A"}
+                          </span>
+                        </div>
+                        <div className="info-item">
+                          <span className="info-label">
+                            Descrição do material:
+                          </span>
+                          <span className="info-value">
+                            {ordem.descricaoMaterial || "N/A"}
+                          </span>
+                        </div>
+                        <div className="info-item">
+                          <span className="info-label">Data de Emissão:</span>
+                          <span className="info-value">
+                            {ordem.dataDeEmissao
+                              ? ordem.dataDeEmissao.split("T")[0]
+                              : "N/A"}
+                          </span>
+                        </div>
+                        <div className="info-item">
+                          <span className="info-label">Quantidade:</span>
+                          <span className="info-value">
+                            {ordem.quantidade || 0} unidades
+                          </span>
+                        </div>
+                        <div className="info-item">
+                          <span className="info-label">Preço Unitário:</span>
+                          <span className="info-value">
+                            R$ {ordem.valorUnitario?.toFixed(2) || "0.00"}
+                          </span>
+                        </div>
+                        <div className="info-item">
+                          <span className="info-label">Prazo Entrega:</span>
+                          <span className="info-value">
+                            {ordem.prazoEntrega || "N/A"}
+                          </span>
+                        </div>
+                        <div className="info-item">
+                          <span className="info-label">
+                            Condição de Pagamento:
+                          </span>
+                          <span className="info-value">
+                            {ordem.condPagamento || "N/A"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* ORDENS DE COMPRA DO FORNECEDOR */}
-        <div className="popup-section">
-  <h4>Ordens de Compra</h4>
-  <div className="info-grid">
-    {ordemDeCompra
-      .filter((ordem) => ordem.fornecedorId === selectedSupplier.fornecedorId)
-      .map((ordem, index) => (
-        <div key={index}>
-          <div className="info-item"> 
-            <span className="info-label">ID do Pedido:</span>
-            <span className="info-value">{ordem.id || "N/A"}</span>
-          </div>
-          <div className="info-item"> 
-            <span className="info-label">Descrição do material:</span>
-            <span className="info-value">{ordem.descricaoMaterial || "N/A"}</span>
-          </div>
-          <div className="info-item"> 
-            <span className="info-label">Data de Emissão:</span>
-            <span className="info-value">
-              {ordem.dataDeEmissao ? ordem.dataDeEmissao.split("T")[0] : "N/A"}
-            </span>
-          </div>
-          <div className="info-item"> 
-            <span className="info-label">Quantidade:</span>
-            <span className="info-value">{ordem.quantidade || 0} unidades</span>
-          </div>
-          <div className="info-item"> 
-            <span className="info-label">Preço Unitário:</span>
-            <span className="info-value">
-              R$ {ordem.valorUnitario?.toFixed(2) || "0.00"}
-            </span>
-          </div>
-          <div className="info-item"> 
-            <span className="info-label">Prazo Entrega:</span>
-            <span className="info-value">{ordem.prazoEntrega || "N/A"}</span>
-          </div>
-          <div className="info-item"> 
-            <span className="info-label">Condição de Pagamento:</span>
-            <span className="info-value">{ordem.condPagamento || "N/A"}</span>
-          </div>
-        </div>
-      ))}
-  </div>
-</div>
-      </div>
-    </div>
-  </div>
-)}
-
+      )}
     </div>
   );
 }
