@@ -18,6 +18,8 @@ export function CadastroFornecedor() {
     numero: '',
     telefone: '',
     email: '',
+    responsavel: '',
+    cargo: ''
   });
 
   const cadastrarFornecedor = async () => {
@@ -30,7 +32,9 @@ export function CadastroFornecedor() {
       !formData.endereco ||
       !formData.numero ||
       !formData.telefone ||
-      !formData.email
+      !formData.email ||
+      !formData.responsavel ||
+      !formData.cargo
     ) {
       Swal.fire({
         title: "Preencha as informações",
@@ -94,7 +98,9 @@ export function CadastroFornecedor() {
       endereco: formData.endereco.trim(),
       numero: formData.numero.trim(),
       telefone: telefoneSemMascara.trim(),
-      email: formData.email.trim()
+      email: formData.email.trim(),
+      responsavel: formData.responsavel.trim(),
+      cargo: formData.cargo.trim()
     };
 
     api.post('/fornecedores', userData, {
@@ -116,7 +122,9 @@ export function CadastroFornecedor() {
         endereco: '',
         numero: '',
         telefone: '',
-        email: ''
+        email: '',
+        responsavel: '',
+        cargo: ''
       });
       setProgresso(1);
     }).catch((error) => {
@@ -370,6 +378,28 @@ export function CadastroFornecedor() {
 
           {progresso === 3 && (
             <>
+              <div className={styles['input-group']}>
+                <p>Responsável</p>
+                <input
+                  placeholder="Digite o nome do Responsável"
+                  type="text"
+                  inputMode='text'
+                  value={formData.responsavel}
+                  onChange={(e) =>
+                    setFormData({ ...formData, responsavel: e.target.value })}
+                />
+              </div>
+              <div className={styles['input-group']}>
+                <p>Cargo</p>
+                <input
+                  placeholder="Digite o cargo do Responsável"
+                  type="text"
+                  inputMode='text'
+                  value={formData.cargo}
+                  onChange={(e) =>
+                    setFormData({ ...formData, cargo: e.target.value })}
+                />
+              </div>
               <div className={styles['input-group']}>
                 <p>Telefone</p>
                 <input

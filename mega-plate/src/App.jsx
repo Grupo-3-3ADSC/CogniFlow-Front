@@ -17,6 +17,7 @@ import DashEstoque from './Pages/DashEstoque/AppEstoque'
 import {Route, BrowserRouter as Router, Routes} from 'react-router-dom';
 import CadastroFornecedor from './Pages/CadastroFornecedor/Fornecedor';
 import { TabelaUsuarios } from './Pages/TabelaUsuarios/TabelaUsuarios';
+import Relatorio, { Historicos } from './Pages/Historicos/Historicos';
 
 
 function App() {
@@ -40,7 +41,7 @@ function App() {
         <Route path='/Relatorios' element={<Relatorios />} />
         <Route path='/RelatorioMaterial' element={<RelatorioMaterial />} />
         <Route path='/RelatorioFornecedor' element={<RelatorioFornecedor />} />
-
+        <Route path='/HistoricoOrdemDeCompra' element={<Historicos />} />
       </Routes>
     </Router>
     <ToastContainer position="top-right" autoClose={1500} closeButton={false}/>

@@ -16,20 +16,21 @@ const NavBar = () => {
   const navigate = useNavigate();
   const [showDashSubmenu, setShowDashSubmenu] = useState(false);
   const [showFormSubmenu, setShowFormSubmenu] = useState(false);
+  const [showHistoricoSubmenu, setShowHistoricoSubmenu] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 520);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [nomeUsuario, setNomeUsuario] = useState("Usuario");
   const [fotoUrl, setFotoUrl] = useState(null); // Mudança: usar fotoUrl específico
   const [fotoError, setFotoError] = useState(false);
   const [usuarioLista, setUsuarioLista] = useState([]);
-  
+
   const token = sessionStorage.getItem('authToken');
   const userId = sessionStorage.getItem('usuario');
 
   function getFoto() {
     if (token) {
       setFotoError(false);
-      
+
       api.get(`/usuarios/${userId}/foto`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -41,7 +42,7 @@ const NavBar = () => {
           if (fotoUrl && fotoUrl.startsWith('blob:')) {
             URL.revokeObjectURL(fotoUrl);
           }
-          
+
           const imageUrl = URL.createObjectURL(resposta.data);
           console.log("NAVBAR: Nova URL criada:", imageUrl);
           setFotoUrl(imageUrl);
@@ -59,18 +60,18 @@ const NavBar = () => {
   }
 
   function getUsuario() {
-    if(token){
+    if (token) {
       api.get(`/usuarios/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }).then((resposta) => {
-      setNomeUsuario(resposta.data.nome);
-      setUsuarioLista(resposta.data);
-    }).catch((err) => {
-      console.log("erro: ", err);
-    });
-  }
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }).then((resposta) => {
+        setNomeUsuario(resposta.data.nome);
+        setUsuarioLista(resposta.data);
+      }).catch((err) => {
+        console.log("erro: ", err);
+      });
+    }
   }
 
   useEffect(() => {
@@ -96,6 +97,7 @@ const NavBar = () => {
 
   const toggleDashSubmenu = () => setShowDashSubmenu(prev => !prev);
   const toggleFormSubmenu = () => setShowFormSubmenu(prev => !prev);
+  const toggleHistoricoSubmenu = () => setShowHistoricoSubmenu(prev => !prev);
 
 
 
@@ -151,16 +153,31 @@ const NavBar = () => {
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </li>
+
             {showFormSubmenu && (
               <ul className="submenu-list">
                 <li onClick={() => navigate('/ordemDeCompra')}>Ordem de Compra</li>
 
                 {usuarioLista?.cargo?.id === 2 && ( // Verifica se o cargo do usuário logado é gestor (id === 2)
-  <li onClick={() => navigate('/cadastro')}>Cadastrar Usuários</li>
-)}
+                  <li onClick={() => navigate('/cadastro')}>Cadastrar Usuários</li>
+                )}
                 {usuarioLista?.cargo?.id === 2 && (
-  <li onClick={() => navigate('/CadastroFornecedor')}>Cadastro de Fornecedor</li>
-)}
+                  <li onClick={() => navigate('/CadastroFornecedor')}>Cadastro de Fornecedor</li>
+                )}
+              </ul>
+            )}
+            <li className="has-submenu" title="Históricos" onClick={toggleHistoricoSubmenu}>
+              <img className="icons-menu" src={iconFormularios} alt="Históricos" />
+              <span>Históricos</span>
+              <svg className={`arrow-icon ${showHistoricoSubmenu ? 'rotate' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </li>
+            {showHistoricoSubmenu && (
+              <ul className="submenu-list">
+                <li onClick={() => navigate('/HistoricoOrdemDeCompra')}>Histórico de Ordem de Compra</li>
+
+                <li onClick={() => navigate('/HistoricoTranferencias')}>Histórico de Transferências</li>
               </ul>
             )}
           </ul>

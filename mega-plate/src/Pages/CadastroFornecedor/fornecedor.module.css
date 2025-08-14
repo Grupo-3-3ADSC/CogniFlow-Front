@@ -144,6 +144,43 @@
     cursor: pointer;
 }
 
+#buttonProximo{    background-color: #1D597B;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    color: white;
+    border-radius: 20px;
+    display: block;
+    text-align: center;
+    font-weight: bold;
+    border: none;
+    outline: none;
+}
+
+#buttonProximo:hover {
+    background-color: #1a4e6d;
+    cursor: pointer;
+}
+
+#buttonVoltar {
+    background-color: #1D597B;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    color: white;
+    border-radius: 20px;
+    display: block;
+    text-align: center;
+    font-weight: bold;
+    border: none;
+    outline: none;
+}
+
+#buttonVoltar:hover {
+    background-color: #1a4e6d;
+    cursor: pointer;
+}
+
 .material a {
     color: rgb(218, 218, 218);
     text-decoration: none;
