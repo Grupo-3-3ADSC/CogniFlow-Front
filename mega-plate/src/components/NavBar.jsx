@@ -5,6 +5,7 @@ import iconDash from '../assets/icon-dash.png';
 import iconLogout from '../assets/icon-logout.png';
 import iconTransferencia from '../assets/icon-transferencia.png';
 import iconFormularios from '../assets/icon-formularios.png';
+import iconHistorico from '../assets/icon-historico.png';
 import iconGroup from '../assets/icon-group.png';
 import logoMega from '../assets/logo-megaplate.png';
 import menuHamburger from '../assets/menu-hamburguer.png';
@@ -167,7 +168,7 @@ const NavBar = () => {
               </ul>
             )}
             <li className="has-submenu" title="Históricos" onClick={toggleHistoricoSubmenu}>
-              <img className="icons-menu" src={iconFormularios} alt="Históricos" />
+              <img className="icons-historico" src={iconHistorico} alt="Históricos" />
               <span>Históricos</span>
               <svg className={`arrow-icon ${showHistoricoSubmenu ? 'rotate' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="6 9 12 15 18 9" />
