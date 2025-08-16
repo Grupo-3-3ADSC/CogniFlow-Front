@@ -15,6 +15,7 @@ import {
 } from "../../components/toastify/ToastifyService";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import baixarOrdemDeCompraPDF from "../../tools/baixarOrdemDeCompraPDF";
 
 export function OrdemDeCompra() {
   const [listaFornecedores, setListaFornecedores] = useState([]);
@@ -331,28 +332,6 @@ export function OrdemDeCompra() {
     progresso === 4 ? "FORMULÁRIO FINALIZADO COM SUCESSO!" : "ORDEM DE COMPRA";
   const nomeBotao = progresso === 3 ? "FINALIZAR" : "PRÓXIMO";
 
-  // Fetch data (comentado para usar dados mockados)
-  const fetchData = useCallback(async () => {
-    try {
-      // Simulando carregamento da API
-      console.log("Usando dados mockados...");
-
-      // Descomente as linhas abaixo quando quiser usar a API real:
-      // const [fornecedores, materiais] = await Promise.all([
-      //   api.get("/fornecedores/listarFornecedorCompleto"),
-      //   api.get("/estoque")
-      // ]);
-      // setListaFornecedores(fornecedores.data);
-      // setListaMateriais(materiais.data);
-    } catch (error) {
-      console.error("Erro ao carregar dados:", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
   // CORREÇÃO: Cálculo automático do total incluindo quantidade
   useEffect(() => {
     const valorUnit =
@@ -504,7 +483,7 @@ export function OrdemDeCompra() {
   // CORREÇÃO: Finalizar ordem - simulando sucesso para chegar na tela 4
   const finalizarOrdemDeCompra = useCallback(async () => {
     const usuarioId = getUsuarioIdDoToken();
-    console.log(Number(valoresInput["MaterialId"]));
+    // console.log(Number(valoresInput["MaterialId"]));
     const dadosApi = {
       usuarioId: getUsuarioIdDoToken(),
       fornecedorId: Number(valoresInput["FornecedorId"]), // ✅
@@ -522,9 +501,10 @@ export function OrdemDeCompra() {
         valoresInput["Valor Unitário"]?.replace(",", ".") || 0
       ),
       ipi: parseFloat(valoresInput["IPI"]?.replace(",", ".") || 0),
-      quantidade: parseInt(valoresInput["Quantidade"] || 0),
+      quantidade: 1,
+      pendentes: parseInt(valoresInput["Quantidade"]),
     };
-    // console.log(dadosApi);
+    //  console.log(dadosApi);
     // console.log("listaMateriais", listaMateriais);
     // console.log("valoresInput", valoresInput);
 
@@ -607,372 +587,169 @@ export function OrdemDeCompra() {
     [errosValidacao]
   );
 
-  // Geração de documentos (versão simplificada)
-  function baixarPDF() {
-    const doc = new jsPDF();
 
-    const corPrimaria = [41, 128, 185];
-    const corSecundaria = [149, 165, 166];
-    const corTexto = [44, 62, 80];
+  // async function baixarExcel() {
+  //   const workbook = new ExcelJS.Workbook();
+  //   const sheet = workbook.addWorksheet("Ordem de Compra");
 
-    const fornecedorDetalhes = listaFornecedores.find(
-      (f) => f.fornecedorId === parseInt(valoresInput["FornecedorId"])
-    );
+  //   const fornecedor = ordemDeCompra.fornecedor;
 
-    doc.setFillColor(...corPrimaria);
-    doc.rect(0, 0, 210, 35, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
+  //   const fornecedorDetalhes = listaFornecedores.find(
+  //     (f) => f.fornecedorId === parseInt(valoresInput["FornecedorId"])
+  //   );
 
-    doc.text(`MegaPlate LTDA`, 20, 20);
+  //   const corPrimaria = "2A80B9"; // Azul
+  //   const corSecundaria = "95A5A6"; // Cinza
+  //   const corTexto = "2C3E50";
 
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
+  //   sheet.mergeCells("A1:E1");
 
+  //   sheet.getCell("A1").value = `MegaPlate LTDA`;
 
-    doc.setFillColor(240, 240, 240);
-    doc.rect(140, 40, 65, 25, "F");
-    doc.setTextColor(...corTexto);
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("Ordem De Compra:", 145, 50);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
+  //   sheet.getCell("A1").fill = {
+  //     type: "pattern",
+  //     pattern: "solid",
+  //     fgColor: { argb: corPrimaria },
+  //   };
+  //   sheet.getCell("A1").font = {
+  //     color: { argb: "FFFFFF" },
+  //     bold: true,
+  //     size: 16,
+  //   };
+  //   sheet.getCell("A1").alignment = { vertical: "middle", horizontal: "left" };
 
-    doc.text(`Nº ${ordemDeCompra.id}`, 145, 58);
+  //   sheet.addRow([]);
 
-    const dataAtual = new Date();
-    const dataFormatada = dataAtual.toLocaleDateString("pt-BR");
-    const horaFormatada = dataAtual.toLocaleTimeString("pt-BR");
-    doc.text(`Data: ${dataFormatada}`, 20, 50);
-    doc.text(`Hora: ${horaFormatada}`, 20, 58);
+  //   if (fornecedor || fornecedorDetalhes) {
+  //     sheet.addRow([
+  //       `CNPJ: ${fornecedorDetalhes?.cnpj || "N/A"}`,
+  //       "",
+  //       "",
+  //       `Endereço: ${fornecedorDetalhes.complemento || "N/A"}`,
+  //     ]);
+  //     sheet.addRow([`Telefone: ${fornecedorDetalhes.telefone || "N/A"}`]);
+  //   } else {
+  //     sheet.addRow(["Dados do fornecedor não disponíveis"]);
+  //   }
 
-    doc.setDrawColor(...corSecundaria);
-    doc.setLineWidth(0.5);
-    doc.line(20, 70, 190, 70);
+  //   const dataAtual = new Date();
+  //   const dataFormatada = dataAtual.toLocaleDateString("pt-BR");
+  //   const horaFormatada = dataAtual.toLocaleTimeString("pt-BR");
 
-    doc.setFontSize(12);
-doc.setFont("helvetica", "bold");
-doc.text("DADOS DO FORNECEDOR", 20, 80);
+  //   sheet.addRow([]);
+  //   sheet.addRow([`Ordem de Compra Nº: ${ordemDeCompra.id}`]);
+  //   sheet.addRow([`Data: ${dataFormatada}`, `Hora: ${horaFormatada}`]);
 
-let posicaoY = 90;
-doc.setFontSize(10);
-doc.setFont("helvetica", "normal");
+  //   sheet.addRow([]);
+  //   sheet.addRow(["DADOS DO FORNECEDOR"]);
+  //   sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true, size: 12 };
 
-if (fornecedorDetalhes) {
-  doc.text(`Nome: ${fornecedorDetalhes.nomeFantasia}`, 20, posicaoY); posicaoY += 6;
-  if (fornecedorDetalhes.cnpj) {
-    doc.text(`CNPJ: ${fornecedorDetalhes.cnpj}`, 20, posicaoY); posicaoY += 6;
-  }
-  if (fornecedorDetalhes.complemento) {
-    doc.text(`Endereço: ${fornecedorDetalhes.complemento}`, 20, posicaoY); posicaoY += 6;
-  }
-  if (valoresInput["I.E"]) {
-    doc.text(`I.E: ${valoresInput["I.E"]}`, 20, posicaoY); posicaoY += 6;
-  }
-} else {
-  doc.text("Fornecedor não encontrado", 20, posicaoY);
-  posicaoY += 6;
-}
+  //   if (fornecedor || fornecedorDetalhes) {
+  //     sheet.addRow([`Nome: ${fornecedorDetalhes?.nomeFantasia}`]);
+  //     if (fornecedorDetalhes?.cnpj)
+  //       sheet.addRow([`CNPJ: ${fornecedorDetalhes?.cnpj}`]);
+  //     if (fornecedorDetalhes.complemento)
+  //       sheet.addRow([`Endereço: ${fornecedorDetalhes.complemento}`]);
+  //   } else {
+  //     sheet.addRow(["Fornecedor não encontrado"]);
+  //   }
 
-posicaoY += 10;
-doc.setFont("helvetica", "bold");
-doc.setFontSize(12);
-doc.text("DADOS DA COMPRA", 20, posicaoY);
+  //   sheet.addRow([]);
+  //   sheet.addRow(["DESCRIÇÃO DOS MATERIAIS"]);
+  //   sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true, size: 12 };
 
-posicaoY += 8;
-doc.setFont("helvetica", "normal");
-doc.setFontSize(10);
+  //   // Cabeçalho da tabela
+  //   const header = ["ITEM", "DESCRIÇÃO", "QTD", "VALOR UNIT.", "TOTAL"];
+  //   const headerRow = sheet.addRow(header);
+  //   headerRow.eachCell((cell) => {
+  //     cell.fill = {
+  //       type: "pattern",
+  //       pattern: "solid",
+  //       fgColor: { argb: "F0F0F0" },
+  //     };
+  //     cell.font = { bold: true };
+  //     cell.border = {
+  //       top: { style: "thin" },
+  //       bottom: { style: "thin" },
+  //       left: { style: "thin" },
+  //       right: { style: "thin" },
+  //     };
+  //   });
 
-const prazoEntrega = new Date(valoresInput["Prazo de entrega"]).toLocaleDateString("pt-BR");
-doc.text(`Prazo de entrega: ${prazoEntrega}`, 20, posicaoY); posicaoY += 6;
+  //   // Dados do material
+  //   const material = listaMateriais.find(
+  //     (m) => m.id === parseInt(valoresInput["MaterialId"])
+  //   );
+  //   const descricao = material?.tipoMaterial || "Material não encontrado";
+  //   const quantidade = parseFloat(valoresInput["Quantidade"]) || 0;
+  //   const valorUnit = parseFloat(valoresInput["Valor Unitário"]) || 0;
+  //   const total = parseFloat(valoresInput["Total"]) || valorUnit * quantidade;
+  //   const ipi = parseFloat(valoresInput["IPI"]) || 0;
+  //   const totalGeral = total + ipi;
 
-doc.text(`Condição de pagamento: ${valoresInput["Cond. Pagamento"]}`, 20, posicaoY); posicaoY += 6;
+  //   sheet.addRow([
+  //     "001",
+  //     descricao.substring(0, 50),
+  //     quantidade,
+  //     `R$ ${valorUnit.toFixed(2).replace(".", ",")}`,
+  //     `R$ ${total.toFixed(2).replace(".", ",")}`,
+  //   ]);
 
-const valorPeca = parseFloat(valoresInput["Valor por peça"]?.replace(",", ".") || 0);
-const valorKg = parseFloat(valoresInput["Valor por Kg"]?.replace(",", ".") || 0);
+  //   sheet.addRow([]);
+  //   sheet.addRow([
+  //     "SUBTOTAL:",
+  //     "",
+  //     "",
+  //     "",
+  //     `R$ ${total.toFixed(2).replace(".", ",")}`,
+  //   ]);
+  //   sheet.addRow([
+  //     "IPI:",
+  //     "",
+  //     "",
+  //     "",
+  //     `R$ ${ipi.toFixed(2).replace(".", ",")}`,
+  //   ]);
+  //   sheet.addRow([
+  //     "TOTAL GERAL:",
+  //     "",
+  //     "",
+  //     "",
+  //     `R$ ${totalGeral.toFixed(2).replace(".", ",")}`,
+  //   ]);
 
-if (valorPeca > 0) {
-  doc.text(`Valor por peça: R$ ${valorPeca.toFixed(2).replace(".", ",")}`, 20, posicaoY); posicaoY += 6;
-}
-if (valorKg > 0) {
-  doc.text(`Valor por Kg: R$ ${valorKg.toFixed(2).replace(".", ",")}`, 20, posicaoY); posicaoY += 6;
-}
+  //   sheet.addRow([]);
+  //   sheet.addRow(["OBSERVAÇÕES:"]);
+  //   sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true };
+  //   const observacoes = [
+  //     "• Documento gerado automaticamente pelo sistema",
+  //     "• Válido como comprovante de compra",
+  //     "• IPI calculado conforme percentual informado",
+  //     "• Para dúvidas, entre em contato conosco",
+  //   ];
+  //   observacoes.forEach((obs) => sheet.addRow([obs]));
 
-    posicaoY += 10;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text("DESCRIÇÃO DOS MATERIAIS", 20, posicaoY);
+  //   sheet.addRow([]);
+  //   sheet.addRow([
+  //     `Documento gerado em ${new Date().toLocaleString("pt-BR")}`,
+  //     "",
+  //     "",
+  //     "",
+  //     "www.megaplate.com.br | vendas@megaplate.com.br",
+  //   ]);
 
-    posicaoY += 10;
-    doc.setFillColor(240, 240, 240);
-    doc.rect(20, posicaoY - 5, 170, 10, "F");
+  //   // Ajustar largura das colunas
+  //   sheet.columns.forEach((col) => {
+  //     col.width = 25;
+  //   });
 
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.text("ITEM", 25, posicaoY);
-    doc.text("DESCRIÇÃO", 45, posicaoY);
-    doc.text("QTD", 120, posicaoY);
-    doc.text("VALOR UNIT.", 140, posicaoY);
-    doc.text("TOTAL", 170, posicaoY);
-
-    const materialSelecionado = listaMateriais.find(
-      (m) => m.id === parseInt(valoresInput["MaterialId"])
-    );
-
-    const item = "001";
-    const descricao =
-      materialSelecionado?.tipoMaterial || "Material não encontrado";
-    const quantidade = parseFloat(valoresInput["Quantidade"]) || 0;
-    const valorUnitario = parseFloat(valoresInput["Valor Unitário"]) || 0;
-    const total =
-      parseFloat(valoresInput["Total"]) || valorUnitario * quantidade;
-    const ipi = parseFloat(valoresInput["IPI"]?.replace(",", ".") || 0);
-
-
-    posicaoY += 10;
-    doc.setFont("helvetica", "normal");
-    doc.text(item, 25, posicaoY);
-    doc.text(descricao.substring(0, 25), 45, posicaoY);
-    doc.text(quantidade.toString(), 120, posicaoY);
-    doc.text(`R$ ${valorUnitario.toFixed(2).replace(".", ",")}`, 140, posicaoY);
-    doc.text(`R$ ${total.toFixed(2).replace(".", ",")}`, 170, posicaoY);
-    doc.line(20, posicaoY + 3, 190, posicaoY + 3);
-
-    posicaoY += 15;
-    doc.setFillColor(240, 240, 240);
-    doc.rect(130, posicaoY - 5, 60, 25, "F");
-
-    const totalGeral = total + ipi;
-
-    doc.setFont("helvetica", "bold");
-    doc.text("SUBTOTAL:", 135, posicaoY);
-    doc.text(`R$ ${total.toFixed(2).replace(".", ",")}`, 170, posicaoY);
-
-    doc.text(`IPI:`, 135, posicaoY + 8);
-    doc.text(`R$ ${ipi.toFixed(2).replace(".", ",")}`, 170, posicaoY + 8);
-
-    doc.setFontSize(11);
-    doc.text("TOTAL GERAL:", 135, posicaoY + 16);
-    doc.text(
-      `R$ ${totalGeral.toFixed(2).replace(".", ",")}`,
-      170,
-      posicaoY + 16
-    );
-
-if (valoresInput["Rastreabilidade"]) {
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text("RASTREABILIDADE", 20, posicaoY);
-  posicaoY += 8;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.text(`Código: ${valoresInput["Rastreabilidade"]}`, 20, posicaoY);
-  posicaoY += 10;
-}
-
-    posicaoY += 20;
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.text("OBSERVAÇÕES:", 20, posicaoY);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    const observacoes = [
-      "• Documento gerado automaticamente pelo sistema",
-      "• Válido como comprovante de compra",
-      "• Para dúvidas, entre em contato conosco",
-    ];
-    observacoes.forEach((obs, index) => {
-      doc.text(obs, 20, posicaoY + 8 + index * 6);
-    });
-
-    const alturaRodape = 275;
-    doc.setFillColor(...corPrimaria);
-    doc.rect(0, alturaRodape, 210, 30, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    doc.text("Documento gerado em " + new Date().toLocaleString("pt-BR"), 20, alturaRodape + 8);
-doc.text("www.megaplate.com.br | vendas@megaplate.com.br", 20, alturaRodape + 14);
-doc.text(`www.${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br | contato@${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br`, 20, alturaRodape + 20);
-
-    const nomeArquivo = `ordem_de_compra_${
-      ordemDeCompra.id
-    }_${dataFormatada.replace(/\//g, "-")}.pdf`;
-    doc.save(nomeArquivo);
-  }
-
-  async function baixarExcel() {
-    const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet("Ordem de Compra");
-
-    const fornecedor = ordemDeCompra.fornecedor;
-
-    const fornecedorDetalhes = listaFornecedores.find(
-      (f) => f.fornecedorId === parseInt(valoresInput["FornecedorId"])
-    );
-
-    const corPrimaria = "2A80B9"; // Azul
-    const corSecundaria = "95A5A6"; // Cinza
-    const corTexto = "2C3E50";
-
-    sheet.mergeCells("A1:E1");
-
-    sheet.getCell("A1").value = `MegaPlate LTDA`;
-
-    sheet.getCell("A1").fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: corPrimaria },
-    };
-    sheet.getCell("A1").font = {
-      color: { argb: "FFFFFF" },
-      bold: true,
-      size: 16,
-    };
-    sheet.getCell("A1").alignment = { vertical: "middle", horizontal: "left" };
-
-    sheet.addRow([]);
-
-    if (fornecedor || fornecedorDetalhes) {
-      sheet.addRow([
-        `CNPJ: ${fornecedorDetalhes?.cnpj || "N/A"}`,
-        "",
-        "",
-        `Endereço: ${fornecedorDetalhes.complemento || "N/A"}`,
-      ]);
-      sheet.addRow([`Telefone: ${fornecedorDetalhes.telefone || "N/A"}`]);
-    } else {
-      sheet.addRow(["Dados do fornecedor não disponíveis"]);
-    }
-
-    const dataAtual = new Date();
-    const dataFormatada = dataAtual.toLocaleDateString("pt-BR");
-    const horaFormatada = dataAtual.toLocaleTimeString("pt-BR");
-
-    sheet.addRow([]);
-    sheet.addRow([`Ordem de Compra Nº: ${ordemDeCompra.id}`]);
-    sheet.addRow([`Data: ${dataFormatada}`, `Hora: ${horaFormatada}`]);
-
-    sheet.addRow([]);
-    sheet.addRow(["DADOS DO FORNECEDOR"]);
-    sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true, size: 12 };
-
-    if (fornecedor || fornecedorDetalhes) {
-      sheet.addRow([`Nome: ${fornecedorDetalhes?.nomeFantasia}`]);
-      if (fornecedorDetalhes?.cnpj)
-        sheet.addRow([`CNPJ: ${fornecedorDetalhes?.cnpj}`]);
-      if (fornecedorDetalhes.complemento)
-        sheet.addRow([`Endereço: ${fornecedorDetalhes.complemento}`]);
-    } else {
-      sheet.addRow(["Fornecedor não encontrado"]);
-    }
-
-    sheet.addRow([]);
-    sheet.addRow(["DESCRIÇÃO DOS MATERIAIS"]);
-    sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true, size: 12 };
-
-    // Cabeçalho da tabela
-    const header = ["ITEM", "DESCRIÇÃO", "QTD", "VALOR UNIT.", "TOTAL"];
-    const headerRow = sheet.addRow(header);
-    headerRow.eachCell((cell) => {
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "F0F0F0" },
-      };
-      cell.font = { bold: true };
-      cell.border = {
-        top: { style: "thin" },
-        bottom: { style: "thin" },
-        left: { style: "thin" },
-        right: { style: "thin" },
-      };
-    });
-
-    // Dados do material
-    const material = listaMateriais.find(
-      (m) => m.id === parseInt(valoresInput["MaterialId"])
-    );
-    const descricao = material?.tipoMaterial || "Material não encontrado";
-    const quantidade = parseFloat(valoresInput["Quantidade"]) || 0;
-    const valorUnit = parseFloat(valoresInput["Valor Unitário"]) || 0;
-    const total = parseFloat(valoresInput["Total"]) || valorUnit * quantidade;
-    const ipi = parseFloat(valoresInput["IPI"]) || 0;
-    const totalGeral = total + ipi;
-
-    sheet.addRow([
-      "001",
-      descricao.substring(0, 50),
-      quantidade,
-      `R$ ${valorUnit.toFixed(2).replace(".", ",")}`,
-      `R$ ${total.toFixed(2).replace(".", ",")}`,
-    ]);
-
-    sheet.addRow([]);
-    sheet.addRow([
-      "SUBTOTAL:",
-      "",
-      "",
-      "",
-      `R$ ${total.toFixed(2).replace(".", ",")}`,
-    ]);
-    sheet.addRow([
-      "IPI:",
-      "",
-      "",
-      "",
-      `R$ ${ipi.toFixed(2).replace(".", ",")}`,
-    ]);
-    sheet.addRow([
-      "TOTAL GERAL:",
-      "",
-      "",
-      "",
-      `R$ ${totalGeral.toFixed(2).replace(".", ",")}`,
-    ]);
-
-    sheet.addRow([]);
-    sheet.addRow(["OBSERVAÇÕES:"]);
-    sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true };
-    const observacoes = [
-      "• Documento gerado automaticamente pelo sistema",
-      "• Válido como comprovante de compra",
-      "• IPI calculado conforme percentual informado",
-      "• Para dúvidas, entre em contato conosco",
-    ];
-    observacoes.forEach((obs) => sheet.addRow([obs]));
-
-    sheet.addRow([]);
-    sheet.addRow([
-      `Documento gerado em ${new Date().toLocaleString("pt-BR")}`,
-      "",
-      "",
-      "",
-      "www.megaplate.com.br | vendas@megaplate.com.br",
-    ]);
-
-    // Ajustar largura das colunas
-    sheet.columns.forEach((col) => {
-      col.width = 25;
-    });
-
-    // Gerar o arquivo
-    const buffer = await workbook.xlsx.writeBuffer();
-    const nomeArquivo = `ordem_de_compra_${
-      ordemDeCompra.id
-    }_${dataFormatada.replace(/\//g, "-")}.xlsx`;
-    saveAs(new Blob([buffer]), nomeArquivo);
-  }
-
-  async function baixarDocumentos() {
-    baixarPDF();
-    await baixarExcel();
-    window.location.reload();
-  }
+  //   // Gerar o arquivo
+  //   const buffer = await workbook.xlsx.writeBuffer();
+  //   const nomeArquivo = `ordem_de_compra_${
+  //     ordemDeCompra.id
+  //   }_${dataFormatada.replace(/\//g, "-")}.xlsx`;
+  //   saveAs(new Blob([buffer]), nomeArquivo);
+  // }
 
   return (
     <>
@@ -1047,7 +824,7 @@ doc.text(`www.${fornecedorDetalhes.nomeFantasia.toLowerCase()}.com.br | contato@
 
           {progresso === 4 && (
             <div className={style.botaoPdf}>
-              <button onClick={baixarDocumentos}>BAIXAR ORDEM DE COMPRA</button>
+              <button onClick={() => baixarOrdemDeCompraPDF(ordemDeCompra.id)}>BAIXAR ORDEM DE COMPRA</button>              
             </div>
           )}
         </main>

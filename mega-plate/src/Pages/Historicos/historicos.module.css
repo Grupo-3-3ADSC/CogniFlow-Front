@@ -195,6 +195,20 @@ h2 {
   transition: opacity 0.3s ease-out;
 }
 
+.ativar:disabled {
+    background-color: #cccccc !important;
+    color: #666666 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+}
+
+.cancelar:disabled {
+    background-color: #cccccc !important;
+    color: #666666 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+}
+
 @media (max-width: 1230px) {
   .tabela {
     border: none;
