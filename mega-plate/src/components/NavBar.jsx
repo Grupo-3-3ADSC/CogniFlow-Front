@@ -8,6 +8,7 @@ import iconFormularios from '../assets/icon-formularios.png';
 import iconGroup from '../assets/icon-group.png';
 import logoMega from '../assets/logo-megaplate.png';
 import menuHamburger from '../assets/menu-hamburguer.png';
+import iconHistoricos from '../assets/icon-historico.png';
 import user from '../assets/User.png';
 import { useEffect } from 'react';
 import { api } from '../provider/api';
@@ -167,7 +168,7 @@ const NavBar = () => {
               </ul>
             )}
             <li className="has-submenu" title="Históricos" onClick={toggleHistoricoSubmenu}>
-              <img className="icons-menu" src={iconFormularios} alt="Históricos" />
+              <img className="icons-menu" src={iconHistoricos} alt="Históricos" />
               <span>Históricos</span>
               <svg className={`arrow-icon ${showHistoricoSubmenu ? 'rotate' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="6 9 12 15 18 9" />

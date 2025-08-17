@@ -80,7 +80,7 @@ export function HistoricoTransferencia() {
     const transferenciasFiltradas = transferencias.filter((transferencias) => {
         if (filtroStatus === "todas") return true;
         if (filtroStatus === "internas") return transferencias.tipoTransferencia === "Internas";
-        if (filtroStatus === "externas") return transferencias.tipoTransferencia === "Externas"; 
+        if (filtroStatus === "externas") return transferencias.tipoTransferencia === "Externas";
         return true;
     });
 
@@ -119,27 +119,35 @@ export function HistoricoTransferencia() {
                     ) : (
                         <div className={styles.tabelaWrapper}>
                             <table className={`${styles.tabela} ${fade ? styles.fadeIn : styles.fadeOut}`}>
+                                <thead>
+                                    <tr>
+                                        <th>MATERIAL</th>
+                                        <th>C1</th>
+                                        <th>C2</th>
+                                        <th>C3</th>
+                                        <th>C4</th>
+                                    </tr>
+                                </thead>
+                                    <tbody>
+                                        {transferenciasFiltradas.map((transferencias) => (
+                                            <tr key={transferencias.id}>
+                                                <td><b><h4>TRANSFERÊNCIA</h4></b> <p>ID: {transferencias.id}</p></td>
+                                                <td><b><h4>DIA</h4></b> <p>{formatarDataBrasileira(transferencias.ultimaMovimentacao)}</p> </td>
+                                                <td><b><h4>HORA</h4></b> <p>{formatarHora(transferencias.ultimaMovimentacao)}</p> </td>
+                                                <td><b><h4>TIPO</h4></b> <p>{transferencias.externa || transferencias.interna}</p> </td>
+                                                <td><b><h4>MATERIAL</h4></b> <p>{transferencias.tipoMaterial}</p></td>
+                                                <td >
+                                                    <button className={styles.baixarRelatorio}
+                                                        onClick={() => baixarOrdem(transferencias.id)}
 
-                                <tbody>
-                                    {transferenciasFiltradas.map((transferencias) => (
-                                        <tr key={transferencias.id}>
-                                            <td><b><h4>TRANSFERÊNCIA</h4></b> <p>ID: {transferencias.id}</p></td>
-                                            <td><b><h4>DIA</h4></b> <p>{formatarDataBrasileira(transferencias.ultimaMovimentacao)}</p> </td>
-                                            <td><b><h4>HORA</h4></b> <p>{formatarHora(transferencias.ultimaMovimentacao)}</p> </td>
-                                            <td><b><h4>TIPO</h4></b> <p>{transferencias.externa || transferencias.interna}</p> </td>
-                                            <td><b><h4>MATERIAL</h4></b> <p>{transferencias.tipoMaterial}</p></td>
-                                            <td >
-                                                <button className={styles.baixarRelatorio}
-                                                    onClick={() => baixarOrdem(ordem.id)}
+                                                    >
+                                                        <b> BAIXAR RELATÓRIO </b>
+                                                    </button>
+                                                </td>
 
-                                                >
-                                                   <b> BAIXAR RELATÓRIO </b> 
-                                                </button>
-                                            </td>
-
-                                        </tr>
-                                    ))}
-                                </tbody>
+                                            </tr>
+                                        ))}
+                                    </tbody>
                             </table>
                         </div>
                     )}

@@ -1,6 +1,6 @@
 import styles from './fornecedor.module.css';
 import logo from '../../assets/logo-megaplate.png';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import NavBar from '../../components/NavBar';
 import Swal from 'sweetalert2';
 import { api } from '../../provider/api.js';
@@ -19,7 +19,8 @@ export function CadastroFornecedor() {
     telefone: '',
     email: '',
     responsavel: '',
-    cargo: ''
+    cargo: '',
+    ie: ''
   });
 
   const cadastrarFornecedor = async () => {
@@ -34,7 +35,8 @@ export function CadastroFornecedor() {
       !formData.telefone ||
       !formData.email ||
       !formData.responsavel ||
-      !formData.cargo
+      !formData.cargo ||
+      !formData.ie
     ) {
       Swal.fire({
         title: "Preencha as informações",
@@ -75,6 +77,10 @@ export function CadastroFornecedor() {
       Swal.fire({ title: "E-mail inválido", icon: "warning", confirmButtonColor: "#3085d6" });
       return;
     }
+    if (!validarIe(formData.ie.replace(/\D/g, ''))) {
+      Swal.fire({ title: "Inscrição Estadual inválida", icon: "warning", confirmButtonColor: "#3085d6" });
+      return;
+    }
 
     if (cnpjLimpo.length !== 14 || !validarCNPJ(cnpjLimpo)) {
       Swal.fire({ title: "CNPJ inválido", icon: "warning", confirmButtonColor: "#3085d6" });
@@ -100,9 +106,11 @@ export function CadastroFornecedor() {
       telefone: telefoneSemMascara.trim(),
       email: formData.email.trim(),
       responsavel: formData.responsavel.trim(),
-      cargo: formData.cargo.trim()
+      cargo: formData.cargo.trim(),
+      ie: formData.ie.trim()
     };
 
+    console.log(userData);
     api.post('/fornecedores', userData, {
       headers: {
         'Content-Type': 'application/json'
@@ -124,7 +132,8 @@ export function CadastroFornecedor() {
         telefone: '',
         email: '',
         responsavel: '',
-        cargo: ''
+        cargo: '',
+        ie: ''
       });
       setProgresso(1);
     }).catch((error) => {
@@ -213,6 +222,11 @@ export function CadastroFornecedor() {
       .slice(0, 9);
   }
 
+  function formatarIE(valor) {
+    return valor.replace(/\D/g, '').slice(0, 12);
+  }
+
+
   function formatarTelefone(valor) {
     const numeros = valor.replace(/\D/g, '');
 
@@ -241,6 +255,19 @@ export function CadastroFornecedor() {
   function validarCNPJ(cnpj) {
     return /^[0-9]{14}$/.test(cnpj);
   }
+
+  function validarIe(ie) {
+    // Permite "ISENTO" (em maiúsculas ou minúsculas)
+    if (!ie) return false;
+    if (ie.toUpperCase() === "ISENTO") return true;
+
+    // Remove caracteres não numéricos
+    const numeros = ie.replace(/\D/g, '');
+
+    // IE geralmente tem entre 8 e 12 dígitos
+    return /^[0-9]{8,12}$/.test(numeros);
+  }
+
 
   function validarTelefone(telefone) {
     const apenasNumeros = telefone.replace(/\D/g, '');
@@ -311,8 +338,8 @@ export function CadastroFornecedor() {
             <>
               <div className={styles['input-group']}>
                 <p>CNPJ
-                   <span style={{}}> </span>
-              <span style={{ color: "red" }}>*</span>
+                  <span style={{}}> </span>
+                  <span style={{ color: "red" }}>*</span>
                 </p>
                 <input
                   placeholder="Digite o CNPJ"
@@ -324,9 +351,23 @@ export function CadastroFornecedor() {
                 />
               </div>
               <div className={styles['input-group']}>
+                <p>I.E
+                  <span style={{}}> </span>
+                  <span style={{ color: "red" }}>*</span>
+                </p>
+                <input
+                  placeholder="Digite o I.E (Inscrição Estadual)"
+                  type="text"
+                  inputMode='numeric'
+                  value={formData.ie}
+                  onChange={(e) => setFormData({ ...formData, ie: formatarIE (e.target.value) })}
+                  maxLength={12}
+                />
+              </div>
+              <div className={styles['input-group']}>
                 <p>Razão Social
-                   <span style={{}}> </span>
-              <span style={{ color: "red" }}>*</span>
+                  <span style={{}}> </span>
+                  <span style={{ color: "red" }}>*</span>
                 </p>
                 <input
                   placeholder="Digite a razão social"
@@ -337,8 +378,8 @@ export function CadastroFornecedor() {
               </div>
               <div className={styles['input-group']}>
                 <p>Nome fantasia
-                   <span style={{}}> </span>
-              <span style={{ color: "red" }}>*</span>
+                  <span style={{}}> </span>
+                  <span style={{ color: "red" }}>*</span>
                 </p>
                 <input
                   placeholder="Digite o Nome Fantasia"
@@ -354,8 +395,8 @@ export function CadastroFornecedor() {
             <>
               <div className={styles['input-group']}>
                 <p>CEP
-                   <span style={{}}> </span>
-              <span style={{ color: "red" }}>*</span>
+                  <span style={{}}> </span>
+                  <span style={{ color: "red" }}>*</span>
                 </p>
                 <input
                   placeholder="Digite o CEP"
@@ -376,9 +417,9 @@ export function CadastroFornecedor() {
                 />
               </div>
               <div className={styles['input-group']}>
-                <p>Número 
+                <p>Número
                   <span style={{}}> </span>
-              <span style={{ color: "red" }}>*</span></p>
+                  <span style={{ color: "red" }}>*</span></p>
                 <input
                   placeholder="Digite o Número"
                   type="text"
@@ -394,7 +435,7 @@ export function CadastroFornecedor() {
             <>
               <div className={styles['input-group']}>
                 <p>Responsável <span style={{}}> </span>
-              <span style={{ color: "red" }}>*</span></p>
+                  <span style={{ color: "red" }}>*</span></p>
                 <input
                   placeholder="Digite o nome do Responsável"
                   type="text"
@@ -406,7 +447,7 @@ export function CadastroFornecedor() {
               </div>
               <div className={styles['input-group']}>
                 <p>Cargo <span style={{}}> </span>
-              <span style={{ color: "red" }}>*</span></p>
+                  <span style={{ color: "red" }}>*</span></p>
                 <input
                   placeholder="Digite o cargo do Responsável"
                   type="text"
@@ -418,7 +459,7 @@ export function CadastroFornecedor() {
               </div>
               <div className={styles['input-group']}>
                 <p>Telefone <span style={{}}> </span>
-              <span style={{ color: "red" }}>*</span></p>
+                  <span style={{ color: "red" }}>*</span></p>
                 <input
                   placeholder="Digite o Telefone"
                   type="text"
@@ -431,7 +472,7 @@ export function CadastroFornecedor() {
               </div>
               <div className={styles['input-group']}>
                 <p>Email <span style={{}}> </span>
-              <span style={{ color: "red" }}>*</span></p>
+                  <span style={{ color: "red" }}>*</span></p>
                 <input
                   placeholder="Digite o Email"
                   type="email"
