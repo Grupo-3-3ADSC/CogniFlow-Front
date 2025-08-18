@@ -195,7 +195,11 @@ export function Relatorios() {
                     <div className={styles.relatorios}>
                         {relatoriosFiltrados.map((relatorio, index) => (
                             <div key={index} className={styles.relatorio}>
-                                <h3>{relatorio.titulo} - {anoSelecionado}</h3>
+                                <h3>
+                                    {relatorio.titulo}
+                                    {(relatorio.tipo === "entradas" || relatorio.tipo === "saidas") && ` - ${anoSelecionado}`}
+                                </h3>
+
                                 <p>{relatorio.descricao}</p>
 
                                 {relatorio.tipo === "entradas" && (

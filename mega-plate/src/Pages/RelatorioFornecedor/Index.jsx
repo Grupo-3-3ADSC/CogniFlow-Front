@@ -14,47 +14,200 @@ export function gerarRelatorioFornecedores(fornecedor, dadosAno, dadosMensais, a
     const doc = new jsPDF();
     const corPrimaria = [5, 49, 76];
     const corTexto = [44, 62, 80];
+    const dataEmissao = new Date().toLocaleString("pt-BR");
 
+    // --- CAPA ---
     doc.setFillColor(...corPrimaria);
     doc.rect(0, 0, 210, 35, "F");
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20).setFont("helvetica", "bold");
-    doc.text(`Relatório de Fornecimento da ${fornecedor} – ${ano}`, 20, 20);
+    doc.setFontSize(16).setFont("helvetica", "bold");
+    doc.text(`RELATÓRIO COMPARATIVO DE FORNECEDORES - ${ano}`, 20, 20);
 
     doc.setTextColor(...corTexto).setFontSize(12).setFont("helvetica", "normal");
     doc.text(
-        "Análise dos fornecedores mais utilizados e desempenho anual.",
+        "Análise anual das compras realizadas com o fornecedor selecionado, incluindo valores, quantidade de pedidos e materiais adquiridos.",
         20,
         60,
         { maxWidth: 170 }
     );
-    doc.text(`DATA DE EMISSÃO: ${new Date().toLocaleString("pt-BR")}`, 20, 100);
+    doc.text(`Fornecedor: ${fornecedor}`, 20, 80);
+    doc.text(`Data de emissão: ${dataEmissao}`, 20, 100);
 
-    dadosMensais.forEach(mes => {
+    // --- PÁGINAS MENSAL ---
+    dadosMensais.forEach((mes) => {
         doc.addPage();
-        doc.setFont("helvetica", "bold").setFontSize(16).setTextColor(...corPrimaria);
-        doc.text(mes.nomeMes.toUpperCase(), 20, 20);
+        doc.setFillColor(...corPrimaria);
+        doc.rect(0, 0, 210, 20, "F");
+
+        doc.setTextColor(255, 255, 255).setFontSize(14).setFont("helvetica", "bold");
+        doc.text(`RELATÓRIO COMPARATIVO DE FORNECEDORES - ${ano}`, 20, 12);
+
+        doc.setTextColor(...corPrimaria).setFontSize(16);
+        doc.text(mes.nomeMes.toUpperCase(), 20, 40);
+
         doc.setTextColor(...corTexto).setFontSize(12);
-        let posY = 40;
-        mes.dados.forEach(item => {
+        let posY = 60;
+        mes.dados.forEach((item) => {
             doc.text(`${item.label}: ${item.valor}`, 20, posY);
-            posY += 8;
+            posY += 10;
         });
     });
 
+    // --- PÁGINA RESUMO ANUAL ---
     doc.addPage();
-    doc.setFont("helvetica", "bold").setFontSize(16).setTextColor(...corPrimaria);
-    doc.text(`${ano} - RESUMO ANUAL`, 20, 20);
+    doc.setFillColor(...corPrimaria);
+    doc.rect(0, 0, 210, 20, "F");
+
+    doc.setTextColor(255, 255, 255).setFontSize(14).setFont("helvetica", "bold");
+    doc.text(`RELATÓRIO GERAL DE ENTRADAS - ${ano}`, 20, 12);
+
+    doc.setTextColor(...corPrimaria).setFontSize(16);
+    doc.text(`${ano} - RESUMO ANUAL`, 20, 40);
+
     doc.setTextColor(...corTexto).setFontSize(12);
-    let posY = 40;
-    dadosAno.forEach(item => {
+    let posY = 60;
+    dadosAno.forEach((item) => {
         doc.text(`${item.label}: ${item.valor}`, 20, posY);
-        posY += 8;
+        posY += 10;
     });
+
+    // --- RODAPÉ EM TODAS AS PÁGINAS ---
+    const totalPaginas = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPaginas; i++) {
+        doc.setPage(i);
+        doc.setFontSize(9).setFont("helvetica", "italic");
+        doc.setTextColor(100);
+        doc.text(
+            `Emitido em: ${dataEmissao} | Página ${i} de ${totalPaginas}`,
+            105, // centralizado (largura A4 ~210mm, então metade é ~105)
+            290, // embaixo (altura A4 ~297mm, margem inferior)
+            { align: "center" }
+        );
+    }
 
     doc.save(`relatorio_fornecedor_${fornecedor}_${ano}.pdf`);
 }
 
+
+const dadosMensaisFake = [
+  {
+    nomeMes: "Janeiro",
+    dados: [
+      { label: "Total de compras no mês", valor: "120" },
+      { label: "Valor total comprado (R$)", valor: "50.000,00" },
+      { label: "Nº de pedidos realizados", valor: "15" },
+      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
+    ]
+  },
+  {
+    nomeMes: "Fevereiro",
+    dados: [
+      { label: "Total de compras no mês", valor: "100" },
+      { label: "Valor total comprado (R$)", valor: "40.000,00" },
+      { label: "Nº de pedidos realizados", valor: "10" },
+      { label: "Material mais comprado", valor: "Bobina (50 unid.)" }
+    ]
+  },
+   {
+    nomeMes: "Março",
+    dados: [
+      { label: "Total de compras no mês", valor: "120" },
+      { label: "Valor total comprado (R$)", valor: "50.000,00" },
+      { label: "Nº de pedidos realizados", valor: "15" },
+      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
+    ]
+  },
+   {
+    nomeMes: "Abril",
+    dados: [
+      { label: "Total de compras no mês", valor: "120" },
+      { label: "Valor total comprado (R$)", valor: "50.000,00" },
+      { label: "Nº de pedidos realizados", valor: "15" },
+      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
+    ]
+  },
+   {
+    nomeMes: "Maio",
+    dados: [
+      { label: "Total de compras no mês", valor: "120" },
+      { label: "Valor total comprado (R$)", valor: "50.000,00" },
+      { label: "Nº de pedidos realizados", valor: "15" },
+      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
+    ]
+  },
+   {
+    nomeMes: "Junho",
+    dados: [
+      { label: "Total de compras no mês", valor: "120" },
+      { label: "Valor total comprado (R$)", valor: "50.000,00" },
+      { label: "Nº de pedidos realizados", valor: "15" },
+      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
+    ]
+  },
+   {
+    nomeMes: "Julho",
+    dados: [
+      { label: "Total de compras no mês", valor: "120" },
+      { label: "Valor total comprado (R$)", valor: "50.000,00" },
+      { label: "Nº de pedidos realizados", valor: "15" },
+      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
+    ]
+  },
+   {
+    nomeMes: "Agosto",
+    dados: [
+      { label: "Total de compras no mês", valor: "120" },
+      { label: "Valor total comprado (R$)", valor: "50.000,00" },
+      { label: "Nº de pedidos realizados", valor: "15" },
+      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
+    ]
+  },
+   {
+    nomeMes: "Setembro",
+    dados: [
+      { label: "Total de compras no mês", valor: "120" },
+      { label: "Valor total comprado (R$)", valor: "50.000,00" },
+      { label: "Nº de pedidos realizados", valor: "15" },
+      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
+    ]
+  },
+   {
+    nomeMes: "Outrubro",
+    dados: [
+      { label: "Total de compras no mês", valor: "120" },
+      { label: "Valor total comprado (R$)", valor: "50.000,00" },
+      { label: "Nº de pedidos realizados", valor: "15" },
+      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
+    ]
+  },
+   {
+    nomeMes: "Novembro",
+    dados: [
+      { label: "Total de compras no mês", valor: "120" },
+      { label: "Valor total comprado (R$)", valor: "50.000,00" },
+      { label: "Nº de pedidos realizados", valor: "15" },
+      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
+    ]
+  },
+   {
+    nomeMes: "Dezembro",
+    dados: [
+      { label: "Total de compras no mês", valor: "120" },
+      { label: "Valor total comprado (R$)", valor: "50.000,00" },
+      { label: "Nº de pedidos realizados", valor: "15" },
+      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
+    ]
+  },
+
+
+];
+
+const dadosAnoFake = [
+  { label: "Total de compras no ano", valor: "1500" },
+  { label: "Valor total comprado (R$)", valor: "500.000,00" },
+  { label: "Nº de pedidos realizados", valor: "120" },
+  { label: "Material mais comprado", valor: "Chapa Aço (800 unid.)" }
+];
 
 function gerarListaAnos(anoInicial) {
     const anoAtual = new Date().getFullYear();
@@ -75,7 +228,7 @@ export function RelatorioFornecedor() {
     const todosAnos = gerarListaAnos(2018);
     const [anoSelecionado, setAnoSelecionado] = useState(todosAnos[todosAnos.length - 1]);
 
-    const anosVisiveis = todosAnos.slice(inicio, inicio + 3);
+    const anosVisiveis = todosAnos.slice(inicio, inicio + 5);
 
     const avancarAno = () => {
         if (inicio + 5 < todosAnos.length) setInicio(inicio + 1);
@@ -139,17 +292,17 @@ export function RelatorioFornecedor() {
             <NavBar />
             <div className={styles.container}>
                 <div className={styles.background}>
-                    <h1>RELATÓRIO COMPARATIVO DE FORNECEDORES</h1>
-                    <div className="filtro">    
-                       <div>
-                        <input
-                            type="text"
-                            id="filtro-nome"
-                            placeholder="Digite o nome do fornecedor..."
-                            value={filtroNome}
-                            onChange={(e) => setFiltroNome(e.target.value)}
-                            className={styles.inputFiltro}
-                        />
+                    <h1>RELATÓRIO COMPARATIVO DE FORNECEDORES - {anoSelecionado}</h1>
+                    <div className={styles.filtro}>
+                        <div>
+                            <input
+                                type="text"
+                                id="filtro-nome"
+                                placeholder="Digite o nome do fornecedor..."
+                                value={filtroNome}
+                                onChange={(e) => setFiltroNome(e.target.value)}
+                                className={styles.inputFiltro}
+                            />
                         </div>
                         <div className={styles.filtroAno}>
                             <div className={styles.anoContent}>
@@ -198,9 +351,9 @@ export function RelatorioFornecedor() {
                                                 onClick={() =>
                                                     gerarRelatorioFornecedores(
                                                         fornecedor.nomeFantasia,
-                                                        dadosAnoFake,
-                                                        dadosMensaisFake,
-                                                        2025
+                                                        dadosAnoFake,      // aqui depois você puxa da API
+                                                        dadosMensaisFake,  // idem
+                                                        anoSelecionado     // ✅ usa o ano selecionado
                                                     )
                                                 }
                                             >
