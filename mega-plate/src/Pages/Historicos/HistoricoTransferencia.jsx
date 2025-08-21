@@ -56,7 +56,7 @@ export function HistoricoTransferencia() {
             });
             setTransferencias(res.data);
         } catch (error) {
-            Swal.fire("Erro ao carregar transferencias", "", "error");
+            Swal.fire("Erro ao carregar transferências", "", "error");
         }
     };
 
@@ -105,49 +105,51 @@ export function HistoricoTransferencia() {
                         <option value="externas">Externas</option>
                     </select>
                     <p className={styles.qtdUsuarios}>
-                        {transferencias.length} transferencia(s) encontrada(s)
+                        {transferencias.length} transferência(s) encontrada(s)
                     </p>
 
                     {transferenciasFiltradas.length === 0 ? (
                         <p className={styles.mensagemVazia}>
-                            {filtroStatus === "internas" && "Nenhuma transferencia interna foi encontrada."}
+                            {filtroStatus === "internas" && "Nenhuma transferência interna foi encontrada."}
 
-                            {filtroStatus === "externas" && "Nenhuma transferencia externa foi encontrada."}
+                            {filtroStatus === "externas" && "Nenhuma transferência externa foi encontrada."}
 
-                            {filtroStatus === "todas" && "Nenhuma transferencia cadastrada no sistema."}
+                            {filtroStatus === "todas" && "Nenhuma transferência cadastrada no sistema."}
                         </p>
                     ) : (
                         <div className={styles.tabelaWrapper}>
                             <table className={`${styles.tabela} ${fade ? styles.fadeIn : styles.fadeOut}`}>
                                 <thead>
-                                    <tr>
-                                        <th>MATERIAL</th>
-                                        <th>C1</th>
-                                        <th>C2</th>
-                                        <th>C3</th>
-                                        <th>C4</th>
+                                    <tr className={styles.containerTitulos}>
+                                        <th id="titulo">TRANSFERÊNCIA</th>
+                                        <th id="titulo">DIA</th>
+                                        <th id="titulo">HORA</th>
+                                        <th id="titulo">MATERIAL</th>
+                                        <th id="titulo">SETOR</th>
+                                        <th id="titulo">QUANTIDADE TRANSFERIDA</th>
+                                        <th id="titulo">BAIXAR</th>
                                     </tr>
                                 </thead>
-                                    <tbody>
-                                        {transferenciasFiltradas.map((transferencias) => (
-                                            <tr key={transferencias.id}>
-                                                <td><b><h4>TRANSFERÊNCIA</h4></b> <p>ID: {transferencias.id}</p></td>
-                                                <td><b><h4>DIA</h4></b> <p>{formatarDataBrasileira(transferencias.ultimaMovimentacao)}</p> </td>
-                                                <td><b><h4>HORA</h4></b> <p>{formatarHora(transferencias.ultimaMovimentacao)}</p> </td>
-                                                <td><b><h4>TIPO</h4></b> <p>{transferencias.externa || transferencias.interna}</p> </td>
-                                                <td><b><h4>MATERIAL</h4></b> <p>{transferencias.tipoMaterial}</p></td>
-                                                <td >
-                                                    <button className={styles.baixarRelatorio}
-                                                        onClick={() => baixarOrdem(transferencias.id)}
+                                <tbody>
+                                    {transferenciasFiltradas.map((transferencias) => (
+                                        <tr className={styles.containerDados} key={transferencias.id}>
+                                            <td><p><b> ID: {transferencias.id} </b> </p></td>
+                                            <td><p><b>{formatarDataBrasileira(transferencias.ultimaMovimentacao)}</b></p> </td>
+                                            <td><p><b>{formatarHora(transferencias.ultimaMovimentacao)}</b></p> </td>
+                                            <td><p><b>{transferencias.tipoMaterial}</b></p></td>
+                                            <td><p><b>{transferencias.setor}</b></p> </td>
+                                            <td><p><b>{transferencias.quantidadeAtual}</b></p></td>
+                                            <td > <button className={styles.baixarRelatorio}
+                                                onClick={() => baixarOrdem(transferencias.id)}
 
-                                                    >
-                                                        <b> BAIXAR RELATÓRIO </b>
-                                                    </button>
-                                                </td>
-
-                                            </tr>
-                                        ))}
-                                    </tbody>
+                                            >
+                                                <img src={iconbaixar} alt="Baixar" />
+                                                
+                                            </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
                             </table>
                         </div>
                     )}

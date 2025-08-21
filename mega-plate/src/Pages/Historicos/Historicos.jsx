@@ -60,11 +60,11 @@ export function Historicos() {
         }
     };
 
-    
-        
 
-    function handleMudancaQuantidadeAtual(){
-        
+
+
+    function handleMudancaQuantidadeAtual() {
+
     }
 
     function formatarDataBrasileira(dataISO) {
@@ -98,55 +98,55 @@ export function Historicos() {
         });
 
         if (result.isConfirmed) {
-             const idUsuario = sessionStorage.getItem("usuario");
-  
-        const [resposta, setResposta] = useState({
-            id:"",
-            pendentes:"",
-            pendenciaAlterada:""
-        })
+            const idUsuario = sessionStorage.getItem("usuario");
 
-        for(i = 0; i <= ordens.length; i++){
+            const [resposta, setResposta] = useState({
+                id: "",
+                pendentes: "",
+                pendenciaAlterada: ""
+            })
+
+            for (i = 0; i <= ordens.length; i++) {
                 let ordemAtual = ordens[i];
 
-                if(ordemAtual.usuarioId == idUsuario){
-                    if(ordemAtual.pendenciaAlterada == 0){
+                if (ordemAtual.usuarioId == idUsuario) {
+                    if (ordemAtual.pendenciaAlterada == 0) {
+                        setResposta({
+                            id: parseInt(ordemAtual.id),
+                            pendentes: ordemAtual.quantidade,
+                            pendenciaAlterada: true
+                        });
+                        break;
+                    }
+
                     setResposta({
-                        id: parseInt(ordemAtual.id),
-                        pendentes: ordemAtual.quantidade,
-                        pendenciaAlterada: true
-                    });
-                    break;           
-                }
-                
-                setResposta({
                         id: parseInt(ordemAtual.id),
                         pendentes: ordemAtual.pendentes,
                         pendenciaAlterada: false
                     });
                     break;
+                }
             }
-        }
 
-        api.patch(`/ordemDeCompra/${idUsuario}` , resposta, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
-        .then((requisicao) => {
-            //console.log(requisicao.data);
-            setResposta({
-                id:"",
-            pendentes:"",
-            pendenciaAlterada:""
-            });
-            Swal.fire("Sucesso na entrega da ordem de compra!", "", "success");
-    })
-        .catch((err) => {
-            console.error("erro na mudança de quantidade atual: ", err);
-            Swal.fire("Erro ao confirmar entrega da ordem de compra", "", "error");
-        });
+            api.patch(`/ordemDeCompra/${idUsuario}`, resposta, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            })
+                .then((requisicao) => {
+                    //console.log(requisicao.data);
+                    setResposta({
+                        id: "",
+                        pendentes: "",
+                        pendenciaAlterada: ""
+                    });
+                    Swal.fire("Sucesso na entrega da ordem de compra!", "", "success");
+                })
+                .catch((err) => {
+                    console.error("erro na mudança de quantidade atual: ", err);
+                    Swal.fire("Erro ao confirmar entrega da ordem de compra", "", "error");
+                });
         }
     }
 
@@ -164,7 +164,7 @@ export function Historicos() {
             <NavBar />
             <div className={styles.container}>
                 <div className={styles.background}>
-                    <h1>Histórico de Ordem de Compra</h1>
+                    <h1>HISTÓRICO DE ORDEM DE COMPRA</h1>
                     <label htmlFor="filtro" className={styles.labelFiltro}>
                         Filtrar por status:{" "}
                     </label>
@@ -193,27 +193,38 @@ export function Historicos() {
                     ) : (
                         <div className={styles.tabelaWrapper}>
                             <table className={`${styles.tabela} ${fade ? styles.fadeIn : styles.fadeOut}`}>
-
+                                <thead>
+                                    <tr className={styles.containerTitulos}>
+                                        <th id="titulo">ORDEM DE COMPRA</th>
+                                        <th id="titulo">DIA</th>
+                                        <th id="titulo">HORA</th>
+                                        <th id="titulo">PRAZO DE ENTREGA</th>
+                                        <th id="titulo">STATUS</th>
+                                        <th id="titulo">CONFIRMAR ENTREGA</th>
+                                        <th id="titulo">CANCELAR ENTREGA</th>
+                                        <th id="titulo">BAIXAR</th>
+                                    </tr>
+                                </thead>
                                 <tbody>
                                     {ordensFiltradas.map((ordem) => (
-                                        <tr key={ordem.id}>
-                                            <td><b><h4>ORDEM DE COMPRA</h4></b> <p>ID: {ordem.id}</p></td>
-                                            <td><b><h4>DIA</h4></b> <p>{formatarDataBrasileira(ordem.dataDeEmissao)}</p> </td>
-                                            <td><b><h4>HORA</h4></b> <p>{formatarHora(ordem.dataDeEmissao)}</p> </td>
-                                            <td><b><h4>PRAZO DE ENTREGA</h4></b> <p>{formatarDataBrasileira(ordem.prazoEntrega)}</p> </td>
-                                            <td><b><h4>STATUS</h4></b> <p>{ordem.status}</p></td>
-                                            <td>
+                                        <tr className={styles.containerDados} key={ordem.id}>
+                                            <td><b><p>ID: {ordem.id}</p></b></td>
+                                            <td><b><p>{formatarDataBrasileira(ordem.dataDeEmissao)}</p> </b> </td>
+                                            <td><b><p>{formatarHora(ordem.dataDeEmissao)}</p> </b> </td>
+                                            <td><b><p>{formatarDataBrasileira(ordem.prazoEntrega)}</p></b> </td>
+                                            <td><b><p>{ordem.status}</p> </b> </td>
+                                            <td >
                                                 <button className={styles.ativar}
                                                     onClick={() => alternarEntrega(ordem.id, ordem.entregaConfirmada)}
                                                 >
-                                                    <b>CONFIRMAR ENTREGA</b>
+                                                    <b>CONFIRMAR </b>
                                                 </button>
                                             </td>
                                             <td>
                                                 <button className={styles.cancelar}
                                                     onClick={() => alternarEntrega(ordem.id)}
                                                 >
-                                                    <b>CANCELAR ENTREGA</b>
+                                                    <b>CANCELAR </b>
                                                 </button>
                                             </td>
                                             <td >

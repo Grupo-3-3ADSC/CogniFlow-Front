@@ -286,7 +286,7 @@ export function CadastroFornecedor() {
   function avancar() {
     if (progresso === 1) {
       if (!formData.razaoSocial || !formData.nomeFantasia || !formData.cnpj) {
-        Swal.fire({ title: "Por favor, preencha todos os campos!", icon: "warning", confirmButtonColor: "#3085d6" });
+        Swal.fire({ title: "Campo obrigatórios não preenchidos!", icon: "warning", confirmButtonColor: "#3085d6" });
         return;
       }
       if (!validarCNPJ(formData.cnpj.replace(/\D/g, ''))) {
@@ -351,9 +351,8 @@ export function CadastroFornecedor() {
                 />
               </div>
               <div className={styles['input-group']}>
-                <p>I.E
+                <p>I.E (Opcional)
                   <span style={{}}> </span>
-                  <span style={{ color: "red" }}>*</span>
                 </p>
                 <input
                   placeholder="Digite o I.E (Inscrição Estadual)"

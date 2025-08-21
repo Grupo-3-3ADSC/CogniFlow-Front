@@ -79,10 +79,10 @@ h2 {
 .baixarRelatorio {
   background-color: #05314c;
   color: white;
-  width: 25vh;
+  width: 6vh;
   height: 6vh;
-  border-radius: 20px;
-  font-size: 14px;
+  border-radius: 15px;
+  font-size: 10px;
   font-weight: bold;
   border: none;
   cursor: pointer;
@@ -120,6 +120,15 @@ h2 {
   font-size: 15px;
   color: white;
   transition: background-color 0.2s ease;
+}
+
+.containerDados {
+  text-align: center;
+  align-items: center;
+}
+
+.containerTitulos {
+  text-align: center;
 }
 
 .tabela tbody tr:hover {
