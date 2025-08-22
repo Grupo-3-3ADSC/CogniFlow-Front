@@ -128,10 +128,12 @@ const NavBar = () => {
               <img className="icons-menu" src={iconTransferencia} alt="Transferência" />
               <span>Transferência</span>
             </li>
+            {usuarioLista?.cargo?.id === 2 && (
              <li title="Relatórios" onClick={() => navigate('/relatorios')}>
               <img className="icons-menu" src={iconFormularios} alt="Relatórios" />
               <span>Relatórios</span>
             </li>
+            )}
             <li className="has-submenu" title="Dashboards" onClick={toggleDashSubmenu}>
               <img className="icons-menu" src={iconDash} alt="Dashboards" />
               <span>Dashboards</span>
@@ -166,6 +168,7 @@ const NavBar = () => {
                 )}
               </ul>
             )}
+            {usuarioLista?.cargo?.id === 2 && (
             <li className="has-submenu" title="Históricos" onClick={toggleHistoricoSubmenu}>
               <img className="icons-menu" src={iconFormularios} alt="Históricos" />
               <span>Históricos</span>
@@ -173,11 +176,15 @@ const NavBar = () => {
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </li>
+            )}
             {showHistoricoSubmenu && (
               <ul className="submenu-list">
+
+                
                 <li onClick={() => navigate('/HistoricoOrdemDeCompra')}>Histórico de Ordem de Compra</li>
 
                 <li onClick={() => navigate('/HistoricoTranferencias')}>Histórico de Transferências</li>
+                
               </ul>
             )}
           </ul>

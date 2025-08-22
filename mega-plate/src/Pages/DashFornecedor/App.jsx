@@ -855,7 +855,7 @@ function App() {
       }
     }
 
-    var resultadoFinal = [["Mês", "Produção", "Meta"]];
+    var resultadoFinal = [["Mês", "Entrada de Material", "Meta"]];
     for (var m = 0; m < months.length; m++) {
       var labelMes = months[m];
       if (
@@ -987,8 +987,15 @@ function App() {
                         </div>
                         <div className="kpi-data">
                           <span>
-                            Receita Total: R${" "}
-                            {item.valorTotalAcumulado.toFixed(2)}
+                            {selectedFornecedor && item.materialIndividual
+                              ? `Gastos por material: ${new Intl.NumberFormat('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL',
+                                }).format(item.valorTotalAcumulado)} | Quantidade: ${item.quantidadeTotal}`
+                              : `Gastos Totais por fornecedor: ${new Intl.NumberFormat('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL',
+                                }).format(item.valorTotalAcumulado)}`}
                           </span>
                         </div>
                       </div>
@@ -1004,7 +1011,7 @@ function App() {
                   chartType="ColumnChart"
                   data={barData}
                   options={{
-                    title: `Produção Mensal (${filteredSuppliers.length} fornecedores)`,
+                    title: `Entrada Mensal de material (${filteredSuppliers.length} fornecedores)`,
                     backgroundColor: "transparent",
                     legend: "none",
                     titleTextStyle: { color: "white" },

@@ -21,9 +21,19 @@ export function Historicos() {
 
     useEffect(() => {
         const token = sessionStorage.getItem("authToken");
+        const cargo = parseInt(sessionStorage.getItem("cargoUsuario"), 10);
         if (!token) {
             navigate("/");
-        } else {
+        } else if (cargo !== 2) {
+              // Verifica se o usuário não é gestor
+              Swal.fire({
+                title: "Acesso Negado",
+                text: "Você não tem permissão para acessar esta página.",
+                icon: "error",
+                confirmButtonColor: "#3085d6",
+              });
+              navigate("/material"); // Redireciona para outra página
+            } else{
             const { exp } = jwtDecode(token);
             if (Date.now() >= exp * 1000) {
                 sessionStorage.removeItem("authToken");

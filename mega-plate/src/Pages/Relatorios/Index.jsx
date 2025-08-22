@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import NavBar from "../../components/NavBar";
 import styles from "./relatorios.module.css";
 import { jsPDF } from "jspdf";
 import setaImg from "../../assets/seta.png";
 import setaRightImg from "../../assets/setaRight.png";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import { jwtDecode } from "jwt-decode";
+
 
 
 /* ---------- Funções de geração de PDF ---------- */
@@ -130,6 +133,9 @@ function gerarListaAnos(anoInicial) {
 
 /* ---------- Componente principal ---------- */
 export function Relatorios() {
+
+
+    
     const navigate = useNavigate();
     const [filtroRelatorio, setFiltroRelatorio] = useState("todos");
     const todosAnos = gerarListaAnos(2018);
@@ -163,6 +169,34 @@ export function Relatorios() {
 
     const relatoriosFiltrados = listaRelatorios.filter(r => filtroRelatorio === "todos" || r.tipo === filtroRelatorio);
 
+
+    // const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
+    
+    //   useEffect(() => {
+    //     const token = sessionStorage.getItem("authToken");
+    //     const cargo = parseInt(sessionStorage.getItem("cargoUsuario"), 10); // Converte para número
+    //     console.log(cargo);
+    //     if (!token) {
+    //       navigate("/");
+    //     } else if (cargo !== 2) {
+    //       // Verifica se o usuário não é gestor
+    //       Swal.fire({
+    //         title: "Acesso Negado",
+    //         text: "Você não tem permissão para acessar esta página.",
+    //         icon: "error",
+    //         confirmButtonColor: "#3085d6",
+    //       });
+    //       navigate("/material"); // Redireciona para outra página
+    //     } else {
+    //       const { exp } = jwtDecode(token);
+    //       if (Date.now() >= exp * 1000) {
+    //         sessionStorage.removeItem("authToken");
+    //         navigate("/");
+    //       } else {
+    //         setAutenticacaoPassou(true);
+    //       }
+    //     }
+    //   }, []);
     return (
         <>
             <NavBar />
