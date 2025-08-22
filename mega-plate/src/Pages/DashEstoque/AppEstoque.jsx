@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Search,
   X,
@@ -272,7 +272,7 @@ function App() {
   const [selectedStockItem, setSelectedStockItem] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [ordemDeCompra, setOrdemDeCompra] = useState([]);
-const [pendencias, setPendencias] = useState({});
+  const [pendencias, setPendencias] = useState({});
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -303,19 +303,59 @@ const [pendencias, setPendencias] = useState({});
         console.log("erro:", err);
       });
   }
+  // Estado para armazenar as ordens de compra
+  const [ordensDeCompra, setOrdensDeCompra] = useState([]);
+
+  // Função para carregar as ordens de compra
   function getOrdemDeCompra() {
     api
       .get("/ordemDeCompra")
       .then((resposta) => {
-        setOrdemDeCompra(resposta.data);
-        // console.log(resposta.data);
+        setOrdensDeCompra(resposta.data || []);
+        console.log("Ordens de compra:", resposta.data);
       })
-      .catch((err) => {
-        console.log("erro:", err);
-
-      });
+      .catch((err) => console.log("Erro ao buscar ordens de compra:", err));
   }
 
+  // Helper para agrupar pendentes por estoqueId
+  const pendentesPorEstoqueId = useMemo(() => {
+    if (!Array.isArray(ordensDeCompra)) return {};
+    return ordensDeCompra.reduce((acc, oc) => {
+      const id = oc?.estoqueId;
+      const qtd = Number(oc?.quantidade) || 0;
+      if (id == null) return acc;
+      acc[id] = (acc[id] || 0) + qtd; // Soma todas as OCs do mesmo estoque
+      return acc;
+    }, {});
+  }, [ordensDeCompra]);
+
+  // Helper para fallback por nome (caso algum item não bata pelo id)
+  const pendentesPorNome = useMemo(() => {
+    if (!Array.isArray(ordensDeCompra)) return {};
+    return ordensDeCompra.reduce((acc, oc) => {
+      const nome = oc?.descricaoMaterialCompleta?.trim();
+      const qtd = Number(oc?.quantidade) || 0;
+      if (!nome) return acc;
+      acc[nome] = (acc[nome] || 0) + qtd;
+      return acc;
+    }, {});
+  }, [ordensDeCompra]);
+
+  // Cria o array já combinado (estoque + pendente)
+  // const stockWithOrders = useMemo(() => {
+  //   if (!Array.isArray(filteredStockItems)) return [];
+  //   return filteredStockItems.map((it) => {
+  //     const byId = pendentesPorEstoqueId[it?.id] || 0;
+  //     const byName = it?.tipoMaterial
+  //       ? (pendentesPorNome[it.tipoMaterial] || 0)
+  //       : 0;
+
+  //     // Prioriza o match por id; se não houver, usa o nome
+  //     const pendente = byId > 0 ? byId : byName;
+
+  //     return { ...it, pendente };
+  //   });
+  // }, [filteredStockItems, pendentesPorEstoqueId, pendentesPorNome]);
 
   useEffect(() => {
     getEstoque();
@@ -385,96 +425,97 @@ const [pendencias, setPendencias] = useState({});
     }
   };
   function calcularPendencias(ordens) {
-  const hoje = new Date();
-  const pendencias = {};
+    const hoje = new Date();
+    const pendencias = {};
 
-  ordens.forEach((ordem) => {
-    const prazo = new Date(ordem.prazoEntrega);
+    ordens.forEach((ordem) => {
+      const prazo = new Date(ordem.prazoEntrega);
 
-    // Se ainda não chegou o prazo
-    if (prazo > hoje) {
-       const descricaoMaterial = ordem.descricaoMaterialCompleta?.toUpperCase();
+      // Se ainda não chegou o prazo
+      if (prazo > hoje) {
+        const descricaoMaterial =
+          ordem.descricaoMaterialCompleta?.toUpperCase();
 
-      if (!pendencias[descricaoMaterial]) {
-        pendencias[descricaoMaterial] = 0;
+        if (!pendencias[descricaoMaterial]) {
+          pendencias[descricaoMaterial] = 0;
+        }
+
+        pendencias[descricaoMaterial] += ordem.quantidade;
       }
+    });
 
-      pendencias[descricaoMaterial] += ordem.quantidade;
-    }
-  });
-
-  return pendencias;
-}
-function buscarUltimasOrdensPorMaterial(ordens) {
-  const ultimasOrdens = {};
-
-  ordens.forEach((ordem) => {
-    const material = ordem.descricaoMaterialCompleta?.toUpperCase();
-    
-    if (!ultimasOrdens[material] || 
-        new Date(ordem.dataOrdem) > new Date(ultimasOrdens[material].dataOrdem)) {
-      ultimasOrdens[material] = ordem;
-    }
-  });
-
-  return ultimasOrdens;
-}
-
-// Modificação no useEffect
-const [pendenciasPorMaterial, setPendenciasPorMaterial] = useState({});
-const [ultimasOrdensPorMaterial, setUltimasOrdensPorMaterial] = useState({});
-const [materialAtual, setMaterialAtual] = useState("");
-useEffect(() => {
-  if (ordemDeCompra.length) {
-    // Calcular pendências
-    const pendenciasCalculadas = calcularPendencias(ordemDeCompra);
-    setPendenciasPorMaterial(pendenciasCalculadas);
-    
-    // Buscar últimas ordens por material
-    const ultimasOrdens = buscarUltimasOrdensPorMaterial(ordemDeCompra);
-    setUltimasOrdensPorMaterial(ultimasOrdens);
-    
-    // console.log("Pendências calculadas:", pendenciasCalculadas);
-    // console.log("Últimas ordens por material:", ultimasOrdens);
-
+    return pendencias;
   }
-  // console.log(temPendenciasParaMaterial(materialAtual, ultimasOrdensPorMaterial, pendenciasPorMaterial));
-}, [ordemDeCompra]);
+  function buscarUltimasOrdensPorMaterial(ordens) {
+    const ultimasOrdens = {};
 
-function temPendenciasParaMaterial(material) {
-  const materialUpper = material?.toUpperCase();
-  const ultimaOrdem = ultimasOrdensPorMaterial[materialUpper];
-  
-  if (!ultimaOrdem) return false;
-  
-  const hoje = new Date();
-  const prazoUltimaOrdem = new Date(ultimaOrdem.prazoEntrega);
-  
-  // Tem pendência se a última ordem ainda não venceu o prazo
-  return prazoUltimaOrdem > hoje;
-}
+    ordens.forEach((ordem) => {
+      const material = ordem.descricaoMaterialCompleta?.toUpperCase();
 
-// Para usar na tabela (exemplo para cada linha):
-// Supondo que você tenha uma variável 'material' para cada linha da tabela
+      if (
+        !ultimasOrdens[material] ||
+        new Date(ordem.dataOrdem) > new Date(ultimasOrdens[material].dataOrdem)
+      ) {
+        ultimasOrdens[material] = ordem;
+      }
+    });
 
-// Para SAE 1020:
-const materialSAE1020 = "SAE 1020";
-const pendenciasSAE1020 = temPendenciasParaMaterial(materialSAE1020) 
-  ? pendenciasPorMaterial[materialSAE1020.toUpperCase()] || 0 
-  : 0;
+    return ultimasOrdens;
+  }
 
-// Para SAE 1045:
-const materialSAE1045 = "SAE 1045"; 
-const pendenciasSAE1045 = temPendenciasParaMaterial(materialSAE1045)
-  ? pendenciasPorMaterial[materialSAE1045.toUpperCase()] || 0
-  : 0;
+  // Modificação no useEffect
+  const [pendenciasPorMaterial, setPendenciasPorMaterial] = useState({});
+  const [ultimasOrdensPorMaterial, setUltimasOrdensPorMaterial] = useState({});
+  const [materialAtual, setMaterialAtual] = useState("");
+  useEffect(() => {
+    if (ordemDeCompra.length) {
+      // Calcular pendências
+      const pendenciasCalculadas = calcularPendencias(ordemDeCompra);
+      setPendenciasPorMaterial(pendenciasCalculadas);
 
-// Para HARDOX:
-const materialHARDOX = "HARDOX";
-const pendenciasHARDOX = temPendenciasParaMaterial(materialHARDOX)
-  ? pendenciasPorMaterial[materialHARDOX.toUpperCase()] || 0
-  : 0;
+      // Buscar últimas ordens por material
+      const ultimasOrdens = buscarUltimasOrdensPorMaterial(ordemDeCompra);
+      setUltimasOrdensPorMaterial(ultimasOrdens);
 
+      // console.log("Pendências calculadas:", pendenciasCalculadas);
+      // console.log("Últimas ordens por material:", ultimasOrdens);
+    }
+    // console.log(temPendenciasParaMaterial(materialAtual, ultimasOrdensPorMaterial, pendenciasPorMaterial));
+  }, [ordemDeCompra]);
+
+  // function temPendenciasParaMaterial(material) {
+  //   const materialUpper = material?.toUpperCase();
+  //   const ultimaOrdem = ultimasOrdensPorMaterial[materialUpper];
+
+  //   if (!ultimaOrdem) return false;
+
+  //   const hoje = new Date();
+  //   const prazoUltimaOrdem = new Date(ultimaOrdem.prazoEntrega);
+
+  //   // Tem pendência se a última ordem ainda não venceu o prazo
+  //   return prazoUltimaOrdem > hoje;
+  // }
+
+  // Para usar na tabela (exemplo para cada linha):
+  // Supondo que você tenha uma variável 'material' para cada linha da tabela
+
+  // Para SAE 1020:
+  // const materialSAE1020 = "SAE 1020";
+  // const pendenciasSAE1020 = temPendenciasParaMaterial(materialSAE1020)
+  //   ? pendenciasPorMaterial[materialSAE1020.toUpperCase()] || 0
+  //   : 0;
+
+  // // Para SAE 1045:
+  // const materialSAE1045 = "SAE 1045";
+  // const pendenciasSAE1045 = temPendenciasParaMaterial(materialSAE1045)
+  //   ? pendenciasPorMaterial[materialSAE1045.toUpperCase()] || 0
+  //   : 0;
+
+  // // Para HARDOX:
+  // const materialHARDOX = "HARDOX";
+  // const pendenciasHARDOX = temPendenciasParaMaterial(materialHARDOX)
+  //   ? pendenciasPorMaterial[materialHARDOX.toUpperCase()] || 0
+  //   : 0;
 
   return (
     <div className="IndexFornecedor">
@@ -554,36 +595,52 @@ const pendenciasHARDOX = temPendenciasParaMaterial(materialHARDOX)
                   </tr>
                 </thead>
                 <tbody>
-  {filteredStockItems.map((item, index) => (
-    <tr
-      key={index}
-      onClick={() => handleStockItemClick(item)}
-      style={{ cursor: "pointer" }}
-      onMouseEnter={(e) =>
-        (e.target.parentElement.style.backgroundColor =
-          "rgba(69, 134, 171, 0.1)")
-      }
-      onMouseLeave={(e) =>
-        (e.target.parentElement.style.backgroundColor =
-          "transparent")
-      }
-    >
-      <td>{item.tipoMaterial}</td>
-      <td>{item.quantidadeAtual - pendenciasPorMaterial[item.tipoMaterial?.toUpperCase()] || item.quantidadeAtual}</td>
-      <td
-  style={{
-    color: (pendenciasPorMaterial[item.tipoMaterial?.toUpperCase()] || 0) > 0 ? "red" : "inherit",
-  }}
->
-  {pendenciasPorMaterial[item.tipoMaterial?.toUpperCase()] || 0}
-</td>
-      <td>{item.quantidadeMinima}</td>
-      <td>{item.quantidadeMaxima}</td>
-      <td>{item.externa || 0}</td>
-      <td>{item.interna || 0}</td>
-    </tr>
-  ))}
-</tbody>
+                  {filteredStockItems.map((item, index) => {
+                    // Busca a ordem de compra correspondente ao material ou ID
+                    const quantidadeTotal = ordensDeCompra
+  .filter(
+    (ordem) =>
+      ordem.descricaoMaterialCompleta?.toUpperCase() === item.tipoMaterial?.toUpperCase() &&
+      ordem.pendenciaAlterada === false
+  )
+  .reduce((total, ordem) => total + (Number(ordem.quantidade) || 0), 0);
+                    return (
+                      <tr
+                        key={index}
+                        onClick={() => handleStockItemClick(item)}
+                        style={{ cursor: "pointer" }}
+                        onMouseEnter={(e) =>
+                          (e.target.parentElement.style.backgroundColor =
+                            "rgba(69, 134, 171, 0.1)")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.target.parentElement.style.backgroundColor =
+                            "transparent")
+                        }
+                      >
+                        <td>{item.tipoMaterial}</td>
+                        <td>{item.quantidadeAtual}</td>
+
+                        {/* PENDENTE vindo das OCs */}
+                        <td
+                          style={{
+                            color:
+                              quantidadeTotal > 0
+                                ? "orange"
+                                : "inherit",
+                          }}
+                        >
+                          {quantidadeTotal}
+                        </td>
+
+                        <td>{item.quantidadeMinima}</td>
+                        <td>{item.quantidadeMaxima}</td>
+                        <td>{item.externa || 0}</td>
+                        <td>{item.interna || 0}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
               </table>
               <div className="search-results">
                 <p>{filteredStockItems.length} itens encontrados</p>
@@ -629,31 +686,6 @@ const pendenciasHARDOX = temPendenciasParaMaterial(materialHARDOX)
                 </div>
               </div>
 
-              {/* <div className="popup-section">
-                <h4>
-                  <Ruler size={20} />
-                  Dimensões
-                </h4>
-                <div className="info-grid">
-                  <div className="info-item">
-                    <span className="info-label">Largura:</span>
-                    <span className="info-value">{selectedStockItem.largura}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Espessura:</span>
-                    <span className="info-value">{selectedStockItem.espessura}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Localização:</span>
-                    <span className="info-value">{selectedStockItem.localizacao}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Valor Unitário:</span>
-                    <span className="info-value">R$ {selectedStockItem.valorUnitario.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div> */}
-
               <div className="popup-section">
                 <h4>
                   <Calendar size={20} />
@@ -662,23 +694,20 @@ const pendenciasHARDOX = temPendenciasParaMaterial(materialHARDOX)
                 <div className="info-grid">
                   <div className="info-item">
                     <span className="info-value">
-                      {selectedStockItem.ultimaMovimentacao ? (
-                        isNaN(new Date(selectedStockItem.ultimaMovimentacao)) ? (
-                          "Data inválida"
-                        ) : (
-                          new Date(selectedStockItem.ultimaMovimentacao).toLocaleString("pt-BR", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        )
-                      ) : (
-                        "Sem movimentação"
-                      )}
+                      {selectedStockItem.ultimaMovimentacao
+                        ? isNaN(new Date(selectedStockItem.ultimaMovimentacao))
+                          ? "Data inválida"
+                          : new Date(
+                              selectedStockItem.ultimaMovimentacao
+                            ).toLocaleString("pt-BR", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                        : "Sem movimentação"}
                     </span>
-
                   </div>
                   {/* <div className="info-item">
                     <span className="info-label">Hora de Entrada:</span>

@@ -501,8 +501,7 @@ export function OrdemDeCompra() {
         valoresInput["Valor Unitário"]?.replace(",", ".") || 0
       ),
       ipi: parseFloat(valoresInput["IPI"]?.replace(",", ".") || 0),
-      quantidade: 1,
-      pendentes: parseInt(valoresInput["Quantidade"]),
+      quantidade: parseFloat(valoresInput["Quantidade"]?.replace(",", ".") || 1),      
     };
     //  console.log(dadosApi);
     // console.log("listaMateriais", listaMateriais);

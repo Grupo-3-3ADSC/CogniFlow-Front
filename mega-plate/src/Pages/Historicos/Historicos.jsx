@@ -95,7 +95,7 @@ export function Historicos() {
         if (result.isConfirmed) {
             let resposta = {
                 id: "",
-                pendentes: "",
+                quantidade: "",
                 pendenciaAlterada: ""
             }
 
@@ -105,13 +105,13 @@ export function Historicos() {
                     if (ordemAtual.pendenciaAlterada == 0) {
                         resposta = {
                             id: parseInt(ordemAtual.id),
-                            pendentes: ordemAtual.pendentes,
+                            quantidade: ordemAtual.quantidade,
                         };
                         break;
                     }
                     resposta = {
                         id: parseInt(ordemAtual.id),
-                        pendentes: ordemAtual.quantidade,
+                        quantidade: ordemAtual.quantidade,
                     };
                     break;
                 }
@@ -126,7 +126,7 @@ export function Historicos() {
                 .then((requisicao) => {
                     resposta = {
                         id: "",
-                        pendentes: "",
+                        quantidade: "",
                         pendenciaAlterada: ""
                     };
                     Swal.fire({
@@ -160,7 +160,7 @@ export function Historicos() {
         if (result.isConfirmed) {
             let resposta = {
                 id: "",
-                pendentes: "",
+                quantidade: "",
                 pendenciaAlterada: ""
             }
 
@@ -170,13 +170,13 @@ export function Historicos() {
                     if (ordemAtual.pendenciaAlterada == 0) {
                         resposta = {
                             id: parseInt(ordemAtual.id),
-                            pendentes: ordemAtual.pendentes,
+                            quantidade: ordemAtual.quantidade,
                         };
                         break;
                     }
                     resposta = {
                         id: parseInt(ordemAtual.id),
-                        pendentes: ordemAtual.quantidade,
+                        quantidade: ordemAtual.quantidade,
                     };
                     break;
                 }
@@ -191,7 +191,7 @@ export function Historicos() {
                 .then((requisicao) => {
                     resposta = {
                         id: "",
-                        pendentes: "",
+                        quantidade: "",
                         pendenciaAlterada: ""
                     };
                     Swal.fire({
