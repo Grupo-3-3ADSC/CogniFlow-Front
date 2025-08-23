@@ -276,6 +276,7 @@ function App() {
   const [ordemDeCompra, setOrdemDeCompra] = useState([]);
   const [estoque, setEstoque] = useState([]);
   const [kpiData, setKpiData] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1); // paginas da paginação da listagem de fornecedores
 
   const fileInputRef = useRef(null);
 
@@ -885,6 +886,15 @@ function App() {
     setSelectedSupplier(null);
   };
 
+  //paginação da lista de fornecedores
+  const suppliersPerPage = 6;
+
+const totalPages = Math.ceil(filteredSuppliers.length / suppliersPerPage);
+const paginatedSuppliers = filteredSuppliers.slice(
+  (currentPage - 1) * suppliersPerPage,
+  currentPage * suppliersPerPage
+);
+
   return (
     <div className="IndexFornecedor">
       <NavBar />
@@ -1037,20 +1047,45 @@ function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredSuppliers.map((supplier, index) => (
-                    <tr
-                      key={supplier.id || index}
-                      onClick={() => handleSupplierClick(supplier)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <td>
-                        {supplier.nomeFantasia ||
-                          supplier.razaoSocial ||
-                          "Nome não informado"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+  {paginatedSuppliers.map((supplier, index) => (
+    <tr
+      key={supplier.id || index}
+      onClick={() => handleSupplierClick(supplier)}
+      style={{ cursor: "pointer" }}
+    >
+      <td>
+        {supplier.nomeFantasia ||
+          supplier.razaoSocial ||
+          "Nome não informado"}
+      </td>
+    </tr>
+  ))}
+</tbody>
+{filteredSuppliers.length > suppliersPerPage && (
+  <tfoot>
+    <tr>
+      <td colSpan="1">
+        <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
+          >
+            Anterior
+          </button>
+          <span>
+            Página {currentPage} de {totalPages}
+          </span>
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(currentPage + 1)}
+          >
+            Próxima
+          </button>
+        </div>
+      </td>
+    </tr>
+  </tfoot>
+)}
               </table>
             </div>
             <div className="search-results">
