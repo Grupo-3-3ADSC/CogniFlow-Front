@@ -22,7 +22,38 @@ export function CadastroFornecedor() {
     cargo: ''
   });
 
+  function validarInputsEspeciais() {
+    const sqlPattern =
+      /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
+    if (sqlPattern.test(formData.email) 
+      || sqlPattern.test(formData.razaoSocial) 
+      || sqlPattern.test(formData.nomeFantasia)
+      || sqlPattern.test(formData.endereco)
+      || sqlPattern.test(formData.responsavel)
+      || sqlPattern.test(formData.cargo)) {
+      return false;
+    }
+    if (
+      /<script.*?>.*?<\/script>/gi.test(formData.email) 
+      || /<script.*?>.*?<\/script>/gi.test(formData.razaoSocial)
+      || /<script.*?>.*?<\/script>/gi.test(formData.nomeFantasia)
+      || /<script.*?>.*?<\/script>/gi.test(formData.endereco)
+      || /<script.*?>.*?<\/script>/gi.test(formData.responsavel)
+      || /<script.*?>.*?<\/script>/gi.test(formData.cargo)
+    ) {
+      return false;
+    }
+    return true;
+  }
+
   const cadastrarFornecedor = async () => {
+
+    if (!validarInputsEspeciais()) {
+            return Swal.fire({
+              title:"Por favor não utilizar comandos nos campos",
+              icon: "error"
+              });
+          }
 
     if (
       !formData.cnpj ||
@@ -108,6 +139,7 @@ export function CadastroFornecedor() {
         'Content-Type': 'application/json'
       }
     }).then((response) => {
+      
       console.log('Resposta do servidor:', response.data);
       Swal.fire({
         title: "Fornecedor cadastrado com sucesso!",
