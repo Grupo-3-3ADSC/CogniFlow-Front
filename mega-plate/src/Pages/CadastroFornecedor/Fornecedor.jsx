@@ -327,7 +327,7 @@ export function CadastroFornecedor() {
       <section className={styles.material}>
         <div className={styles['bloco-fundo-material']}>
           <div className={styles['tab-container-user']}>
-            <div className={styles.tabActiveMaterial}>Cadastro de Fornecedor</div>
+            <div className={styles.tabActiveMaterial}>CADASTRO DE FORNECEDOR</div>
           </div>
         </div>
         <aside className={styles['aside-material']}>

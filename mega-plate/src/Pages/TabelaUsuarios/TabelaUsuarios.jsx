@@ -131,7 +131,7 @@ export function TabelaUsuarios() {
       <NavBar />
       <div className={styles.container}>
         <div className={styles.background}>
-          <h1>Lista de Usuários</h1>
+          <h1>LISTA DE USUÁRIOS</h1>
           <label htmlFor="filtro" className={styles.labelFiltro}>
             Filtrar por status:{" "}
           </label>
