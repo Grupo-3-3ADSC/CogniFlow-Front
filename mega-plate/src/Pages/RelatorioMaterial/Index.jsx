@@ -7,175 +7,152 @@ import setaImg from "../../assets/seta.png";
 import setaRightImg from "../../assets/setaRight.png";
 import { useNavigate } from "react-router-dom";
 import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import logoMegaPlate from '../../assets/logo-megaplate-azul.png';
 
-function gerarRelatorioMaterial(material, dadosAno, dadosMensais, ano) {
+// Adicione esta função ao seu arquivo, antes de 'gerarRelatorioMaterial'
+
+function drawKpiCard(doc, x, y, w, h, title, value, corPrimaria, corTexto) {
+  // Desenha o fundo do card
+  doc.setFillColor(245, 245, 245).setDrawColor(...corPrimaria);
+  doc.roundedRect(x, y, w, h, 3, 3, "FD"); // Borda arredondada
+
+  // Título (KPI)
+  doc.setTextColor(...corTexto).setFontSize(9).setFont("helvetica", "normal");
+  doc.text(title, x + w / 2, y + 8, { align: "center" });
+
+  // Valor
+  doc.setTextColor(...corPrimaria).setFontSize(14).setFont("helvetica", "bold");
+  doc.text(value.toString(), x + w / 2, y + 18, { align: "center" });
+}
+
+export function gerarRelatorioMaterial(material, dadosAno, dadosMensais, ano) {
   const doc = new jsPDF();
   const corPrimaria = [5, 49, 76];
   const corTexto = [44, 62, 80];
-  const dataHoraEmissao = new Date().toLocaleString("pt-BR");
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const dataEmissao = new Date().toLocaleString("pt-BR");
 
-  // Função para rodapé
-  const addRodape = () => {
-    const pageHeight = doc.internal.pageSize.height;
-    doc.setFontSize(8).setTextColor(100);
-    doc.text(`Emitido em: ${dataHoraEmissao}`, 14, pageHeight - 10);
-  };
-
-  // --- CAPA ---
+  // ===== CAPA =====
   doc.setFillColor(...corPrimaria);
-  doc.rect(0, 0, 210, 35, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(16).setFont("helvetica", "bold");
-  doc.text(`RELATÓRIO DE SAÍDAS POR MATERIAL - ${ano}`, 20, 20);
+  doc.rect(0, 0, pageWidth, 35, "F");
+  doc.setTextColor(255, 255, 255).setFontSize(20).setFont("helvetica", "bold");
+  doc.text(`RELATÓRIO DE MATERIAL – ${ano}`, pageWidth / 2, 20, { align: "center" });
 
   doc.setTextColor(...corTexto).setFontSize(12).setFont("helvetica", "normal");
-  doc.text(
-    "Análise anual das movimentações do material selecionado, com detalhamento por tipo de saída e destino.",
-    20,
-    60,
-    { maxWidth: 170 }
-  );
-  doc.text(`Material: ${material}`, 20, 80);
-  doc.text(`Data de emissão: ${dataHoraEmissao}`, 20, 100);
+  doc.text(`Material: ${material}`, pageWidth / 2, 80, { align: "center" });
+  doc.text(`Análise das movimentações e desempenho anual`, pageWidth / 2, 60, { align: "center" });
+  doc.text(`Data de emissão: ${dataEmissao}`, pageWidth / 2, 90, { align: "center" });
+  if (logoMegaPlate) doc.addImage(logoMegaPlate, "PNG", (pageWidth - 50) / 2, 100, 50, 50);
 
-  addRodape();
-
-  // --- PÁGINAS MENSAIS ---
-  dadosMensais.forEach((mes) => {
+  // ===== PÁGINAS MENSAIS =====
+  (dadosMensais || []).forEach(mes => {
     doc.addPage();
-    doc.setFillColor(...corPrimaria);
-    doc.rect(0, 0, 210, 20, "F");
+    doc.setFont("helvetica", "bold").setFontSize(16).setTextColor(...corPrimaria);
+    doc.text((mes?.nomeMes || "").toUpperCase(), 20, 30);
 
-    doc.setTextColor(255, 255, 255).setFontSize(14).setFont("helvetica", "bold");
-    doc.text(`RELATÓRIO DE SAÍDAS POR MATERIAL - ${ano}`, 20, 12);
 
-    doc.setTextColor(...corPrimaria).setFontSize(16);
-    doc.text(mes.nomeMes.toUpperCase(), 20, 40);
+    // KPIs
+    const kpis = mes?.dados?.map(d => ({ t: d.label, v: d.valor })) || [];
+    const gridX = 20, gridY = 50, gap = 8, cols = 2;
+    const cardW = (pageWidth - gridX * 2 - gap * (cols - 1)) / cols;
+    const cardH = 26;
+    let idx = 0;
 
-    doc.setTextColor(...corTexto).setFontSize(12);
-    let posY = 60;
-    mes.dados.forEach((item) => {
-      doc.text(`${item.label}: ${item.valor}`, 20, posY);
-      posY += 10;
-    });
+    // CALCULA O NÚMERO DE LINHAS NECESSÁRIAS (ceil(6/2) = 3 linhas)
+    const totalRows = Math.ceil(kpis.length / cols);
 
-    addRodape();
+    for (let r = 0; r < totalRows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (idx >= kpis.length) break;
+        const x = gridX + c * (cardW + gap);
+        const y = gridY + r * (cardH + gap);
+        const { t, v } = kpis[idx++];
+        drawKpiCard(doc, x, y, cardW, cardH, t, v, corPrimaria, corTexto);
+      }
+    }
+
+    // tabela de movimentações (igual a pedidos)
+    const movimentos = mes?.movimentos || [];
+    if (movimentos.length > 0) {
+      // REMOVIDO "Tipo" DO CABEÇALHO
+      const head = [["Data", "Setor", "Qtd", "Observação"]];
+
+      // REMOVIDO m.tipo DO CORPO
+      const body = movimentos.map(m => [m.data, m.setor, m.quantidade, m.obs || "-"]);
+
+      autoTable(doc, {
+        head, body,
+        // **CORREÇÃO AQUI:** USA totalRows para calcular a posição Y
+        startY: gridY + totalRows * (cardH + gap) + 10,
+        styles: { font: "helvetica", fontSize: 9 },
+        headStyles: { fillColor: corPrimaria, textColor: [255, 255, 255] },
+        theme: "striped",
+        margin: { left: 20, right: 20 }
+      });
+    }
   });
 
-  // --- PÁGINA RESUMO ANUAL ---
+  // ===== RESUMO ANUAL =====
   doc.addPage();
-  doc.setFillColor(...corPrimaria);
-  doc.rect(0, 0, 210, 20, "F");
+  doc.setFont("helvetica", "bold").setFontSize(16).setTextColor(...corPrimaria);
+  doc.text(`${ano} - RESUMO ANUAL (MATERIAL)`, 20, 30);
 
-  doc.setTextColor(255, 255, 255).setFontSize(14).setFont("helvetica", "bold");
-  doc.text(`RELATÓRIO GERAL DE SAÍDAS - ${ano}`, 20, 12);
+  const resumo = dadosAno || [];
+  const gridX = 20, gridY = 50, gap = 8, cols = 2;
+  const cardW = (pageWidth - gridX * 2 - gap * (cols - 1)) / cols;
+  const cardH = 26;
+  let idx = 0;
+  for (let r = 0; r < Math.ceil(resumo.length / cols); r++) {
+    for (let c = 0; c < cols; c++) {
+      if (idx >= resumo.length) break;
+      const x = gridX + c * (cardW + gap);
+      const y = gridY + r * (cardH + gap);
+      const { label, valor } = resumo[idx++];
+      drawKpiCard(doc, x, y, cardW, cardH, label, valor, corPrimaria, corTexto);
+    }
+  }
 
-  doc.setTextColor(...corPrimaria).setFontSize(16);
-  doc.text(`${ano} - RESUMO ANUAL`, 20, 40);
+  // ===== RODAPÉ =====
+  const totalPaginas = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPaginas; i++) {
+    doc.setPage(i);
+    doc.setFillColor(...corPrimaria);
+    doc.rect(0, pageHeight - 20, pageWidth, 20, "F");
+    doc.setFontSize(9).setFont("helvetica", "italic").setTextColor(255, 255, 255);
+    doc.text(`Emitido em: ${dataEmissao} | Página ${i} de ${totalPaginas}`, pageWidth / 2, pageHeight - 7, { align: "center" });
+  }
 
-  doc.setTextColor(...corTexto).setFontSize(12);
-  let posY = 60;
-  dadosAno.forEach((item) => {
-    doc.text(`${item.label}: ${item.valor}`, 20, posY);
-    posY += 10;
-  });
-
-  addRodape();
-
-  // --- SALVAR ---
   doc.save(`relatorio_material_${material}_${ano}.pdf`);
 }
 
-const MOCK_DADOS_MENSAIS = [
-  { nomeMes: "Janeiro", dados: [
-      { label: "Total de saídas", valor: "120" },
-      { label: "Saídas internas", valor: "80" },
-      { label: "Saídas externas", valor: "40" },
-      { label: "Material mais movimentado", valor: "SAE 1020" }
+const MOCK_DADOS_MENSAL_MATERIAL = [
+  {
+    nomeMes: "Janeiro",
+    dados: [
+      { label: "Total de saídas ", valor: "120" },
+      { label: "Saídas para C1", valor: "35" },
+      { label: "Saídas para C2", valor: "25" },
+      { label: "Saídas para C3", valor: "40" },
+      { label: "Saídas para C4", valor: "20" },
+      { label: "Maior Setor (Volume)", valor: "C3" } // <- Novo KPI
+    ],
+    movimentos: [
+      { data: "01/01/2025", setor: "C1", quantidade: 50 },
+      { data: "05/01/2025", setor: "Cliente X", quantidade: 30 },
     ]
   },
-  { nomeMes: "Fevereiro", dados: [
-      { label: "Total de saídas", valor: "95" },
-      { label: "Saídas internas", valor: "55" },
-      { label: "Saídas externas", valor: "40" },
-      { label: "Material mais movimentado", valor: "SAE 1040" }
-    ]
-  },
-    { nomeMes: "Março", dados: [
-      { label: "Total de saídas", valor: "95" },
-      { label: "Saídas internas", valor: "55" },
-      { label: "Saídas externas", valor: "40" },
-      { label: "Material mais movimentado", valor: "SAE 1040" }
-    ]
-  },
-    { nomeMes: "Abril", dados: [
-      { label: "Total de saídas", valor: "95" },
-      { label: "Saídas internas", valor: "55" },
-      { label: "Saídas externas", valor: "40" },
-      { label: "Material mais movimentado", valor: "SAE 1040" }
-    ]
-  },
-    { nomeMes: "Maio", dados: [
-      { label: "Total de saídas", valor: "95" },
-      { label: "Saídas internas", valor: "55" },
-      { label: "Saídas externas", valor: "40" },
-      { label: "Material mais movimentado", valor: "SAE 1040" }
-    ]
-  },
-    { nomeMes: "Junho", dados: [
-      { label: "Total de saídas", valor: "95" },
-      { label: "Saídas internas", valor: "55" },
-      { label: "Saídas externas", valor: "40" },
-      { label: "Material mais movimentado", valor: "SAE 1040" }
-    ]
-  },
-    { nomeMes: "Julho", dados: [
-      { label: "Total de saídas", valor: "95" },
-      { label: "Saídas internas", valor: "55" },
-      { label: "Saídas externas", valor: "40" },
-      { label: "Material mais movimentado", valor: "SAE 1040" }
-    ]
-  },
-    { nomeMes: "Agosto", dados: [
-      { label: "Total de saídas", valor: "95" },
-      { label: "Saídas internas", valor: "55" },
-      { label: "Saídas externas", valor: "40" },
-      { label: "Material mais movimentado", valor: "SAE 1040" }
-    ]
-  },
-    { nomeMes: "Setembro", dados: [
-      { label: "Total de saídas", valor: "95" },
-      { label: "Saídas internas", valor: "55" },
-      { label: "Saídas externas", valor: "40" },
-      { label: "Material mais movimentado", valor: "SAE 1040" }
-    ]
-  },
-
-    { nomeMes: "Novembro", dados: [
-      { label: "Total de saídas", valor: "95" },
-      { label: "Saídas internas", valor: "55" },
-      { label: "Saídas externas", valor: "40" },
-      { label: "Material mais movimentado", valor: "SAE 1040" }
-    ]
-  },
-    { nomeMes: "Dezembro", dados: [
-      { label: "Total de saídas", valor: "95" },
-      { label: "Saídas internas", valor: "55" },
-      { label: "Saídas externas", valor: "40" },
-      { label: "Material mais movimentado", valor: "SAE 1040" }
-    ]
-  },
-
 ];
 
-const MOCK_DADOS_ANO = [
-  { label: "Total de saídas (quantidade)", valor: "215" },
-  { label: "Nº de saídas internas", valor: "135" },
-  { label: "Nº de saídas externas", valor: "80" },
-  { label: "Material mais movimentado do ano", valor: "SAE 1020" }
+const MOCK_DADOS_ANO_MATERIAL = [
+  { label: "Total de Saídas no Ano", valor: "550" },
+  { label: "Saídas Anuais para C1", valor: "150" },
+  { label: "Saídas Anuais para C2", valor: "120" },
+  { label: "Saídas Anuais para C3", valor: "170" },
+  { label: "Saídas Anuais para C4", valor: "110" },
+  { label: "Setor de Maior Consumo", valor: "C3" }, // KPI adicional
 ];
-
-
 
 function gerarListaAnos(anoInicial) {
   const anoAtual = new Date().getFullYear();
@@ -197,7 +174,7 @@ export function RelatorioMaterial() {
   const [filtroNome, setFiltroNome] = useState("");
   const todosAnos = gerarListaAnos(2018);
   const [inicio, setInicio] = useState(0);
-  const [anoSelecionado, setAnoSelecionado] = useState(todosAnos[todosAnos.length - 1]);
+  const [anoSelecionado, setAnoSelecionado] = useState(null);
   const navigate = useNavigate();
 
 
@@ -313,12 +290,20 @@ export function RelatorioMaterial() {
                 </div>
                 <button
                   className={styles.btnBaixar}
-                  onClick={() => gerarRelatorioMaterial(
-                    material.material,
-                    MOCK_DADOS_ANO,
-                    MOCK_DADOS_MENSAIS,
-                    anoSelecionado
-                  )}
+                  // 1. Desabilitar se o anoSelecionado for 'falso' (null/undefined/0/etc.)
+                  disabled={!anoSelecionado}
+
+                  onClick={() => {
+                    // 2. Garantir que o ano existe antes de chamar a função
+                    if (anoSelecionado) {
+                      gerarRelatorioMaterial(
+                        material.material,
+                        MOCK_DADOS_ANO_MATERIAL,
+                        MOCK_DADOS_MENSAL_MATERIAL,
+                        anoSelecionado
+                      );
+                    }
+                  }}
                 >
                   Baixar Relatório
                 </button>

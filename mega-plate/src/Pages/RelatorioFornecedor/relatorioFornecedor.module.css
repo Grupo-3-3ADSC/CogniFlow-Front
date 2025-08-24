@@ -24,10 +24,33 @@
   width: 80%;
   max-width: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   flex-direction: column;
 }
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  justify-self: center;
+}
+
+.seta {
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+
 
 h2 {
   color: white;
@@ -65,17 +88,17 @@ h2 {
 }
 
 .filtro {
-    width: 70%;
-    display: flex;
-    flex-direction: row;
-    padding: 20px 10px;
+  width: 70%;
+  display: flex;
+  flex-direction: row;
+  padding: 20px 10px;
 }
 
 .filtroAno {
- display: flex;
+  display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1; /* ocupa o espaço restante do row */
+  flex: 1;
   justify-content: flex-start;
 }
 
@@ -84,7 +107,6 @@ h2 {
   overflow: hidden;
   gap: 8px;
   flex: 1;
-  /* ocupa todo o espaço entre as setas */
 }
 
 .anoContent {
@@ -93,11 +115,9 @@ h2 {
   gap: 10px;
 }
 
-.seta {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  cursor: pointer;
+
+.seta:hover {
+  transform: scale(1.1);
 }
 
 .ano {
@@ -122,16 +142,17 @@ h2 {
   color: var(--primary-color);
 }
 
-.seta {
+.setaAno {
+  width: 40px;
+  height: 40px;
   cursor: pointer;
   padding: 4px;
   transition: transform 0.2s;
 }
 
-.seta:hover {
+.setaAno:hover {
   transform: scale(1.1);
 }
-
 
 
 .tabela {

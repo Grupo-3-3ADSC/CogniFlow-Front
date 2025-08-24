@@ -5,208 +5,221 @@ import styles from "./relatorioFornecedor.module.css";
 import iconBaixar from '../../assets/icon-baixar.png';
 import setaImg from "../../assets/seta.png";
 import setaRightImg from "../../assets/setaRight.png";
+import logoMegaPlate from "../../assets/logo-megaplate-azul.png";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../provider/api.js";
 import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
+
+function drawKpiCard(doc, x, y, w, h, titulo, valor, corPrimaria, corTexto) {
+    doc.setDrawColor(...corPrimaria);
+    doc.setFillColor(245, 247, 250);
+    doc.roundedRect(x, y, w, h, 3, 3, "FD");
+
+    doc.setTextColor(...corTexto);
+    doc.setFont("helvetica", "bold").setFontSize(10);
+    doc.text(titulo, x + 6, y + 9);
+
+    doc.setFont("helvetica", "normal").setFontSize(12);
+    doc.setTextColor(30);
+    doc.text(String(valor ?? "-"), x + 6, y + 20);
+}
 
 export function gerarRelatorioFornecedores(fornecedor, dadosAno, dadosMensais, ano) {
     const doc = new jsPDF();
     const corPrimaria = [5, 49, 76];
     const corTexto = [44, 62, 80];
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const dataEmissao = new Date().toLocaleString("pt-BR");
 
-    // --- CAPA ---
+    // ===== CAPA =====
     doc.setFillColor(...corPrimaria);
-    doc.rect(0, 0, 210, 35, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16).setFont("helvetica", "bold");
-    doc.text(`RELATÓRIO COMPARATIVO DE FORNECEDORES - ${ano}`, 20, 20);
+    doc.rect(0, 0, pageWidth, 35, "F");
+    doc.setTextColor(255, 255, 255).setFontSize(20).setFont("helvetica", "bold");
+    doc.text(`RELATÓRIO DE FORNECEDOR – ${ano}`, pageWidth / 2, 20, { align: "center" });
+
+    doc.setTextColor(...corTexto).setFontSize(12).setFont("helvetica", "normal");
+    doc.text(`Fornecedor: ${fornecedor}`, pageWidth / 2, 80, { align: "center" })
 
     doc.setTextColor(...corTexto).setFontSize(12).setFont("helvetica", "normal");
     doc.text(
-        "Análise anual das compras realizadas com o fornecedor selecionado, incluindo valores, quantidade de pedidos e materiais adquiridos.",
-        20,
-        60,
-        { maxWidth: 170 }
+        "Análise dos fornecedores mais utilizados e desempenho anual.",
+        pageWidth / 2, 60, { maxWidth: 170, align: "center" }
     );
-    doc.text(`Fornecedor: ${fornecedor}`, 20, 80);
-    doc.text(`Data de emissão: ${dataEmissao}`, 20, 100);
 
-    // --- PÁGINAS MENSAL ---
-    dadosMensais.forEach((mes) => {
+    doc.text(`DATA DE EMISSÃO: ${dataEmissao}`, pageWidth / 2, 100, { align: "center" });
+    if (logoMegaPlate) {
+        doc.addImage(logoMegaPlate, "PNG", (pageWidth - 50) / 2, 120, 50, 50);
+    }
+
+    // ===== PÁGINAS MENSAIS =====
+    (dadosMensais || []).forEach((mes) => {
         doc.addPage();
-        doc.setFillColor(...corPrimaria);
-        doc.rect(0, 0, 210, 20, "F");
 
-        doc.setTextColor(255, 255, 255).setFontSize(14).setFont("helvetica", "bold");
-        doc.text(`RELATÓRIO COMPARATIVO DE FORNECEDORES - ${ano}`, 20, 12);
+        // título do mês
+        doc.setFont("helvetica", "bold").setFontSize(16).setTextColor(...corPrimaria);
+        doc.text((mes?.nomeMes || "").toUpperCase(), 20, 30);
 
-        doc.setTextColor(...corPrimaria).setFontSize(16);
-        doc.text(mes.nomeMes.toUpperCase(), 20, 40);
+        // monta KPIs
+        const kpis = mes?.dados?.map(d => ({ t: d.label, v: d.valor })) || [];
 
-        doc.setTextColor(...corTexto).setFontSize(12);
-        let posY = 60;
-        mes.dados.forEach((item) => {
-            doc.text(`${item.label}: ${item.valor}`, 20, posY);
-            posY += 10;
-        });
+        // grid 2x2 de cards
+        const gridX = 20, gridY = 50, gap = 8, cols = 2;
+        const cardW = (pageWidth - gridX * 2 - gap * (cols - 1)) / cols;
+        const cardH = 26;
+
+        let idx = 0;
+        for (let r = 0; r < 2; r++) {
+            for (let c = 0; c < cols; c++) {
+                if (idx >= kpis.length) break;
+                const x = gridX + c * (cardW + gap);
+                const y = gridY + r * (cardH + gap);
+                const { t, v } = kpis[idx++];
+                drawKpiCard(doc, x, y, cardW, cardH, t, v, corPrimaria, corTexto);
+            }
+        }
+
+        // tabela de pedidos do mês
+        const pedidos = mes?.pedidos || [];
+        if (pedidos.length > 0) {
+            const head = [
+                ["Data", "Ordem de compra", "Produto", "Qtd", "Preço unitário", "Preço total pedido", "IPI (%)", "Valor total"]
+            ];
+
+            const body = pedidos.map(p => [
+                p.data,
+                p.ordemCompra,
+                p.produto,
+                p.quantidade,
+                `R$ ${p.precoUnitario.toFixed(2)}`,
+                `R$ ${p.precoTotalPedido.toFixed(2)}`,
+                `${p.ipi}%`,
+                `R$ ${p.valorTotal.toFixed(2)}`
+            ]);
+
+            autoTable(doc, {
+                head,
+                body,
+                startY: gridY + 2 * (cardH + gap) + 10,
+                styles: { font: "helvetica", fontSize: 9 },
+                headStyles: { fillColor: corPrimaria, textColor: [255, 255, 255] },
+                theme: "striped",
+                margin: { left: 20, right: 20 }
+            });
+        }
     });
 
-    // --- PÁGINA RESUMO ANUAL ---
+    // ===== RESUMO ANUAL =====
     doc.addPage();
-    doc.setFillColor(...corPrimaria);
-    doc.rect(0, 0, 210, 20, "F");
+    doc.setFont("helvetica", "bold").setFontSize(16).setTextColor(...corPrimaria);
+    doc.text(`${ano} - RESUMO ANUAL (FORNECEDOR)`, 20, 30);
 
-    doc.setTextColor(255, 255, 255).setFontSize(14).setFont("helvetica", "bold");
-    doc.text(`RELATÓRIO GERAL DE ENTRADAS - ${ano}`, 20, 12);
+    const resumo = dadosAno || [];
+    const gridX = 20, gridY = 50, gap = 8, cols = 2;
+    const cardW = (pageWidth - gridX * 2 - gap * (cols - 1)) / cols;
+    const cardH = 26;
 
-    doc.setTextColor(...corPrimaria).setFontSize(16);
-    doc.text(`${ano} - RESUMO ANUAL`, 20, 40);
+    let idx = 0;
+    for (let r = 0; r < Math.ceil(resumo.length / cols); r++) {
+        for (let c = 0; c < cols; c++) {
+            if (idx >= resumo.length) break;
+            const x = gridX + c * (cardW + gap);
+            const y = gridY + r * (cardH + gap);
+            const { label, valor } = resumo[idx++];
+            drawKpiCard(doc, x, y, cardW, cardH, label, valor, corPrimaria, corTexto);
+        }
+    }
 
-    doc.setTextColor(...corTexto).setFontSize(12);
-    let posY = 60;
-    dadosAno.forEach((item) => {
-        doc.text(`${item.label}: ${item.valor}`, 20, posY);
-        posY += 10;
-    });
-
-    // --- RODAPÉ EM TODAS AS PÁGINAS ---
+    // ===== RODAPÉ =====
     const totalPaginas = doc.getNumberOfPages();
     for (let i = 1; i <= totalPaginas; i++) {
         doc.setPage(i);
-        doc.setFontSize(9).setFont("helvetica", "italic");
-        doc.setTextColor(100);
-        doc.text(
-            `Emitido em: ${dataEmissao} | Página ${i} de ${totalPaginas}`,
-            105, // centralizado (largura A4 ~210mm, então metade é ~105)
-            290, // embaixo (altura A4 ~297mm, margem inferior)
-            { align: "center" }
-        );
+        doc.setFillColor(...corPrimaria);
+        doc.rect(0, pageHeight - 20, pageWidth, 20, "F");
+        doc.setFontSize(9).setFont("helvetica", "italic").setTextColor(255, 255, 255);
+        doc.text(`Emitido em: ${dataEmissao} | Página ${i} de ${totalPaginas}`, pageWidth / 2, pageHeight - 7, { align: "center" });
     }
 
     doc.save(`relatorio_fornecedor_${fornecedor}_${ano}.pdf`);
 }
 
 
+pedidos: [
+    {
+        data: "08/01/2025",
+        ordemCompra: "1",
+        produto: "SAE1023",
+        quantidade: 30,
+        precoUnitario: 250,
+        precoTotalPedido: 7500,
+        ipi: 10,
+        valorTotal: 8250
+    },
+    {
+        data: "08/02/2025",
+        ordemCompra: "2",
+        produto: "SAE1025",
+        quantidade: 50,
+        precoUnitario: 500,
+        precoTotalPedido: 25000,
+        ipi: 0,
+        valorTotal: 25000
+    }
+]
+
+
 const dadosMensaisFake = [
-  {
-    nomeMes: "Janeiro",
-    dados: [
-      { label: "Total de compras no mês", valor: "120" },
-      { label: "Valor total comprado (R$)", valor: "50.000,00" },
-      { label: "Nº de pedidos realizados", valor: "15" },
-      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
-    ]
-  },
-  {
-    nomeMes: "Fevereiro",
-    dados: [
-      { label: "Total de compras no mês", valor: "100" },
-      { label: "Valor total comprado (R$)", valor: "40.000,00" },
-      { label: "Nº de pedidos realizados", valor: "10" },
-      { label: "Material mais comprado", valor: "Bobina (50 unid.)" }
-    ]
-  },
-   {
-    nomeMes: "Março",
-    dados: [
-      { label: "Total de compras no mês", valor: "120" },
-      { label: "Valor total comprado (R$)", valor: "50.000,00" },
-      { label: "Nº de pedidos realizados", valor: "15" },
-      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
-    ]
-  },
-   {
-    nomeMes: "Abril",
-    dados: [
-      { label: "Total de compras no mês", valor: "120" },
-      { label: "Valor total comprado (R$)", valor: "50.000,00" },
-      { label: "Nº de pedidos realizados", valor: "15" },
-      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
-    ]
-  },
-   {
-    nomeMes: "Maio",
-    dados: [
-      { label: "Total de compras no mês", valor: "120" },
-      { label: "Valor total comprado (R$)", valor: "50.000,00" },
-      { label: "Nº de pedidos realizados", valor: "15" },
-      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
-    ]
-  },
-   {
-    nomeMes: "Junho",
-    dados: [
-      { label: "Total de compras no mês", valor: "120" },
-      { label: "Valor total comprado (R$)", valor: "50.000,00" },
-      { label: "Nº de pedidos realizados", valor: "15" },
-      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
-    ]
-  },
-   {
-    nomeMes: "Julho",
-    dados: [
-      { label: "Total de compras no mês", valor: "120" },
-      { label: "Valor total comprado (R$)", valor: "50.000,00" },
-      { label: "Nº de pedidos realizados", valor: "15" },
-      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
-    ]
-  },
-   {
-    nomeMes: "Agosto",
-    dados: [
-      { label: "Total de compras no mês", valor: "120" },
-      { label: "Valor total comprado (R$)", valor: "50.000,00" },
-      { label: "Nº de pedidos realizados", valor: "15" },
-      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
-    ]
-  },
-   {
-    nomeMes: "Setembro",
-    dados: [
-      { label: "Total de compras no mês", valor: "120" },
-      { label: "Valor total comprado (R$)", valor: "50.000,00" },
-      { label: "Nº de pedidos realizados", valor: "15" },
-      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
-    ]
-  },
-   {
-    nomeMes: "Outrubro",
-    dados: [
-      { label: "Total de compras no mês", valor: "120" },
-      { label: "Valor total comprado (R$)", valor: "50.000,00" },
-      { label: "Nº de pedidos realizados", valor: "15" },
-      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
-    ]
-  },
-   {
-    nomeMes: "Novembro",
-    dados: [
-      { label: "Total de compras no mês", valor: "120" },
-      { label: "Valor total comprado (R$)", valor: "50.000,00" },
-      { label: "Nº de pedidos realizados", valor: "15" },
-      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
-    ]
-  },
-   {
-    nomeMes: "Dezembro",
-    dados: [
-      { label: "Total de compras no mês", valor: "120" },
-      { label: "Valor total comprado (R$)", valor: "50.000,00" },
-      { label: "Nº de pedidos realizados", valor: "15" },
-      { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
-    ]
-  },
-
-
+    {
+        nomeMes: "Janeiro",
+        dados: [
+            { label: "Total de compras no mês", valor: "120" },
+            { label: "Valor total comprado (R$)", valor: "50.000,00" },
+            { label: "Nº de pedidos realizados", valor: "15" },
+            { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
+        ],
+        pedidos: [
+            {
+                data: "08/01/2025",
+                ordemCompra: "1",
+                produto: "SAE1023",
+                quantidade: 30,
+                precoUnitario: 250,
+                precoTotalPedido: 7500,
+                ipi: 10,
+                valorTotal: 8250
+            },
+            {
+                data: "08/02/2025",
+                ordemCompra: "2",
+                produto: "SAE1025",
+                quantidade: 50,
+                precoUnitario: 500,
+                precoTotalPedido: 25000,
+                ipi: 0,
+                valorTotal: 25000
+            }
+        ]
+    },
+    {
+        nomeMes: "Fevereiro",
+        dados: [
+            { label: "Total de compras no mês", valor: "100" },
+            { label: "Valor total comprado (R$)", valor: "40.000,00" },
+            { label: "Nº de pedidos realizados", valor: "10" },
+            { label: "Material mais comprado", valor: "Bobina (50 unid.)" }
+        ],
+        pedidos: [] // pode deixar vazio se não quiser mostrar tabela
+    }
 ];
 
+
 const dadosAnoFake = [
-  { label: "Total de compras no ano", valor: "1500" },
-  { label: "Valor total comprado (R$)", valor: "500.000,00" },
-  { label: "Nº de pedidos realizados", valor: "120" },
-  { label: "Material mais comprado", valor: "Chapa Aço (800 unid.)" }
+    { label: "Total de compras no ano", valor: "1500" },
+    { label: "Valor total comprado (R$)", valor: "500.000,00" },
+    { label: "Nº de pedidos realizados", valor: "120" },
+    { label: "Material mais comprado", valor: "Chapa Aço (800 unid.)" }
 ];
 
 function gerarListaAnos(anoInicial) {
@@ -292,7 +305,16 @@ export function RelatorioFornecedor() {
             <NavBar />
             <div className={styles.container}>
                 <div className={styles.background}>
-                    <h1>RELATÓRIO COMPARATIVO DE FORNECEDORES - {anoSelecionado}</h1>
+                    <div className={styles.header}>
+                        <img
+                            src={setaImg}
+                            alt="Voltar"
+                            className={styles.seta}
+                            onClick={() => navigate("/relatorios")}
+                        />
+                        <h1>RELATÓRIO COMPARATIVO DE FORNECEDORES - {anoSelecionado}</h1>
+                    </div>
+
                     <div className={styles.filtro}>
                         <div>
                             <input
@@ -306,7 +328,7 @@ export function RelatorioFornecedor() {
                         </div>
                         <div className={styles.filtroAno}>
                             <div className={styles.anoContent}>
-                                <img src={setaImg} alt="seta esquerda" className={styles.seta} onClick={voltarAno} />
+                                <img src={setaImg} alt="seta esquerda" className={styles.setaAno} onClick={voltarAno} />
                                 {anosVisiveis.map((ano) => (
                                     <div
                                         key={ano}
@@ -316,7 +338,7 @@ export function RelatorioFornecedor() {
                                         {ano}
                                     </div>
                                 ))}
-                                <img src={setaRightImg} alt="seta direita" className={styles.seta} onClick={avancarAno} />
+                                <img src={setaRightImg} alt="seta direita" className={styles.setaAno} onClick={avancarAno} />
                             </div>
                         </div>
                     </div>
@@ -351,9 +373,9 @@ export function RelatorioFornecedor() {
                                                 onClick={() =>
                                                     gerarRelatorioFornecedores(
                                                         fornecedor.nomeFantasia,
-                                                        dadosAnoFake,      // aqui depois você puxa da API
+                                                        dadosAnoFake,
                                                         dadosMensaisFake,  // idem
-                                                        anoSelecionado     // ✅ usa o ano selecionado
+                                                        anoSelecionado
                                                     )
                                                 }
                                             >
