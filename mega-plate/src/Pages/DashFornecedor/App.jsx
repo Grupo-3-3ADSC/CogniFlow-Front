@@ -276,7 +276,15 @@ function App() {
   const [ordemDeCompra, setOrdemDeCompra] = useState([]);
   const [estoque, setEstoque] = useState([]);
   const [kpiData, setKpiData] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1); // paginas da paginação da listagem de fornecedores
+  //paginação de lista
+  const [fornecedoresPage, setFornecedoresPage] = useState ([]);
+  const [paginaAtual, setPaginaAtual] = useState(0);
+  const [paginasTotais, setPaginasTotais] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrevious, setHasPrevious] = useState(false);
+
+  const fornecedoresPorPagina = 6;
 
   const fileInputRef = useRef(null);
 
@@ -357,6 +365,27 @@ function App() {
       })
       .catch((error) => {
         console.error("Erro ao buscar estoque:", error);
+      });
+  }
+
+  function getFornecedoresPaginados(){
+
+    const paginaInt = Number(paginaAtual) || 0;
+
+    api.
+      get(`/fornecedores/paginados?pagina=${paginaInt}&tamanho=${fornecedoresPorPagina}`)
+      .then((response) => {
+        const { data, paginasTotais, totalItems, paginaAtual, hasNext, hasPrevious } = response.data;
+      
+      setFornecedoresPage(data);
+      setPaginasTotais(paginasTotais);
+      setTotalItems(totalItems);
+      setPaginaAtual(paginaAtual);
+      setHasNext(hasNext);
+      setHasPrevious(hasPrevious);      
+      })
+      .catch((err)=> {
+        console.error("Erro ao buscar fornecedores paginados:", err);
       });
   }
 
@@ -531,6 +560,11 @@ function App() {
     []
   );
 
+  // useEffect para quando mudar pagina da lista
+  useEffect(() => {
+  getFornecedoresPaginados(paginaAtual);
+}, [paginaAtual]);
+
   // Efeito para aplicar filtros quando os critérios mudam
   useEffect(() => {
     if (fornecedores.length > 0 && ordemDeCompra.length > 0) {
@@ -557,6 +591,7 @@ function App() {
         await getFornecedor();
         await getEstoque();
         await BuscarOrdemDeCompra();
+        await getFornecedoresPaginados();
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       }
@@ -886,14 +921,12 @@ function App() {
     setSelectedSupplier(null);
   };
 
-  //paginação da lista de fornecedores
-  const suppliersPerPage = 6;
+const handlePageChange = (newPage) => {
+  if (newPage >= 0 && newPage <= paginasTotais && newPage !== paginaAtual) {
+    setPaginaAtual(newPage);
+  }
+};
 
-const totalPages = Math.ceil(filteredSuppliers.length / suppliersPerPage);
-const paginatedSuppliers = filteredSuppliers.slice(
-  (currentPage - 1) * suppliersPerPage,
-  currentPage * suppliersPerPage
-);
 
   return (
     <div className="IndexFornecedor">
@@ -1047,45 +1080,44 @@ const paginatedSuppliers = filteredSuppliers.slice(
                   </tr>
                 </thead>
                 <tbody>
-  {paginatedSuppliers.map((supplier, index) => (
-    <tr
-      key={supplier.id || index}
-      onClick={() => handleSupplierClick(supplier)}
-      style={{ cursor: "pointer" }}
-    >
-      <td>
-        {supplier.nomeFantasia ||
-          supplier.razaoSocial ||
-          "Nome não informado"}
-      </td>
-    </tr>
-  ))}
-</tbody>
-{filteredSuppliers.length > suppliersPerPage && (
-  <tfoot>
-    <tr>
-      <td colSpan="1">
-        <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
-          >
-            Anterior
-          </button>
-          <span>
-            Página {currentPage} de {totalPages}
-          </span>
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(currentPage + 1)}
-          >
-            Próxima
-          </button>
-        </div>
-      </td>
-    </tr>
-  </tfoot>
-)}
+    {fornecedoresPage.map((supplier, index) => (
+      <tr
+        key={supplier.id || index}
+        onClick={() => handleSupplierClick(supplier)}
+        style={{ cursor: "pointer" }}
+      >
+        <td>
+          {supplier.nomeFantasia ||
+            supplier.razaoSocial ||
+            "Nome não informado"}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+  
+    <tfoot>
+      <tr>
+        <td colSpan="1">
+          <div style={{ display: "flex", justifyContent: "center", gap: "8px", alignItems: "center" }}>
+            <button
+              disabled={!hasPrevious}
+              onClick={() => handlePageChange(Number(paginaAtual) - 1)}
+            >
+              Anterior
+            </button>
+            <span>
+               {paginaAtual + 1} / {paginasTotais} 
+            </span>
+            <button
+              disabled={!hasNext}
+              onClick={() => handlePageChange(paginaAtual + 1)}
+            >
+              Próxima
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tfoot>
               </table>
             </div>
             <div className="search-results">
