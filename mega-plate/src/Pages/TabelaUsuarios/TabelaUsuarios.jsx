@@ -17,7 +17,7 @@ export function TabelaUsuarios() {
   const [fade, setFade] = useState(true);
   const navigate = useNavigate();
 
-  /*   useEffect(() => {
+    useEffect(() => {
       const token = sessionStorage.getItem("authToken");
       if (!token) {
         navigate("/");
@@ -30,7 +30,7 @@ export function TabelaUsuarios() {
           setAutenticacaoPassou(true);
         }
       }
-    }, [navigate]); */
+    }, [navigate]);
 
   useEffect(() => {
     setFade(false); // inicia fade out

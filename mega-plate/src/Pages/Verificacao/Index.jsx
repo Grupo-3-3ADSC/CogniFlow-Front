@@ -2,6 +2,10 @@ import styles from './verificacao.module.css';
 import logo from '../../assets/logo-megaplate.png';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+    toastError,
+    toastSucess,
+} from "../../components/toastify/ToastifyService.jsx";
 
 export function Verificacao() {
     const navigate = useNavigate();
@@ -10,8 +14,6 @@ export function Verificacao() {
     const inputsRef = Array.from({ length: 6 }, () => useRef(null));
     const [isVerifying, setIsVerifying] = useState(false);
     const [code, setCode] = useState(Array(6).fill(''));
-    const [showModal, setShowModal] = useState(false);
-    const [modalMessage, setModalMessage] = useState('');
 
     const handleChange = (e, index) => {
         const value = e.target.value.replace(/[^0-9]/g, '');
@@ -19,18 +21,17 @@ export function Verificacao() {
         const newCode = [...code];
         newCode[index] = value[0];
         setCode(newCode);
-        if (value.length === 1 && index < inputsRef.length - 1) {
+        if (index < inputsRef.length - 1) {
             inputsRef[index + 1].current.focus();
         }
     };
 
     const handleSendEmail = async () => {
         if (!email || !email.includes('@') || !email.includes('.')) {
-            alert('Por favor, insira um e-mail válido.');
+            toastError('Por favor, insira um e-mail válido.');
             return;
         }
-        setModalMessage('Enviando código...');
-        setShowModal(true);
+
         try {
             const response = await fetch('http://localhost:3001/enviar-codigo', {
                 method: 'POST',
@@ -38,49 +39,38 @@ export function Verificacao() {
                 body: JSON.stringify({ email })
             });
             const data = await response.json();
+
             if (data.success) {
-                setModalMessage('Código enviado para seu e-mail!');
-                setTimeout(() => {
-                    setShowModal(false);
-                    setShowEmailScreen(false);
-                }, 1500);
+                toastSucess('Código enviado para seu e-mail!');
+                setTimeout(() => setShowEmailScreen(false), 1500);
             } else {
-                setModalMessage(data.message || 'Erro ao enviar código.');
-                setTimeout(() => setShowModal(false), 2000);
+                toastError(data.message || 'Erro ao enviar código.');
             }
         } catch (err) {
-            setModalMessage('Erro ao conectar com o servidor.');
-            setTimeout(() => setShowModal(false), 2000);
+            toastError('Erro ao conectar com o servidor.');
         }
     };
 
     const buscarUsuarioPorEmail = async (email) => {
         try {
             const response = await fetch(`http://localhost:8080/usuarios/buscar-por-email/${encodeURIComponent(email)}`);
-
-            if (!response.ok) {
-                throw new Error('Usuário não encontrado');
-            }
-
+            if (!response.ok) throw new Error('Usuário não encontrado');
             const usuario = await response.json();
             return usuario.id;
         } catch (error) {
-            console.error('Erro ao buscar usuário:', error);
             throw new Error('Erro ao encontrar usuário');
         }
     };
 
-
     const handleVerifyCode = async () => {
         const userCode = code.join('');
         if (userCode.length < 6) {
-            alert('Digite o código completo.');
+            toastError('Digite o código completo.');
             return;
         }
         setIsVerifying(true);
 
         try {
-            // Primeiro verifica o código
             const response = await fetch('http://localhost:3001/verificar-codigo', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -89,33 +79,30 @@ export function Verificacao() {
             const data = await response.json();
 
             if (data.success) {
-                // Se código válido, busca o userId pelo email
                 try {
                     const userId = await buscarUsuarioPorEmail(email);
-                    // Navega para redefinição com o userId
+                    toastSucess('Código verificado com sucesso!');
                     navigate(`/Redefinicao/${userId}`);
                 } catch (error) {
-                    alert('Erro ao encontrar usuário. Tente novamente.');
+                    toastError('Erro ao encontrar usuário. Tente novamente.');
                 }
             } else {
-                alert(data.message || 'Código inválido. Tente novamente.');
+                toastError(data.message || 'Código inválido. Tente novamente.');
             }
         } catch (err) {
-            console.error('Erro ao verificar código:', err);
-            alert('Erro ao conectar com o servidor.');
+            toastError('Erro ao conectar com o servidor.');
+        } finally {
+            setIsVerifying(false);
         }
-        setIsVerifying(false);
     };
 
     const handleKeyDown = (e, index) => {
         if (e.key === 'Backspace') {
             if (code[index]) {
-                // Apenas limpa o campo atual
                 const newCode = [...code];
                 newCode[index] = '';
                 setCode(newCode);
             } else if (index > 0) {
-                // Vai para o campo anterior e limpa
                 inputsRef[index - 1].current.focus();
                 const newCode = [...code];
                 newCode[index - 1] = '';
@@ -125,39 +112,33 @@ export function Verificacao() {
     };
 
     return (
-        <>
-            {showModal && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.modalContent}>
-                        <p>{modalMessage}</p>
-                    </div>
-                </div>
-            )}
-
-            <div className={styles.verificacao}>
-                <div className={styles['container-verificacao']}>
-
-                    <div className={styles.card} style={{ display: showEmailScreen ? 'block' : 'none' }}>
+        <div className={styles.verificacao}>
+            <div className={styles['container-verificacao']}>
+                {/* Tela de email */}
+                {showEmailScreen && (
+                    <div className={styles.card}>
                         <div className={styles['card-header']}>REDEFINIR SENHA</div>
                         <p>
                             Insira o e-mail associado à sua conta. Enviaremos um código de 6 dígitos para redefinir sua senha.
                         </p>
-                        <input type="email"
+                        <input
+                            type="email"
                             placeholder="Digite seu e-mail"
                             className={styles["email-input"]}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    handleSendEmail();
-                                }
+                                if (e.key === 'Enter') handleSendEmail();
                             }}
                         />
                         <button onClick={handleSendEmail}>ENVIAR</button>
                         <img src={logo} alt="" />
                     </div>
+                )}
 
-                    <div className={styles.card} style={{ display: showEmailScreen ? 'none' : 'block' }}>
+                {/* Tela de código */}
+                {!showEmailScreen && (
+                    <div className={styles.card}>
                         <div className={styles['card-header']}>VERIFICAÇÃO</div>
                         <p>
                             Enviamos um código de 6 dígitos para o seu e-mail. Insira-o abaixo para continuar com a redefinição da sua senha.
@@ -184,7 +165,6 @@ export function Verificacao() {
                                                 ...newCode,
                                                 ...Array(6 - newCode.length).fill('')
                                             ].slice(0, 6));
-                                            // Foca no último input preenchido
                                             setTimeout(() => {
                                                 if (inputsRef[paste.length - 1]?.current) {
                                                     inputsRef[paste.length - 1].current.focus();
@@ -200,9 +180,9 @@ export function Verificacao() {
                         </button>
                         <img src={logo} alt="" />
                     </div>
-                </div>
+                )}
             </div>
-        </>
+        </div>
     );
 }
 
