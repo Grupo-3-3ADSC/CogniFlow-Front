@@ -32,10 +32,10 @@ export function Transferencia() {
   }, []);
 
   const [showSuccessScreen, setShowSuccessScreen] = useState(false);
-  const [quantidadeAtual, setquantidadeAtual] = useState("");
   const [tipoMaterial, setTipoMaterial] = useState("");
   const [materiais, setMateriais] = useState([]);
-  const [tipoTransferencia, setTipoTransferencia] = useState("");
+  const [quantidadeTransferida, setQuantidadeTransferida] = useState("");
+  const [setor, setSetor] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [dadosUltimaTransferencia, setDadosUltimaTransferencia] =
     useState(null);
@@ -70,12 +70,12 @@ export function Transferencia() {
 
     const dados = {
       tipoMaterial,
-      quantidadeAtual: Number(quantidadeAtual),
-      tipoTransferencia,
+      quantidadeTransferida: Number(quantidadeTransferida),
+      setor,
     };
 
     api
-      .put("/estoque/retirar", dados)
+      .post("/transferencias", dados)
       .then((resposta) => {
         gerarPDF(dados);
         setDadosUltimaTransferencia(dados); // Salva os dados da última transferência
@@ -103,21 +103,21 @@ export function Transferencia() {
     const validations = [
       {
         condition:
-          !quantidadeAtual?.trim() ||
+          !quantidadeTransferida?.trim() ||
           !tipoMaterial?.trim() ||
-          !tipoTransferencia?.trim(),
+          !setor?.trim(),
         message: "Por favor, preencha todos os campos.",
       },
       {
-        condition: isNaN(quantidadeAtual),
+        condition: isNaN(quantidadeTransferida),
         message: "A quantidade UMR deve ser um número.",
       },
       {
-        condition: Number(quantidadeAtual) <= 0,
+        condition: Number(quantidadeTransferida) <= 0,
         message: "A quantidade UMR deve ser maior que zero.",
       },
       {
-        condition: !Number.isInteger(Number(quantidadeAtual)),
+        condition: !Number.isInteger(Number(quantidadeTransferida)),
         message: "A quantidade UMR deve ser um número inteiro.",
       },
       {
@@ -125,8 +125,8 @@ export function Transferencia() {
         message: "Por favor, selecione um tipo de material.",
       },
       {
-        condition: tipoTransferencia === "Selecione uma opção",
-        message: "Por favor, selecione um tipo de transferência.",
+        condition: setor === "Selecione uma opção",
+        message: "Por favor, selecione um setor.",
       },
     ];
 
@@ -176,8 +176,8 @@ export function Transferencia() {
     console.error("Erro na requisição:", {
       error: error.message,
       tipoMaterial,
-      quantidadeAtual,
-      tipoTransferencia,
+      quantidadeTransferida,
+      setor,
     });
 
     const errorMessages = {
@@ -291,15 +291,15 @@ export function Transferencia() {
     const details = [
       {
         label: "Quantidade:",
-        value: materiais?.quantidadeAtual || "Não informado", // Added null check and fallback
+        value: materiais?.quantidadeTransferida || "Não informado", // Added null check and fallback
       },
       {
         label: "Tipo de Material:",
         value: materiais?.tipoMaterial || "Não informado", // Added null check and fallback
       },
       {
-        label: "Tipo de Transferência:",
-        value: materiais?.tipoTransferencia || "Não informado", // Added null check and fallback
+        label: "Setor:",
+        value: materiais?.setor  || "Não informado", // Added null check and fallback
       },
     ];
 
@@ -355,18 +355,17 @@ export function Transferencia() {
 
   // Função helper para resetar formulário
   function resetForm() {
-    setquantidadeAtual("");
+    setQuantidadeTransferida("");
     setTipoMaterial("");
-    setTipoTransferencia("");
+    setSetor("");
   }
   return (
     <>
       <NavBar userName="Usuário" />
 
       <div
-        className={`container-transferencia ${
-          showSuccessScreen ? "success-screen" : "transfer-screen"
-        }`}
+        className={`container-transferencia ${showSuccessScreen ? "success-screen" : "transfer-screen"
+          }`}
       >
         <div className="box-mega">
           <h1>
@@ -377,16 +376,11 @@ export function Transferencia() {
         <div className="box-campos">
           <label htmlFor="quantidadeAtual">Quantidade:</label>
           <input
-            id="quantidadeAtual"
-            className="input-quantidadeAtual"
-            type="text"
-            maxLength={10}
-            placeholder="Quantidade: 100"
-            value={quantidadeAtual}
+            id="quantidadeTransferida"
+            value={quantidadeTransferida}
             onChange={(e) => {
-              // Remove tudo que não for número
               const onlyNums = e.target.value.replace(/[^0-9]/g, "");
-              setquantidadeAtual(onlyNums);
+              setQuantidadeTransferida(onlyNums);
             }}
           />
 
@@ -411,12 +405,12 @@ export function Transferencia() {
               ))}
           </select>
 
-          <label htmlFor="tipo">Tipo de Transferência:</label>
+          <label htmlFor="tipo">Setor:</label>
           <select
             id="tipo"
             className="input-tipoTransferencia"
-            value={tipoTransferencia}
-            onChange={(e) => setTipoTransferencia(e.target.value)}
+            value={setor}
+            onChange={(e) => setSetor(e.target.value)}
           >
             <option value="" disabled>
               Selecione uma opção

@@ -51,7 +51,7 @@ export function HistoricoTransferencia() {
 
         setIsGestor(Number(cargoUsuario) === 2);
 
-        let url = "/estoque";
+        let url = "/transferencias";
 
         try {
             const res = await api.get(url, {
@@ -157,7 +157,7 @@ export function HistoricoTransferencia() {
 
         const details = [
             { label: "ID:", value: t?.id ?? "—" },
-            { label: "Quantidade:", value: t?.quantidadeAtual ?? "—" },
+            { label: "Quantidade:", value: t?.quantidadeTransferida ?? "—" },
             { label: "Tipo de Material:", value: t?.tipoMaterial ?? "—" },
             { label: t?.setor ? "Setor:" : "Tipo de Transferência:", value: t?.setor ?? t?.tipoTransferencia ?? "—" },
         ];
@@ -365,7 +365,7 @@ export function HistoricoTransferencia() {
                                             <td><p><b>{formatarHora(transferencias.ultimaMovimentacao)}</b></p> </td>
                                             <td><p><b>{transferencias.tipoMaterial}</b></p></td>
                                             <td><p><b>{transferencias.setor}</b></p> </td>
-                                            <td><p><b>{transferencias.quantidadeAtual}</b></p></td>
+                                            <td><p><b>{transferencias.quantidadeTransferida}</b></p></td>
                                             <td > <button className={styles.baixarRelatorio}
                                                 onClick={() => baixarOrdem(transferencias.id)}
 
