@@ -84,17 +84,17 @@ export function OrdemDeCompra() {
   const [errosValidacao, setErrosValidacao] = useState({});
 
   // Funções de formatação
-  const formatarIE = (valor) => {
-    const nums = valor.replace(/\D/g, "");
-    if (nums.length <= 3) return nums;
-    if (nums.length <= 6) return `${nums.slice(0, 3)}.${nums.slice(3)}`;
-    if (nums.length <= 9)
-      return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6)}`;
-    return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(
-      6,
-      9
-    )}.${nums.slice(9, 12)}`;
-  };
+  // const formatarIE = (valor) => {
+  //   const nums = valor.replace(/\D/g, "");
+  //   if (nums.length <= 3) return nums;
+  //   if (nums.length <= 6) return `${nums.slice(0, 3)}.${nums.slice(3)}`;
+  //   if (nums.length <= 9)
+  //     return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6)}`;
+  //   return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(
+  //     6,
+  //     9
+  //   )}.${nums.slice(9, 12)}`;
+  // };
 
   const formatarPagamento = (valor) => {
     const nums = valor.replace(/\D/g, "");
@@ -192,17 +192,17 @@ export function OrdemDeCompra() {
             required: true,
             validationMessage: "Informe uma data de entrega válida",
           },
-          {
-            id: "ie",
-            titulo: "I.E",
-            tipo: "text",
-            placeholder: "Ex: 123.456.789.000",
-            pattern: "^\\d{3}\\.\\d{3}\\.\\d{3}\\.\\d{3}$",
-            required: true,
-            validationMessage:
-              "Inscrição estadual inválida. Use: 123.456.789.000",
-            formatador: formatarIE,
-          },
+          // {
+          //   id: "ie",
+          //   titulo: "I.E",
+          //   tipo: "text",
+          //   placeholder: "Ex: 123.456.789.000",
+          //   pattern: "^\\d{3}\\.\\d{3}\\.\\d{3}\\.\\d{3}$",
+          //   required: true,
+          //   validationMessage:
+          //     "Inscrição estadual inválida. Use: 123.456.789.000",
+          //   formatador: formatarIE,
+          // },
           {
             id: "pagamento",
             titulo: "Cond. Pagamento",
@@ -509,7 +509,7 @@ export function OrdemDeCompra() {
       usuarioId: getUsuarioIdDoToken(),
       fornecedorId: Number(valoresInput["FornecedorId"]), // ✅
       prazoEntrega: valoresInput["Prazo de entrega"],
-      ie: (valoresInput["I.E"] || "").replace(/\./g, ""),
+      // ie: (valoresInput["I.E"] || "").replace(/\./g, ""),
       condPagamento: valoresInput["Cond. Pagamento"],
       valorKg: parseFloat(valoresInput["Valor por Kg"]?.replace(",", ".") || 0),
       rastreabilidade: valoresInput["Rastreabilidade"],

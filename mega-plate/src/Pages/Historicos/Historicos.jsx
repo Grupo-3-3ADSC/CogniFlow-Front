@@ -12,7 +12,10 @@ export function Historicos() {
     const [usuarios, setUsuarios] = useState([]);
     const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
     const [isGestor, setIsGestor] = useState(false);
-    const [filtroStatus, setFiltroStatus] = useState("todos");
+    const [filtroId, setFiltroId] = useState("");
+    const [filtroDia, setFiltroDia] = useState("");
+    const [filtroPrazo, setFiltroPrazo] = useState("");
+    const [filtroStatus, setFiltroStatus] = useState("");
     const [fade, setFade] = useState(true);
     const navigate = useNavigate();
 
@@ -151,10 +154,29 @@ export function Historicos() {
     }
 
     const ordensFiltradas = ordens.filter((ordem) => {
-        if (filtroStatus === "todas") return true;
-        if (filtroStatus === "pendentes") return ordem.status === "Pendente"; // ajuste conforme seu status real
-        if (filtroStatus === "confirmadas") return ordem.status === "Confirmada";
-        return true;
+        const matchId = filtroId
+            ? String(ordem?.id ?? "").includes(filtroId)
+            : true;
+
+        const matchDia = filtroDia
+            ? (ordem?.dataDeEmissao ?? "")
+                .toLowerCase()
+                .includes(filtroDia.toLowerCase())
+            : true;
+
+        const matchPrazo = filtroPrazo
+            ? (ordem?.prazoEntrega ?? "")
+                .toLowerCase()
+                .includes(filtroPrazo.toLowerCase())
+            : true;
+
+        const matchStatus = filtroStatus
+            ? (ordem?.status ?? "")
+                .toLowerCase()
+                .includes(filtroStatus.toLowerCase())
+            : true;
+
+        return matchId && matchDia && matchPrazo && matchStatus;
     });
 
 
@@ -165,19 +187,38 @@ export function Historicos() {
             <div className={styles.container}>
                 <div className={styles.background}>
                     <h1>HISTÓRICO DE ORDEM DE COMPRA</h1>
-                    <label htmlFor="filtro" className={styles.labelFiltro}>
-                        Filtrar por status:{" "}
-                    </label>
-                    <select
-                        id="filtro"
-                        value={filtroStatus}
-                        onChange={(e) => setFiltroStatus(e.target.value)}
-                        className={styles.selectFiltro}
-                    >
-                        <option value="todas">Todas</option>
-                        <option value="pendentes">Pendentes</option>
-                        <option value="confirmadas">Confirmadas</option>
-                    </select>
+                    <div className={styles.filtros}>
+                        <input
+                            id="status"
+                            type="text"
+                            placeholder="Filtrar por ID"
+                            value={filtroId}
+                            className={styles.inputFiltro}
+                            onChange={(e) => setFiltroId(e.target.value)}
+                        />
+                        <label htmlFor="">Filtrar por data de emissão</label>
+                        <input
+                            type="date"
+                            value={filtroDia}
+                            onChange={(e) => setFiltroDia(e.target.value)}
+                            className={styles.inputFiltro}
+                        />
+                        <label htmlFor="">Filtrar por prazo de entrega</label>
+                        <input
+                            type="date"
+                            placeholder="Filtrar por data de prazo"
+                            value={filtroPrazo}
+                            onChange={(e) => setFiltroPrazo(e.target.value)}
+                            className={styles.inputFiltro}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Filtrar por status"
+                            value={filtroStatus}
+                            onChange={(e) => setFiltroStatus(e.target.value)}
+                            className={styles.inputFiltro}
+                        />
+                    </div>
                     <p className={styles.qtdUsuarios}>
                         {ordens.length} ordem(s) de compra encontrada(s)
                     </p>

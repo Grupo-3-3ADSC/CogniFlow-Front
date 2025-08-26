@@ -377,6 +377,7 @@ export function Transferencia() {
           <label htmlFor="quantidadeAtual">Quantidade:</label>
           <input
             id="quantidadeTransferida"
+            placeholder="Selecione a quantidade"
             value={quantidadeTransferida}
             onChange={(e) => {
               const onlyNums = e.target.value.replace(/[^0-9]/g, "");

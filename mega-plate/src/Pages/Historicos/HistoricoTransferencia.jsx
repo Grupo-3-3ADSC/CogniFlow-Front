@@ -10,10 +10,14 @@ import iconbaixar from "../../assets/icon-baixar.png";
 
 export function HistoricoTransferencia() {
     const [transferencias, setTransferencias] = useState([]);
+    const [filtroId, setFiltroId] = useState("");
+    const [filtroDia, setFiltroDia] = useState("");
+    const [filtroMaterial, setFiltroMaterial] = useState("");
+    const [filtroSetor, setFiltroSetor] = useState("");
+    const [filtroStatus, setFiltroStatus] = useState("todas");
     const [usuarios, setUsuarios] = useState([]);
     const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
     const [isGestor, setIsGestor] = useState(false);
-    const [filtroStatus, setFiltroStatus] = useState("todas");
     const [fade, setFade] = useState(true);
     const navigate = useNavigate();
     const [historicoTransferencias, setHistoricoTransferencias] = useState([]);
@@ -38,12 +42,17 @@ export function HistoricoTransferencia() {
         setFade(false); // inicia fade out
         const timeout = setTimeout(() => {
             setUsuarios([]);
-            buscarTransferencias();
+            buscarTransferencias({
+                id: filtroId,
+                dia: filtroDia,
+                material: filtroMaterial,
+                setor: filtroSetor,
+            });
             setFade(true); // inicia fade in depois de buscar
-        }, 200); // tempo de fade out antes de buscar
+        }, 200);
 
         return () => clearTimeout(timeout);
-    }, [filtroStatus]);
+    }, [filtroId, filtroDia, filtroMaterial, filtroSetor]);
 
     const buscarTransferencias = async () => {
         const token = sessionStorage.getItem("authToken");
@@ -52,6 +61,12 @@ export function HistoricoTransferencia() {
         setIsGestor(Number(cargoUsuario) === 2);
 
         let url = "/transferencias";
+
+        const params = {};
+        if (filtroId) params.id = filtroId;
+        if (filtroDia) params.dia = filtroDia;
+        if (filtroMaterial) params.material = filtroMaterial;
+        if (filtroSetor) params.setor = filtroSetor;
 
         try {
             const res = await api.get(url, {
@@ -80,12 +95,32 @@ export function HistoricoTransferencia() {
         });
     };
 
-    const transferenciasFiltradas = transferencias.filter((transferencias) => {
-        if (filtroStatus === "todas") return true;
-        if (filtroStatus === "internas") return transferencias.tipoTransferencia === "Internas";
-        if (filtroStatus === "externas") return transferencias.tipoTransferencia === "Externas";
-        return true;
+    const transferenciasFiltradas = transferencias.filter((t) => {
+        const matchId = filtroId
+            ? String(t?.id ?? "").includes(filtroId)
+            : true;
+
+        const matchDia = filtroDia
+            ? (t?.ultimaMovimentacao ?? "")
+                .toLowerCase()
+                .includes(filtroDia.toLowerCase())
+            : true;
+
+        const matchMaterial = filtroMaterial
+            ? (t?.tipoMaterial ?? "")
+                .toLowerCase()
+                .includes(filtroMaterial.toLowerCase())
+            : true;
+
+        const matchSetor = filtroSetor
+            ? (t?.setor ?? "")
+                .toLowerCase()
+                .includes(filtroSetor.toLowerCase())
+            : true;
+
+        return matchId && matchDia && matchMaterial && matchSetor;
     });
+
 
     function baixarOrdem(id) {
         const item = transferencias.find((t) => t.id === id);
@@ -318,10 +353,38 @@ export function HistoricoTransferencia() {
             <div className={styles.container}>
                 <div className={styles.background}>
                     <h1>HISTÓRICO DE TRANSFERÊNCIAS</h1>
-                    <label htmlFor="filtro" className={styles.labelFiltro}>
-                        Filtrar por status:{" "}
-                    </label>
-                    <select
+                    <div className={styles.filtros}>
+                        <input
+                            id="status"
+                            type="text"
+                            placeholder="Filtrar por ID"
+                            value={filtroId}
+                            className={styles.inputFiltro}
+                            onChange={(e) => setFiltroId(e.target.value)}
+                        />
+                        <input
+                            type="date"
+                            placeholder="Filtrar por data"
+                            value={filtroDia}
+                            onChange={(e) => setFiltroDia(e.target.value)}
+                            className={styles.inputFiltro}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Filtrar por material"
+                            value={filtroMaterial}
+                            onChange={(e) => setFiltroMaterial(e.target.value)}
+                            className={styles.inputFiltro}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Filtrar por setor"
+                            value={filtroSetor}
+                            onChange={(e) => setFiltroSetor(e.target.value)}
+                            className={styles.inputFiltro}
+                        />
+                    </div>
+                    {/* <select
                         id="filtro"
                         value={filtroStatus}
                         onChange={(e) => setFiltroStatus(e.target.value)}
@@ -330,7 +393,7 @@ export function HistoricoTransferencia() {
                         <option value="todas">Todas</option>
                         <option value="internas">Internas</option>
                         <option value="externas">Externas</option>
-                    </select>
+                    </select> */}
                     <p className={styles.qtdUsuarios}>
                         {transferencias.length} transferência(s) encontrada(s)
                     </p>
