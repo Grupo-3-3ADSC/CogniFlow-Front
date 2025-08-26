@@ -90,8 +90,8 @@ function renderPaginaMensal(doc, mes, corPrimaria, corTexto) {
     { t: "Custo total (R$)", v: formatarMoeda(resumo.custoTotal ?? infer("custo total")) },
     { t: "Fornecedores", v: formatarNumero(resumo.fornecedores ?? infer("fornecedor")) },
     { t: "Ordens de Compra (OC)", v: formatarNumero(resumo.ordensCompra ?? infer("ordem")) },
-    { t: "Var. vs mês ant. (%)", v: formatarPercentual(resumo.variacaoVsAnteriorPct ?? infer("varia")) },
-    { t: "Partic. no ano (%)", v: formatarPercentual(resumo.participacaoAnoPct ?? infer("partic")) },
+    { t: "Var. vs mês ant. (%)*", v: formatarPercentual(resumo.variacaoVsAnteriorPct ?? infer("varia")) },
+    { t: "Partic. no ano (%)*", v: formatarPercentual(resumo.participacaoAnoPct ?? infer("partic")) },
   ];
 
 
@@ -121,14 +121,14 @@ function renderPaginaMensal(doc, mes, corPrimaria, corTexto) {
 
   // Materiais
   const materias = mes?.Materiais || [];
-  const matHead = ["Material", "Kg", "IPI(%)", "Custo total (R$)", "Custo médio (R$/kg)", "Valor total (R$)"];
+  const matHead = ["Material", "Kg", "IPI(%)*", "Custo total (R$)", "Custo médio (R$/kg)", "Valor total (R$)"];
   const matBody = materias.map(m => [
     m.material,
-    formatarPercentual(m.ipi),
     formatarNumero(m.kg),
-    formatarMoeda(m.custoMedio),
+    formatarPercentual(m.ipi),
     formatarMoeda(m.custoTotal),
-    formatarMoeda(m.valoroTotal)
+    formatarMoeda(m.custoMedio),
+    formatarMoeda(m.valorTotal),
   ]);
   nextY = renderTabela(doc, "Materiais", matHead, matBody, nextY, corPrimaria, corTexto);
 
@@ -143,7 +143,19 @@ function renderPaginaMensal(doc, mes, corPrimaria, corTexto) {
   ]);
   nextY = renderTabela(doc, "Fornecedores", fornHead, fornBody, nextY, corPrimaria, corTexto);
 
-
+  doc.setFontSize(9).setFont("helvetica", "italic").setTextColor(...corTexto);
+  doc.text(
+    "* IPI (%) - Imposto sobre Produtos Industrializados aplicado sobre o material.",
+    20, pageHeight - 41
+  );
+  doc.text(
+    "* Var. vs mês ant. (%) - Variação percentual em relação ao mês anterior.",
+    20, pageHeight - 35
+  );
+  doc.text(
+    "* Partic. no ano (%) - Participação do mês no total acumulado do ano.",
+    20, pageHeight - 29
+  );
 }
 export function gerarRelatorioEntradas(dadosAno, dadosMensais, ano) {
   const doc = new jsPDF();
@@ -201,7 +213,7 @@ export function gerarRelatorioEntradas(dadosAno, dadosMensais, ano) {
     { t: "Custo total (R$)", v: formatarMoeda(dadosAno.find(d => d.label === "custoTotal")?.valor) },
     { t: "Fornecedores", v: formatarNumero(dadosAno.find(d => d.label === "fornecedores")?.valor) },
     { t: "Ordens de compra (OC)", v: formatarNumero(dadosAno.find(d => d.label === "ordensCompra")?.valor) },
-    { t: "Var. vs mês ant. (%) *", v: formatarPercentual(dadosAno.find(d => d.label === "variacaoVsAnteriorPct")?.valor) },
+    { t: "Var. vs ano ant. (%) *", v: formatarPercentual(dadosAno.find(d => d.label === "variacaoVsAnteriorPct")?.valor) },
     { t: "Partic. no ano (%)", v: formatarPercentual(dadosAno.find(d => d.label === "participacaoAnoPct")?.valor) },
     { t: "Mês com menos entradas", v: mesMin },
     { t: "Mês com mais entradas", v: mesMax },
@@ -225,6 +237,15 @@ export function gerarRelatorioEntradas(dadosAno, dadosMensais, ano) {
     }
   }
 
+  doc.setFontSize(9).setFont("helvetica", "italic").setTextColor(...corTexto);
+  doc.text(
+    "* Var. vs ano ant. (%) - Variação percentual em relação ao mês anterior.",
+    20, pageHeight - 35
+  );
+  doc.text(
+    "* Partic. no ano (%) - Participação do mês no total acumulado do ano.",
+    20, pageHeight - 29
+  );
 
 
   // ====== RODAPÉ ======
@@ -247,6 +268,7 @@ export function gerarRelatorioEntradas(dadosAno, dadosMensais, ano) {
 // Render da página de um mês (saídas)
 function renderPaginaMensalSaidas(doc, mes, corPrimaria, corTexto) {
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
 
   // Título do mês
   doc.setFont("helvetica", "bold").setFontSize(16).setTextColor(...corPrimaria);
@@ -256,29 +278,29 @@ function renderPaginaMensalSaidas(doc, mes, corPrimaria, corTexto) {
   const resumo = mes?.resumo || {};
   const kpis = [
     { t: "Materiais", v: formatarNumero(resumo.materiais) },
-    { t: "Total de Saídas", v: formatarNumero(resumo.totalSaidas) },
+    { t: "Quntidade Transferida", v: formatarNumero(resumo.qtdTranferida) },
     { t: "Transferências realizadas", v: formatarNumero(resumo.transferencias) },
-    { t: "Var. vs mês ant. (%)", v: formatarPercentual(resumo.variacaoVsAnteriorPct) },
+    { t: "Var. vs mês ant. (%)*", v: formatarPercentual(resumo.variacaoVsAnteriorPct) },
   ];
 
   // Grid de KPIs
-const gridX = 20;
-const gridY = 40;
-const gap = 8;
-const cols = 2; // agora só 2 por linha
-const colW = (pageWidth - gridX * 2 - gap * (cols - 1)) / cols;
-const cardH = 26;
+  const gridX = 20;
+  const gridY = 40;
+  const gap = 8;
+  const cols = 2; // agora só 2 por linha
+  const colW = (pageWidth - gridX * 2 - gap * (cols - 1)) / cols;
+  const cardH = 26;
 
-let idx = 0;
-for (let r = 0; r < 2; r++) { // 2 linhas
-  for (let c = 0; c < cols; c++) {
-    if (idx >= kpis.length) break;
-    const x = gridX + c * (colW + gap);
-    const y = gridY + r * (cardH + gap);
-    const { t, v } = kpis[idx++];
-    drawKpiCard(doc, x, y, colW, cardH, t, v, corPrimaria, corTexto);
+  let idx = 0;
+  for (let r = 0; r < 2; r++) { // 2 linhas
+    for (let c = 0; c < cols; c++) {
+      if (idx >= kpis.length) break;
+      const x = gridX + c * (colW + gap);
+      const y = gridY + r * (cardH + gap);
+      const { t, v } = kpis[idx++];
+      drawKpiCard(doc, x, y, colW, cardH, t, v, corPrimaria, corTexto);
+    }
   }
-}
 
 
   // Tabelas
@@ -286,7 +308,7 @@ for (let r = 0; r < 2; r++) { // 2 linhas
 
   // --- Materiais ---
   const materias = mes?.Materiais || [];
-  const matHead = ["Material", "Total Saídas", "C1", "C2", "C3", "C4"];
+  const matHead = ["Material", "Quantidade Transferida", "C1", "C2", "C3", "C4"];
   const matBody = materias.map(m => [
     m.material,
     formatarNumero(m.total),
@@ -299,12 +321,18 @@ for (let r = 0; r < 2; r++) { // 2 linhas
 
   // --- Setores ---
   const setores = mes?.Setores || [];
-  const setHead = ["Setor", "Total Saídas"];
+  const setHead = ["Setor", "Quantidade Transferida"];
   const setBody = setores.map(s => [
     s.setor,
     formatarNumero(s.total),
   ]);
   nextY = renderTabela(doc, "Setores", setHead, setBody, nextY, corPrimaria, corTexto);
+
+    doc.setFontSize(9).setFont("helvetica", "italic").setTextColor(...corTexto);
+  doc.text(
+    "* Var. vs mês ant. (%) - Variação percentual em relação ao mês anterior.",
+    20, pageHeight - 35
+  );
 }
 
 const dadosMensaisSaidas = [
@@ -385,9 +413,9 @@ export function gerarRelatorioSaidas(dadosAno, dadosMensaisSaidas, ano) {
 
   const resumoAnual = [
     { t: "Materiais", v: formatarNumero(dadosAno.find(d => d.label === "materiais")?.valor) },
-    { t: "Total de Saídas", v: formatarNumero(dadosAno.find(d => d.label === "totalSaidas")?.valor) },
+    { t: "Quantidade Transferida", v: formatarNumero(dadosAno.find(d => d.label === "qtdTransferida")?.valor) },
     { t: "Transferências realizadas", v: formatarNumero(dadosAno.find(d => d.label === "transferencias")?.valor) },
-    { t: "Var. vs mês ant. (%)", v: formatarPercentual(dadosAno.find(d => d.label === "variacaoVsAnteriorPct")?.valor) },
+    { t: "Var. vs ano ant. (%)*", v: formatarPercentual(dadosAno.find(d => d.label === "variacaoVsAnteriorPct")?.valor) },
     { t: "Mês com menos saídas", v: dadosAno.find(d => d.label === "mesMin")?.valor ?? "-" },
     { t: "Mês com mais saídas", v: dadosAno.find(d => d.label === "mesMax")?.valor ?? "-" },
   ];
@@ -409,6 +437,11 @@ export function gerarRelatorioSaidas(dadosAno, dadosMensaisSaidas, ano) {
       drawKpiCard(doc, x, y, cardW, cardH, t, v, corPrimaria, corTexto);
     }
   }
+  doc.setFontSize(9).setFont("helvetica", "italic").setTextColor(...corTexto);
+  doc.text(
+    "* Var. vs ano ant. (%) - Variação percentual em relação ao mês anterior.",
+    20, pageHeight - 35
+  );
 
   // ====== RODAPÉ ======
   const totalPaginas = doc.getNumberOfPages();
@@ -553,7 +586,7 @@ export function Relatorios() {
               <div key={index} className={styles.relatorio}>
                 <h3>
                   {relatorio.titulo}
-                  {(relatorio.tipo === "entradas" || relatorio.tipo === "saidas") && ` - ${anoSelecionado}`}
+                  {(relatorio.tipo === "entradas" || relatorio.tipo === "saidas") && anoSelecionado && ` - ${anoSelecionado}`}
                 </h3>
 
                 <p>{relatorio.descricao}</p>

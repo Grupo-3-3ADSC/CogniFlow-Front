@@ -29,6 +29,15 @@
   flex-direction: column;
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly ;
+  width: 80%;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
 h2 {
   color: white;
   margin-bottom: 20px;
@@ -48,6 +57,7 @@ h2 {
   margin-right: 20px;
   outline: none;
   background-color: var(--secondary-color);
+  color: white;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   appearance: none;
@@ -72,16 +82,25 @@ h2 {
   border: none;
   margin-right: 20px;
   outline: none;
-  background-color: violet;
+  background-color: var(--secondary-color); /* azul secundário */
+  color: white; /* texto branco no início */
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23ffffff' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px;
-  transition: background-color 0.3s, transform 0.2s;
+  transition: all 0.3s ease;
 }
+
+.selectFiltro:hover {
+  background-color: #25719c;
+}
+
+.selectFiltro:focus,
+.selectFiltro:active {
+  background-color: #fff;
+  color: var(--primary-color);
+  border: 2px solid #28a745;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3);
+}
+
 
 .filtro {
   width: 80%;
@@ -102,7 +121,7 @@ h2 {
   overflow: hidden;
   gap: 8px;
   flex: 1;
-  /* ocupa todo o espaço entre as setas */
+
 }
 
 .anoContent {
@@ -112,10 +131,15 @@ h2 {
 }
 
 .seta {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
+   width: 28px;
+  height: 28px;
   cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.seta:hover {
+  transform: scale(1.1);
 }
 
 .ano {
@@ -133,6 +157,18 @@ h2 {
   /* tom mais claro ao passar o mouse */
 }
 
+.setaAno {
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  padding: 4px;
+  transition: transform 0.2s;
+}
+
+.setaAno:hover {
+  transform: scale(1.1);
+}
+
 .ativo {
   background-color: #00bfff;
   /* cor de destaque */
@@ -140,41 +176,11 @@ h2 {
 }
 
 
-.seta:hover {
-  transform: scale(1.1);
-}
-
-
-
-
 .labelFiltro {
   padding: 30px 0 2px 0;
   font-weight: 500;
   font-size: 16px;
   margin-right: 0.5rem;
-}
-
-.selectFiltro {
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  background-color: #f9f9f9;
-  color: #333;
-  font-size: 14px;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.selectFiltro:hover {
-  border-color: #4caf50;
-  background-color: #f1fef3;
-}
-
-.selectFiltro:focus {
-  outline: none;
-  border-color: #28a745;
-  background-color: #fff;
-  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3);
 }
 
 

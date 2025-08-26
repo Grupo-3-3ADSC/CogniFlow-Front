@@ -85,7 +85,7 @@ export function gerarRelatorioFornecedores(fornecedor, dadosAno, dadosMensais, a
         const pedidos = mes?.pedidos || [];
         if (pedidos.length > 0) {
             const head = [
-                ["Data", "Ordem de compra", "Produto", "Qtd", "Preço unitário", "Preço total pedido", "IPI (%)", "Valor total"]
+                ["Data", "Ordem de compra", "Produto", "Qtd", "Preço unitário", "Preço total pedido", "IPI (%)*", "Valor total"]
             ];
 
             const body = pedidos.map(p => [
@@ -109,6 +109,13 @@ export function gerarRelatorioFornecedores(fornecedor, dadosAno, dadosMensais, a
                 margin: { left: 20, right: 20 }
             });
         }
+
+        doc.setFontSize(9).setFont("helvetica", "italic").setTextColor(...corTexto);
+        doc.text(
+            "* IPI (%) - Imposto sobre Produtos Industrializados aplicado sobre o material.",
+            20, pageHeight - 41
+        );
+
     });
 
     // ===== RESUMO ANUAL =====
@@ -177,7 +184,7 @@ const dadosMensaisFake = [
             { label: "Total de compras no mês", valor: "120" },
             { label: "Valor total comprado (R$)", valor: "50.000,00" },
             { label: "Nº de pedidos realizados", valor: "15" },
-            { label: "Material mais comprado", valor: "Chapa Aço (80 unid.)" }
+            { label: "Material mais comprado", valor: "Chapa Aço" }
         ],
         pedidos: [
             {
@@ -208,7 +215,7 @@ const dadosMensaisFake = [
             { label: "Total de compras no mês", valor: "100" },
             { label: "Valor total comprado (R$)", valor: "40.000,00" },
             { label: "Nº de pedidos realizados", valor: "10" },
-            { label: "Material mais comprado", valor: "Bobina (50 unid.)" }
+            { label: "Material mais comprado", valor: "Bobina" }
         ],
         pedidos: [] // pode deixar vazio se não quiser mostrar tabela
     }
@@ -219,7 +226,7 @@ const dadosAnoFake = [
     { label: "Total de compras no ano", valor: "1500" },
     { label: "Valor total comprado (R$)", valor: "500.000,00" },
     { label: "Nº de pedidos realizados", valor: "120" },
-    { label: "Material mais comprado", valor: "Chapa Aço (800 unid.)" }
+    { label: "Material mais comprado", valor: "Chapa Aço" }
 ];
 
 function gerarListaAnos(anoInicial) {
@@ -239,7 +246,7 @@ export function RelatorioFornecedor() {
     const [filtroNome, setFiltroNome] = useState("");
     const [inicio, setInicio] = useState(0);
     const todosAnos = gerarListaAnos(2018);
-    const [anoSelecionado, setAnoSelecionado] = useState(todosAnos[todosAnos.length - 1]);
+    const [anoSelecionado, setAnoSelecionado] = useState(null);
 
     const anosVisiveis = todosAnos.slice(inicio, inicio + 5);
 
@@ -312,7 +319,7 @@ export function RelatorioFornecedor() {
                             className={styles.seta}
                             onClick={() => navigate("/relatorios")}
                         />
-                        <h1>RELATÓRIO COMPARATIVO DE FORNECEDORES - {anoSelecionado}</h1>
+                        <h1>RELATÓRIO COMPARATIVO DE FORNECEDORES {anoSelecionado && ` - ${anoSelecionado}`}</h1>
                     </div>
 
                     <div className={styles.filtro}>
@@ -370,14 +377,19 @@ export function RelatorioFornecedor() {
                                         <td>
                                             <button
                                                 className={styles.baixar}
-                                                onClick={() =>
+                                                onClick={() => {
+                                                    if (!anoSelecionado) {
+
+                                                        alert("⚠️ Por favor, selecione um ano antes de baixar o relatório de entradas.");
+                                                        return;
+                                                    }
                                                     gerarRelatorioFornecedores(
                                                         fornecedor.nomeFantasia,
                                                         dadosAnoFake,
                                                         dadosMensaisFake,  // idem
                                                         anoSelecionado
                                                     )
-                                                }
+                                                }}
                                             >
                                                 <img className="icons-baixar" src={iconBaixar} alt="Baixar" />
                                             </button>

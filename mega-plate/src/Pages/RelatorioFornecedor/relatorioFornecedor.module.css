@@ -32,9 +32,9 @@
 .header {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-evenly ;
   width: 100%;
-  gap: 12px;
+  gap: 13px;
   margin-bottom: 20px;
 }
 
@@ -50,7 +50,9 @@
   transition: transform 0.2s;
 }
 
-
+.seta:hover {
+  transform: scale(1.1);
+}
 
 h2 {
   color: white;
@@ -116,9 +118,7 @@ h2 {
 }
 
 
-.seta:hover {
-  transform: scale(1.1);
-}
+
 
 .ano {
   padding: 6px 14px;

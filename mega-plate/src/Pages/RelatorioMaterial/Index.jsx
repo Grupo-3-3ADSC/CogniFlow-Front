@@ -43,8 +43,8 @@ export function gerarRelatorioMaterial(material, dadosAno, dadosMensais, ano) {
   doc.setTextColor(...corTexto).setFontSize(12).setFont("helvetica", "normal");
   doc.text(`Material: ${material}`, pageWidth / 2, 80, { align: "center" });
   doc.text(`Análise das movimentações e desempenho anual`, pageWidth / 2, 60, { align: "center" });
-  doc.text(`Data de emissão: ${dataEmissao}`, pageWidth / 2, 90, { align: "center" });
-  if (logoMegaPlate) doc.addImage(logoMegaPlate, "PNG", (pageWidth - 50) / 2, 100, 50, 50);
+  doc.text(`DATA DE EMISSÃO: ${dataEmissao}`, pageWidth / 2, 100, { align: "center" });
+  if (logoMegaPlate) doc.addImage(logoMegaPlate, "PNG", (pageWidth - 50) / 2, 120, 50, 50);
 
   // ===== PÁGINAS MENSAIS =====
   (dadosMensais || []).forEach(mes => {
@@ -76,15 +76,12 @@ export function gerarRelatorioMaterial(material, dadosAno, dadosMensais, ano) {
     // tabela de movimentações (igual a pedidos)
     const movimentos = mes?.movimentos || [];
     if (movimentos.length > 0) {
-      // REMOVIDO "Tipo" DO CABEÇALHO
       const head = [["Data", "Setor", "Qtd", "Observação"]];
 
-      // REMOVIDO m.tipo DO CORPO
       const body = movimentos.map(m => [m.data, m.setor, m.quantidade, m.obs || "-"]);
 
       autoTable(doc, {
         head, body,
-        // **CORREÇÃO AQUI:** USA totalRows para calcular a posição Y
         startY: gridY + totalRows * (cardH + gap) + 10,
         styles: { font: "helvetica", fontSize: 9 },
         headStyles: { fillColor: corPrimaria, textColor: [255, 255, 255] },
@@ -136,11 +133,11 @@ const MOCK_DADOS_MENSAL_MATERIAL = [
       { label: "Saídas para C2", valor: "25" },
       { label: "Saídas para C3", valor: "40" },
       { label: "Saídas para C4", valor: "20" },
-      { label: "Maior Setor (Volume)", valor: "C3" } // <- Novo KPI
+      { label: "Maior Setor (Volume)", valor: "C3" } 
     ],
     movimentos: [
-      { data: "01/01/2025", setor: "C1", quantidade: 50 },
-      { data: "05/01/2025", setor: "Cliente X", quantidade: 30 },
+      { data: "01/01/2025", setor: "C1", quantidade: 35 },
+      { data: "05/01/2025", setor: "C2", quantidade: 25 },
     ]
   },
 ];
@@ -151,7 +148,7 @@ const MOCK_DADOS_ANO_MATERIAL = [
   { label: "Saídas Anuais para C2", valor: "120" },
   { label: "Saídas Anuais para C3", valor: "170" },
   { label: "Saídas Anuais para C4", valor: "110" },
-  { label: "Setor de Maior Consumo", valor: "C3" }, // KPI adicional
+  { label: "Setor de Maior Consumo", valor: "C3" },
 ];
 
 function gerarListaAnos(anoInicial) {
@@ -244,14 +241,21 @@ export function RelatorioMaterial() {
       <NavBar />
       <div className={styles.container}>
         <div className={styles.background}>
-          <h1>RELATÓRIO DE SAÍDAS POR MATERIAIS - {anoSelecionado}</h1>
+          <div className={styles.header}>
+            <img
+              src={setaImg}
+              alt="Voltar"
+              className={styles.seta}
+              onClick={() => navigate("/relatorios")}
+            />
+            <h1>RELATÓRIO DE SAÍDAS POR MATERIAIS {anoSelecionado && ` - ${anoSelecionado}`}</h1>
+          </div>
           <div className={styles.filtro}>
             <select value={filtroMaterial} onChange={(e) => setFiltroMateiral(e.target.value)} className={styles.selectFiltro}>
               <option value="todos">Todos os Materias</option>
               <option value="SAE 1020">SAE 1020</option>
               <option value="SAE 1040">SAE 1040</option>
               <option value="HARDOX">HARDOX</option>
-              <option value="materiais">Relatório de Materiais</option>
             </select>
 
 
@@ -266,13 +270,13 @@ export function RelatorioMaterial() {
 
             <div className={styles.filtroAno}>
               <div className={styles.anoContent}>
-                <img src={setaImg} alt="seta esquerda" className={styles.seta} onClick={voltarAno} />
+                <img src={setaImg} alt="seta esquerda" className={styles.setaAno} onClick={voltarAno} />
                 {anosVisiveis.map((ano) => (
                   <div key={ano} className={`${styles.ano} ${anoSelecionado === ano ? styles.ativo : ""}`} onClick={() => setAnoSelecionado(ano)}>
                     {ano}
                   </div>
                 ))}
-                <img src={setaRightImg} alt="seta direita" className={styles.seta} onClick={avancarAno} />
+                <img src={setaRightImg} alt="seta direita" className={styles.setaAno} onClick={avancarAno} />
               </div>
             </div>
           </div>
@@ -290,19 +294,20 @@ export function RelatorioMaterial() {
                 </div>
                 <button
                   className={styles.btnBaixar}
-                  // 1. Desabilitar se o anoSelecionado for 'falso' (null/undefined/0/etc.)
-                  disabled={!anoSelecionado}
-
                   onClick={() => {
-                    // 2. Garantir que o ano existe antes de chamar a função
-                    if (anoSelecionado) {
-                      gerarRelatorioMaterial(
-                        material.material,
-                        MOCK_DADOS_ANO_MATERIAL,
-                        MOCK_DADOS_MENSAL_MATERIAL,
-                        anoSelecionado
-                      );
+                    if (!anoSelecionado) {
+
+                      alert("⚠️ Por favor, selecione um ano antes de baixar o relatório de entradas.");
+                      return;
                     }
+
+                    gerarRelatorioMaterial(
+                      material.material,
+                      MOCK_DADOS_ANO_MATERIAL,
+                      MOCK_DADOS_MENSAL_MATERIAL,
+                      anoSelecionado
+                    );
+
                   }}
                 >
                   Baixar Relatório
