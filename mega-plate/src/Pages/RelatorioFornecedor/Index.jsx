@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import NavBar from "../../components/NavBar.jsx";
-import Swal from "sweetalert2";
+import { toastSuccess, toastError, toastInfo } from "../../components/toastify/ToastifyService.jsx";
 import styles from "./relatorioFornecedor.module.css";
 import iconBaixar from '../../assets/icon-baixar.png';
 import setaImg from "../../assets/seta.png";
@@ -294,7 +294,7 @@ export function RelatorioFornecedor() {
                 setFornecedores(res.data);
             }
         } catch (error) {
-            Swal.fire("Erro ao carregar fornecedores", "", "error");
+            toastError("Erro ao carregar fornecedores");
         }
     };
 
@@ -379,9 +379,7 @@ export function RelatorioFornecedor() {
                                                 className={styles.baixar}
                                                 onClick={() => {
                                                     if (!anoSelecionado) {
-
-                                                        alert("⚠️ Por favor, selecione um ano antes de baixar o relatório de entradas.");
-                                                        return;
+                                                        toastError("Por favor, selecione um ano antes de baixar o relatório."); return;
                                                     }
                                                     gerarRelatorioFornecedores(
                                                         fornecedor.nomeFantasia,

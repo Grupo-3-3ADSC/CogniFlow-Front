@@ -3,7 +3,7 @@ import logo from '../../assets/logo-megaplate.png';
 import olho from '../../assets/olho.png';
 import {
     toastError,
-    toastSucess,
+    toastSuccess,
 } from "../../components/toastify/ToastifyService.jsx";
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
@@ -71,7 +71,7 @@ export function Redefinicao() {
 
         try {
             await atualizarSenha(userId, senha);
-            toastSucess('Senha atualizada com sucesso!');
+            toastSuccess('Senha atualizada com sucesso!');
             navigate('/');
         } catch (error) {
             toastError('Erro ao atualizar senha: ' + error.message);

@@ -4,10 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import NavBar from "../../components/NavBar";
-import {
-  toastError,
-  toastSucess,
-} from "../../components/toastify/ToastifyService";
+import { toastError,toastSuccess} from "../../components/toastify/ToastifyService";
 import { jwtDecode } from "jwt-decode";
 import { api } from "../../provider/api";
 

@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { api } from "../../provider/api.js";
 import {
   toastError,
-  toastSucess,
+  toastSuccess,
 } from "../../components/toastify/ToastifyService.jsx";
 
 export function Login() {
@@ -84,7 +84,7 @@ export function Login() {
         setFormData({ email: "", password: "" });
         divLoading.style.display = "block";
         setTimeout(function () {
-          toastSucess("Sucesso! Seja Bem-vindo!");
+          toastSuccess("Sucesso! Seja Bem-vindo!");
           navigate("/Material");
         }, 1500);
       })

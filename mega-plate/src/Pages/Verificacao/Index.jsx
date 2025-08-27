@@ -2,10 +2,7 @@ import styles from './verificacao.module.css';
 import logo from '../../assets/logo-megaplate.png';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-    toastError,
-    toastSucess,
-} from "../../components/toastify/ToastifyService.jsx";
+import {toastError, toastSuccess} from "../../components/toastify/ToastifyService.jsx";
 
 export function Verificacao() {
     const navigate = useNavigate();
@@ -41,7 +38,7 @@ export function Verificacao() {
             const data = await response.json();
 
             if (data.success) {
-                toastSucess('Código enviado para seu e-mail!');
+                toastSuccess('Código enviado para seu e-mail!');
                 setTimeout(() => setShowEmailScreen(false), 1500);
             } else {
                 toastError(data.message || 'Erro ao enviar código.');
@@ -81,7 +78,7 @@ export function Verificacao() {
             if (data.success) {
                 try {
                     const userId = await buscarUsuarioPorEmail(email);
-                    toastSucess('Código verificado com sucesso!');
+                    toastSuccess('Código verificado com sucesso!');
                     navigate(`/Redefinicao/${userId}`);
                 } catch (error) {
                     toastError('Erro ao encontrar usuário. Tente novamente.');

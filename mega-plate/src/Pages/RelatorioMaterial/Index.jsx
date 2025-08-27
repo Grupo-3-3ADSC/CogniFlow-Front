@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import NavBar from "../../components/NavBar.jsx";
 import { api } from "../../provider/api.js";
-import Swal from "sweetalert2";
+import { toastSuccess, toastError, toastInfo } from "../../components/toastify/ToastifyService.jsx";
 import styles from "./relatorioMaterial.module.css";
 import setaImg from "../../assets/seta.png";
 import setaRightImg from "../../assets/setaRight.png";
@@ -10,7 +10,6 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import logoMegaPlate from '../../assets/logo-megaplate-azul.png';
 
-// Adicione esta função ao seu arquivo, antes de 'gerarRelatorioMaterial'
 
 function drawKpiCard(doc, x, y, w, h, title, value, corPrimaria, corTexto) {
   // Desenha o fundo do card
@@ -133,7 +132,7 @@ const MOCK_DADOS_MENSAL_MATERIAL = [
       { label: "Saídas para C2", valor: "25" },
       { label: "Saídas para C3", valor: "40" },
       { label: "Saídas para C4", valor: "20" },
-      { label: "Maior Setor (Volume)", valor: "C3" } 
+      { label: "Maior Setor (Volume)", valor: "C3" }
     ],
     movimentos: [
       { data: "01/01/2025", setor: "C1", quantidade: 35 },
@@ -210,15 +209,17 @@ export function RelatorioMaterial() {
           { id: 2, material: "SAE 1040" },
           { id: 3, material: "HARDOX" },
         ]);
+        toastInfo("Materiais carregados no modo MOCK."); // opcional para feedback
       } else {
         const token = sessionStorage.getItem("authToken");
         const res = await api.get("/materiais", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setMateriais(res.data);
+        toastSuccess("Materiais carregados com sucesso!");
       }
     } catch (error) {
-      Swal.fire("Erro ao carregar materiais", "", "error");
+      toastError("Erro ao carregar materiais");
     }
   };
 
@@ -296,8 +297,7 @@ export function RelatorioMaterial() {
                   className={styles.btnBaixar}
                   onClick={() => {
                     if (!anoSelecionado) {
-
-                      alert("⚠️ Por favor, selecione um ano antes de baixar o relatório de entradas.");
+                      toastError("Por favor, selecione um ano antes de baixar o relatório.");
                       return;
                     }
 
