@@ -174,7 +174,7 @@ function Perfil() {
                 setFormData(resposta.data)
                 setTimeout(() => {
                     if (emailAlterado) {
-                        toastSuccess('Reiniciando aplicação...');
+                        toastInfo('Reiniciando aplicação...');
                         navigate('/');
                     } else {
                         window.location.reload();

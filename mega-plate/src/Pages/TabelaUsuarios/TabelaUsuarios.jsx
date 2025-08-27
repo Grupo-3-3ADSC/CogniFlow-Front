@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import NavBar from "../../components/NavBar";
 import { api } from "../../provider/api.js";
 import Swal from "sweetalert2";
+import { toastSuccess, toastError, toastInfo } from "../../components/toastify/ToastifyService.jsx";
 import styles from "./tabela.module.css";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
@@ -17,20 +18,20 @@ export function TabelaUsuarios() {
   const [fade, setFade] = useState(true);
   const navigate = useNavigate();
 
-    useEffect(() => {
-      const token = sessionStorage.getItem("authToken");
-      if (!token) {
+  useEffect(() => {
+    const token = sessionStorage.getItem("authToken");
+    if (!token) {
+      navigate("/");
+    } else {
+      const { exp } = jwtDecode(token);
+      if (Date.now() >= exp * 1000) {
+        sessionStorage.removeItem("authToken");
         navigate("/");
       } else {
-        const { exp } = jwtDecode(token);
-        if (Date.now() >= exp * 1000) {
-          sessionStorage.removeItem("authToken");
-          navigate("/");
-        } else {
-          setAutenticacaoPassou(true);
-        }
+        setAutenticacaoPassou(true);
       }
-    }, [navigate]);
+    }
+  }, [navigate]);
 
   useEffect(() => {
     setFade(false); // inicia fade out
@@ -88,11 +89,11 @@ export function TabelaUsuarios() {
           }
         );
 
-        Swal.fire("Status atualizado com sucesso!", "", "success");
+        toastSuccess("Status atualizado com sucesso!");
         buscarUsuarios(); // Recarrega a lista do banco
       } catch (error) {
         console.error("Erro ao atualizar status:", error);
-        Swal.fire("Erro ao atualizar status", "", "error");
+        toastError("Erro ao atualizar status");
       }
     }
   };
@@ -182,8 +183,8 @@ export function TabelaUsuarios() {
             </select>
 
             <select
-              id="filtro"
-              value={filtroStatus}
+              id="filtroCargo"
+              value={filtroCargo}
               onChange={(e) => setFiltroCargo(e.target.value)}
               className={styles.selectFiltro}
             >
@@ -191,6 +192,7 @@ export function TabelaUsuarios() {
               <option value="gestor">Gestor</option>
               <option value="comum">Comum</option>
             </select>
+
 
           </div>
 

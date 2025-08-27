@@ -35,7 +35,7 @@ export function CadastroFornecedor() {
       !formData.responsavel ||
       !formData.cargo
     ) {
-      toastInfo("Preencha as informações.");
+      toastError("Preencha as informações.");
       return;
     }
 
@@ -50,33 +50,33 @@ export function CadastroFornecedor() {
     const telefoneSemMascara = formData.telefone.replace(/\D/g, '');
 
     if (!validarRazaoSocial(formData.razaoSocial)) {
-      toastWarning("Razão Social inválida.");
+      toastError("Razão Social inválida.");
       return;
     }
     if (!validarTelefone(formData.telefone)) {
-      toastWarning("Telefone inválido.");
+      toastError("Telefone inválido.");
       return;
     }
     if (!validarNumero(formData.numero)) {
-      toastWarning("Número deve conter apenas dígitos.");
+      toastError("Número deve conter apenas dígitos.");
       return;
     }
     if (!validarEmail(formData.email)) {
-      toastWarning("E-mail inválido.");
+      toastError("E-mail inválido.");
       return;
     }
 
     if (cnpjLimpo.length !== 14 || !validarCNPJ(cnpjLimpo)) {
-      toastWarning("CNPJ inválido.");
+      toastError("CNPJ inválido.");
       return;
     }
 
     if (todosDigitosIguais(cnpjLimpo)) {
-      toastWarning("CNPJ inválido (todos os dígitos iguais).");
+      toastError("CNPJ inválido (todos os dígitos iguais).");
       return;
     }
     if (todosDigitosIguais(telefoneSemMascara)) {
-      toastWarning("Telefone inválido (todos os dígitos iguais).");
+      toastError("Telefone inválido (todos os dígitos iguais).");
       return;
     }
 
@@ -234,25 +234,25 @@ export function CadastroFornecedor() {
   function avancar() {
     if (progresso === 1) {
       if (!formData.razaoSocial || !formData.nomeFantasia || !formData.cnpj) {
-        toastWarning("Por favor, preencha todos os campos!");
+        toastError("Por favor, preencha todos os campos!");
         return;
       }
       if (!validarCNPJ(formData.cnpj.replace(/\D/g, ''))) {
-        toastWarning("CNPJ inválido.");
+        toastError("CNPJ inválido.");
         return;
       }
     }
     if (progresso === 2) {
       if (!formData.cep) {
-        toastWarning("CEP é obrigatório.");
+        toastError("CEP é obrigatório.");
         return;
       }
       if (!formData.endereco) {
-        toastWarning("Endereço é obrigatório.");
+        toastError("Endereço é obrigatório.");
         return;
       }
       if (!formData.numero || !validarNumero(formData.numero)) {
-        toastWarning("Número deve conter apenas dígitos.");
+        toastError("Número deve conter apenas dígitos.");
         return;
       }
     }

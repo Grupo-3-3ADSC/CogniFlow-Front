@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import NavBar from "../../components/NavBar";
-import { toastError,toastSuccess} from "../../components/toastify/ToastifyService";
+import { toastError, toastSuccess } from "../../components/toastify/ToastifyService";
 import { jwtDecode } from "jwt-decode";
 import { api } from "../../provider/api";
 
@@ -162,7 +162,7 @@ export function Transferencia() {
       errorMessages[response.status] ||
       errorData.message ||
       "Erro ao realizar transferência.";
-    alert(message);
+    toastError(message);
 
     // Log detalhado para debugging
     console.error("Erro HTTP:", { status: response.status, errorData });
@@ -192,7 +192,7 @@ export function Transferencia() {
       errorMessages[error.message] ||
       errorMessages.default;
 
-    alert(message);
+    toastError(message);
   }
 
   // Função helper para obter token (se necessário)
@@ -204,9 +204,7 @@ export function Transferencia() {
 
   // Função helper para toast de sucesso (opcional)
   function showSuccessToast(message) {
-    // Implementar conforme biblioteca de toast utilizada
-    // Exemplo: toast.success(message);
-    console.log("Sucesso:", message);
+    toastSuccess(message);
   }
 
   function gerarPDF(materiais) {
@@ -361,9 +359,8 @@ export function Transferencia() {
       <NavBar userName="Usuário" />
 
       <div
-        className={`container-transferencia ${
-          showSuccessScreen ? "success-screen" : "transfer-screen"
-        }`}
+        className={`container-transferencia ${showSuccessScreen ? "success-screen" : "transfer-screen"
+          }`}
       >
         <div className="box-mega">
           <h1>

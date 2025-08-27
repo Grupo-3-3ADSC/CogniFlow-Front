@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import NavBar from "../../components/NavBar";
 import styles from "./relatorios.module.css";
-import { toastSuccess, toastError, toastInfo  } from "../../components/toastify/ToastifyService.jsx";
+import { toastSuccess, toastError, toastInfo } from "../../components/toastify/ToastifyService.jsx";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import setaImg from "../../assets/seta.png";
@@ -240,7 +240,7 @@ export function Relatorios() {
 
                       }
                       baixarExcelEntradas(ordensDeCompra.filter(o => o.data.includes(anoSelecionado)));
-
+                      toastSuccess("Relatório gerado com sucesso!");
                     }}
                   >
                     {relatorio.botao}
@@ -257,6 +257,7 @@ export function Relatorios() {
                         return;
                       }
                       baixarExcelSaidas(transferencias.filter(t => t.data.includes(anoSelecionado)));
+                      toastSuccess("Relatório gerado com sucesso!");
                     }}
                   >
                     {relatorio.botao}

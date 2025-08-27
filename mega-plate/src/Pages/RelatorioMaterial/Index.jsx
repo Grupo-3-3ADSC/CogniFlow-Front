@@ -307,6 +307,7 @@ export function RelatorioMaterial() {
                       MOCK_DADOS_MENSAL_MATERIAL,
                       anoSelecionado
                     );
+                    toastSuccess("Relatório gerado com sucesso!");
 
                   }}
                 >

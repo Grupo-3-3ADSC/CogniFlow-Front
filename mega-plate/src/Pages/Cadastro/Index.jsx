@@ -65,7 +65,7 @@ export function Cadastro() {
   // Função para cadastrar usuário
   const cadastrar = () => {
     if (!formData.nome || !formData.email || !formData.cargo.id || !formData.password) {
-      toastWarning("Por favor, preencha todos os campos!");
+      toastError("Por favor, preencha todos os campos!");
       return;
     }
 
@@ -85,7 +85,7 @@ export function Cadastro() {
     }
 
     if (!validarCargo(formData.cargo?.id)) {
-      toastWarning("Cargo inválido.");
+      toastError("Cargo inválido.");
       return;
     }
 

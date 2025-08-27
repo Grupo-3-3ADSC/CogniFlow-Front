@@ -387,6 +387,7 @@ export function RelatorioFornecedor() {
                                                         dadosMensaisFake,  // idem
                                                         anoSelecionado
                                                     )
+                                                    toastSuccess("Relatório gerado com sucesso!");
                                                 }}
                                             >
                                                 <img className="icons-baixar" src={iconBaixar} alt="Baixar" />
