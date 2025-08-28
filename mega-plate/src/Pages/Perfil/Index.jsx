@@ -7,7 +7,7 @@ import User from '../../assets/logo-megaplate.png'
 import { api } from '../../provider/api.js';
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { toastError, toastSucess } from "../../components/toastify/ToastifyService.jsx";
+import { toastError, toastSuccess } from "../../components/toastify/ToastifyService.jsx";
 import { jwtDecode } from 'jwt-decode';
 
 function Perfil() {
@@ -167,14 +167,14 @@ function Perfil() {
                     Authorization: `Bearer ${token}`
                 }
             }).then((resposta) => {
-                toastSucess('O usuário foi atualizado!')
+                toastSuccess('O usuário foi atualizado!')
                 document.querySelectorAll('.inputNome, .inputEmail, .inputCargo')
                     .forEach(input => input.disabled = true);
                 setBotaoDesabilitado(true);
                 setFormData(resposta.data)
                 setTimeout(() => {
                     if (emailAlterado) {
-                        toastSucess('Reiniciando aplicação...');
+                        toastInfo('Reiniciando aplicação...');
                         navigate('/');
                     } else {
                         window.location.reload();
@@ -219,7 +219,7 @@ function Perfil() {
             timeout: 30000
         })
             .then((response) => {
-                toastSucess('Foto enviada com sucesso! Atualizando...');
+                toastSuccess('Foto enviada com sucesso! Atualizando...');
 
                 // Aguardar um pouco e recarregar a foto
                 setTimeout(() => {

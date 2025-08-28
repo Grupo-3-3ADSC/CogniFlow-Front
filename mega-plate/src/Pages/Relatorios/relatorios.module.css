@@ -4,12 +4,13 @@
     --dashboard-margin: 5%;
 }
 
+
 .container {
     margin-top: 15vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 90%;
+    width: 95%;
     margin-left: var(--dashboard-margin);
     margin-right: var(--dashboard-margin);
     margin-left: 7.5vw;
@@ -42,7 +43,7 @@
     padding: 25px;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    min-height: 70vh;
+    height: 83vh;
     width: 90%;
     max-width: 100%;
     display: flex;
@@ -84,7 +85,7 @@ h3 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 230px;
+    height: 190px;
     margin: 5px;
     border-collapse: collapse;
     background-color: #1D597B;

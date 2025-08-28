@@ -1,6 +1,10 @@
 import styles from './redefinicao.module.css';
 import logo from '../../assets/logo-megaplate.png';
 import olho from '../../assets/olho.png';
+import {
+    toastError,
+    toastSuccess,
+} from "../../components/toastify/ToastifyService.jsx";
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
 
@@ -46,33 +50,31 @@ export function Redefinicao() {
     };
 
     async function irParaLogin() {
-        // Validação antes de navegar
         if (!senha || !confirmarSenha) {
-            setErro('Preencha ambos os campos.');
+            toastError('Preencha ambos os campos.');
             return;
         }
         if (senha !== confirmarSenha) {
-            setErro('As senhas não coincidem.');
+            toastError('As senhas não coincidem.');
             return;
         }
         if (senha.length < 6) {
-            setErro('A senha deve ter pelo menos 6 caracteres.');
+            toastError('A senha deve ter pelo menos 6 caracteres.');
             return;
         }
         if (!userId) {
-            setErro('ID do usuário não encontrado.');
+            toastError('ID do usuário não encontrado.');
             return;
         }
 
-        setErro('');
         setCarregando(true);
 
         try {
             await atualizarSenha(userId, senha);
-            alert('Senha atualizada com sucesso!'); // Opcional
+            toastSuccess('Senha atualizada com sucesso!');
             navigate('/');
         } catch (error) {
-            setErro('Erro ao atualizar senha: ' + error.message);
+            toastError('Erro ao atualizar senha: ' + error.message);
         } finally {
             setCarregando(false);
         }

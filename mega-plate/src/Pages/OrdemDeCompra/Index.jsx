@@ -9,10 +9,7 @@ import { api } from "../../provider/api";
 import { jwtDecode } from "jwt-decode";
 import { jsPDF } from "jspdf";
 import NavBar from "../../components/NavBar";
-import {
-  toastError,
-  toastSucess,
-} from "../../components/toastify/ToastifyService";
+import {toastError,toastSuccess} from "../../components/toastify/ToastifyService";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import baixarOrdemDeCompraPDF from "../../tools/baixarOrdemDeCompraPDF";
@@ -523,7 +520,7 @@ export function OrdemDeCompra() {
       .then((resDetalhado) => {
         if (!resDetalhado) return;
         setOrdemDeCompra(resDetalhado.data);
-        toastSucess("Ordem cadastrada com sucesso!");
+        toastSuccess("Ordem cadastrada com sucesso!");
         setProgresso(4);
       })
       .catch((err) => {

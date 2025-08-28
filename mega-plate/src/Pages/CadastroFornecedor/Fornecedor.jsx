@@ -2,9 +2,9 @@ import styles from './fornecedor.module.css';
 import logo from '../../assets/logo-megaplate.png';
 import { useState, useEffect } from 'react';
 import NavBar from '../../components/NavBar';
-import Swal from 'sweetalert2';
 import { api } from '../../provider/api.js';
 import { useNavigate } from 'react-router-dom';
+import { toastSuccess, toastError, toastWarning, toastInfo } from "../../components/toastify/ToastifyService.jsx";
 
 export function CadastroFornecedor() {
   const navigate = useNavigate();
@@ -49,10 +49,7 @@ export function CadastroFornecedor() {
   const cadastrarFornecedor = async () => {
 
     if (!validarInputsEspeciais()) {
-            return Swal.fire({
-              title:"Por favor não utilizar comandos nos campos",
-              icon: "error"
-              });
+            return toastError("Por favor não utilizar comandos nos campos");
           }
 
     if (
@@ -67,21 +64,13 @@ export function CadastroFornecedor() {
       !formData.responsavel ||
       !formData.cargo
     ) {
-      Swal.fire({
-        title: "Preencha as informações",
-        icon: "info",
-        confirmButtonColor: "#3085d6",
-      });
+      toastError("Preencha as informações.");
       return;
     }
 
     const cepValido = await validarCEPExistente(formData.cep);
     if (!cepValido) {
-      Swal.fire({
-        title: "CEP inválido ou inexistente!",
-        icon: "warning",
-        confirmButtonColor: "#3085d6"
-      });
+      toastWarning("CEP inválido ou inexistente!");
       return;
     }
 
@@ -89,35 +78,34 @@ export function CadastroFornecedor() {
     const cepLimpo = formData.cep.replace(/-/g, '');
     const telefoneSemMascara = formData.telefone.replace(/\D/g, '');
 
-
     if (!validarRazaoSocial(formData.razaoSocial)) {
-      Swal.fire({ title: "Razão Social inválida", icon: "warning", confirmButtonColor: "#3085d6" });
+      toastError("Razão Social inválida.");
       return;
     }
     if (!validarTelefone(formData.telefone)) {
-      Swal.fire({ title: "Telefone inválido", icon: "warning", confirmButtonColor: "#3085d6" });
+      toastError("Telefone inválido.");
       return;
     }
     if (!validarNumero(formData.numero)) {
-      Swal.fire({ title: "Número deve conter apenas dígitos", icon: "warning", confirmButtonColor: "#3085d6" });
+      toastError("Número deve conter apenas dígitos.");
       return;
     }
     if (!validarEmail(formData.email)) {
-      Swal.fire({ title: "E-mail inválido", icon: "warning", confirmButtonColor: "#3085d6" });
+      toastError("E-mail inválido.");
       return;
     }
 
     if (cnpjLimpo.length !== 14 || !validarCNPJ(cnpjLimpo)) {
-      Swal.fire({ title: "CNPJ inválido", icon: "warning", confirmButtonColor: "#3085d6" });
+      toastError("CNPJ inválido.");
       return;
     }
 
     if (todosDigitosIguais(cnpjLimpo)) {
-      Swal.fire({ title: "CNPJ inválido (todos os dígitos iguais)", icon: "warning", confirmButtonColor: "#3085d6" });
+      toastError("CNPJ inválido (todos os dígitos iguais).");
       return;
     }
     if (todosDigitosIguais(telefoneSemMascara)) {
-      Swal.fire({ title: "Telefone inválido (todos os dígitos iguais)", icon: "warning", confirmButtonColor: "#3085d6" });
+      toastError("Telefone inválido (todos os dígitos iguais).");
       return;
     }
 
@@ -141,11 +129,7 @@ export function CadastroFornecedor() {
     }).then((response) => {
       
       console.log('Resposta do servidor:', response.data);
-      Swal.fire({
-        title: "Fornecedor cadastrado com sucesso!",
-        icon: "success",
-        confirmButtonColor: "#3085d6",
-      });
+      toastSuccess("Fornecedor cadastrado com sucesso!");
       setFormData({
         cnpj: '',
         nomeFantasia: '',
@@ -161,12 +145,7 @@ export function CadastroFornecedor() {
       setProgresso(1);
     }).catch((error) => {
       console.error('Erro ao cadastrar fornecedor:', error);
-      Swal.fire({
-        title: "Erro ao cadastrar fornecedor",
-        text: "Erro: " + error.response.data.message || "Tente novamente mais tarde.",
-        icon: "error",
-        confirmButtonColor: "#3085d6",
-      });
+      toastError(error.response?.data?.message || "Erro ao cadastrar fornecedor. Tente novamente mais tarde.");
     });
   };
 
@@ -180,21 +159,18 @@ export function CadastroFornecedor() {
   useEffect(() => {
     const cepNumeros = formData.cep.replace(/\D/g, '');
     const cargo = parseInt(sessionStorage.getItem('cargoUsuario'), 10);
+
     if (cepNumeros.length === 8) {
       preencherEnderecoPorCEP(formData.cep);
     } else {
-
       setFormData((prev) => ({
         ...prev,
         endereco: ''
       }));
-    } if (cargo !== 2) { // Verifica se o usuário não é gestor
-      Swal.fire({
-        title: "Acesso Negado",
-        text: "Você não tem permissão para acessar esta página.",
-        icon: "error",
-        confirmButtonColor: "#3085d6",
-      });
+    }
+
+    if (cargo !== 2) {
+      toastError("Acesso Negado: Você não tem permissão para acessar esta página.");
       navigate('/material');
     }
   }, [formData.cep]);
@@ -209,7 +185,7 @@ export function CadastroFornecedor() {
       const data = await response.json();
 
       if (data.erro) {
-        Swal.fire({ title: "CEP não encontrado!", icon: "warning", confirmButtonColor: "#3085d6" });
+        toastWarning("CEP não encontrado!");
         return;
       }
 
@@ -219,10 +195,9 @@ export function CadastroFornecedor() {
         endereco: enderecoFormatado
       }));
     } catch (error) {
-      Swal.fire({ title: "Erro ao buscar endereço", icon: "error", confirmButtonColor: "#3085d6" });
+      toastError("Erro ao buscar endereço.");
     }
   }
-
 
   function todosDigitosIguais(valor) {
     return /^(\d)\1+$/.test(valor);
@@ -261,7 +236,6 @@ export function CadastroFornecedor() {
       .slice(0, 15);
   }
 
-
   function validarRazaoSocial(razao) {
     return typeof razao === 'string' && razao.trim().length >= 3;
   }
@@ -279,7 +253,6 @@ export function CadastroFornecedor() {
     return apenasNumeros.length >= 10 && apenasNumeros.length <= 11;
   }
 
-
   function validarNumero(numero) {
     return apenasNumeros(numero);
   }
@@ -291,29 +264,25 @@ export function CadastroFornecedor() {
   function avancar() {
     if (progresso === 1) {
       if (!formData.razaoSocial || !formData.nomeFantasia || !formData.cnpj) {
-        Swal.fire({ title: "Por favor, preencha todos os campos!", icon: "warning", confirmButtonColor: "#3085d6" });
+        toastError("Por favor, preencha todos os campos!");
         return;
       }
       if (!validarCNPJ(formData.cnpj.replace(/\D/g, ''))) {
-        Swal.fire({
-          title: "CNPJ inválido",
-          icon: "warning",
-          confirmButtonColor: "#3085d6"
-        });
+        toastError("CNPJ inválido.");
         return;
       }
     }
     if (progresso === 2) {
       if (!formData.cep) {
-        Swal.fire({ title: "CEP é obrigatório", icon: "warning", confirmButtonColor: "#3085d6" });
+        toastError("CEP é obrigatório.");
         return;
       }
       if (!formData.endereco) {
-        Swal.fire({ title: "Endereço é obrigatório", icon: "warning", confirmButtonColor: "#3085d6" });
+        toastError("Endereço é obrigatório.");
         return;
       }
       if (!formData.numero || !validarNumero(formData.numero)) {
-        Swal.fire({ title: "Número deve conter apenas dígitos", icon: "warning", confirmButtonColor: "#3085d6" });
+        toastError("Número deve conter apenas dígitos.");
         return;
       }
     }
@@ -474,6 +443,7 @@ export function CadastroFornecedor() {
             </>
           )}
 
+          {/* ... mantém os inputs iguais */}
           <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
             {progresso > 1 && (
               <button onClick={voltar}>VOLTAR</button>

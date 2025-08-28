@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import { api } from "../../provider/api.js";
 import NavBar from "../../components/NavBar";
 import { useNavigate } from "react-router-dom";
-import {toastSucess, toastError,} from "../../components/toastify/ToastifyService.jsx";
+import { toastSuccess, toastError, toastWarning } from "../../components/toastify/ToastifyService.jsx";
 import { jwtDecode } from "jwt-decode";
-import Swal from "sweetalert2";
 
 export function Cadastro() {
   const navigate = useNavigate();
@@ -24,19 +23,12 @@ export function Cadastro() {
 
   useEffect(() => {
     const token = sessionStorage.getItem("authToken");
-    const cargo = parseInt(sessionStorage.getItem("cargoUsuario"), 10); // Converte para número
-    console.log(cargo);
+    const cargo = parseInt(sessionStorage.getItem("cargoUsuario"), 10);
     if (!token) {
       navigate("/");
     } else if (cargo !== 2) {
-      // Verifica se o usuário não é gestor
-      Swal.fire({
-        title: "Acesso Negado",
-        text: "Você não tem permissão para acessar esta página.",
-        icon: "error",
-        confirmButtonColor: "#3085d6",
-      });
-      navigate("/material"); // Redireciona para outra página
+      toastError("Você não tem permissão para acessar esta página.");
+      navigate("/material");
     } else {
       const { exp } = jwtDecode(token);
       if (Date.now() >= exp * 1000) {
@@ -53,13 +45,8 @@ export function Cadastro() {
   // Funções de validação
   function validarNome(nome) {
     if (typeof nome !== "string") return false;
-
     const nomeLimpo = nome.trim();
-
-    // Verifica se tem apenas letras e espaços, e ao menos duas palavras
-    return (
-      /^[a-zA-ZÀ-ÿ\s]+$/.test(nomeLimpo) && nomeLimpo.split(/\s+/).length >= 2
-    );
+    return /^[a-zA-ZÀ-ÿ\s]+$/.test(nomeLimpo) && nomeLimpo.split(/\s+/).length >= 2;
   }
 
   function validarEmail(email) {
@@ -67,70 +54,42 @@ export function Cadastro() {
     return regex.test(email.trim());
   }
 
-  // Valida a senha com pelo menos 6 caracteres, uma letra, um número e um caractere especial
- function validarSenha(senha) {
-  return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{6,}$/.test(senha);
-}
+  function validarSenha(senha) {
+    return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{6,}$/.test(senha);
+  }
 
   function validarCargo(cargo) {
     return cargo === 1 || cargo === 2;
   }
- // Função para cadastrar usuário
-  // Verifica se os campos estão preenchidos e se os dados são válidos
+
+  // Função para cadastrar usuário
   const cadastrar = () => {
-    if (
-      !formData.nome ||
-      !formData.email ||
-      !formData.cargo.id ||
-      !formData.password
-    ) {
-       Swal.fire({ title: "Por favor, preencha todos os campos!", icon: "warning", confirmButtonColor: "#3085d6" });
+    if (!formData.nome || !formData.email || !formData.cargo.id || !formData.password) {
+      toastError("Por favor, preencha todos os campos!");
       return;
     }
 
     if (!validarNome(formData.nome)) {
-      Swal.fire({
-        title: "Nome inválido",
-        text:"É necessario ter nome e sobrenome",
-        icon: "error",
-        confirmButtonColor: "#3085d6",
-      });
+      toastError("Nome inválido. É necessário ter nome e sobrenome.");
       return;
     }
 
     if (!validarEmail(formData.email)) {
-      Swal.fire({
-        title: "E-mail inválido",
-        text:"Deve conter @ e domínio com pelo menos 3 letras Ex: email@exemplo.com",
-        icon: "error",
-        confirmButtonColor: "#3085d6",
-      });
+      toastError("E-mail inválido. Ex: email@exemplo.com");
       return;
     }
 
     if (!validarSenha(formData.password)) {
-      Swal.fire({
-        title: "Senha inválida",
-        text:"Deve ter pelo menos 6 caracteres, uma letra, um número e um caractere especial",
-        icon: "error",
-        confirmButtonColor: "#3085d6",
-      });
+      toastError("Senha inválida. Deve ter pelo menos 6 caracteres, uma letra, um número e um caractere especial.");
       return;
     }
 
     if (!validarCargo(formData.cargo?.id)) {
-      Swal.fire({
-        title: "Cargo inválido",
-        icon: "warning",
-        confirmButtonColor: "#3085d6",
-      });
+      toastError("Cargo inválido.");
       return;
     }
 
     const token = sessionStorage.getItem("authToken");
-
-    // console.log('Token:', token); // verificação se o token esta sendo pego corretamente
-
     if (!token) {
       toastError("Token de autenticação não encontrado. Faça login novamente.");
       navigate("/");
@@ -147,35 +106,23 @@ export function Cadastro() {
       password: formData.password.trim(),
     };
 
-    const sqlPattern =
-      /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
-    if (
-      sqlPattern.test(userData.email) ||
-      sqlPattern.test(userData.nome) ||
-      sqlPattern.test(userData.password)
-    ) {
-      Swal.fire({
-        title: "Por favor não cadastrar com comandos especiais...",
-        icon: "error",
-        confirmButtonColor: "#3085d6",
-      });
+    const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
+    if (sqlPattern.test(userData.email) || sqlPattern.test(userData.nome) || sqlPattern.test(userData.password)) {
+      toastError("Por favor não cadastrar com comandos especiais...");
       return;
     }
+
     if (
       /<script.*?>.*?<\/script>/gi.test(userData.email) ||
       /<script.*?>.*?<\/script>/gi.test(userData.nome) ||
       /<script.*?>.*?<\/script>/gi.test(userData.password)
     ) {
-      Swal.fire({
-        title: "Por favor não cadastrar com comandos especiais...",
-        icon: "error",
-        confirmButtonColor: "#3085d6",
-      });
+      toastError("Por favor não cadastrar com comandos especiais...");
       return;
     }
 
     const endpoint = formData.cargo.id === 2 ? "/usuarios/gestor" : "/usuarios";
- // Envia os dados do usuário para o servidor
+
     api
       .post(endpoint, userData, {
         headers: {
@@ -183,61 +130,32 @@ export function Cadastro() {
           "Content-Type": "application/json",
         },
       })
-
       .then((response) => {
         console.log("Resposta do servidor:", response.data);
-        Swal.fire({
-          title: "Usuário cadastrado com sucesso!",
-          icon: "success",
-          confirmButtonColor: "#3085d6",
-        });
+        toastSuccess("Usuário cadastrado com sucesso!");
         setFormData({
           nome: "",
           email: "",
           password: "",
-          cargo: { id: 1, nome: "comum" }
+          cargo: { id: 1, nome: "comum" },
         });
       })
       .catch((error) => {
-        //console.error("Erro completo:", error);
         if (error.response) {
-          //console.log("Status do erro:", error.response.status);
-          //console.log("Dados do erro:", error.response.data);
           if (error.response.status === 400) {
-            Swal.fire({
-        title: "Dados inválidos: ",
-        text:error.response.data.message || "Verifique as informações",
-        icon: "error",
-        confirmButtonColor: "#3085d6",
-      });          
+            toastError(error.response.data.message || "Dados inválidos. Verifique as informações.");
           } else if (error.response.status === 401) {
-               Swal.fire({
-        title: "Sessão expirada, por favor faça login novamente!",
-        icon: "warning",
-        confirmButtonColor: "#3085d6",
-      });
+            toastError("Sessão expirada, faça login novamente!");
             navigate("/login");
           } else {
-            Swal.fire({
-        title: "Erro ao cadastrar usuário",
-        text:error.response.data?.message || "Tente novamente mais tarde.",
-        icon: "error",
-        confirmButtonColor: "#3085d6",
-      });
-      return;
+            toastError(error.response.data?.message || "Erro ao cadastrar usuário. Tente novamente mais tarde.");
           }
         } else {
-          Swal.fire({
-        title: "Erro ao cadastrar usuário",
-        text:"Erro de conexão. Verifique sua internet e tente novamente.",
-        icon: "error",
-        confirmButtonColor: "#3085d6",
-      });
-      return;
+          toastError("Erro de conexão. Verifique sua internet e tente novamente.");
         }
       });
   };
-  // Renderiza o componente de cadastro
+
   return (
     <>
       <NavBar />
@@ -282,9 +200,7 @@ export function Cadastro() {
               placeholder="exemplo@dominio.com"
               type="email"
               value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
 
@@ -308,7 +224,6 @@ export function Cadastro() {
               }}
             >
               <option value={1}>Usuário Comum</option>
-
               <option value={2}>Gestor</option>
             </select>
           </div>
@@ -323,9 +238,7 @@ export function Cadastro() {
               placeholder="********"
               type="password"
               value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
           </div>
 

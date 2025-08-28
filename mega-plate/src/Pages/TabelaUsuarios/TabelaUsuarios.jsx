@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import NavBar from "../../components/NavBar";
 import { api } from "../../provider/api.js";
 import Swal from "sweetalert2";
+import { toastSuccess, toastError, toastInfo } from "../../components/toastify/ToastifyService.jsx";
 import styles from "./tabela.module.css";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
@@ -11,6 +12,9 @@ export function TabelaUsuarios() {
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
   const [isGestor, setIsGestor] = useState(false);
   const [filtroStatus, setFiltroStatus] = useState("todos");
+  const [filtroNome, setFiltroNome] = useState("");
+  const [filtroEmail, setFiltroEmail] = useState("");
+  const [filtroCargo, setFiltroCargo] = useState("todos");
   const [fade, setFade] = useState(true);
   const navigate = useNavigate();
 
@@ -85,11 +89,11 @@ export function TabelaUsuarios() {
           }
         );
 
-        Swal.fire("Status atualizado com sucesso!", "", "success");
+        toastSuccess("Status atualizado com sucesso!");
         buscarUsuarios(); // Recarrega a lista do banco
       } catch (error) {
         console.error("Erro ao atualizar status:", error);
-        Swal.fire("Erro ao atualizar status", "", "error");
+        toastError("Erro ao atualizar status");
       }
     }
   };
@@ -125,6 +129,19 @@ export function TabelaUsuarios() {
 
     }
   }
+  const usuariosFiltrados = usuarios
+    .filter((usuario) =>
+      usuario.nome?.toLowerCase().includes(filtroNome.toLowerCase())
+    )
+    .filter((usuario) =>
+      usuario.email?.toLowerCase().includes(filtroEmail.toLowerCase())
+    )
+    .filter((usuario) => {
+      if (filtroCargo === "todos") return true;
+      if (filtroCargo === "gestor") return Number(usuario.cargo?.id) === 2;
+      if (filtroCargo === "comum") return Number(usuario.cargo?.id) !== 2;
+      return true;
+    });
 
   return (
     <>
@@ -132,22 +149,58 @@ export function TabelaUsuarios() {
       <div className={styles.container}>
         <div className={styles.background}>
           <h1>Lista de Usuários</h1>
-          <label htmlFor="filtro" className={styles.labelFiltro}>
-            Filtrar por status:{" "}
-          </label>
-          <select
-            id="filtro"
-            value={filtroStatus}
-            onChange={(e) => setFiltroStatus(e.target.value)}
-            className={styles.selectFiltro}
-          >
-            <option value="todos">Todos</option>
-            <option value="ativos">Ativos</option>
-            <option value="inativos">Inativos</option>
-          </select>
+
+          <div className={styles.filtro}>
+
+
+
+            <input
+              type="text"
+              id="filtro-nome"
+              placeholder="Digite o nome do usuário..."
+              value={filtroNome}
+              onChange={(e) => setFiltroNome(e.target.value)}
+              className={styles.inputFiltro}
+            />
+
+            <input
+              type="text"
+              id="filtro-email"
+              placeholder="Digite o e-mail do usuário..."
+              value={filtroEmail}
+              onChange={(e) => setFiltroEmail(e.target.value)}
+              className={styles.inputFiltro}
+            />
+            <select
+              id="filtro"
+              value={filtroStatus}
+              onChange={(e) => setFiltroStatus(e.target.value)}
+              className={styles.selectFiltro}
+            >
+              <option value="todos">Todos os Status</option>
+              <option value="ativos">Ativos</option>
+              <option value="inativos">Inativos</option>
+            </select>
+
+            <select
+              id="filtroCargo"
+              value={filtroCargo}
+              onChange={(e) => setFiltroCargo(e.target.value)}
+              className={styles.selectFiltro}
+            >
+              <option value="todos">Todos os Cargos</option>
+              <option value="gestor">Gestor</option>
+              <option value="comum">Comum</option>
+            </select>
+
+
+          </div>
+
+
           <p className={styles.qtdUsuarios}>
-            {usuarios.length} usuário(s) encontrado(s)
+            {usuariosFiltrados.length} usuário(s) encontrado(s)
           </p>
+
 
           {usuarios.length === 0 ? (
             <p className={styles.mensagemVazia}>
@@ -172,7 +225,10 @@ export function TabelaUsuarios() {
                   </tr>
                 </thead>
                 <tbody>
-                  {usuarios.map((usuario) => (
+
+
+                  {usuariosFiltrados.map((usuario) => (
+
                     <tr key={usuario.id}>
                       <td data-label="Nome">{usuario.nome}</td>
                       <td data-label="Email">{usuario.email}</td>
