@@ -9,6 +9,7 @@ import iconHistorico from '../assets/icon-historico.png';
 import iconGroup from '../assets/icon-group.png';
 import logoMega from '../assets/logo-megaplate.png';
 import menuHamburger from '../assets/menu-hamburguer.png';
+import iconHistoricos from '../assets/icon-historico.png';
 import user from '../assets/User.png';
 import { useEffect } from 'react';
 import { api } from '../provider/api';
@@ -184,8 +185,7 @@ const NavBar = () => {
                 
                 <li onClick={() => navigate('/HistoricoOrdemDeCompra')}>Histórico de Ordem de Compra</li>
 
-                <li onClick={() => navigate('/HistoricoTranferencias')}>Histórico de Transferências</li>
-                
+                <li onClick={() => navigate('/HistoricoTransferencia')}>Histórico de Transferências</li>
               </ul>
             )}
           </ul>

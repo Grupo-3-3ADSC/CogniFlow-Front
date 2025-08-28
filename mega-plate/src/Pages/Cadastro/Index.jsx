@@ -164,7 +164,7 @@ export function Cadastro() {
       <section className={styles.cadastro}>
         <div className={styles["bloco-fundo"]}>
           <div className={styles["tab-container-user"]}>
-            <div className={styles.tabActiveUsuario}>Cadastro de Usuário</div>
+            <div className={styles.tabActiveUsuario}>CADASTRO DE USUÁRIO</div>
           </div>
         </div>
         <aside className={styles["aside-cadastro"]}>

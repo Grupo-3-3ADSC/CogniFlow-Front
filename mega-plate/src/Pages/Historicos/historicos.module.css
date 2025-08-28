@@ -76,6 +76,18 @@ h2 {
   cursor: pointer;
 }
 
+.baixarRelatorio {
+  background-color: #05314c;
+  color: white;
+  width: 6vh;
+  height: 6vh;
+  border-radius: 15px;
+  font-size: 10px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
 .cancelar {
   background-color: #af1414;
   color: white;
@@ -110,6 +122,15 @@ h2 {
   transition: background-color 0.2s ease;
 }
 
+.containerDados {
+  text-align: center;
+  align-items: center;
+}
+
+.containerTitulos {
+  text-align: center;
+}
+
 .tabela tbody tr:hover {
   background-color: rgba(255, 255, 255, 0.08);
   cursor: pointer;
@@ -139,11 +160,33 @@ h2 {
   gap: 82px;
 }
 
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  align-items: center;
+}
+
 .labelFiltro {
-  padding: 30px 0 2px 0;
-  font-weight: 500;
-  font-size: 16px;
-  margin-right: 0.5rem;
+  font-weight: bold;
+  margin-right: 1rem;
+}
+
+.inputFiltro {
+  flex: 1;
+  min-width: 180px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.inputFiltro:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
 }
 
 .selectFiltro {

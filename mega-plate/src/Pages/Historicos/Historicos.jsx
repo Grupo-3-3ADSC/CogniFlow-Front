@@ -13,7 +13,10 @@ export function Historicos() {
     const [usuarios, setUsuarios] = useState([]);
     const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
     const [isGestor, setIsGestor] = useState(false);
-    const [filtroStatus, setFiltroStatus] = useState("todos");
+    const [filtroId, setFiltroId] = useState("");
+    const [filtroDia, setFiltroDia] = useState("");
+    const [filtroPrazo, setFiltroPrazo] = useState("");
+    const [filtroStatus, setFiltroStatus] = useState("");
     const [fade, setFade] = useState(true);
     const navigate = useNavigate();
 
@@ -72,6 +75,13 @@ export function Historicos() {
             Swal.fire("Erro ao carregar ordens de compra", "", "error");
         }
     };
+
+
+
+
+    function handleMudancaQuantidadeAtual() {
+
+    }
 
     function formatarDataBrasileira(dataISO) {
         if (!dataISO) return "N/A";
@@ -223,58 +233,103 @@ export function Historicos() {
 
 
     const ordensFiltradas = ordens.filter((ordem) => {
-    if (filtroStatus === "todas") return true;
-    if (filtroStatus === "pendentes") return ordem.pendenciaAlterada === false; // não entregues
-    if (filtroStatus === "confirmadas") return ordem.pendenciaAlterada === true; // já entregues
-    return true;
-});
+        const matchId = filtroId
+            ? String(ordem?.id ?? "").includes(filtroId)
+            : true;
 
-return (
-    <>
-        <NavBar />
-        <div className={styles.container}>
-            <div className={styles.background}>
-                <h1>Histórico de Ordem de Compra</h1>
-                <label htmlFor="filtro" className={styles.labelFiltro}>
-                    Filtrar por status:{" "}
-                </label>
-                <select
-                    id="filtro"
-                    value={filtroStatus}
-                    onChange={(e) => setFiltroStatus(e.target.value)}
-                    className={styles.selectFiltro}
-                >
-                    <option value="todas">Todas</option>
-                    <option value="pendentes">Pendentes</option>
-                    <option value="confirmadas">Confirmadas</option>
-                </select>
-                <p className={styles.qtdUsuarios}>
-                    {ordensFiltradas.length} ordem(s) de compra encontrada(s)
-                </p>
-                {ordensFiltradas.length === 0 ? (
-                    <p className={styles.mensagemVazia}>
-                        {filtroStatus === "pendentes" && "Nenhuma ordem de compra pendente foi encontrada."}
-                        {filtroStatus === "confirmadas" && "Nenhuma ordem de compra confirmada foi encontrada."}
-                        {filtroStatus === "todas" && "Nenhuma ordem de compra cadastrada no sistema."}
+        const matchDia = filtroDia
+            ? (ordem?.dataDeEmissao ?? "")
+                .toLowerCase()
+                .includes(filtroDia.toLowerCase())
+            : true;
+
+        const matchPrazo = filtroPrazo
+            ? (ordem?.prazoEntrega ?? "")
+                .toLowerCase()
+                .includes(filtroPrazo.toLowerCase())
+            : true;
+
+        const matchStatus = filtroStatus
+            ? (ordem?.status ?? "")
+                .toLowerCase()
+                .includes(filtroStatus.toLowerCase())
+            : true;
+
+        return matchId && matchDia && matchPrazo && matchStatus;
+    });
+
+
+
+    return (
+        <>
+            <NavBar />
+            <div className={styles.container}>
+                <div className={styles.background}>
+                    <h1>HISTÓRICO DE ORDEM DE COMPRA</h1>
+                    <div className={styles.filtros}>
+                        <input
+                            id="status"
+                            type="text"
+                            placeholder="Filtrar por ID"
+                            value={filtroId}
+                            className={styles.inputFiltro}
+                            onChange={(e) => setFiltroId(e.target.value)}
+                        />
+                        <label htmlFor="">Filtrar por data de emissão</label>
+                        <input
+                            type="date"
+                            value={filtroDia}
+                            onChange={(e) => setFiltroDia(e.target.value)}
+                            className={styles.inputFiltro}
+                        />
+                        <label htmlFor="">Filtrar por prazo de entrega</label>
+                        <input
+                            type="date"
+                            placeholder="Filtrar por data de prazo"
+                            value={filtroPrazo}
+                            onChange={(e) => setFiltroPrazo(e.target.value)}
+                            className={styles.inputFiltro}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Filtrar por status"
+                            value={filtroStatus}
+                            onChange={(e) => setFiltroStatus(e.target.value)}
+                            className={styles.inputFiltro}
+                        />
+                    </div>
+                    <p className={styles.qtdUsuarios}>
+                        {ordens.length} ordem(s) de compra encontrada(s)
                     </p>
                 ) : (
                         <div className={styles.tabelaWrapper}>
                             <table className={`${styles.tabela} ${fade ? styles.fadeIn : styles.fadeOut}`}>
-
+                                <thead>
+                                    <tr className={styles.containerTitulos}>
+                                        <th id="titulo">ORDEM DE COMPRA</th>
+                                        <th id="titulo">DIA</th>
+                                        <th id="titulo">HORA</th>
+                                        <th id="titulo">PRAZO DE ENTREGA</th>
+                                        <th id="titulo">STATUS</th>
+                                        <th id="titulo">CONFIRMAR ENTREGA</th>
+                                        <th id="titulo">CANCELAR ENTREGA</th>
+                                        <th id="titulo">BAIXAR</th>
+                                    </tr>
+                                </thead>
                                 <tbody>
                                     {ordensFiltradas.map((ordem) => (
-                                        <tr key={ordem.id}>
-                                            <td><b><h4>ORDEM DE COMPRA</h4></b> <p>ID: {ordem.id}</p></td>
-                                            <td><b><h4>DIA</h4></b> <p>{formatarDataBrasileira(ordem.dataDeEmissao)}</p> </td>
-                                            <td><b><h4>HORA</h4></b> <p>{formatarHora(ordem.dataDeEmissao)}</p> </td>
-                                            <td><b><h4>PRAZO DE ENTREGA</h4></b> <p>{formatarDataBrasileira(ordem.prazoEntrega)}</p> </td>
-                                            <td><b><h4>STATUS</h4></b> <p>{ordem.status}</p></td>
-                                            <td>
+                                        <tr className={styles.containerDados} key={ordem.id}>
+                                            <td><b><p>ID: {ordem.id}</p></b></td>
+                                            <td><b><p>{formatarDataBrasileira(ordem.dataDeEmissao)}</p> </b> </td>
+                                            <td><b><p>{formatarHora(ordem.dataDeEmissao)}</p> </b> </td>
+                                            <td><b><p>{formatarDataBrasileira(ordem.prazoEntrega)}</p></b> </td>
+                                            <td><b><p>{ordem.status}</p> </b> </td>
+                                            <td >
                                                 <button className={styles.ativar}
                                                     onClick={() => confirmarEntrega(ordem.id)}
                                                     disabled={ordem.pendenciaAlterada === true}
                                                 >
-                                                    <b>CONFIRMAR ENTREGA</b>
+                                                    <b>CONFIRMAR </b>
                                                 </button>
                                             </td>
                                             <td>
@@ -282,7 +337,7 @@ return (
                                                     onClick={() => cancelarEntrega(ordem.id)}
                                                     disabled={ordem.pendenciaAlterada === false}
                                                 >
-                                                    <b>CANCELAR ENTREGA</b>
+                                                    <b>CANCELAR </b>
                                                 </button>
                                             </td>
                                             <td >
@@ -300,7 +355,7 @@ return (
                                 </tbody>
                             </table>
                         </div>
-                    )}
+                    )
                 </div>
             </div>
         </>
