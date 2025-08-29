@@ -23,7 +23,7 @@
     background-position: center;
     font-family: "Poppins", sans-serif;
     width: 100%;
-    height: 100%;
+    height: 50%;
     margin-left: 5vh;
 }
 
@@ -154,31 +154,47 @@ option {
 
 /* Dashboard Container */
 .containerDashFornecedor {
-    display: flex;
-    gap: 30px;
-    max-width: 1600px;
+  display: flex;
+    gap: 20px;
+    max-width: 100%;
+    width: 92%;
     margin: 0 auto;
-    padding: 0 var(--dashboard-margin);
+    padding: 10px;
     margin-top: 10px;
+    box-sizing: border-box;
 }
+
 
 /* Main Dashboard */
 .dashboardFornecedor {
-    flex: 2;
+   flex: 1;
     background: rgba(5, 49, 76, 0.95);
     backdrop-filter: blur(20px);
     padding: 20px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--card-shadow);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    min-height: 75vh;
-    width: 100%;
+    min-height: calc(100vh - 40px);
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+/* Para permitir scroll interno no dashboard */
+.dashboardFornecedor {
+    overflow-y: auto; /* Scroll vertical interno */
+    overflow-x: hidden; /* Sem scroll horizontal */
+}
+
+/* Para conteúdo específico dentro do dashboard */
+.dashboardFornecedor .content {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
 }
 
 .dashboard h2 {
     text-align: center;
     margin-bottom: 20px;
-    font-size: 22px;
+    font-size: clamp(18px, 3vw, 22px);
     font-weight: 700;
     background: linear-gradient(135deg, #ffffff 0%, #87ceeb 100%);
     -webkit-background-clip: text;
@@ -188,38 +204,43 @@ option {
 
 /* KPI Cards */
 #Kpi {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
     margin-bottom: 25px;
-    flex-wrap: nowrap;
-    align-items: stretch;
+    justify-items: center;
+    align-items: start;
+    width: 100%;
+    box-sizing: border-box;
 }
 
+
 [id^="chart-aviso-fornecedor"] {
-    background: linear-gradient(135deg, var(--accent-color) 0%, rgba(29, 89, 123, 0.8) 100%);
+    background: linear-gradient(135deg, rgba(29, 89, 123, 0.9) 0%, rgba(29, 89, 123, 0.7) 100%);
     backdrop-filter: blur(15px);
-    width: 180px;
-    height: 130px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--card-shadow);
+    width: 100%;
+    max-width: 300px;
+    min-height: 350px;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.15);
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     text-align: center;
-    padding: 12px;
+    padding: 15px;
     position: relative;
-    transition: var(--transition);
+    transition: all 0.3s ease;
     overflow: hidden;
-    flex: 1;
-    min-width: 180px;
+    box-sizing: border-box;
+
 }
 
 [id^="chart-aviso-fornecedor"]:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: var(--hover-shadow);
+ transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 [id^="chart-aviso-fornecedor"]::before {
@@ -254,20 +275,48 @@ option {
 }
 
 .kpi-subtitle {
-    font-size: 12px;
-    color: var(--text-secondary);
+    font-size: 16px;
+    color: var(--text-primary);
     margin-bottom: 12px;
     font-weight: 500;
+    font-style: bold;
 }
-
 .kpi-data {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
     font-size: 12px;
     font-weight: 600;
-    color: #90ee90;
 }
+
+.kpi-data > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 80px;
+}
+
+
+.material-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.material-details > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 80px;
+}
+
+.value-green {
+    color: #90ee90;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 
 /* Charts */
 .chart {
@@ -280,6 +329,7 @@ option {
     transition: var(--transition);
     position: relative;
     overflow: hidden;
+    gap: 12px;
 }
 
 .chart:hover {
@@ -304,19 +354,39 @@ option {
 }
 
 /* Supplier Table */
-.supplier-table-container {
-    flex: 1;
+
+.dashboardFornecedor {
+    flex: 2;
     background: rgba(5, 49, 76, 0.95);
     backdrop-filter: blur(20px);
     padding: 20px;
     border-radius: var(--border-radius);
     box-shadow: var(--card-shadow);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    min-height: 75vh;
-    width: 100%;
+    min-height: 95vh; /* aumentado de 85vh para 95vh */
+    height: 100vh; /* garante altura total da viewport */
+    width: 85%; /* diminuído de 100% para 85% */
+    max-width: 1400px; /* limita a largura máxima */
+    margin: 0 auto; /* centraliza o dashboard */
 }
 
-.supplier-table-container h3 {
+.supplier-table-container-fornecedor {
+    flex: 0 0 auto; /* Mudança: não cresce automaticamente */
+    background: rgba(5, 49, 76, 0.95);
+    backdrop-filter: blur(20px);
+    padding: 15px; /* Diminuído de 20px para 15px */
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: 50vh; /* Diminuído de 85vh para 50vh */
+    height: auto; /* Mudança: altura automática baseada no conteúdo */
+    width: 30%; /* Diminuído de 65% para 45% */
+    max-width: 300px; /* Diminuído de 1800px para 600px */
+    margin: 0 auto;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+.supplier-table-container-fornecedor h3 {
     text-align: center;
     margin-bottom: 16px;
     font-size: 20px;
@@ -330,7 +400,7 @@ option {
 }
 
 .supplier-table {
-    width: 100%;
+    width: 40%;
     border-collapse: collapse;
     background: linear-gradient(135deg, var(--accent-color) 0%, rgba(29, 89, 123, 0.9) 100%);
     border-radius: var(--border-radius);
@@ -488,7 +558,7 @@ option {
     
     [id^="chart-aviso-fornecedor"] {
         width: 160px;
-        height: 120px;
+        height: 600px;
         min-width: 160px;
     }
 }
@@ -552,7 +622,7 @@ option {
     
     [id^="chart-aviso-fornecedor"] {
         width: 140px;
-        height: 110px;
+        height: 600px;
         min-width: 140px;
         flex-shrink: 0;
         padding: 10px;
