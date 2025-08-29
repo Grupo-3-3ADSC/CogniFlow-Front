@@ -301,7 +301,6 @@ export function Historicos() {
                     <p className={styles.qtdUsuarios}>
                         {ordens.length} ordem(s) de compra encontrada(s)
                     </p>
-                ) : (
                         <div className={styles.tabelaWrapper}>
                             <table className={`${styles.tabela} ${fade ? styles.fadeIn : styles.fadeOut}`}>
                                 <thead>
@@ -354,8 +353,7 @@ export function Historicos() {
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
-                    )
+                        </div>                    
                 </div>
             </div>
         </>
