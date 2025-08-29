@@ -276,15 +276,6 @@ function App() {
   const [ordemDeCompra, setOrdemDeCompra] = useState([]);
   const [estoque, setEstoque] = useState([]);
   const [kpiData, setKpiData] = useState([]);
-  //paginação de lista
-  const [fornecedoresPage, setFornecedoresPage] = useState ([]);
-  const [paginaAtual, setPaginaAtual] = useState(0);
-  const [paginasTotais, setPaginasTotais] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [hasNext, setHasNext] = useState(false);
-  const [hasPrevious, setHasPrevious] = useState(false);
-
-  const fornecedoresPorPagina = 6;
 
   const fileInputRef = useRef(null);
 
@@ -365,27 +356,6 @@ function App() {
       })
       .catch((error) => {
         console.error("Erro ao buscar estoque:", error);
-      });
-  }
-
-  function getFornecedoresPaginados(){
-
-    const paginaInt = Number(paginaAtual) || 0;
-
-    api.
-      get(`/fornecedores/paginados?pagina=${paginaInt}&tamanho=${fornecedoresPorPagina}`)
-      .then((response) => {
-        const { data, paginasTotais, totalItems, paginaAtual, hasNext, hasPrevious } = response.data;
-      
-      setFornecedoresPage(data);
-      setPaginasTotais(paginasTotais);
-      setTotalItems(totalItems);
-      setPaginaAtual(paginaAtual);
-      setHasNext(hasNext);
-      setHasPrevious(hasPrevious);      
-      })
-      .catch((err)=> {
-        console.error("Erro ao buscar fornecedores paginados:", err);
       });
   }
 
@@ -560,11 +530,6 @@ function App() {
     []
   );
 
-  // useEffect para quando mudar pagina da lista
-  useEffect(() => {
-  getFornecedoresPaginados(paginaAtual);
-}, [paginaAtual]);
-
   // Efeito para aplicar filtros quando os critérios mudam
   useEffect(() => {
     if (fornecedores.length > 0 && ordemDeCompra.length > 0) {
@@ -591,7 +556,6 @@ function App() {
         await getFornecedor();
         await getEstoque();
         await BuscarOrdemDeCompra();
-        await getFornecedoresPaginados();
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       }
@@ -624,29 +588,29 @@ function App() {
 
       var valorUnitario = Number(ordem.valorUnitario || 0);
       var quantidade = Number(ordem.quantidade || 0);
-      var valorTotalOrdem = valorUnitario * quantidade; // Valor total desta ordem específica
+      var valorTotalOrdem = valorUnitario * quantidade;
 
       // Inicializa o fornecedor se não existir
       if (!statsPorFornecedor[fornecedorId]) {
         statsPorFornecedor[fornecedorId] = {
-          valorTotalAcumulado: 0, // Soma de TODAS as ordens deste fornecedor
+          valorTotalAcumulado: 0,
           totalQuantity: 0,
           nome: fornecedorNome,
-          materiais: new Set(), // Todos os tipos de material deste fornecedor
+          materiais: new Set(),
           maiorValorUnitario: 0,
           materialMaiorValor: "N/A",
           estoqueIdMaiorValor: null,
-          numeroOrdens: 0, // Contador de ordens
+          numeroOrdens: 0,
         };
       }
 
-      // Acumula o valor total de TODAS as ordens deste fornecedor
+      // Acumula os valores
       statsPorFornecedor[fornecedorId].valorTotalAcumulado += valorTotalOrdem;
       statsPorFornecedor[fornecedorId].totalQuantity += quantidade;
       statsPorFornecedor[fornecedorId].materiais.add(material);
       statsPorFornecedor[fornecedorId].numeroOrdens++;
 
-      // Verifica se é o maior valor unitário deste fornecedor
+      // Atualiza maior valor unitário
       if (valorUnitario > statsPorFornecedor[fornecedorId].maiorValorUnitario) {
         statsPorFornecedor[fornecedorId].maiorValorUnitario = valorUnitario;
         statsPorFornecedor[fornecedorId].materialMaiorValor = material;
@@ -654,13 +618,11 @@ function App() {
       }
     }
 
-    // NOVA LÓGICA: Verificar se há filtro por fornecedor específico
+    // Se filtro por fornecedor
     if (selectedFornecedor) {
-      // Filtro por fornecedor: Retornar KPIs separados por material
       var kpisPorMaterial = [];
       var fornecedorSelecionado = null;
 
-      // Encontrar o fornecedor selecionado
       for (var fornecedorId in statsPorFornecedor) {
         var stats = statsPorFornecedor[fornecedorId];
         if (stats.nome === selectedFornecedor) {
@@ -670,11 +632,9 @@ function App() {
       }
 
       if (fornecedorSelecionado) {
-        // Criar um KPI para cada material deste fornecedor
         Array.from(fornecedorSelecionado.materiais).forEach(function (
           material
         ) {
-          // Calcular valor específico para este material
           var valorMaterial = 0;
           var quantidadeMaterial = 0;
 
@@ -701,23 +661,26 @@ function App() {
           kpisPorMaterial.push({
             fornecedorId: fornecedorId + "_" + material,
             supplierName: selectedFornecedor,
-            materialIndividual: material, // Material individual
+            materialIndividual: material,
             valorTotalAcumulado: valorMaterial,
             quantidadeTotal: quantidadeMaterial,
+            precoMedioUnitario:
+              quantidadeMaterial > 0 ? valorMaterial / quantidadeMaterial : 0,
             numeroOrdens: fornecedorSelecionado.numeroOrdens,
           });
         });
       }
+      return kpisPorMaterial
 
-      return kpisPorMaterial.slice(0, 3); // Retorna até 3 materiais
+      // return kpisPorMaterial.slice(0, 3);
     }
-    // Filtro por material: Retornar fornecedores agrupados com materiais em vírgulas
+
+    // Se filtro por material
     else if (selectedMaterial) {
       var listaFinal = [];
       for (var fornecedorId in statsPorFornecedor) {
         var stats = statsPorFornecedor[fornecedorId];
 
-        // Verificar se este fornecedor tem o material filtrado
         var temMaterialFiltrado = Array.from(stats.materiais).some(function (
           material
         ) {
@@ -734,10 +697,14 @@ function App() {
             valorTotalAcumulado: stats.valorTotalAcumulado,
             maiorValorUnitario: stats.maiorValorUnitario,
             quantidadeTotal: stats.totalQuantity,
+            precoMedioUnitario:
+              stats.totalQuantity > 0
+                ? stats.valorTotalAcumulado / stats.totalQuantity
+                : 0,
             materialMaiorValor: stats.materialMaiorValor,
             estoqueId: stats.estoqueIdMaiorValor,
             tiposMateriais: Array.from(stats.materiais),
-            tiposMateriaisString: Array.from(stats.materiais).join(", "), // String formatada
+            tiposMateriaisString: Array.from(stats.materiais).join(", "),
             numeroOrdens: stats.numeroOrdens,
           });
         }
@@ -745,13 +712,46 @@ function App() {
 
       return listaFinal
         .sort((a, b) => b.valorTotalAcumulado - a.valorTotalAcumulado)
-        .slice(0, 3);
+        // .slice(0, 3);
     }
-    // Sem filtros específicos: Comportamento padrão
+
+    // Sem filtro
     else {
       var listaFinal = [];
       for (var fornecedorId in statsPorFornecedor) {
         var stats = statsPorFornecedor[fornecedorId];
+
+        // monta os materiais detalhados deste fornecedor
+        var materiaisDetalhados = [];
+        Array.from(stats.materiais).forEach(function (material) {
+          var valorMaterial = 0;
+          var quantidadeMaterial = 0;
+
+          for (var j = 0; j < ordens.length; j++) {
+            var ordem = ordens[j];
+            var ordemMaterial =
+              ordem.descricaoMaterialCompleta ||
+              ordem.estoque?.tipoMaterial ||
+              "N/A";
+            var ordemFornecedor =
+              ordem.nomeFornecedor || ordem.fornecedor?.nomeFantasia;
+
+            if (ordemMaterial === material && ordemFornecedor === stats.nome) {
+              valorMaterial +=
+                Number(ordem.valorUnitario || 0) *
+                Number(ordem.quantidade || 0);
+              quantidadeMaterial += Number(ordem.quantidade || 0);
+            }
+          }
+
+          materiaisDetalhados.push({
+            material: material,
+            valorTotalAcumulado: valorMaterial,
+            quantidadeTotal: quantidadeMaterial,
+            precoMedioUnitario:
+              quantidadeMaterial > 0 ? valorMaterial / quantidadeMaterial : 0,
+          });
+        });
 
         listaFinal.push({
           fornecedorId: fornecedorId,
@@ -759,17 +759,22 @@ function App() {
           valorTotalAcumulado: stats.valorTotalAcumulado,
           maiorValorUnitario: stats.maiorValorUnitario,
           quantidadeTotal: stats.totalQuantity,
+          precoMedioUnitario:
+            stats.totalQuantity > 0
+              ? stats.valorTotalAcumulado / stats.totalQuantity
+              : 0,
           materialMaiorValor: stats.materialMaiorValor,
           estoqueId: stats.estoqueIdMaiorValor,
           tiposMateriais: Array.from(stats.materiais),
-          tiposMateriaisString: Array.from(stats.materiais).join(", "), // String formatada
+          tiposMateriaisString: Array.from(stats.materiais).join(", "),
           numeroOrdens: stats.numeroOrdens,
+          materiaisDetalhados: materiaisDetalhados, // <-- aqui!
         });
       }
 
       return listaFinal
         .sort((a, b) => b.valorTotalAcumulado - a.valorTotalAcumulado)
-        .slice(0, 3);
+        // .slice(0, 3);
     }
   }
 
@@ -921,13 +926,6 @@ function App() {
     setSelectedSupplier(null);
   };
 
-const handlePageChange = (newPage) => {
-  if (newPage >= 0 && newPage <= paginasTotais && newPage !== paginaAtual) {
-    setPaginaAtual(newPage);
-  }
-};
-
-
   return (
     <div className="IndexFornecedor">
       <NavBar />
@@ -1010,45 +1008,93 @@ const handlePageChange = (newPage) => {
           <div className="dashboardFornecedor">
             <h2>Dashboard Fornecedor</h2>
 
-            <div id="charts-superior">
-              <div id="Kpi">
-                {kpiData.map(function (item, index) {
-                  return (
-                    <React.Fragment key={item.fornecedorId}>
-                      <div
-                        id={"chart-aviso-fornecedor" + (index + 1)}
-                        className="chart"
-                      >
-                        <div className="kpi-title">{item.supplierName}</div>
-                        <div className="kpi-subtitle">
-                          {/* Renderização condicional baseada no tipo de filtro */}
-                          {
-                            selectedFornecedor && item.materialIndividual
-                              ? item.materialIndividual // Filtro por fornecedor: mostra material individual
-                              : item.tiposMateriaisString // Filtro por material ou padrão: mostra materiais separados por vírgula
-                          }
-                        </div>
-                        <div className="kpi-data">
-                          <span>
-                            {selectedFornecedor && item.materialIndividual
-                              ? `Gastos por material: ${new Intl.NumberFormat('pt-BR', {
-                                  style: 'currency',
-                                  currency: 'BRL',
-                                }).format(item.valorTotalAcumulado)} | Quantidade: ${item.quantidadeTotal}`
-                              : `Gastos Totais por fornecedor: ${new Intl.NumberFormat('pt-BR', {
-                                  style: 'currency',
-                                  currency: 'BRL',
-                                }).format(item.valorTotalAcumulado)}`}
-                          </span>
-                        </div>
-                      </div>
-                    </React.Fragment>
-                  );
-                })}
+           <div id="charts-superior">
+  <div id="Kpi">
+    {kpiData.map(function (item, index) {
+      return (
+        <React.Fragment key={item.fornecedorId}>
+          <div
+            id={"chart-aviso-fornecedor" + (index + 1)}
+            className="chart"
+          >
+            {/* Nome do fornecedor */}
+            <div className="kpi-title">{item.supplierName}</div>
+
+            {/* Lista de materiais (resumida) */}
+            <div className="kpi-subtitle">
+              {item.tiposMateriaisString}
+            </div>
+
+            {/* Totais do fornecedor */}
+            <div className="kpi-data">
+              <div>
+                <span>Gastos Totais:</span>
+                <span className="value-green">
+                  {new Intl.NumberFormat("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  }).format(item.valorTotalAcumulado)}
+                </span>
+              </div>
+              <div>
+                <span>Quantidade Total:</span>
+                <span className="value-green">
+                  {item.quantidadeTotal}
+                </span>
+              </div>
+              <div>
+                <span>Preço Médio Unitário:</span>
+                <span className="value-green">
+                  {new Intl.NumberFormat("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  }).format(item.precoMedioUnitario)}
+                </span>
               </div>
             </div>
 
-            <div id="charts-inferior">
+            {/* Detalhes por material */}
+            <div className="kpi-materials">
+              {item.materiaisDetalhados &&
+                item.materiaisDetalhados.map((mat, i) => (
+                  <div key={i} className="kpi-material">
+                    <strong>{mat.material}</strong>
+                    <div className="material-details">
+                      <div>
+                        <span>Gastos:</span>
+                        <span className="value-green">
+                          {new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          }).format(mat.valorTotalAcumulado)}
+                        </span>
+                      </div>
+                      <div>
+                        <span>Quantidade:</span>
+                        <span className="value-green">
+                          {mat.quantidadeTotal}
+                        </span>
+                      </div>
+                      <div>
+                        <span>Preço Médio Unitário:</span>
+                        <span className="value-green">
+                          {new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          }).format(mat.precoMedioUnitario)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </React.Fragment>
+      );
+    })}
+  </div>
+</div>
+            {/* <div id="charts-inferior">
               <div id="bar_chart" className="chart">
                 <Chart
                   chartType="ColumnChart"
@@ -1068,9 +1114,9 @@ const handlePageChange = (newPage) => {
                   height="100%"
                 />
               </div>
-            </div>
+            </div> */}
           </div>
-          <div className="supplier-table-container">
+          <div className="supplier-table-container-fornecedor">
             <h3>Fornecedores</h3>
             <div className="table-wrapper">
               <table className="supplier-table">
@@ -1080,44 +1126,20 @@ const handlePageChange = (newPage) => {
                   </tr>
                 </thead>
                 <tbody>
-    {fornecedoresPage.map((supplier, index) => (
-      <tr
-        key={supplier.id || index}
-        onClick={() => handleSupplierClick(supplier)}
-        style={{ cursor: "pointer" }}
-      >
-        <td>
-          {supplier.nomeFantasia ||
-            supplier.razaoSocial ||
-            "Nome não informado"}
-        </td>
-      </tr>
-    ))}
-  </tbody>
-  
-    <tfoot>
-      <tr>
-        <td colSpan="1">
-          <div style={{ display: "flex", justifyContent: "center", gap: "8px", alignItems: "center" }}>
-            <button
-              disabled={!hasPrevious}
-              onClick={() => handlePageChange(Number(paginaAtual) - 1)}
-            >
-              Anterior
-            </button>
-            <span>
-               {paginaAtual + 1} / {paginasTotais} 
-            </span>
-            <button
-              disabled={!hasNext}
-              onClick={() => handlePageChange(paginaAtual + 1)}
-            >
-              Próxima
-            </button>
-          </div>
-        </td>
-      </tr>
-    </tfoot>
+                  {filteredSuppliers.map((supplier, index) => (
+                    <tr
+                      key={supplier.id || index}
+                      onClick={() => handleSupplierClick(supplier)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <td>
+                        {supplier.nomeFantasia ||
+                          supplier.razaoSocial ||
+                          "Nome não informado"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
               </table>
             </div>
             <div className="search-results">
