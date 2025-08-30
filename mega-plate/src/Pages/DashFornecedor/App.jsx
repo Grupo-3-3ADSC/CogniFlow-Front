@@ -276,6 +276,14 @@ function App() {
   const [ordemDeCompra, setOrdemDeCompra] = useState([]);
   const [estoque, setEstoque] = useState([]);
   const [kpiData, setKpiData] = useState([]);
+  const [fornecedoresPage, setFornecedoresPage] = useState([]);
+  const [paginaAtual, setPaginaAtual] = useState(0);
+  const [paginasTotais, setPaginasTotais] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrevious, setHasPrevious] = useState(false);
+
+  const fornecedoresPorPagina = 6;
 
   const fileInputRef = useRef(null);
 
@@ -359,6 +367,27 @@ function App() {
       });
   }
 
+
+  function getFornecedoresPaginados() {
+
+    const paginaInt = Number(paginaAtual) || 0;
+    api.
+      get(`/fornecedores/paginados?pagina=${paginaInt}&tamanho=${fornecedoresPorPagina}`)
+      .then((response) => {
+        const { data, paginasTotais, totalItems, paginaAtual, hasNext, hasPrevious } = response.data;
+
+        setFornecedoresPage(data);
+        setPaginasTotais(paginasTotais);
+        setTotalItems(totalItems);
+        setPaginaAtual(paginaAtual);
+        setHasNext(hasNext);
+        setHasPrevious(hasPrevious);
+      })
+      .catch((err) => {
+        console.error("Erro ao buscar fornecedores paginados:", err);
+      });
+  }
+
   // Função de parsing de data melhorada
   const parseDate = (dateString) => {
     if (!dateString) return null;
@@ -382,9 +411,9 @@ function App() {
   const groupedData = useMemo(() => {
     const filtered = selectedFornecedor
       ? fornecedores.filter(
-          (f) =>
-            (f.nomeFantasia || f.razaoSocial || f.id) === selectedFornecedor
-        )
+        (f) =>
+          (f.nomeFantasia || f.razaoSocial || f.id) === selectedFornecedor
+      )
       : fornecedores;
 
     if (selectedFornecedor) {
@@ -529,6 +558,10 @@ function App() {
   const [ordensFiltradasParaGrafico, setOrdensFiltradasParaGrafico] = useState(
     []
   );
+
+  useEffect(() => {
+    getFornecedoresPaginados(paginaAtual);
+  }, [paginaAtual]);
 
   // Efeito para aplicar filtros quando os critérios mudam
   useEffect(() => {
@@ -712,7 +745,7 @@ function App() {
 
       return listaFinal
         .sort((a, b) => b.valorTotalAcumulado - a.valorTotalAcumulado)
-        // .slice(0, 3);
+      // .slice(0, 3);
     }
 
     // Sem filtro
@@ -774,7 +807,7 @@ function App() {
 
       return listaFinal
         .sort((a, b) => b.valorTotalAcumulado - a.valorTotalAcumulado)
-        // .slice(0, 3);
+      // .slice(0, 3);
     }
   }
 
@@ -903,15 +936,20 @@ function App() {
         anoInicio !== new Date().getFullYear() ||
         anoFim !== new Date().getFullYear()
       ) {
-        labelMes += ` ${
-          anoInicio === anoFim ? anoInicio : anoInicio + "-" + anoFim
-        }`;
+        labelMes += ` ${anoInicio === anoFim ? anoInicio : anoInicio + "-" + anoFim
+          }`;
       }
       resultadoFinal.push([labelMes, producaoMensal[m], meta]);
     }
 
     return resultadoFinal;
   }
+
+  const handlePageChange = (newPage) => {
+      if (newPage >= 0 && newPage <= paginasTotais && newPage !== paginaAtual) {
+        setPaginaAtual(newPage);
+      }
+    };
 
   const barData = generateBarData(
     ordensFiltradasParaGrafico.length > 0
@@ -1008,92 +1046,92 @@ function App() {
           <div className="dashboardFornecedor">
             <h2>Dashboard Fornecedor</h2>
 
-           <div id="charts-superior">
-  <div id="Kpi">
-    {kpiData.map(function (item, index) {
-      return (
-        <React.Fragment key={item.fornecedorId}>
-          <div
-            id={"chart-aviso-fornecedor" + (index + 1)}
-            className="chart"
-          >
-            {/* Nome do fornecedor */}
-            <div className="kpi-title">{item.supplierName}</div>
+            <div id="charts-superior">
+              <div id="Kpi">
+                {kpiData.map(function (item, index) {
+                  return (
+                    <React.Fragment key={item.fornecedorId}>
+                      <div
+                        id={"chart-aviso-fornecedor" + (index + 1)}
+                        className="chart"
+                      >
+                        {/* Nome do fornecedor */}
+                        <div className="kpi-title">{item.supplierName}</div>
 
-            {/* Lista de materiais (resumida) */}
-            <div className="kpi-subtitle">
-              {item.tiposMateriaisString}
-            </div>
+                        {/* Lista de materiais (resumida) */}
+                        <div className="kpi-subtitle">
+                          {item.tiposMateriaisString}
+                        </div>
 
-            {/* Totais do fornecedor */}
-            <div className="kpi-data">
-              <div>
-                <span>Gastos Totais:</span>
-                <span className="value-green">
-                  {new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(item.valorTotalAcumulado)}
-                </span>
-              </div>
-              <div>
-                <span>Quantidade Total:</span>
-                <span className="value-green">
-                  {item.quantidadeTotal}
-                </span>
-              </div>
-              <div>
-                <span>Preço Médio Unitário:</span>
-                <span className="value-green">
-                  {new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(item.precoMedioUnitario)}
-                </span>
-              </div>
-            </div>
+                        {/* Totais do fornecedor */}
+                        <div className="kpi-data">
+                          <div>
+                            <span>Gastos Totais:</span>
+                            <span className="value-green">
+                              {new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(item.valorTotalAcumulado)}
+                            </span>
+                          </div>
+                          <div>
+                            <span>Quantidade Total:</span>
+                            <span className="value-green">
+                              {item.quantidadeTotal}
+                            </span>
+                          </div>
+                          <div>
+                            <span>Preço Médio Unitário:</span>
+                            <span className="value-green">
+                              {new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(item.precoMedioUnitario)}
+                            </span>
+                          </div>
+                        </div>
 
-            {/* Detalhes por material */}
-            <div className="kpi-materials">
-              {item.materiaisDetalhados &&
-                item.materiaisDetalhados.map((mat, i) => (
-                  <div key={i} className="kpi-material">
-                    <strong>{mat.material}</strong>
-                    <div className="material-details">
-                      <div>
-                        <span>Gastos:</span>
-                        <span className="value-green">
-                          {new Intl.NumberFormat("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          }).format(mat.valorTotalAcumulado)}
-                        </span>
+                        {/* Detalhes por material */}
+                        <div className="kpi-materials">
+                          {item.materiaisDetalhados &&
+                            item.materiaisDetalhados.map((mat, i) => (
+                              <div key={i} className="kpi-material">
+                                <strong>{mat.material}</strong>
+                                <div className="material-details">
+                                  <div>
+                                    <span>Gastos:</span>
+                                    <span className="value-green">
+                                      {new Intl.NumberFormat("pt-BR", {
+                                        style: "currency",
+                                        currency: "BRL",
+                                      }).format(mat.valorTotalAcumulado)}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span>Quantidade:</span>
+                                    <span className="value-green">
+                                      {mat.quantidadeTotal}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span>Preço Médio Unitário:</span>
+                                    <span className="value-green">
+                                      {new Intl.NumberFormat("pt-BR", {
+                                        style: "currency",
+                                        currency: "BRL",
+                                      }).format(mat.precoMedioUnitario)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
                       </div>
-                      <div>
-                        <span>Quantidade:</span>
-                        <span className="value-green">
-                          {mat.quantidadeTotal}
-                        </span>
-                      </div>
-                      <div>
-                        <span>Preço Médio Unitário:</span>
-                        <span className="value-green">
-                          {new Intl.NumberFormat("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          }).format(mat.precoMedioUnitario)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </React.Fragment>
-      );
-    })}
-  </div>
-</div>
             {/* <div id="charts-inferior">
               <div id="bar_chart" className="chart">
                 <Chart
@@ -1126,7 +1164,7 @@ function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredSuppliers.map((supplier, index) => (
+                  {fornecedoresPage.map((supplier, index) => (
                     <tr
                       key={supplier.id || index}
                       onClick={() => handleSupplierClick(supplier)}
@@ -1140,6 +1178,29 @@ function App() {
                     </tr>
                   ))}
                 </tbody>
+                <tfoot>
+                  <tr>
+                    <td colSpan="1">
+                      <div style={{ display: "flex", justifyContent: "center", gap: "8px", alignItems: "center" }}>
+                        <button
+                          disabled={!hasPrevious}
+                          onClick={() => handlePageChange(Number(paginaAtual) - 1)}
+                        >
+                          Anterior
+                        </button>
+                        <span>
+                          {paginaAtual + 1} / {paginasTotais}
+                        </span>
+                        <button
+                          disabled={!hasNext}
+                          onClick={() => handlePageChange(paginaAtual + 1)}
+                        >
+                          Próxima
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
             <div className="search-results">
