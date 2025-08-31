@@ -9,6 +9,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   width: 100%;
   margin-left: var(--dashboard-margin);
   margin-right: var(--dashboard-margin);
@@ -36,7 +37,7 @@
   padding: 10px 14px;
   font-size: 15px;
   font-weight: bold;
-  border-radius: 8px;
+  border-radius: 40px;
   border: none;
   margin-right: 20px;
   outline: none;
@@ -62,7 +63,7 @@
   padding: 10px 14px;
   font-size: 15px;
   font-weight: bold;
-  border-radius: 8px;
+  border-radius: 40px;
   border: none;
   margin-right: 20px;
   outline: none;
@@ -87,26 +88,14 @@
   box-shadow: 0 0 0 2px rgba(69, 134, 171, 0.3);
 }
 
-
-
 .filtro {
   width: 80%;
   display: flex;
   flex-direction: row;
   padding: 20px;
+  justify-content: center;
+  align-items: center;
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 h2 {
   color: white;
@@ -173,21 +162,21 @@ h2 {
   color: #fff;
   font-weight: 560;
   padding: 8px 17px 10px 18px;
-  border-radius: 5px;
+  border-radius: 80px;
 }
 
 .textDesativar {
   background-color: #374151;
   font-weight: 600;
   padding: 10px;
-  border-radius: 5px;
+  border-radius: 80px;
 }
 
 .textExcluir {
   background-color: #d33;
   font-weight: 600;
   padding: 10px;
-  border-radius: 5px;
+  border-radius: 80px;
 }
 
 .statusColuna {

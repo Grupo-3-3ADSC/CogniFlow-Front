@@ -241,10 +241,11 @@ export function Cadastro() {
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
           </div>
-
-          <button id="buttonCadastrar" className={styles.buttonCadastrar} onClick={cadastrar}>
-            CADASTRAR
-          </button>
+          <div>
+            <button id="buttonCadastrar" className={styles.buttonCadastrar} onClick={cadastrar}>
+              CADASTRAR
+            </button>
+          </div>
         </main>
       </section>
     </>

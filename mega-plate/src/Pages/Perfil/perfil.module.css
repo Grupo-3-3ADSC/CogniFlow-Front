@@ -81,7 +81,7 @@
 .input-group input{
   width: 100%;
   padding: 10px 40px 10px 10px;
-  border-radius: 15px;
+  border-radius: 40px;
   border: 1px solid #ccc;
   box-sizing: border-box;
   font-size: 12px;
@@ -96,7 +96,7 @@
     width: 100%;
     height: 45px;
   padding: 10px 40px 10px 10px;
-  border-radius: 15px;
+  border-radius: 40px;
   border: 1px solid #ccc;
   box-sizing: border-box;
   font-size: 12px;
@@ -116,7 +116,7 @@
 
 .label-imagem{
   display: block;
-  border-radius: 20px;
+  border-radius: 80px;
   color: white;
   background-color: #6C93A8;
   font-weight: bold;

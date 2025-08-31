@@ -598,24 +598,24 @@ function App() {
                   {filteredStockItems.map((item, index) => {
                     // Busca a ordem de compra correspondente ao material ou ID
                     const quantidadeTotal = ordensDeCompra
-  .filter(
-    (ordem) =>
-      ordem.descricaoMaterialCompleta?.toUpperCase() === item.tipoMaterial?.toUpperCase() &&
-      ordem.pendenciaAlterada === false
-  )
-  .reduce((total, ordem) => total + (Number(ordem.quantidade) || 0), 0);
+                      .filter(
+                        (ordem) =>
+                          ordem.descricaoMaterialCompleta?.toUpperCase() === item.tipoMaterial?.toUpperCase() &&
+                          ordem.pendenciaAlterada === false
+                      )
+                      .reduce((total, ordem) => total + (Number(ordem.quantidade) || 0), 0);
                     return (
                       <tr
                         key={index}
                         onClick={() => handleStockItemClick(item)}
                         style={{ cursor: "pointer" }}
                         onMouseEnter={(e) =>
-                          (e.target.parentElement.style.backgroundColor =
-                            "rgba(69, 134, 171, 0.1)")
+                        (e.target.parentElement.style.backgroundColor =
+                          "rgba(69, 134, 171, 0.1)")
                         }
                         onMouseLeave={(e) =>
-                          (e.target.parentElement.style.backgroundColor =
-                            "transparent")
+                        (e.target.parentElement.style.backgroundColor =
+                          "transparent")
                         }
                       >
                         <td>{item.tipoMaterial}</td>
@@ -698,14 +698,14 @@ function App() {
                         ? isNaN(new Date(selectedStockItem.ultimaMovimentacao))
                           ? "Data inválida"
                           : new Date(
-                              selectedStockItem.ultimaMovimentacao
-                            ).toLocaleString("pt-BR", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
+                            selectedStockItem.ultimaMovimentacao
+                          ).toLocaleString("pt-BR", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
                         : "Sem movimentação"}
                     </span>
                   </div>

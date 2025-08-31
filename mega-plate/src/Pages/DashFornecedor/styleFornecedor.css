@@ -29,7 +29,7 @@
 
 /* Filter Header */
 .filter-headerFornecedor {
-   display: flex;
+    display: flex;
     align-items: center;
     justify-content: space-between;
     background: rgba(5, 49, 76, 0.95);
@@ -51,10 +51,10 @@
 }
 
 /* Form Elements */
-#select-Filtro-Fornecedor, 
+#select-Filtro-Fornecedor,
 .search-input,
 .date-filter-input {
-   background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.08);
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
     padding: 6px 10px;
@@ -154,7 +154,7 @@ option {
 
 /* Dashboard Container */
 .containerDashFornecedor {
-  display: flex;
+    display: flex;
     gap: 20px;
     max-width: 100%;
     width: 92%;
@@ -167,7 +167,7 @@ option {
 
 /* Main Dashboard */
 .dashboardFornecedor {
-   flex: 1;
+    flex: 1;
     background: rgba(5, 49, 76, 0.95);
     backdrop-filter: blur(20px);
     padding: 20px;
@@ -179,10 +179,13 @@ option {
     box-sizing: border-box;
     overflow: hidden;
 }
+
 /* Para permitir scroll interno no dashboard */
 .dashboardFornecedor {
-    overflow-y: auto; /* Scroll vertical interno */
-    overflow-x: hidden; /* Sem scroll horizontal */
+    overflow-y: auto;
+    /* Scroll vertical interno */
+    overflow-x: hidden;
+    /* Sem scroll horizontal */
 }
 
 /* Para conteúdo específico dentro do dashboard */
@@ -239,7 +242,7 @@ option {
 }
 
 [id^="chart-aviso-fornecedor"]:hover {
- transform: translateY(-5px);
+    transform: translateY(-5px);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
@@ -281,6 +284,7 @@ option {
     font-weight: 500;
     font-style: bold;
 }
+
 .kpi-data {
     display: flex;
     flex-direction: column;
@@ -289,7 +293,7 @@ option {
     font-weight: 600;
 }
 
-.kpi-data > div {
+.kpi-data>div {
     display: flex;
     justify-content: space-between;
     gap: 80px;
@@ -305,7 +309,7 @@ option {
     font-weight: 600;
 }
 
-.material-details > div {
+.material-details>div {
     display: flex;
     justify-content: space-between;
     gap: 80px;
@@ -363,29 +367,41 @@ option {
     border-radius: var(--border-radius);
     box-shadow: var(--card-shadow);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    min-height: 95vh; /* aumentado de 85vh para 95vh */
-    height: 100vh; /* garante altura total da viewport */
-    width: 85%; /* diminuído de 100% para 85% */
-    max-width: 1400px; /* limita a largura máxima */
-    margin: 0 auto; /* centraliza o dashboard */
+    min-height: 95vh;
+    /* aumentado de 85vh para 95vh */
+    height: 100vh;
+    /* garante altura total da viewport */
+    width: 85%;
+    /* diminuído de 100% para 85% */
+    max-width: 1400px;
+    /* limita a largura máxima */
+    margin: 0 auto;
+    /* centraliza o dashboard */
 }
 
 .supplier-table-container-fornecedor {
-    flex: 0 0 auto; /* Mudança: não cresce automaticamente */
+    flex: 0 0 auto;
+    /* Mudança: não cresce automaticamente */
     background: rgba(5, 49, 76, 0.95);
     backdrop-filter: blur(20px);
-    padding: 15px; /* Diminuído de 20px para 15px */
+    padding: 15px;
+    /* Diminuído de 20px para 15px */
     border-radius: var(--border-radius);
     box-shadow: var(--card-shadow);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    min-height: 50vh; /* Diminuído de 85vh para 50vh */
-    height: auto; /* Mudança: altura automática baseada no conteúdo */
-    width: 30%; /* Diminuído de 65% para 45% */
-    max-width: 300px; /* Diminuído de 1800px para 600px */
+    min-height: 50vh;
+    /* Diminuído de 85vh para 50vh */
+    height: auto;
+    /* Mudança: altura automática baseada no conteúdo */
+    width: 30%;
+    /* Diminuído de 65% para 45% */
+    max-width: 300px;
+    /* Diminuído de 1800px para 600px */
     margin: 0 auto;
     box-sizing: border-box;
     overflow: hidden;
 }
+
 .supplier-table-container-fornecedor h3 {
     text-align: center;
     margin-bottom: 16px;
@@ -506,11 +522,11 @@ option {
         gap: 15px;
         max-width: 95%;
     }
-    
+
     .supplier-table-container {
         min-height: auto;
     }
-    
+
     #Kpi {
         gap: 8px;
         flex-wrap: nowrap;
@@ -518,7 +534,7 @@ option {
         justify-content: flex-start;
         padding: 0 5px;
     }
-    
+
     [id^="chart-aviso-fornecedor"] {
         width: 160px;
         height: 120px;
@@ -535,13 +551,13 @@ option {
         margin-left: 2.5%;
         padding: 0;
     }
-    
+
     .dashboardFornecedor {
         width: 100%;
         order: 1;
         min-height: auto;
     }
-    
+
     .supplier-table-container {
         width: 100%;
         order: 2;
@@ -549,13 +565,13 @@ option {
         max-height: 60vh;
         overflow-y: auto;
     }
-    
+
     #Kpi {
         gap: 10px;
         justify-content: center;
         flex-wrap: wrap;
     }
-    
+
     [id^="chart-aviso-fornecedor"] {
         width: 160px;
         height: 600px;
@@ -569,7 +585,7 @@ option {
         padding: 10px;
         /* padding-top: 70px; */
     }
-    
+
     .filter-headerFornecedor {
         flex-direction: column;
         gap: 12px;
@@ -577,7 +593,7 @@ option {
         margin-left: 2.5%;
         padding: 15px;
     }
-    
+
     #select-Filtro-Fornecedor,
     .search-input,
     .date-filter-input {
@@ -586,7 +602,7 @@ option {
         max-width: none;
         height: 40px;
     }
-    
+
     .containerDashFornecedor {
         flex-direction: column;
         gap: 15px;
@@ -594,13 +610,13 @@ option {
         margin-left: 2%;
         margin-top: 15px;
     }
-    
+
     .dashboardFornecedor {
         width: 100%;
         padding: 15px;
         min-height: auto;
     }
-    
+
     .supplier-table-container {
         width: 100%;
         padding: 15px;
@@ -608,7 +624,7 @@ option {
         max-height: 50vh;
         overflow-y: auto;
     }
-    
+
     #Kpi {
         flex-direction: row;
         gap: 8px;
@@ -619,7 +635,7 @@ option {
         scroll-behavior: smooth;
         -webkit-overflow-scrolling: touch;
     }
-    
+
     [id^="chart-aviso-fornecedor"] {
         width: 140px;
         height: 600px;
@@ -627,58 +643,58 @@ option {
         flex-shrink: 0;
         padding: 10px;
     }
-    
+
     .kpi-title {
         font-size: 13px;
     }
-    
+
     .kpi-subtitle {
         font-size: 11px;
     }
-    
+
     .kpi-data {
         font-size: 11px;
     }
-    
+
     #bar_chart {
         height: 300px;
     }
-    
+
     .supplier-table th,
     .supplier-table td {
         padding: 8px 10px;
         font-size: 11px;
     }
-    
+
     .dashboardFornecedor h2,
     .supplier-table-container h3 {
         font-size: 18px;
         margin-bottom: 15px;
     }
-    
+
     .supplier-table-container {
         padding: 15px;
         max-height: 50vh;
         overflow: hidden;
     }
-    
+
     .supplier-table-container h3 {
         font-size: 18px;
         margin-bottom: 12px;
     }
-    
+
     .table-wrapper {
         max-height: calc(50vh - 70px);
         overflow-x: hidden;
         overflow-y: auto;
     }
-    
+
     .supplier-table th,
     .supplier-table td {
         padding: 10px 12px;
         font-size: 12px;
     }
-    
+
     .supplier-table th {
         font-size: 11px;
     }
@@ -690,90 +706,90 @@ option {
         max-height: 45vh;
         overflow: hidden;
     }
-    
+
     .supplier-table-container h3 {
         font-size: 16px;
         margin-bottom: 10px;
     }
-    
+
     .table-wrapper {
         max-height: calc(45vh - 60px);
         overflow-x: hidden;
         overflow-y: auto;
     }
-    
+
     .supplier-table th,
     .supplier-table td {
         padding: 8px 10px;
         font-size: 11px;
     }
-    
+
     .supplier-table th {
         font-size: 10px;
     }
-    
+
     .IndexFornecedor {
         margin-left: 1vh;
         padding: 8px;
     }
-    
+
     .filter-headerFornecedor {
         width: 98%;
         margin-left: 1%;
         padding: 12px;
     }
-    
+
     .containerDashFornecedor {
         width: 98%;
         margin-left: 1%;
         gap: 12px;
     }
-    
+
     .dashboardFornecedor,
     .supplier-table-container {
         padding: 12px;
     }
-    
+
     .dashboardFornecedor h2,
     .supplier-table-container h3 {
         font-size: 16px;
         margin-bottom: 12px;
     }
-    
+
     [id^="chart-aviso-fornecedor"] {
         width: 120px;
         height: 100px;
         min-width: 120px;
         padding: 8px;
     }
-    
+
     .kpi-title {
         font-size: 12px;
     }
-    
+
     .kpi-subtitle {
         font-size: 10px;
     }
-    
+
     .kpi-data {
         font-size: 10px;
     }
-    
+
     #bar_chart {
         height: 250px;
     }
-    
+
     .supplier-table th,
     .supplier-table td {
         padding: 6px 8px;
         font-size: 10px;
     }
-    
+
     .supplier-table-container {
         max-height: 45vh;
         overflow-x: auto;
     }
-    
+
     .supplier-table {
         min-width: 300px;
     }
@@ -785,12 +801,12 @@ option {
         flex-direction: column !important;
         align-items: center;
     }
-    
+
     .dashboardFornecedor {
         width: 100% !important;
         margin-bottom: 15px;
     }
-    
+
     .supplier-table-container {
         width: 100% !important;
         min-height: auto !important;
@@ -802,17 +818,17 @@ option {
     #Kpi::-webkit-scrollbar {
         height: 4px;
     }
-    
+
     #Kpi::-webkit-scrollbar-track {
         background: rgba(255, 255, 255, 0.1);
         border-radius: 2px;
     }
-    
+
     #Kpi::-webkit-scrollbar-thumb {
         background: rgba(69, 134, 171, 0.6);
         border-radius: 2px;
     }
-    
+
     #Kpi::-webkit-scrollbar-thumb:hover {
         background: rgba(69, 134, 171, 0.8);
     }

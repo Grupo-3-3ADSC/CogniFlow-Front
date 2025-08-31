@@ -80,7 +80,7 @@
 #input-filtro-codigo {
     background: rgba(255, 255, 255, 0.08);
     border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
+    border-radius: 40px;
     padding: 6px 12px;
     color: var(--text-primary);
     font-size: 12px;

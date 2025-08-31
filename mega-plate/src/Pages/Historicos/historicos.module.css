@@ -93,7 +93,7 @@ h2 {
   color: white;
   width: 18vh;
   height: 6vh;
-  border-radius: 30px;
+  border-radius: 80px;
   font-size: 14px;
   font-weight: bold;
   font-family: 'Poppins';
@@ -106,7 +106,7 @@ h2 {
   color: white;
   width: 18vh;
   height: 6vh;
-  border-radius: 30px;
+  border-radius: 80px;
   font-size: 14px;
   font-weight: bold;
   font-family: 'Poppins';
@@ -178,7 +178,7 @@ h2 {
   min-width: 180px;
   padding: 0.5rem 0.75rem;
   border: 1px solid #ccc;
-  border-radius: 8px;
+  border-radius: 40px;
   font-size: 0.9rem;
   transition: border-color 0.2s, box-shadow 0.2s;
 }

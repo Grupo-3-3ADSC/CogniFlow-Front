@@ -16,7 +16,7 @@ export function Historicos() {
     const [filtroId, setFiltroId] = useState("");
     const [filtroDia, setFiltroDia] = useState("");
     const [filtroPrazo, setFiltroPrazo] = useState("");
-    const [filtroStatus, setFiltroStatus] = useState("");
+    const [filtroPendentes, setFiltroPendentes] = useState("");
     const [fade, setFade] = useState(true);
     const navigate = useNavigate();
 
@@ -56,7 +56,7 @@ export function Historicos() {
         }, 200); // tempo de fade out antes de buscar
 
         return () => clearTimeout(timeout);
-    }, [filtroStatus]);
+    }, [filtroPendentes]);
 
     const buscarOrdensDeCompra = async () => {
         const token = sessionStorage.getItem("authToken");
@@ -249,13 +249,13 @@ export function Historicos() {
                 .includes(filtroPrazo.toLowerCase())
             : true;
 
-        const matchStatus = filtroStatus
-            ? (ordem?.status ?? "")
+        const matchPendentes = filtroPendentes
+            ? (ordem?.pendentes ?? "")
                 .toLowerCase()
                 .includes(filtroStatus.toLowerCase())
             : true;
 
-        return matchId && matchDia && matchPrazo && matchStatus;
+        return matchId && matchDia && matchPrazo && matchPendentes;
     });
 
 
@@ -293,8 +293,8 @@ export function Historicos() {
                         <input
                             type="text"
                             placeholder="Filtrar por status"
-                            value={filtroStatus}
-                            onChange={(e) => setFiltroStatus(e.target.value)}
+                            value={filtroPendentes}
+                            onChange={(e) => setFiltroPendentes(e.target.value)}
                             className={styles.inputFiltro}
                         />
                     </div>
@@ -322,7 +322,7 @@ export function Historicos() {
                                             <td><b><p>{formatarDataBrasileira(ordem.dataDeEmissao)}</p> </b> </td>
                                             <td><b><p>{formatarHora(ordem.dataDeEmissao)}</p> </b> </td>
                                             <td><b><p>{formatarDataBrasileira(ordem.prazoEntrega)}</p></b> </td>
-                                            <td><b><p>{ordem.status}</p> </b> </td>
+                                            <td><b><p>{ordem.pendenciaAlterada ? "Entregue" : "Pendente"}</p> </b> </td>
                                             <td >
                                                 <button className={styles.ativar}
                                                     onClick={() => confirmarEntrega(ordem.id)}
