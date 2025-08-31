@@ -376,6 +376,8 @@ function App() {
       .then((response) => {
         const { data, paginasTotais, totalItems, paginaAtual, hasNext, hasPrevious } = response.data;
 
+        // console.log("dataaaa: ", data)
+
         setFornecedoresPage(data);
         setPaginasTotais(paginasTotais);
         setTotalItems(totalItems);
@@ -465,6 +467,7 @@ function App() {
   const handleSearch = () => {
     // Se não há dados, não filtra
     if (fornecedores.length === 0 || ordemDeCompra.length === 0) {
+      setFilteredSuppliers([]);
       return;
     }
 
@@ -483,29 +486,23 @@ function App() {
         if (ordemDate) {
           const startDateObj = startDate ? new Date(startDate) : null;
           const endDateObj = endDate ? new Date(endDate) : null;
-
           dateInRange =
             (!startDateObj || ordemDate >= startDateObj) &&
             (!endDateObj || ordemDate <= endDateObj);
         }
       }
-
       return materialMatch && dateInRange;
     });
 
     console.log("Ordens filtradas por material e data:", ordensFiltered.length);
 
-    // Agora filtra os fornecedores baseado nas ordens filtradas e no termo de busca
-    const fornecedoresFiltrados = fornecedores.filter((fornecedor) => {
+    // MUDANÇA PRINCIPAL: Filtra TODOS os fornecedores globalmente
+    const todosFornecedoresFiltrados = fornecedores.filter((fornecedor) => {
       // Filtro por nome
       const nameMatch =
         !searchTerm ||
-        fornecedor.nomeFantasia
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        fornecedor.razaoSocial
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase());
+        fornecedor.nomeFantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        fornecedor.razaoSocial?.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Verifica se o fornecedor tem ordens que passaram pelos filtros de material/data
       const temOrdemValida = ordensFiltered.some(
@@ -520,32 +517,24 @@ function App() {
       );
     });
 
-    // Agora filtra os fornecedores baseado nas ordens filtradas e no termo de busca
-    const fornecedoresFiltradosBusca = fornecedores.filter((fornecedor) => {
-      // Filtro por nome
-      const nameMatch =
-        !searchTerm ||
-        fornecedor.nomeFantasia
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        fornecedor.razaoSocial
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase());
+    // Aplica paginação nos resultados filtrados
+    const itemsPerPage = fornecedoresPorPagina || 6;
+    const startIndex = paginaAtual * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const fornecedoresPaginados = todosFornecedoresFiltrados.slice(startIndex, endIndex);
 
-      // Verifica se o fornecedor tem ordens que passaram pelos filtros de material/data
-      const temOrdemValida = ordensFiltered.some(
-        (ordem) =>
-          ordem.fornecedorId === fornecedor.id ||
-          ordem.fornecedor?.id === fornecedor.id
-      );
+    // Atualiza o estado de fornecedoresPage com os resultados paginados
+    setFornecedoresPage(fornecedoresPaginados);
 
-      return (
-        nameMatch &&
-        (ordensFiltered.length === ordemDeCompra.length || temOrdemValida)
-      );
-    });
+    // Atualiza informações de paginação baseado nos dados filtrados
+    const totalPaginasFiltradas = Math.ceil(todosFornecedoresFiltrados.length / itemsPerPage);
+    setPaginasTotais(totalPaginasFiltradas);
+    setTotalItems(todosFornecedoresFiltrados.length);
+    setHasNext(paginaAtual < totalPaginasFiltradas - 1);
+    setHasPrevious(paginaAtual > 0);
 
-    setFilteredSuppliers(fornecedoresFiltradosBusca);
+    // Mantém compatibilidade com o estado filteredSuppliers se necessário
+    setFilteredSuppliers(todosFornecedoresFiltrados);
 
     // Salvar as ordens filtradas em um estado separado
     setOrdensFiltradasParaGrafico(ordensFiltered);
@@ -559,14 +548,29 @@ function App() {
     []
   );
 
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedMaterial('');
+    setStartDate('');
+    setEndDate('');
+    setPaginaAtual(0);
+
+    // Volta a buscar dados paginados do servidor
+    getFornecedoresPaginados(0);
+  };
+
+
   useEffect(() => {
-    getFornecedoresPaginados(paginaAtual);
+    const hasFilters = searchTerm || selectedMaterial || startDate || endDate;
+
+    if (!hasFilters) {
+      getFornecedoresPaginados(paginaAtual);
+    }
   }, [paginaAtual]);
 
   // Efeito para aplicar filtros quando os critérios mudam
   useEffect(() => {
     if (fornecedores.length > 0 && ordemDeCompra.length > 0) {
-      // Inicializar ordensFiltradasParaGrafico se ainda não foi inicializado
       if (ordensFiltradasParaGrafico.length === 0) {
         setOrdensFiltradasParaGrafico(ordemDeCompra);
       }
@@ -580,6 +584,7 @@ function App() {
     endDate,
     fornecedores,
     ordemDeCompra,
+    paginaAtual
   ]);
 
   // Carregamento inicial dos dados
@@ -946,10 +951,10 @@ function App() {
   }
 
   const handlePageChange = (newPage) => {
-      if (newPage >= 0 && newPage <= paginasTotais && newPage !== paginaAtual) {
-        setPaginaAtual(newPage);
-      }
-    };
+    if (newPage >= 0 && newPage <= paginasTotais && newPage !== paginaAtual) {
+      setPaginaAtual(newPage);
+    }
+  };
 
   const barData = generateBarData(
     ordensFiltradasParaGrafico.length > 0
@@ -1186,16 +1191,16 @@ function App() {
                           disabled={!hasPrevious}
                           onClick={() => handlePageChange(Number(paginaAtual) - 1)}
                         >
-                          Anterior
+                          {"<"}
                         </button>
                         <span>
-                          {paginaAtual + 1} / {paginasTotais}
+                          {paginaAtual + 1}/{paginasTotais}
                         </span>
                         <button
                           disabled={!hasNext}
                           onClick={() => handlePageChange(paginaAtual + 1)}
                         >
-                          Próxima
+                          {">"}
                         </button>
                       </div>
                     </td>
@@ -1247,65 +1252,19 @@ function App() {
 
               {/* ORDENS DE COMPRA DO FORNECEDOR */}
               <div className="popup-section">
-                <h4>Ordens de Compra</h4>
+                <h4>
+                  Ordens de Compra 
+                </h4>
+
                 <div className="info-grid">
-                  {ordemDeCompra
-                    .filter(
-                      (ordem) =>
-                        ordem.fornecedorId === selectedSupplier.fornecedorId
-                    )
-                    .map((ordem, index) => (
-                      <div key={index}>
-                        <div className="info-item">
-                          <span className="info-label">ID do Pedido:</span>
-                          <span className="info-value">
-                            {ordem.id || "N/A"}
-                          </span>
-                        </div>
-                        <div className="info-item">
-                          <span className="info-label">
-                            Descrição do material:
-                          </span>
-                          <span className="info-value">
-                            {ordem.descricaoMaterial || "N/A"}
-                          </span>
-                        </div>
-                        <div className="info-item">
-                          <span className="info-label">Data de Emissão:</span>
-                          <span className="info-value">
-                            {ordem.dataDeEmissao
-                              ? ordem.dataDeEmissao.split("T")[0]
-                              : "N/A"}
-                          </span>
-                        </div>
-                        <div className="info-item">
-                          <span className="info-label">Quantidade:</span>
-                          <span className="info-value">
-                            {ordem.quantidade || 0} unidades
-                          </span>
-                        </div>
-                        <div className="info-item">
-                          <span className="info-label">Preço Unitário:</span>
-                          <span className="info-value">
-                            R$ {ordem.valorUnitario?.toFixed(2) || "0.00"}
-                          </span>
-                        </div>
-                        <div className="info-item">
-                          <span className="info-label">Prazo Entrega:</span>
-                          <span className="info-value">
-                            {ordem.prazoEntrega || "N/A"}
-                          </span>
-                        </div>
-                        <div className="info-item">
-                          <span className="info-label">
-                            Condição de Pagamento:
-                          </span>
-                          <span className="info-value">
-                            {ordem.condPagamento || "N/A"}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="info-item">
+                  <span className="info-label">Ordens de compra:</span>
+                  <span className="info-value">
+                Esse fornecedor realizou {ordemDeCompra.filter(
+                    (ordem) => ordem.fornecedorId === selectedSupplier.fornecedorId
+                  ).length} ordens de compra
+                  </span>
+                  </div>
                 </div>
               </div>
             </div>
