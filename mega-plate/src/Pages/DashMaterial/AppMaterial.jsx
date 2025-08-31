@@ -36,6 +36,7 @@ function App() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [estoqueData, setEstoqueData] = useState([]);
+  const [transferencias, setTransferencias] = useState([]);
 
   // Estado para modal de detalhes do alerta
   const [selectedAlert, setSelectedAlert] = useState(null);
@@ -66,7 +67,11 @@ function App() {
   // Estado para materiais únicos
   const [materiais, setMateriais] = useState([]);
 
-  // Função para buscar dados do estoque e inicializar os gráficos
+  // Estados para KPIs
+  const [mensagemMinimo, setMensagemMinimo] = useState("");
+  const [mensagemMeta, setMensagemMeta] = useState("");
+
+  // Função para buscar dados do estoque
   function getEstoque() {
     api
       .get("/estoque")
@@ -88,7 +93,6 @@ function App() {
       })
       .catch((err) => {
         console.log("Erro ao buscar estoque:", err);
-        // Em caso de erro, manter dados de loading
         setPieData([
           ["Tipo", "Quantidade"],
           ["Erro ao carregar", 0],
@@ -104,13 +108,87 @@ function App() {
       });
   }
 
-  // Função para inicializar os gráficos com dados reais
+  // Função para buscar dados das transferências
+   function getTransferencias() {
+    api.get("/transferencias")
+      .then((resposta) => {
+        const dados = resposta.data || [];
+        setTransferencias(dados);
+        console.log("=== DEBUG API ===");
+        console.log("Transferências recebidas:", dados);
+
+        if (dados.length > 0) {
+          inicializarGraficoTransferencias(dados);
+        } else {
+          setPieData([
+            ["Tipo de Transferência", "Quantidade"],
+            ["Sem transferências", 1],
+          ]);
+        }
+      })
+      .catch((err) => {
+        console.log("Erro ao buscar transferências:", err);
+        setPieData([
+          ["Tipo de Transferência", "Quantidade"],
+          ["Erro ao carregar", 1],
+        ]);
+      });
+  }
+
+  // Função que prepara os dados para o gráfico
+  const inicializarGraficoTransferencias = (dados) => {
+  console.log("=== Estrutura dos dados ===");
+  console.log("Primeiro item:", dados[0]);
+  console.log("Propriedades disponíveis:", Object.keys(dados[0]));
+
+  // Criar acumuladores
+  const totais = { C1: 0, C2: 0, C3: 0, C4: 0 };
+
+  dados.forEach((item) => {
+    const setor = item.setor; // "C1", "C2", ...
+    const qtd = item.quantidadeTransferida || 0;
+
+    if (totais[setor] !== undefined) {
+      totais[setor] += qtd;
+    }
+  });
+
+  console.log("=== Totais calculados ===", totais);
+
+  const totalGeral = Object.values(totais).reduce((acc, val) => acc + val, 0);
+
+  if (totalGeral === 0) {
+    setPieData([
+      ["Tipo de Transferência", "Quantidade"],
+      ["Sem transferências", 1],
+    ]);
+    return;
+  }
+
+  // Montar dados para o gráfico
+  const newPieData = [["Tipo de Transferência", "Quantidade"]];
+  Object.entries(totais).forEach(([setor, valor]) => {
+    if (valor > 0) {
+      newPieData.push([setor, valor]);
+    }
+  });
+
+  // Mostrar porcentagens no console
+  console.log("=== Porcentagens ===");
+  Object.entries(totais).forEach(([setor, valor]) => {
+    if (valor > 0) {
+      const perc = ((valor / totalGeral) * 100).toFixed(1);
+      console.log(`${setor}: ${valor} (${perc}%)`);
+    }
+  });
+
+  console.log("Dados finais do gráfico:", newPieData);
+  setPieData(newPieData);
+};
+
+  // Função para inicializar os gráficos de estoque
   const inicializarGraficos = (dadosEstoque) => {
     if (!dadosEstoque || dadosEstoque.length === 0) {
-      setPieData([
-        ["Tipo", "Quantidade"],
-        ["Sem dados", 0],
-      ]);
       setBarData([
         ["Material", "Estoque Atual", "Estoque Mínimo"],
         ["Sem dados", 0, 0],
@@ -122,40 +200,12 @@ function App() {
       return;
     }
 
-    // Gráfico de Pizza - Distribuição por tipo de material
+    // Contar materiais para gráfico de barras
     const materialCounts = {};
-
-    const transferenciaInternaTotal = dadosEstoque.reduce((acc, item) => {
-      const valorInterno = item.interna || 0;
-      return acc + valorInterno;
-    }, 0);
-
-    const transferenciaExternaTotal = dadosEstoque.reduce((acc, item) => {
-      const valorExterno = item.externa || 0;
-      return acc + valorExterno;
-    }, 0);
-
-    console.log("Total de Transferências Internas:", transferenciaInternaTotal);
-    console.log("Total de Transferências Externas:", transferenciaExternaTotal);
-
-    const totalTransferencias =
-      transferenciaInternaTotal + transferenciaExternaTotal;
-
-    const newPieData = [["Tipo de Transferência", "Porcentagem"]];
-
-    if (totalTransferencias > 0) {
-      const porcentagemInterna =
-        (transferenciaInternaTotal / totalTransferencias) * 100;
-      const porcentagemExterna =
-        (transferenciaExternaTotal / totalTransferencias) * 100;
-
-      newPieData.push(["Interna", porcentagemInterna]);
-      newPieData.push(["Externa", porcentagemExterna]);
-    } else {
-      newPieData.push(["Sem transferências", 100]);
-    }
-
-    setPieData(newPieData);
+    dadosEstoque.forEach((item) => {
+      materialCounts[item.tipoMaterial] =
+        (materialCounts[item.tipoMaterial] || 0) + (item.quantidadeAtual || 0);
+    });
 
     // Gráfico de Barras - Estoque Atual vs Estoque Mínimo
     const newBarData = [["Material", "Estoque Atual", "Estoque Mínimo"]];
@@ -192,7 +242,6 @@ function App() {
 
     const newLineData = [["Data", "Movimentações"]];
     if (Object.keys(dateMovements).length > 0) {
-      // Ordenar por data
       Object.entries(dateMovements)
         .sort(([a], [b]) => {
           const [dayA, monthA] = a.split("/");
@@ -338,9 +387,18 @@ function App() {
     setAlertas(newAlertas);
   };
 
+  // useEffect para carregar dados iniciais
   useEffect(() => {
     getEstoque();
+    getTransferencias();
   }, []);
+
+  // useEffect para atualizar gráfico de transferências quando os dados chegarem
+  useEffect(() => {
+    if (transferencias && transferencias.length > 0) {
+      inicializarGraficoTransferencias(transferencias);
+    }
+  }, [transferencias]);
 
   // Verificar se a imagem de fundo foi carregada corretamente
   useEffect(() => {
@@ -398,13 +456,10 @@ function App() {
 
   // Função para formatar data para comparação
   const parseDate = (dateString) => {
-    // Se a data vier como LocalDateTime do backend, converter para Date
     if (dateString && typeof dateString === "string") {
-      // Se for ISO string (2025-04-28T10:30:00)
       if (dateString.includes("T")) {
         return new Date(dateString);
       }
-      // Se for formato DD/MM/YYYY
       if (dateString.includes("/")) {
         const [day, month, year] = dateString.split("/");
         return new Date(year, month - 1, day);
@@ -413,26 +468,20 @@ function App() {
     return new Date(dateString);
   };
 
-  const [mensagemMinimo, setMensagemMinimo] = useState("");
-  const [mensagemMeta, setMensagemMeta] = useState("");
-
   // Função para filtrar dados baseada nos filtros do estoque
   const aplicarFiltros = () => {
     if (!estoqueData || estoqueData.length === 0) return;
 
     // Filtrar dados do estoque
     const filtered = estoqueData.filter((item) => {
-      // Filtro por tipo de material
       const materialMatch =
         !selectedMaterial || item.tipoMaterial === selectedMaterial;
 
-      // Filtro por tipo de transferência (se existir no objeto)
       const transferTypeMatch =
         !selectedTransferType ||
         (item.tipoTransferencia &&
           item.tipoTransferencia === selectedTransferType);
 
-      // Filtro por data (usando ultimaMovimentacao)
       let dateInRange = true;
       if (item.ultimaMovimentacao && (startDate || endDate)) {
         const itemDate = parseDate(item.ultimaMovimentacao);
@@ -444,7 +493,6 @@ function App() {
           (!endDateObj || itemDate <= endDateObj);
       }
 
-      // Filtro de pesquisa
       const searchMatch =
         !searchTerm ||
         item.tipoMaterial.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -460,14 +508,13 @@ function App() {
     ];
     setProdutos(uniqueMaterials);
 
-    // Atualizar gráfico de pizza baseado nos dados filtrados
+    // Atualizar gráfico de barras (Estoque Atual vs Estoque Mínimo)
     const materialCounts = {};
     filtered.forEach((item) => {
       materialCounts[item.tipoMaterial] =
         (materialCounts[item.tipoMaterial] || 0) + (item.quantidadeAtual || 0);
     });
 
-    // Atualizar gráfico de barras (Estoque Atual vs Estoque Mínimo)
     const newBarData = [["Material", "Estoque Atual", "Estoque Mínimo"]];
     const materiaisAbaixoMinimo = [];
 
@@ -480,7 +527,6 @@ function App() {
           ? materialInfo.quantidadeMinima || 0
           : 0;
 
-        // Verifica se o estoque atual está abaixo do mínimo
         if (quantidadeAtual < quantidadeMinima && quantidadeMinima > 0) {
           materiaisAbaixoMinimo.push({
             material: material,
@@ -495,10 +541,9 @@ function App() {
       newBarData.push(["Sem dados filtrados", 0, 0]);
     }
 
-    // Atualiza o gráfico de barras
     setBarData(newBarData);
 
-    // Atualiza a mensagem para o KPI
+    // Atualizar mensagens de KPI
     if (materiaisAbaixoMinimo.length > 0) {
       const mensagemAlerta = `${
         materiaisAbaixoMinimo.length
@@ -510,7 +555,7 @@ function App() {
       setMensagemMinimo("Não há nenhum material abaixo do minímo");
     }
 
-    // Nova lógica para materiais acima da meta (75% do máximo)
+    // Lógica para materiais acima da meta (75% do máximo)
     const materiaisAcimaMeta = [];
 
     if (Object.keys(materialCounts).length > 0) {
@@ -522,10 +567,8 @@ function App() {
           ? materialInfo.quantidadeMaxima || 0
           : 0;
 
-        // Calcula 75% da quantidade máxima
         const metaAlerta = quantidadeMaxima * 0.75;
 
-        // Verifica se o estoque atual está acima de 75% do máximo
         if (quantidadeAtual >= metaAlerta && quantidadeMaxima > 0) {
           const porcentagem = Math.round(
             (quantidadeAtual / quantidadeMaxima) * 100
@@ -553,18 +596,6 @@ function App() {
     } else {
       setMensagemMeta("Nenhum material está acima da meta");
     }
-
-    // const newPieData = [['Tipo', 'Quantidade']];
-    // Object.entries(materialCounts).forEach(([tipo, quantidade]) => {
-    //   if (quantidade > 0) {
-    //     newPieData.push([tipo, quantidade]);
-    //   }
-    // });
-
-    // if (newPieData.length === 1) {
-    //   newPieData.push(['Sem dados filtrados', 0]);
-    // }
-    // setPieData(newPieData);
 
     // Atualizar gráfico de linhas baseado nas movimentações filtradas
     const dateMovements = {};
@@ -601,8 +632,6 @@ function App() {
 
     // Gerar alertas baseados nos dados filtrados
     gerarAlertas(filtered, materialCounts);
-
-    
   };
 
   // Aplicar filtros quando qualquer um deles mudar
@@ -639,8 +668,6 @@ function App() {
               </option>
             ))}
           </select>
-
-          
 
           <div id="FiltroData">
             <span id="textFiltro">

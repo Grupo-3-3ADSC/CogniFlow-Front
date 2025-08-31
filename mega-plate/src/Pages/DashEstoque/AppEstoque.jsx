@@ -316,6 +316,17 @@ function App() {
       })
       .catch((err) => console.log("Erro ao buscar ordens de compra:", err));
   }
+  const [transferencias, setTransferencias] = useState([]);
+
+  function getTransferencias() {
+    api
+      .get("/transferencias")
+      .then((resposta) => {
+        setTransferencias(resposta.data || []);
+        console.log("Transferências:", resposta.data);
+      })
+      .catch((err) => console.log("Erro ao buscar transferências:", err));
+  }
 
   // Helper para agrupar pendentes por estoqueId
   const pendentesPorEstoqueId = useMemo(() => {
@@ -360,6 +371,7 @@ function App() {
   useEffect(() => {
     getEstoque();
     getOrdemDeCompra();
+    getTransferencias();
   }, []);
 
   const parseDate = (dateString) => {
@@ -462,6 +474,17 @@ function App() {
 
     return ultimasOrdens;
   }
+  function calcularTransferenciasPorSetor(transferencias, tipoMaterial, setor) {
+  return transferencias
+    .filter(transferencia => 
+      transferencia.tipoMaterial?.toUpperCase() === tipoMaterial?.toUpperCase() &&
+      transferencia.setor?.toUpperCase() === setor?.toUpperCase()
+    )
+    .reduce((total, transferencia) => 
+      total + (Number(transferencia.quantidadeTransferida) || 0), 0
+    );
+}
+  
 
   // Modificação no useEffect
   const [pendenciasPorMaterial, setPendenciasPorMaterial] = useState({});
@@ -517,6 +540,7 @@ function App() {
   //   ? pendenciasPorMaterial[materialHARDOX.toUpperCase()] || 0
   //   : 0;
 
+  
   return (
     <div className="IndexFornecedor">
       <NavBar />
@@ -588,22 +612,32 @@ function App() {
                     <th>Material</th>
                     <th>Quantidade</th>
                     <th>Pendente</th>
-                    <th>Quantidade mininma</th>
-                    <th>Quantidade máxima</th>
-                    <th>Qtd. Externo</th>
-                    <th>Qtd. Interno</th>
+                    <th>C1</th>
+                    <th>C2</th>
+                    <th>C3</th>
+                    <th>C4</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredStockItems.map((item, index) => {
                     // Busca a ordem de compra correspondente ao material ou ID
                     const quantidadeTotal = ordensDeCompra
-  .filter(
-    (ordem) =>
-      ordem.descricaoMaterialCompleta?.toUpperCase() === item.tipoMaterial?.toUpperCase() &&
-      ordem.pendenciaAlterada === false
-  )
-  .reduce((total, ordem) => total + (Number(ordem.quantidade) || 0), 0);
+                     
+                      .filter(
+                        (ordem) =>
+                          ordem.descricaoMaterialCompleta?.toUpperCase() ===
+                            item.tipoMaterial?.toUpperCase() &&
+                          ordem.pendenciaAlterada === false
+                      )
+                      .reduce(
+                        (total, ordem) =>
+                          total + (Number(ordem.quantidade) || 0),
+                        0
+                      );
+                       const quantidadeC1 = calcularTransferenciasPorSetor(transferencias, item.tipoMaterial, "C1");
+                      const quantidadeC2 = calcularTransferenciasPorSetor(transferencias, item.tipoMaterial, "C2");
+                      const quantidadeC3 = calcularTransferenciasPorSetor(transferencias, item.tipoMaterial, "C3");
+                      const quantidadeC4 = calcularTransferenciasPorSetor(transferencias, item.tipoMaterial, "C4")
                     return (
                       <tr
                         key={index}
@@ -624,19 +658,24 @@ function App() {
                         {/* PENDENTE vindo das OCs */}
                         <td
                           style={{
-                            color:
-                              quantidadeTotal > 0
-                                ? "orange"
-                                : "inherit",
+                            color: quantidadeTotal > 0 ? "orange" : "inherit",
                           }}
                         >
                           {quantidadeTotal}
                         </td>
 
-                        <td>{item.quantidadeMinima}</td>
-                        <td>{item.quantidadeMaxima}</td>
-                        <td>{item.externa || 0}</td>
-                        <td>{item.interna || 0}</td>
+                        <td style={{ color: quantidadeC1 > 0 ? "green" : "inherit" }}>
+          {quantidadeC1}
+        </td>
+        <td style={{ color: quantidadeC2 > 0 ? "green" : "inherit" }}>
+          {quantidadeC2}
+        </td>
+        <td style={{ color: quantidadeC3 > 0 ? "green" : "inherit" }}>
+          {quantidadeC3}
+        </td>
+        <td style={{ color: quantidadeC4 > 0 ? "green" : "inherit" }}>
+          {quantidadeC4}
+        </td>
                       </tr>
                     );
                   })}

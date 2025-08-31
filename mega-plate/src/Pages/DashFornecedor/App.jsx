@@ -358,6 +358,7 @@ function App() {
         console.error("Erro ao buscar estoque:", error);
       });
   }
+  
 
   // Função de parsing de data melhorada
   const parseDate = (dateString) => {
