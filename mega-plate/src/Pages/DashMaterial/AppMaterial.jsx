@@ -1345,7 +1345,7 @@ function App() {
                             {movimentacao.nomeMes} {movimentacao.ano}
                           </span>
                           <span className="info-value">
-                            No mês de {movimentacao.nomeMes.toLowerCase()} foram movimentadas {movimentacao.quantidadeTotal} unidades desse material
+                            No mês de {movimentacao.nomeMes.toLowerCase()} foram movimentadas {movimentacao.quantidadeTotal} unidades de {selectedStock.material}
                           </span>
                         </div>
                       ))
