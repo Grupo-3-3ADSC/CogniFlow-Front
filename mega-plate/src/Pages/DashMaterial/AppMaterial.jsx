@@ -8,6 +8,232 @@ import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { api } from "../../provider/api";
 
+const popupStyles = `
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.popup-content {
+  background: linear-gradient(135deg, #05314C 0%,rgb(25, 81, 114) 100%);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  color: white;
+  border: 2px solid rgba(126, 185, 217, 0.3);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 30px;
+  border-bottom: 2px solid rgba(126, 185, 217, 0.3);
+  background: rgba(126, 185, 217, 0.1);
+  backdrop-filter: blur(20px);
+  border-radius: 20px 20px 0 0;
+}
+
+.popup-header h3 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.close-button {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 8px 12px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.1);
+}
+
+.popup-body {
+  padding: 30px;
+}
+
+.popup-section {
+  margin-bottom: 30px;
+}
+
+.popup-section h4 {
+  margin: 0 0 20px 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #ffffff;
+  border-bottom: 2px solid #7EB9D9;
+  padding-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.info-label {
+  font-size: 0.9rem;
+  color: #B0C4DE;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 12px 16px;
+  background: rgba(126, 185, 217, 0.15);
+  border-radius: 12px;
+  border: 1px solid rgba(126, 185, 217, 0.3);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  color: #ffffff;
+}
+
+.info-value:hover {
+  background: rgba(126, 185, 217, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.status-ontime {
+  color: #4ade80 !important;
+  border-color: rgba(74, 222, 128, 0.5) !important;
+  background: rgba(74, 222, 128, 0.15) !important;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.2);
+}
+
+.status-late {
+  color: #f87171 !important;
+  border-color: rgba(248, 113, 113, 0.5) !important;
+  background: rgba(248, 113, 113, 0.15) !important;
+  box-shadow: 0 0 10px rgba(248, 113, 113, 0.2);
+}
+
+.financial-summary {
+  background: linear-gradient(135deg, #05314C; 0%, rgba(69, 134, 171, 0.1) 100%);
+  padding: 20px;
+  border-radius: 16px;
+  border: 2px solid rgba(126, 185, 217, 0.3);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.financial-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.financial-label {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.financial-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color:rgb(255, 255, 255);
+  text-shadow: 0 2px 8px rgba(126, 185, 217, 0.5);
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(126, 185, 217, 0.4);
+}
+
+@media (max-width: 600px) {
+  .popup-content {
+    width: 95%;
+    margin: 10px;
+    border-radius: 16px;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .popup-header {
+    padding: 20px 24px;
+  }
+  
+  .popup-body {
+    padding: 24px;
+  }
+  
+  .popup-header h3 {
+    font-size: 1.5rem;
+  }
+  
+  .financial-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+`;
+
 function App() {
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
   const [userPhoto, setUserPhoto] = useState("./User.png");
@@ -40,6 +266,9 @@ function App() {
   // Estado para modal de detalhes do alerta
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [selectedStock, setSelectedStock] = useState(false);
+  const [ordemDeCompra, setOrdemDeCompra] = useState([]);
 
   // Estados para os dados dos gráficos - inicializados com dados vazios
   const [pieData, setPieData] = useState([
@@ -102,6 +331,16 @@ function App() {
           ["Erro ao carregar", 0],
         ]);
       });
+  }
+
+  function getOrdemDeCompra() {
+    api
+      .get("/ordemDeCompra")
+      .then((resposta) => {
+        setOrdemDeCompra(resposta.data);
+      }).catch((err) => {
+        console.error("erro ao pegar ordem de compra: ", err);
+      })
   }
 
   // Função para inicializar os gráficos com dados reais
@@ -237,8 +476,8 @@ function App() {
             estoqueMinimo: quantidadeMinima,
             ultimaMovimentacao: materialInfo?.ultimaMovimentacao
               ? new Date(materialInfo.ultimaMovimentacao).toLocaleDateString(
-                  "pt-BR"
-                )
+                "pt-BR"
+              )
               : "N/A",
             deficit: quantidadeMinima - quantidadeAtual,
             percentualDisponivel:
@@ -272,8 +511,8 @@ function App() {
             excesso: quantidadeAtual - quantidadeMaxima,
             ultimaMovimentacao: materialInfo?.ultimaMovimentacao
               ? new Date(materialInfo.ultimaMovimentacao).toLocaleDateString(
-                  "pt-BR"
-                )
+                "pt-BR"
+              )
               : "N/A",
             observacao: "Estoque no limite máximo recomendado",
           },
@@ -311,8 +550,8 @@ function App() {
                 item.quantidadeAtual < item.quantidadeMinima
                   ? "Abaixo do mínimo"
                   : item.quantidadeAtual >= (item.quantidadeMaxima || 0)
-                  ? "No limite máximo"
-                  : "Normal",
+                    ? "No limite máximo"
+                    : "Normal",
             },
           });
         }
@@ -340,6 +579,7 @@ function App() {
 
   useEffect(() => {
     getEstoque();
+    getOrdemDeCompra();
   }, []);
 
   // Verificar se a imagem de fundo foi carregada corretamente
@@ -379,6 +619,7 @@ function App() {
   // Função para fechar modal
   const closeModal = () => {
     setIsModalOpen(false);
+    setShowPopup(false);
     setSelectedAlert(null);
   };
 
@@ -500,11 +741,10 @@ function App() {
 
     // Atualiza a mensagem para o KPI
     if (materiaisAbaixoMinimo.length > 0) {
-      const mensagemAlerta = `${
-        materiaisAbaixoMinimo.length
-      } material(is) abaixo do estoque mínimo: ${materiaisAbaixoMinimo
-        .map((item) => `${item.material} (${item.atual}/${item.minimo})`)
-        .join(", ")}`;
+      const mensagemAlerta = `${materiaisAbaixoMinimo.length
+        } material(is) abaixo do estoque mínimo: ${materiaisAbaixoMinimo
+          .map((item) => `${item.material} (${item.atual}/${item.minimo})`)
+          .join(", ")}`;
       setMensagemMinimo(mensagemAlerta);
     } else {
       setMensagemMinimo("Não há nenhum material abaixo do minímo");
@@ -541,14 +781,13 @@ function App() {
     }
 
     if (materiaisAcimaMeta.length > 0) {
-      const mensagemMeta = `${
-        materiaisAcimaMeta.length
-      } material(is) acima da meta (75%): ${materiaisAcimaMeta
-        .map(
-          (item) =>
-            `${item.material} (${item.atual}/${item.maximo} - ${item.porcentagem}%)`
-        )
-        .join(", ")}`;
+      const mensagemMeta = `${materiaisAcimaMeta.length
+        } material(is) acima da meta (75%): ${materiaisAcimaMeta
+          .map(
+            (item) =>
+              `${item.material} (${item.atual}/${item.maximo} - ${item.porcentagem}%)`
+          )
+          .join(", ")}`;
       setMensagemMeta(mensagemMeta);
     } else {
       setMensagemMeta("Nenhum material está acima da meta");
@@ -602,7 +841,7 @@ function App() {
     // Gerar alertas baseados nos dados filtrados
     gerarAlertas(filtered, materialCounts);
 
-    
+
   };
 
   // Aplicar filtros quando qualquer um deles mudar
@@ -616,6 +855,94 @@ function App() {
     endDate,
     estoqueData,
   ]);
+
+  const obterNomeMes = (numeroMes) => {
+    const meses = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    return meses[numeroMes];
+  };
+
+  const agruparMovimentacoesPorMes = (tipoMaterial, ordensDeCompra) => {
+
+    const anoAtual = new Date().getFullYear();
+
+  // Filtrar todas as ordens relacionadas ao tipo de material
+  const ordensDoMaterial = ordensDeCompra.filter(
+    (ordem) =>
+      ordem.estoque?.tipoMaterial === tipoMaterial ||
+      ordem.descricaoMaterialCompleta === tipoMaterial ||
+      ordem.descricaoMaterial === tipoMaterial
+  );
+
+  // Agrupar por ano-mês
+  const movimentacoesPorMes = {};
+  
+  ordensDoMaterial.forEach((ordem) => {
+    if (ordem.dataDeEmissao) {
+      const data = new Date(ordem.dataDeEmissao);
+      const ano = data.getFullYear();
+      const mes = data.getMonth(); // 0-11
+
+      if(ano == anoAtual){
+      const chaveAnoMes = `${ano}-${mes}`;
+      
+      if (!movimentacoesPorMes[chaveAnoMes]) {
+        movimentacoesPorMes[chaveAnoMes] = {
+          ano,
+          mes,
+          nomeMes: obterNomeMes(mes),
+          quantidadeTotal: 0,
+          numeroMovimentacoes: 0
+        };
+      }
+      
+      if(ordem.pendenciaAlterada == true){
+      movimentacoesPorMes[chaveAnoMes].quantidadeTotal += ordem.quantidade || 0;
+      movimentacoesPorMes[chaveAnoMes].numeroMovimentacoes += 1;
+        }
+      }
+    }
+  });
+
+  // Converter para array e ordenar por data (mais recente primeiro)
+  return Object.values(movimentacoesPorMes)
+    .sort((a, b) => {
+      // Ordenar por mês decrescente
+      return b.mes - a.mes;
+    });
+};
+
+  const handleStockClick = (tipoMaterial) => {
+    const ordensDoMaterial = ordemDeCompra.filter(
+    (ordem) =>
+      ordem.estoque?.tipoMaterial === tipoMaterial ||
+      ordem.descricaoMaterialCompleta === tipoMaterial ||
+      ordem.descricaoMaterial === tipoMaterial
+  );
+  
+  // Pegar a primeira ordem para informações básicas
+  const ordem = ordensDoMaterial[0];
+
+  const movimentacoesPorMes = agruparMovimentacoesPorMes(tipoMaterial, ordemDeCompra);
+
+    setSelectedStock({
+    id: tipoMaterial,
+    material: tipoMaterial,
+    dataPedido: ordem?.dataDeEmissao?.split("T")[0] || "Data não disponível",
+    preco: ordem?.valorUnitario || 0,
+    quantidade: ordem?.quantidade || 0,
+    descricaoMaterial: ordem?.descricaoMaterial || "Descrição não informada",
+    valorKg: ordem?.valorKg || 0,
+    valorPeca: ordem?.valorPeca || 0,
+    pendenciaAlterada: ordem?.pendenciaAlterada || false,
+    // Adicionar as movimentações agrupadas
+    movimentacoesPorMes: movimentacoesPorMes
+  });
+
+    setShowPopup(true);
+  };
 
   if (!autenticacaoPassou) return null;
 
@@ -640,7 +967,7 @@ function App() {
             ))}
           </select>
 
-          
+
 
           <div id="FiltroData">
             <span id="textFiltro">
@@ -701,13 +1028,18 @@ function App() {
                         letterSpacing: "0.5px",
                       }}
                     >
-                      Materiais em Estoque
+                     Movimentações De Materiais Em Estoque
                     </h4>
                   </div>
                   {materiais.length > 0 ? (
-                    materiais.map((materiais, index) => (
-                      <div id="Produto" key={index}>
-                        {materiais}
+                    materiais.map((material, index) => (
+                      <div
+                        id="Produto"
+                        key={index}
+                        onClick={() => handleStockClick(material)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {material}
                       </div>
                     ))
                   ) : (
@@ -815,7 +1147,7 @@ function App() {
                         1: { offset: 0.03 },
                       },
                       pieSliceBorderColor: "#05314C",
-                     tooltip: {
+                      tooltip: {
                         showColorCode: true,
                         textStyle: {
                           color: '#05314C',
@@ -987,6 +1319,46 @@ function App() {
                 <button className="btn-close" onClick={closeModal}>
                   Fechar
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {showPopup && selectedStock && (
+          <div className="popup-overlay" onClick={closeModal}>
+            <div className="popup-content" onClick={(e) => e.stopPropagation()}>
+              <div className="popup-header">
+                <h3>{selectedStock.material}</h3>
+                <div className="close-button" onClick={closeModal}>
+                  <X size={20} />
+                </div>
+              </div>
+
+              <div className="popup-body">
+                {/* MOVIMENTAÇÕES POR MÊS */}
+                <div className="popup-section">
+                  <h4>Movimentações por Mês</h4>
+                  <div className="info-grid">
+                    {selectedStock.movimentacoesPorMes && selectedStock.movimentacoesPorMes.length > 0 ? (
+                      selectedStock.movimentacoesPorMes.map((movimentacao, index) => (
+                        <div key={index} className="info-item">
+                          <span className="info-label">
+                            {movimentacao.nomeMes} {movimentacao.ano}
+                          </span>
+                          <span className="info-value">
+                            No mês de {movimentacao.nomeMes.toLowerCase()} foram movimentadas {movimentacao.quantidadeTotal} unidades desse material
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="info-item">
+                        <span className="info-label">Sem movimentações</span>
+                        <span className="info-value">
+                          Nenhuma movimentação encontrada para este material
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
