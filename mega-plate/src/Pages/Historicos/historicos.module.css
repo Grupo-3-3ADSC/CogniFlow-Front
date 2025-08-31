@@ -29,6 +29,47 @@
   flex-direction: column;
 }
 
+.backgroundPages {
+  background: var(--primary-color);
+  color: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  min-height: 10vh;
+  width: 90%;
+  max-width: 100%;
+  display: flex;
+  justify-content: center; /* centraliza na horizontal */
+  align-items: center;     /* centraliza na vertical */
+  flex-direction: row;     /* <-- aqui a mudança */
+  gap: 10px;               /* espaço entre os círculos */
+  margin-top: 4vh;
+  margin-bottom: 2vh;
+}
+
+.circle {
+  width: 80px;
+  height: 80px;
+  border: 3px solid #2c5aa0;
+  border-radius: 50%;
+  background-color: #2c5aa0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 28px;
+  font-weight: bold;
+  margin: 20px;
+  cursor: pointer;
+}
+
+.circleSmall {
+  width: 50px;
+  height: 50px;
+  font-size: 18px;
+  border-width: 2px;
+}
+
 h2 {
   color: white;
   margin-bottom: 20px;
@@ -239,17 +280,17 @@ h2 {
 }
 
 .ativar:disabled {
-    background-color: #cccccc !important;
-    color: #666666 !important;
-    cursor: not-allowed !important;
-    opacity: 0.6;
+  background-color: #cccccc !important;
+  color: #666666 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
 }
 
 .cancelar:disabled {
-    background-color: #cccccc !important;
-    color: #666666 !important;
-    cursor: not-allowed !important;
-    opacity: 0.6;
+  background-color: #cccccc !important;
+  color: #666666 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
 }
 
 @media (max-width: 1230px) {
@@ -413,7 +454,7 @@ h2 {
   }
 }
 
-/* 🖥️ MENU LATERAL (a partir de 601px) */
+/* 🖥 MENU LATERAL (a partir de 601px) */
 @media (min-width: 601px) {
   .background {
     width: calc(100% - 280px);
