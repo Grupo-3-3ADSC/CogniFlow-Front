@@ -103,7 +103,7 @@ export function RelatorioMaterial() {
     // ======== Aba de Entradas ========
     const sheetEntradas = workbook.addWorksheet("Entradas");
 
- const response = await fetch(logoMegaPlate);
+    const response = await fetch(logoMegaPlate);
     const blob = await response.blob();
     const imageBuffer = await blob.arrayBuffer();
 
@@ -113,12 +113,12 @@ export function RelatorioMaterial() {
     });
 
     // === Faixa azul do topo ===
-    sheetEntradas.mergeCells("B1:H4");
-    const faixa = sheetEntradas.getCell("B1");
+    sheetEntradas.mergeCells("A1:G4");
+    const faixa = sheetEntradas.getCell("A1");
     faixa.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "1D597B" }, // azul médio
+      fgColor: { argb: "05314c" }, // azul médio
     };
 
     // Adiciona logo (colocado dentro da faixa azul)
@@ -128,8 +128,8 @@ export function RelatorioMaterial() {
     });
 
     // Título
-    sheetEntradas.mergeCells("B6:H6");
-    const tituloEntradas = sheetEntradas.getCell("B6");
+    sheetEntradas.mergeCells("A6:G6");
+    const tituloEntradas = sheetEntradas.getCell("A6");
     tituloEntradas.value = `Entradas do material: ${material}`;
     tituloEntradas.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
     tituloEntradas.alignment = { horizontal: "center" };
@@ -142,8 +142,9 @@ export function RelatorioMaterial() {
     // Cabeçalho
     const header = ["Data", "Fornecedor", "Quantidade", "Preço Unitário", "Preço Total do Pedido", "IPI", " Valor Total"]
 
-    const headerEntradas = sheetEntradas.addRow(["", ...header]);
-    
+    const headerEntradas = sheetEntradas.addRow(header);
+
+
     headerEntradas.eachCell((cell) => {
       cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
       cell.fill = {
@@ -190,41 +191,108 @@ export function RelatorioMaterial() {
       col.width = maxLength + 2;
     });
 
+     // Texto "Total:"
+    sheet.getCell(`D${ultimaLinha}`).value = "Total:";
+    sheet.getCell(`D${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheet.getCell(`D${ultimaLinha}`).alignment = { horizontal: "center", vertical: "middle" };
+    sheet.getCell(`D${ultimaLinha}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" },
+    };
+
+    // Soma do Preço unitário (coluna F)
+    sheet.getCell(`E${ultimaLinha}`).value = {
+      formula: `SUM(E10:E${sheet.rowCount})`
+    };
+    sheet.getCell(`E${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheet.getCell(`E${ultimaLinha}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" },
+    };
+    sheet.getCell(`F${ultimaLinha}`).alignment = { horizontal: "center" };
+
+    sheet.getCell(`F${ultimaLinha}`).value = {
+      formula: `SUM(F10:F${sheet.rowCount})`,
+
+    };
+    sheet.getCell(`F${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheet.getCell(`F${ultimaLinha}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" },
+    };
+    sheet.getCell(`F${ultimaLinha}`).alignment = { horizontal: "center" };
+
+    // Soma do Preço total do pedido (coluna H ou J, conforme sua tabela)
+    sheet.getCell(`G${ultimaLinha}`).value = {
+      formula: `SUM(G10:G${sheet.rowCount})`,
+      result: 0,
+    };
+    sheet.getCell(`G${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheet.getCell(`G${ultimaLinha}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" },
+    };
+    sheet.getCell(`G${ultimaLinha}`).alignment = { horizontal: "center" };
+
+
+
+    sheet.getCell(`I${ultimaLinha}`).alignment = { horizontal: "center" };
+
+    sheet.getCell(`I${ultimaLinha}`).value = {
+      formula: `SUM(I10:I${sheet.rowCount})`,
+    };
+    sheet.getCell(`I${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheet.getCell(`I${ultimaLinha}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" },
+    };
+    sheet.getCell(`I${ultimaLinha}`).alignment = { horizontal: "center" };
+
+
     // ======== Aba de Transferências ========
     const sheetSaidas = workbook.addWorksheet("Transferências");
 
- sheetSaidas.mergeCells("B1:D4");
+    sheetSaidas.mergeCells("B1:D4");
     const faixaSaida = sheetSaidas.getCell("B1");
-    faixa.fill = {
+    faixaSaida.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "05314c" },
+      fgColor: { argb: "1D597B" },
     };
 
     sheetSaidas.addImage(imageId, {
-      tl: { col: 1.2, row: 0.2 }, 
+      tl: { col: 1.2, row: 0.2 },
       ext: { width: 120, height: 60 },
     });
 
     // Título
     sheetSaidas.mergeCells("B6:D6");
     const tituloSaidas = sheetSaidas.getCell("B6");
-    tituloSaidas.value = `Entradas do material: ${material}`;
+    tituloSaidas.value = `Saídas do material: ${material}`;
     tituloSaidas.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
     tituloSaidas.alignment = { horizontal: "center" };
     tituloSaidas.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "05314c" },
+      fgColor: { argb: "FFB22222" },
     };
 
-    const headerSaidas = sheetSaidas.addRow(["Data", "Destino", "Quantidade"]);
-    headerSaidas.eachCell((cell) => {
+    const headerS = sheetSaidas.addRow(["Data", "Destino", "Quantidade"]);
+
+     const headerSaida = sheetSaidas.addRow(headerS);
+
+    headerSaida.eachCell((cell) => {
       cell.font = { color: { argb: "FFFFFFFF" }, bold: true };
       cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFB22222" } };
       cell.alignment = { horizontal: "center" };
       cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
     });
+
 
     saidas.forEach(s => {
       const row = sheetSaidas.addRow([new Date(s.data), s.destino, s.quantidade]);
