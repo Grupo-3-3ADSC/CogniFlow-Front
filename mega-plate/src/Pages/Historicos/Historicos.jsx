@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import NavBar from "../../components/NavBar.jsx";
 import { api } from "../../provider/api.js";
 import Swal from "sweetalert2";
+import {toastError,toastSuccess} from "../../components/toastify/ToastifyService";
 import styles from "./historicos.module.css";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
@@ -56,7 +57,7 @@ export function Historicos() {
             });
             setOrdens(res.data);
         } catch (error) {
-            Swal.fire("Erro ao carregar ordens de compra", "", "error");
+            toastError("Erro ao carregar ordens de compra");
         }
     };
 
@@ -144,7 +145,7 @@ export function Historicos() {
             Swal.fire("Sucesso na entrega da ordem de compra!", "", "success");
     })
         .catch((err) => {
-            console.error("erro na mudança de quantidade atual: ", err);
+            toastError("erro na mudança de quantidade atual: ", err);
             Swal.fire("Erro ao confirmar entrega da ordem de compra", "", "error");
         });
         }

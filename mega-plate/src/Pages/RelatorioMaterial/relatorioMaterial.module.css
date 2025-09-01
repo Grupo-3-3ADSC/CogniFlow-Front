@@ -52,7 +52,7 @@ h2 {
   padding: 10px 14px;
   font-size: 15px;
   font-weight: bold;
-  border-radius: 8px;
+  border-radius: 20px;
   border: none;
   margin-right: 20px;
   outline: none;
@@ -78,7 +78,7 @@ h2 {
   padding: 10px 14px;
   font-size: 15px;
   font-weight: bold;
-  border-radius: 8px;
+  border-radius: 20px;
   border: none;
   margin-right: 20px;
   outline: none;
@@ -248,7 +248,7 @@ h2 {
   border: none;
   color: white;
   padding: 8px 15px;
-  border-radius: 12px;
+  border-radius: 20px;
   font-weight: bold;
   font-size: 20px;
   cursor: pointer;

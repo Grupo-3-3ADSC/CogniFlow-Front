@@ -25,7 +25,7 @@ export function OrdemDeCompra() {
         setListaFornecedores(resposta.data);
       })
       .catch((erro) => {
-        console.error("Erro ao buscar usuários", erro);
+        toastError("Erro ao buscar usuários", erro);
       });
   }
 

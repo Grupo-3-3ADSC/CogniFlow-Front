@@ -6,7 +6,7 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import setaImg from "../../assets/seta.png";
 import setaRightImg from "../../assets/setaRight.png";
-import logoMegaPlate from "../../assets/logo-megaplate-azul.png";
+import logoMegaPlate from "../../assets/logo-megaplate.png";
 import { useNavigate } from "react-router-dom";
 
 
@@ -52,7 +52,7 @@ export function Relatorios() {
     { tipo: "entradas", titulo: "Relatório Geral de Entradas", descricao: "Análise anual geral de preços com foco em fornecedores, sazonalidades e oscilações críticas que impactaram os custos.", botao: "BAIXAR RELATÓRIO COMPARATIVO ANUAL" },
     { tipo: "saidas", titulo: "Relatório Geral de Saídas", descricao: "Análise anual geral de saídas com comparativo de saídas internas e externas.", botao: "BAIXAR RELATÓRIO COMPARATIVO ANUAL" },
     { tipo: "fornecedores", titulo: "Relatório Comparativo de Fornecedores", descricao: "Análise dos fornecedores mais utilizados e desempenho anual.", botao: "FORNECEDORES" },
-    { tipo: "materiais", titulo: "Relatório de Saídas por Materiais", descricao: "Visão geral dos materiais mais movimentados no período.", botao: "MATERIAS" }
+    { tipo: "materiais", titulo: "Relatório de Movimentações por Materiais", descricao: "Visão geral dos materiais mais movimentados no período.", botao: "MATERIAS" }
   ];
 
   const relatoriosFiltrados = listaRelatorios.filter(r => filtroRelatorio === "todos" || r.tipo === filtroRelatorio);
@@ -61,7 +61,44 @@ export function Relatorios() {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Entradas");
 
-    // Cabeçalho do Excel
+    const response = await fetch(logoMegaPlate);
+    const blob = await response.blob();
+    const imageBuffer = await blob.arrayBuffer();
+
+    const imageId = workbook.addImage({
+      buffer: imageBuffer,
+      extension: "png",
+    });
+
+    // === Faixa azul do topo ===
+    sheet.mergeCells("B1:J4");
+    const faixa = sheet.getCell("B1");
+    faixa.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" }, // azul médio
+    };
+
+    // Adiciona logo (colocado dentro da faixa azul)
+    sheet.addImage(imageId, {
+      tl: { col: 1.2, row: 0.2 }, // canto esquerdo
+      ext: { width: 120, height: 60 },
+    });
+
+    // === Título do relatório ===
+    sheet.mergeCells("B6:J6");
+    const titulo = sheet.getCell("B6");
+    titulo.value = `Relatório de Entradas - ${anoSelecionado}`;
+    titulo.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
+    titulo.alignment = { horizontal: "center", vertical: "middle" };
+    titulo.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "05314c" },
+    };
+
+
+    // === Cabeçalho da tabela ===
     const header = [
       "Data",
       "Fornecedor",
@@ -73,19 +110,19 @@ export function Relatorios() {
       "IPI",
       "Valor total",
     ];
+    const headerRow = sheet.addRow(["", ...header]);
 
-    const headerRow = sheet.addRow(header);
-
-    // Estilo do cabeçalho
+    sheet.getColumn(1).eachCell((cell) => {
+      cell.fill = null; // remove qualquer preenchimento
+    });
     headerRow.eachCell((cell) => {
-      cell.font = { bold: true };
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
       cell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "FF2A80B9" }, // Azul
+        fgColor: { argb: "1D597B" },
       };
-      cell.font = { color: { argb: "FFFFFFFF" }, bold: true };
-      cell.alignment = { horizontal: "center" };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
       cell.border = {
         top: { style: "thin" },
         left: { style: "thin" },
@@ -94,64 +131,184 @@ export function Relatorios() {
       };
     });
 
-    // Adiciona os dados da tabela
-    ordensDeCompra.forEach((ordem) => {
-      sheet.addRow([
+
+
+
+    // Adiciona dados
+    ordensDeCompra.forEach((ordem, index) => {
+      const row = sheet.addRow([
         ordem.data,
         ordem.fornecedor,
         ordem.ordemCompra,
         ordem.produto,
         ordem.quantidade,
-        `R$ ${ordem.precoUnitario.toFixed(2).replace(".", ",")}`,
-        `R$ ${ordem.precoTotalPedido.toFixed(2).replace(".", ",")}`,
-        `${ordem.ipi.toFixed(2).replace(".", ",")}%`,
-        `R$ ${ordem.valorTotal.toFixed(2).replace(".", ",")}`,
+        ordem.precoUnitario,
+        ordem.precoTotalPedido,
+        ordem.ipi / 100,
+        ordem.valorTotal,
       ]);
+
+      // Formatação de células
+      row.getCell(6).numFmt = '"R$"#,##0.00';
+      row.getCell(7).numFmt = '"R$"#,##0.00';
+      row.getCell(8).numFmt = '0.00%';
+      row.getCell(9).numFmt = '"R$"#,##0.00';
+
+      // Zebra
+      if (index % 2 === 0) {
+        row.eachCell((cell) => {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFEFEFEF" },
+          };
+        });
+      }
     });
 
-    // Ajusta largura das colunas
+    // Ajuste automático de largura
     sheet.columns.forEach((col) => {
-      col.width = 20;
+      let maxLength = 0;
+      col.eachCell({ includeEmpty: true }, (cell) => {
+        const cellValue = cell.value ? cell.value.toString() : "";
+        if (cellValue.length > maxLength) maxLength = cellValue.length;
+      });
+      col.width = maxLength + 5;
     });
+
+    const ultimaLinha = sheet.rowCount + 1;
+
+    // Texto "Total:"
+    sheet.getCell(`E${ultimaLinha}`).value = "Total:";
+    sheet.getCell(`E${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheet.getCell(`E${ultimaLinha}`).alignment = { horizontal: "center", vertical: "middle" };
+    sheet.getCell(`E${ultimaLinha}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" },
+    };
+
+    // Soma do Preço unitário (coluna F)
+    sheet.getCell(`F${ultimaLinha}`).value = {
+      formula: `SUM(F10:F${sheet.rowCount})`
+    };
+    sheet.getCell(`F${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheet.getCell(`F${ultimaLinha}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" },
+    };
+    sheet.getCell(`G${ultimaLinha}`).alignment = { horizontal: "center" };
+
+    sheet.getCell(`G${ultimaLinha}`).value = {
+      formula: `SUM(G10:G${sheet.rowCount})`,
+
+    };
+    sheet.getCell(`G${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheet.getCell(`G${ultimaLinha}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" },
+    };
+    sheet.getCell(`G${ultimaLinha}`).alignment = { horizontal: "center" };
+
+    // Soma do Preço total do pedido (coluna H ou J, conforme sua tabela)
+    sheet.getCell(`H${ultimaLinha}`).value = {
+      formula: `SUM(H10:H${sheet.rowCount})`,
+      result: 0,
+    };
+    sheet.getCell(`H${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheet.getCell(`H${ultimaLinha}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" },
+    };
+    sheet.getCell(`H${ultimaLinha}`).alignment = { horizontal: "center" };
+
+
+
+    sheet.getCell(`J${ultimaLinha}`).alignment = { horizontal: "center" };
+
+    sheet.getCell(`J${ultimaLinha}`).value = {
+      formula: `SUM(J10:J${sheet.rowCount})`,
+    };
+    sheet.getCell(`J${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheet.getCell(`J${ultimaLinha}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" },
+    };
+    sheet.getCell(`H${ultimaLinha}`).alignment = { horizontal: "center" };
+
 
     // Salvar arquivo
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), `entradas_${anoSelecionado}.xlsx`);
   }
 
-  // Exemplo de uso
   const ordensDeCompra = [
-    { data: "8/1/2025", fornecedor: "ABC", ordemCompra: 1, produto: "SAE1023", quantidade: 30, precoUnitario: 250, precoTotalPedido: 7500, ipi: 10, valorTotal: 8250 },
-    { data: "8/2/2025", fornecedor: "ABCD", ordemCompra: 2, produto: "SAE1025", quantidade: 50, precoUnitario: 500, precoTotalPedido: 25000, ipi: 0, valorTotal: 25000 },
-    // ... adicione todos os outros dados aqui
+    { data: "15/01/2025", fornecedor: "Fornecedor A", ordemCompra: "OC-123", produto: "Aço SAE1020", quantidade: 50, precoUnitario: 200, precoTotalPedido: 10000, ipi: 10, valorTotal: 11000 },
+    { data: "20/02/2025", fornecedor: "Fornecedor B", ordemCompra: "OC-456", produto: "Bobina Galvanizada", quantidade: 30, precoUnitario: 500, precoTotalPedido: 15000, ipi: 5, valorTotal: 15750 },
   ];
 
 
+  // ====================== Saídas ======================
   async function baixarExcelSaidas(transferencias) {
     const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet("Saidas");
+    const sheet = workbook.addWorksheet("Saídas");
 
-    // Cabeçalho do Excel
-    const header = [
-      "Data",
-      "Material",
-      "Quantidade Solicitada",
-      "Média preço",
-      "Destino",
-    ];
 
-    const headerRow = sheet.addRow(header);
+    const response = await fetch(logoMegaPlate);
+    const blob = await response.blob();
+    const imageBuffer = await blob.arrayBuffer();
 
-    // Estilo do cabeçalho
+    const imageId = workbook.addImage({
+      buffer: imageBuffer,
+      extension: "png",
+    });
+
+
+    sheet.mergeCells("B1:F4");
+    const faixa = sheet.getCell("B1");
+    faixa.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" }, // azul médio
+    };
+
+    sheet.addImage(imageId, {
+      tl: { col: 1.2, row: 0.2 },
+      ext: { width: 120, height: 60 },
+    });
+
+    sheet.addRow([]);
+    sheet.addRow([]);
+
+
+
+    sheet.mergeCells("B6:F6");
+    const titulo = sheet.getCell("B6");
+    titulo.value = `Relatório de Saídas - ${anoSelecionado}`;
+    titulo.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
+    titulo.alignment = { horizontal: "center", vertical: "middle" };
+    titulo.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "05314c" }, // azul escuro
+    };
+
+    const header = ["Data", "Material", "Quantidade Solicitada", "Média preço", "Destino"];
+    const headerRow = sheet.addRow(["", ...header]);
+
+
     headerRow.eachCell((cell) => {
-      cell.font = { bold: true };
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
       cell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "FF2A80B9" }, // Azul
+        fgColor: { argb: "1D597B" },
       };
-      cell.font = { color: { argb: "FFFFFFFF" }, bold: true };
-      cell.alignment = { horizontal: "center" };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
       cell.border = {
         top: { style: "thin" },
         left: { style: "thin" },
@@ -160,26 +317,33 @@ export function Relatorios() {
       };
     });
 
-    // Adiciona os dados da tabela
-    transferencias.forEach((ordem) => {
-      sheet.addRow([
-        ordem.data,
-        ordem.material,
-        ordem.qtdSolicitada,
-        ordem.mediaPreco,
-        ordem.destino,
-      ]);
+    transferencias.forEach((t, index) => {
+      const row = sheet.addRow([t.data, t.material, t.qtdSolicitada, t.mediaPreco, t.destino]);
+      row.getCell(4).numFmt = '"R$"#,##0.00';
+
+      if (index % 2 === 0) {
+        row.eachCell((cell) => {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFEFEFEF" },
+          };
+        });
+      }
     });
 
-
-    // Ajusta largura das colunas
+    // Ajuste automático de largura
     sheet.columns.forEach((col) => {
-      col.width = 20;
+      let maxLength = 0;
+      col.eachCell({ includeEmpty: true }, (cell) => {
+        const cellValue = cell.value ? cell.value.toString() : "";
+        if (cellValue.length > maxLength) maxLength = cellValue.length;
+      });
+      col.width = maxLength + 5;
     });
 
-    // Salvar arquivo
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `entradas_${anoSelecionado}.xlsx`);
+    saveAs(new Blob([buffer]), `saidas_${anoSelecionado}.xlsx`);
   }
 
   // Exemplo de uso
@@ -239,7 +403,10 @@ export function Relatorios() {
                         return;
 
                       }
-                      baixarExcelEntradas(ordensDeCompra.filter(o => o.data.includes(anoSelecionado)));
+                      baixarExcelEntradas(ordensDeCompra.filter(o => {
+                        const ano = o.data.split("/")[2]; // pega "2025"
+                        return ano === String(anoSelecionado);
+                      }));
                       toastSuccess("Relatório gerado com sucesso!");
                     }}
                   >

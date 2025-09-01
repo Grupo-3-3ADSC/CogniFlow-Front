@@ -6,149 +6,12 @@ import styles from "./relatorioMaterial.module.css";
 import setaImg from "../../assets/seta.png";
 import setaRightImg from "../../assets/setaRight.png";
 import { useNavigate } from "react-router-dom";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import logoMegaPlate from '../../assets/logo-megaplate-azul.png';
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
+import logoMegaPlate from "../../assets/logo-megaplate.png";
 
 
-function drawKpiCard(doc, x, y, w, h, title, value, corPrimaria, corTexto) {
-  // Desenha o fundo do card
-  doc.setFillColor(245, 245, 245).setDrawColor(...corPrimaria);
-  doc.roundedRect(x, y, w, h, 3, 3, "FD"); // Borda arredondada
 
-  // Título (KPI)
-  doc.setTextColor(...corTexto).setFontSize(9).setFont("helvetica", "normal");
-  doc.text(title, x + w / 2, y + 8, { align: "center" });
-
-  // Valor
-  doc.setTextColor(...corPrimaria).setFontSize(14).setFont("helvetica", "bold");
-  doc.text(value.toString(), x + w / 2, y + 18, { align: "center" });
-}
-
-export function gerarRelatorioMaterial(material, dadosAno, dadosMensais, ano) {
-  const doc = new jsPDF();
-  const corPrimaria = [5, 49, 76];
-  const corTexto = [44, 62, 80];
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const dataEmissao = new Date().toLocaleString("pt-BR");
-
-  // ===== CAPA =====
-  doc.setFillColor(...corPrimaria);
-  doc.rect(0, 0, pageWidth, 35, "F");
-  doc.setTextColor(255, 255, 255).setFontSize(20).setFont("helvetica", "bold");
-  doc.text(`RELATÓRIO DE MATERIAL – ${ano}`, pageWidth / 2, 20, { align: "center" });
-
-  doc.setTextColor(...corTexto).setFontSize(12).setFont("helvetica", "normal");
-  doc.text(`Material: ${material}`, pageWidth / 2, 80, { align: "center" });
-  doc.text(`Análise das movimentações e desempenho anual`, pageWidth / 2, 60, { align: "center" });
-  doc.text(`DATA DE EMISSÃO: ${dataEmissao}`, pageWidth / 2, 100, { align: "center" });
-  if (logoMegaPlate) doc.addImage(logoMegaPlate, "PNG", (pageWidth - 50) / 2, 120, 50, 50);
-
-  // ===== PÁGINAS MENSAIS =====
-  (dadosMensais || []).forEach(mes => {
-    doc.addPage();
-    doc.setFont("helvetica", "bold").setFontSize(16).setTextColor(...corPrimaria);
-    doc.text((mes?.nomeMes || "").toUpperCase(), 20, 30);
-
-
-    // KPIs
-    const kpis = mes?.dados?.map(d => ({ t: d.label, v: d.valor })) || [];
-    const gridX = 20, gridY = 50, gap = 8, cols = 2;
-    const cardW = (pageWidth - gridX * 2 - gap * (cols - 1)) / cols;
-    const cardH = 26;
-    let idx = 0;
-
-    // CALCULA O NÚMERO DE LINHAS NECESSÁRIAS (ceil(6/2) = 3 linhas)
-    const totalRows = Math.ceil(kpis.length / cols);
-
-    for (let r = 0; r < totalRows; r++) {
-      for (let c = 0; c < cols; c++) {
-        if (idx >= kpis.length) break;
-        const x = gridX + c * (cardW + gap);
-        const y = gridY + r * (cardH + gap);
-        const { t, v } = kpis[idx++];
-        drawKpiCard(doc, x, y, cardW, cardH, t, v, corPrimaria, corTexto);
-      }
-    }
-
-    // tabela de movimentações (igual a pedidos)
-    const movimentos = mes?.movimentos || [];
-    if (movimentos.length > 0) {
-      const head = [["Data", "Setor", "Qtd", "Observação"]];
-
-      const body = movimentos.map(m => [m.data, m.setor, m.quantidade, m.obs || "-"]);
-
-      autoTable(doc, {
-        head, body,
-        startY: gridY + totalRows * (cardH + gap) + 10,
-        styles: { font: "helvetica", fontSize: 9 },
-        headStyles: { fillColor: corPrimaria, textColor: [255, 255, 255] },
-        theme: "striped",
-        margin: { left: 20, right: 20 }
-      });
-    }
-  });
-
-  // ===== RESUMO ANUAL =====
-  doc.addPage();
-  doc.setFont("helvetica", "bold").setFontSize(16).setTextColor(...corPrimaria);
-  doc.text(`${ano} - RESUMO ANUAL (MATERIAL)`, 20, 30);
-
-  const resumo = dadosAno || [];
-  const gridX = 20, gridY = 50, gap = 8, cols = 2;
-  const cardW = (pageWidth - gridX * 2 - gap * (cols - 1)) / cols;
-  const cardH = 26;
-  let idx = 0;
-  for (let r = 0; r < Math.ceil(resumo.length / cols); r++) {
-    for (let c = 0; c < cols; c++) {
-      if (idx >= resumo.length) break;
-      const x = gridX + c * (cardW + gap);
-      const y = gridY + r * (cardH + gap);
-      const { label, valor } = resumo[idx++];
-      drawKpiCard(doc, x, y, cardW, cardH, label, valor, corPrimaria, corTexto);
-    }
-  }
-
-  // ===== RODAPÉ =====
-  const totalPaginas = doc.getNumberOfPages();
-  for (let i = 1; i <= totalPaginas; i++) {
-    doc.setPage(i);
-    doc.setFillColor(...corPrimaria);
-    doc.rect(0, pageHeight - 20, pageWidth, 20, "F");
-    doc.setFontSize(9).setFont("helvetica", "italic").setTextColor(255, 255, 255);
-    doc.text(`Emitido em: ${dataEmissao} | Página ${i} de ${totalPaginas}`, pageWidth / 2, pageHeight - 7, { align: "center" });
-  }
-
-  doc.save(`relatorio_material_${material}_${ano}.pdf`);
-}
-
-const MOCK_DADOS_MENSAL_MATERIAL = [
-  {
-    nomeMes: "Janeiro",
-    dados: [
-      { label: "Total de saídas ", valor: "120" },
-      { label: "Saídas para C1", valor: "35" },
-      { label: "Saídas para C2", valor: "25" },
-      { label: "Saídas para C3", valor: "40" },
-      { label: "Saídas para C4", valor: "20" },
-      { label: "Maior Setor (Volume)", valor: "C3" }
-    ],
-    movimentos: [
-      { data: "01/01/2025", setor: "C1", quantidade: 35 },
-      { data: "05/01/2025", setor: "C2", quantidade: 25 },
-    ]
-  },
-];
-
-const MOCK_DADOS_ANO_MATERIAL = [
-  { label: "Total de Saídas no Ano", valor: "550" },
-  { label: "Saídas Anuais para C1", valor: "150" },
-  { label: "Saídas Anuais para C2", valor: "120" },
-  { label: "Saídas Anuais para C3", valor: "170" },
-  { label: "Saídas Anuais para C4", valor: "110" },
-  { label: "Setor de Maior Consumo", valor: "C3" },
-];
 
 function gerarListaAnos(anoInicial) {
   const anoAtual = new Date().getFullYear();
@@ -166,7 +29,7 @@ function gerarListaAnos(anoInicial) {
 
 export function RelatorioMaterial() {
   const [materiais, setMateriais] = useState([]);
-  const [filtroMaterial, setFiltroMateiral] = useState("todos");
+  const [filtroMaterial, setFiltroMaterial] = useState("todos");
   const [filtroNome, setFiltroNome] = useState("");
   const todosAnos = gerarListaAnos(2018);
   const [inicio, setInicio] = useState(0);
@@ -187,19 +50,16 @@ export function RelatorioMaterial() {
 
   const MOCK_MODE = true;
 
-  const listaMateriais = [
-    { id: "1", material: "SAE 1020" },
-    { id: "2", material: "SAE 1040" },
-    { id: "3", material: "Hardox" },
-    { id: "4", material: "SAE " },
-    { id: "5", material: "SAE " },
-    { id: "6", material: "SAE " },
-    { id: "7", material: "SAE " },
-    { id: "8", material: "SAE " },
-    { id: "9", material: "SAE " },
-    { id: "10", material: "SAE " },
-    { id: "11", material: "SAE " }
-  ]
+  const MOCK_ENTRADAS = [
+    { data: "01/08/2025", fornecedor: "Fornecedor X", quantidade: 50, precoUnitario: 20, total: 1000 },
+    { data: "05/08/2025", fornecedor: "Fornecedor Y", quantidade: 30, precoUnitario: 22, total: 660 }
+  ];
+
+  const MOCK_SAIDAS = [
+    { data: "06/08/2025", destino: "Cliente A", quantidade: 20, mediaPreco: 21, total: 420 },
+    { data: "07/08/2025", destino: "Cliente B", quantidade: 40, mediaPreco: 20, total: 800 }
+  ];
+
 
   const buscarMateriais = async () => {
     try {
@@ -237,6 +97,159 @@ export function RelatorioMaterial() {
     return nomeMatch && tipoMatch;
   });
 
+  async function baixarExcelMaterial(material, entradas, saidas) {
+    const workbook = new ExcelJS.Workbook();
+
+    // ======== Aba de Entradas ========
+    const sheetEntradas = workbook.addWorksheet("Entradas");
+
+ const response = await fetch(logoMegaPlate);
+    const blob = await response.blob();
+    const imageBuffer = await blob.arrayBuffer();
+
+    const imageId = workbook.addImage({
+      buffer: imageBuffer,
+      extension: "png",
+    });
+
+    // === Faixa azul do topo ===
+    sheetEntradas.mergeCells("B1:H4");
+    const faixa = sheetEntradas.getCell("B1");
+    faixa.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" }, // azul médio
+    };
+
+    // Adiciona logo (colocado dentro da faixa azul)
+    sheetEntradas.addImage(imageId, {
+      tl: { col: 1.2, row: 0.2 }, // canto esquerdo
+      ext: { width: 120, height: 60 },
+    });
+
+    // Título
+    sheetEntradas.mergeCells("B6:H6");
+    const tituloEntradas = sheetEntradas.getCell("B6");
+    tituloEntradas.value = `Entradas do material: ${material}`;
+    tituloEntradas.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
+    tituloEntradas.alignment = { horizontal: "center" };
+    tituloEntradas.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "05314c" },
+    };
+
+    // Cabeçalho
+    const header = ["Data", "Fornecedor", "Quantidade", "Preço Unitário", "Preço Total do Pedido", "IPI", " Valor Total"]
+
+    const headerEntradas = sheetEntradas.addRow(["", ...header]);
+    
+    headerEntradas.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "1D597B" },
+      };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
+
+    entradas.forEach((e) => {
+      const row = sheetEntradas.addRow([
+        new Date(e.data),
+        e.fornecedor,
+        e.quantidade,
+        e.precoUnitario,
+        e.precoTotalPedido,
+        e.ipi,
+        e.valorTotal
+      ]);
+
+      row.eachCell((cell, colNumber) => {
+        cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
+
+        if (colNumber === 1) cell.numFmt = "dd/mm/yyyy"; // Data
+        if (colNumber === 4 || colNumber === 5 || colNumber === 7) cell.numFmt = '"R$"#,##0.00';
+        if (colNumber === 6) cell.numFmt = "0.00%";
+      });
+    });
+
+    // Ajuste de largura
+    sheetEntradas.columns.forEach(col => {
+      let maxLength = 0;
+      col.eachCell({ includeEmpty: true }, (cell) => {
+        const columnLength = cell.value ? cell.value.toString().length : 10;
+        if (columnLength > maxLength) maxLength = columnLength;
+      });
+      col.width = maxLength + 2;
+    });
+
+    // ======== Aba de Transferências ========
+    const sheetSaidas = workbook.addWorksheet("Transferências");
+
+ sheetSaidas.mergeCells("B1:D4");
+    const faixaSaida = sheetSaidas.getCell("B1");
+    faixa.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "05314c" },
+    };
+
+    sheetSaidas.addImage(imageId, {
+      tl: { col: 1.2, row: 0.2 }, 
+      ext: { width: 120, height: 60 },
+    });
+
+    // Título
+    sheetSaidas.mergeCells("B6:D6");
+    const tituloSaidas = sheetSaidas.getCell("B6");
+    tituloSaidas.value = `Entradas do material: ${material}`;
+    tituloSaidas.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
+    tituloSaidas.alignment = { horizontal: "center" };
+    tituloSaidas.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "05314c" },
+    };
+
+    const headerSaidas = sheetSaidas.addRow(["Data", "Destino", "Quantidade"]);
+    headerSaidas.eachCell((cell) => {
+      cell.font = { color: { argb: "FFFFFFFF" }, bold: true };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFB22222" } };
+      cell.alignment = { horizontal: "center" };
+      cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
+    });
+
+    saidas.forEach(s => {
+      const row = sheetSaidas.addRow([new Date(s.data), s.destino, s.quantidade]);
+      row.eachCell((cell, colNumber) => {
+        cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
+        if (colNumber === 1) cell.numFmt = "dd/mm/yyyy";
+      });
+    });
+
+    sheetSaidas.columns.forEach(col => {
+      let maxLength = 0;
+      col.eachCell({ includeEmpty: true }, (cell) => {
+        const columnLength = cell.value ? cell.value.toString().length : 10;
+        if (columnLength > maxLength) maxLength = columnLength;
+      });
+      col.width = maxLength + 2;
+    });
+
+    // ======== Salvar arquivo ========
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `Movimentacoes_${material}.xlsx`);
+  }
+
+
+
   return (
     <>
       <NavBar />
@@ -249,10 +262,10 @@ export function RelatorioMaterial() {
               className={styles.seta}
               onClick={() => navigate("/relatorios")}
             />
-            <h1>RELATÓRIO DE SAÍDAS POR MATERIAIS {anoSelecionado && ` - ${anoSelecionado}`}</h1>
+            <h1>RELATÓRIO DE MOVIMENTAÇÕES {anoSelecionado && ` - ${anoSelecionado}`}</h1>
           </div>
           <div className={styles.filtro}>
-            <select value={filtroMaterial} onChange={(e) => setFiltroMateiral(e.target.value)} className={styles.selectFiltro}>
+            <select value={filtroMaterial} onChange={(e) => setFiltroMaterial(e.target.value)} className={styles.selectFiltro}>
               <option value="todos">Todos os Materias</option>
               <option value="SAE 1020">SAE 1020</option>
               <option value="SAE 1040">SAE 1040</option>
@@ -301,15 +314,14 @@ export function RelatorioMaterial() {
                       return;
                     }
 
-                    gerarRelatorioMaterial(
+                    baixarExcelMaterial(
                       material.material,
-                      MOCK_DADOS_ANO_MATERIAL,
-                      MOCK_DADOS_MENSAL_MATERIAL,
-                      anoSelecionado
+                      MOCK_ENTRADAS,
+                      MOCK_SAIDAS
                     );
                     toastSuccess("Relatório gerado com sucesso!");
-
                   }}
+
                 >
                   Baixar Relatório
                 </button>
