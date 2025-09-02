@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import NavBar from "../../components/NavBar";
 import styles from "./relatorios.module.css";
 import { toastSuccess, toastError, toastInfo } from "../../components/toastify/ToastifyService.jsx";
@@ -7,7 +7,9 @@ import { saveAs } from "file-saver";
 import setaImg from "../../assets/seta.png";
 import setaRightImg from "../../assets/setaRight.png";
 import logoMegaPlate from "../../assets/logo-megaplate.png";
+import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
+import { api } from "../../provider/api.js";
 
 
 // Função para criar lista de anos (ano atual até ano inicial)
@@ -29,6 +31,57 @@ export function Relatorios() {
   const todosAnos = gerarListaAnos(2018);
   const [inicio, setInicio] = useState(0);
   const [anoSelecionado, setAnoSelecionado] = useState(null);
+  const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
+  const [isGestor, setIsGestor] = useState(false);
+  const [ordens, setOrdens] = useState([]);
+  const [estoque, setEstoque] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
+  const [filtroStatus, setFiltroStatus] = useState("todos");
+  const [fade, setFade] = useState(true);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("authToken");
+    if (!token) {
+      navigate("/");
+    } else {
+      const { exp } = jwtDecode(token);
+      if (Date.now() >= exp * 1000) {
+        sessionStorage.removeItem("authToken");
+        navigate("/");
+      } else {
+        setAutenticacaoPassou(true);
+      }
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    setFade(false); // inicia fade out
+    const timeout = setTimeout(() => {
+      setUsuarios([]);
+      buscarOrdensDeCompra();
+      setFade(true); // inicia fade in depois de buscar
+    }, 200); // tempo de fade out antes de buscar
+
+    return () => clearTimeout(timeout);
+  }, [filtroStatus]);
+
+  const buscarOrdensDeCompra = async () => {
+    const token = sessionStorage.getItem("authToken");
+    const cargoUsuario = sessionStorage.getItem("cargoUsuario");
+
+    setIsGestor(Number(cargoUsuario) === 2);
+
+    let url = "/ordemDeCompra";
+
+    try {
+      const res = await api.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setOrdens(res.data);
+    } catch (error) {
+      toastError("Erro ao carregar ordens de compra");
+    }
+  };
 
   const anosVisiveis = todosAnos.slice(inicio, inicio + 7);
 
@@ -89,19 +142,19 @@ export function Relatorios() {
     });
 
     // === Título do relatório ===
-const titleRow = sheet.addRow([]);
-titleRow.height = 30;
-sheet.mergeCells("A6:I6");
+    const titleRow = sheet.addRow([]);
+    titleRow.height = 30;
+    sheet.mergeCells("A6:I6");
 
-const tituloCell = sheet.getCell("A6");
-tituloCell.value = `Relatório de Entradas - ${anoSelecionado}`;
-tituloCell.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } }; // Cor do texto branca
-tituloCell.alignment = { horizontal: "center", vertical: "middle" };
-tituloCell.fill = {
-  type: "pattern",
-  pattern: "solid",
-  fgColor: { argb: "FF05314C" }, // Azul escuro
-};
+    const tituloCell = sheet.getCell("A6");
+    tituloCell.value = `Relatório de Entradas - ${anoSelecionado}`;
+    tituloCell.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } }; // Cor do texto branca
+    tituloCell.alignment = { horizontal: "center", vertical: "middle" };
+    tituloCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF05314C" }, // Azul escuro
+    };
 
 
     // === Cabeçalho da tabela ===
@@ -135,21 +188,28 @@ tituloCell.fill = {
       };
     });
 
+    function formatarDataBrasileira(dataISO) {
+      if (!dataISO) return "N/A";
 
+      // Pega só a parte da data, ignorando a hora
+      const [ano, mes, dia] = dataISO.split("T")[0].split("-");
+
+      return `${dia}/${mes}/${ano}`;
+    }
 
 
     // Adiciona dados
-    ordensDeCompra.forEach((ordem, index) => {
+    ordens.forEach((ordem, index) => {
       const row = sheet.addRow([
-        ordem.data,
-        ordem.fornecedor,
-        ordem.ordemCompra,
-        ordem.produto,
-        ordem.quantidade,
-        ordem.precoUnitario,
-        ordem.precoTotalPedido,
-        ordem.ipi / 100,
-        ordem.valorTotal,
+        formatarDataBrasileira(ordem.dataDeEmissao) || "N/A", // Data de emissão formatada (DD/MM/YYYY)
+        ordem.nomeFornecedor || "Desconhecido", // Nome do fornecedor
+        ordem.id || "N/A", // ID da ordem de compra
+        ordem.descricaoMaterial || "N/A", // Descrição do material
+        ordem.quantidade || 0, // Quantidade solicitada
+        ordem.valorUnitario || 0, // Valor unitário
+        (ordem.valorUnitario) * ordem.quantidade || 0, // Quantidade * Valor unitário
+        (ordem.ipi || 0) / 100, // IPI em formato decimal (ex.: 10% -> 0.10)
+        (ordem.valorUnitario * ordem.quantidade) * (1 + (ordem.ipi || 0) / 100) || 0, // Valor total com IPI
       ]);
 
       // Formatação de células
@@ -180,70 +240,70 @@ tituloCell.fill = {
       col.width = maxLength + 5;
     });
 
-/*     const ultimaLinha = sheet.rowCount + 1;
+    const ultimaLinha = sheet.rowCount + 1;
 
     // Texto "Total:"
-    sheet.getCell(`B${ultimaLinha}`).value = "Total:";
-    sheet.getCell(`B${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheet.getCell(`B${ultimaLinha}`).alignment = { horizontal: "center", vertical: "middle" };
-    sheet.getCell(`B${ultimaLinha}`).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "1D597B" },
-    };
+    // sheet.getCell(`B${ultimaLinha}`).value = "Total:";
+    // sheet.getCell(`B${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    // sheet.getCell(`B${ultimaLinha}`).alignment = { horizontal: "center", vertical: "middle" };
+    // sheet.getCell(`B${ultimaLinha}`).fill = {
+    //   type: "pattern",
+    //   pattern: "solid",
+    //   fgColor: { argb: "1D597B" },
+    // };
 
-    // Soma do Preço unitário (coluna F)
-    sheet.getCell(`D${ultimaLinha}`).value = {
-      formula: `SUM(D10:D${sheet.rowCount})`
-    };
-    sheet.getCell(`D${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheet.getCell(`D${ultimaLinha}`).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "1D597B" },
-    };
-    sheet.getCell(`${ultimaLinha}`).alignment = { horizontal: "center" };
+    // // Soma do Preço unitário (coluna F)
+    // sheet.getCell(`D${ultimaLinha}`).value = {
+    //   formula: `SUM(D10:D${sheet.rowCount})`
+    // };
+    // sheet.getCell(`D${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    // sheet.getCell(`D${ultimaLinha}`).fill = {
+    //   type: "pattern",
+    //   pattern: "solid",
+    //   fgColor: { argb: "1D597B" },
+    // };
+    // sheet.getCell(`${ultimaLinha}`).alignment = { horizontal: "center" };
 
-    sheet.getCell(`D${ultimaLinha}`).value = {
-      formula: `SUM(F10:F${sheet.rowCount})`,
+    // sheet.getCell(`D${ultimaLinha}`).value = {
+    //   formula: `SUM(F10:F${sheet.rowCount})`,
 
-    };
-    sheet.getCell(`F${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheet.getCell(`F${ultimaLinha}`).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "1D597B" },
-    };
-    sheet.getCell(`F${ultimaLinha}`).alignment = { horizontal: "center" };
+    // };
+    // sheet.getCell(`F${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    // sheet.getCell(`F${ultimaLinha}`).fill = {
+    //   type: "pattern",
+    //   pattern: "solid",
+    //   fgColor: { argb: "1D597B" },
+    // };
+    // sheet.getCell(`F${ultimaLinha}`).alignment = { horizontal: "center" };
 
-    // Soma do Preço total do pedido
-    sheet.getCell(`G${ultimaLinha}`).value = {
-      formula: `SUM(G10:G${sheet.rowCount})`,
-      result: 0,
-    };
-    sheet.getCell(`G${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheet.getCell(`G${ultimaLinha}`).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "1D597B" },
-    };
-    sheet.getCell(`G${ultimaLinha}`).alignment = { horizontal: "center" };
+    // // Soma do Preço total do pedido
+    // sheet.getCell(`G${ultimaLinha}`).value = {
+    //   formula: `SUM(G10:G${sheet.rowCount})`,
+    //   result: 0,
+    // };
+    // sheet.getCell(`G${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    // sheet.getCell(`G${ultimaLinha}`).fill = {
+    //   type: "pattern",
+    //   pattern: "solid",
+    //   fgColor: { argb: "1D597B" },
+    // };
+    // sheet.getCell(`G${ultimaLinha}`).alignment = { horizontal: "center" };
 
 
 
-    sheet.getCell(`I${ultimaLinha}`).alignment = { horizontal: "center" };
+    // sheet.getCell(`I${ultimaLinha}`).alignment = { horizontal: "center" };
 
-    sheet.getCell(`I${ultimaLinha}`).value = {
-      formula: `SUM(I10:I${sheet.rowCount})`,
-    };
-    sheet.getCell(`I${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheet.getCell(`I${ultimaLinha}`).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "1D597B" },
-    };
-    sheet.getCell(`I${ultimaLinha}`).alignment = { horizontal: "center" };
- */
+    // sheet.getCell(`I${ultimaLinha}`).value = {
+    //   formula: `SUM(I10:I${sheet.rowCount})`,
+    // };
+    // sheet.getCell(`I${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    // sheet.getCell(`I${ultimaLinha}`).fill = {
+    //   type: "pattern",
+    //   pattern: "solid",
+    //   fgColor: { argb: "1D597B" },
+    // };
+    // sheet.getCell(`I${ultimaLinha}`).alignment = { horizontal: "center" };
+
 
     // Salvar arquivo
     const buffer = await workbook.xlsx.writeBuffer();
@@ -257,7 +317,25 @@ tituloCell.fill = {
 
 
   // ====================== Saídas ======================
+  const [transferencias, setTransferencias] = useState([]);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("authToken");
+    api.get("/transferencias", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => setTransferencias(res.data))
+      .catch(() => toastError("Erro ao carregar transferências"));
+  }, []);
+
   async function baixarExcelSaidas(transferencias) {
+
+    function formatarDataBrasileira(dataISO) {
+      if (!dataISO) return "N/A";
+      const [ano, mes, dia] = dataISO.split("T")[0].split("-");
+      return `${dia}/${mes}/${ano}`;
+    }
+
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Saídas");
 
@@ -323,7 +401,7 @@ tituloCell.fill = {
     });
 
     transferencias.forEach((t, index) => {
-      const row = sheet.addRow([t.data, t.material, t.qtdSolicitada, t.destino]);
+      const row = sheet.addRow([formatarDataBrasileira(t.ultimaMovimentacao), t.tipoMaterial, t.quantidadeTransferida, t.setor]);
       row.getCell(4).numFmt = '"R$"#,##0.00';
 
       if (index % 2 === 0) {
@@ -352,7 +430,7 @@ tituloCell.fill = {
   }
 
   // Exemplo de uso
-  const transferencias = [
+  const transferenciasMock = [
     { data: "8/1/2025", material: "SAE1023", qtdSolicitada: 100, destino: "C1" },
     { data: "8/2/2025", material: "SAE1024", qtdSolicitada: 200, destino: "C2" },
     // ... adicione todos os outros dados aqui
@@ -428,7 +506,7 @@ tituloCell.fill = {
                         toastError("Por favor, selecione um ano antes de baixar o relatório.");
                         return;
                       }
-                      baixarExcelSaidas(transferencias.filter(t => t.data.includes(anoSelecionado)));
+                      baixarExcelSaidas(transferencias.filter(t => t.ultimaMovimentacao.includes(anoSelecionado)));
                       toastSuccess("Relatório gerado com sucesso!");
                     }}
                   >
