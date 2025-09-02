@@ -1,6 +1,6 @@
 import styles from './fornecedor.module.css';
 import logo from '../../assets/logo-megaplate.png';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import NavBar from '../../components/NavBar';
 import { api } from '../../provider/api.js';
 import { useNavigate } from 'react-router-dom';
@@ -19,10 +19,40 @@ export function CadastroFornecedor() {
     telefone: '',
     email: '',
     responsavel: '',
-    cargo: ''
+    cargo: '',
+    ie: ''
   });
 
+  function validarInputsEspeciais() {
+    const sqlPattern =
+      /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
+    if (sqlPattern.test(formData.email) 
+      || sqlPattern.test(formData.razaoSocial) 
+      || sqlPattern.test(formData.nomeFantasia)
+      || sqlPattern.test(formData.endereco)
+      || sqlPattern.test(formData.responsavel)
+      || sqlPattern.test(formData.cargo)) {
+      return false;
+    }
+    if (
+      /<script.*?>.*?<\/script>/gi.test(formData.email) 
+      || /<script.*?>.*?<\/script>/gi.test(formData.razaoSocial)
+      || /<script.*?>.*?<\/script>/gi.test(formData.nomeFantasia)
+      || /<script.*?>.*?<\/script>/gi.test(formData.endereco)
+      || /<script.*?>.*?<\/script>/gi.test(formData.responsavel)
+      || /<script.*?>.*?<\/script>/gi.test(formData.cargo)
+    ) {
+      return false;
+    }
+    return true;
+  }
+
   const cadastrarFornecedor = async () => {
+
+    if (!validarInputsEspeciais()) {
+            return toastError("Por favor não utilizar comandos nos campos");
+          }
+
     if (
       !formData.cnpj ||
       !formData.nomeFantasia ||
@@ -33,7 +63,8 @@ export function CadastroFornecedor() {
       !formData.telefone ||
       !formData.email ||
       !formData.responsavel ||
-      !formData.cargo
+      !formData.cargo ||
+      !formData.ie
     ) {
       toastError("Preencha as informações.");
       return;
@@ -65,6 +96,10 @@ export function CadastroFornecedor() {
       toastError("E-mail inválido.");
       return;
     }
+    if (!validarIe(formData.ie.replace(/\D/g, ''))) {
+      Swal.fire({ title: "Inscrição Estadual inválida", icon: "warning", confirmButtonColor: "#3085d6" });
+      return;
+    }
 
     if (cnpjLimpo.length !== 14 || !validarCNPJ(cnpjLimpo)) {
       toastError("CNPJ inválido.");
@@ -90,14 +125,17 @@ export function CadastroFornecedor() {
       telefone: telefoneSemMascara.trim(),
       email: formData.email.trim(),
       responsavel: formData.responsavel.trim(),
-      cargo: formData.cargo.trim()
+      cargo: formData.cargo.trim(),
+      ie: formData.ie.trim()
     };
 
+    console.log(userData);
     api.post('/fornecedores', userData, {
       headers: {
         'Content-Type': 'application/json'
       }
     }).then((response) => {
+      
       console.log('Resposta do servidor:', response.data);
       toastSuccess("Fornecedor cadastrado com sucesso!");
       setFormData({
@@ -110,7 +148,8 @@ export function CadastroFornecedor() {
         telefone: '',
         email: '',
         responsavel: '',
-        cargo: ''
+        cargo: '',
+        ie: ''
       });
       setProgresso(1);
     }).catch((error) => {
@@ -190,6 +229,11 @@ export function CadastroFornecedor() {
       .slice(0, 9);
   }
 
+  function formatarIE(valor) {
+    return valor.replace(/\D/g, '').slice(0, 12);
+  }
+
+
   function formatarTelefone(valor) {
     const numeros = valor.replace(/\D/g, '');
 
@@ -217,6 +261,19 @@ export function CadastroFornecedor() {
   function validarCNPJ(cnpj) {
     return /^[0-9]{14}$/.test(cnpj);
   }
+
+  function validarIe(ie) {
+    // Permite "ISENTO" (em maiúsculas ou minúsculas)
+    if (!ie) return false;
+    if (ie.toUpperCase() === "ISENTO") return true;
+
+    // Remove caracteres não numéricos
+    const numeros = ie.replace(/\D/g, '');
+
+    // IE geralmente tem entre 8 e 12 dígitos
+    return /^[0-9]{8,12}$/.test(numeros);
+  }
+
 
   function validarTelefone(telefone) {
     const apenasNumeros = telefone.replace(/\D/g, '');
@@ -271,13 +328,161 @@ export function CadastroFornecedor() {
       <section className={styles.material}>
         <div className={styles['bloco-fundo-material']}>
           <div className={styles['tab-container-user']}>
-            <div className={styles.tabActiveMaterial}>Cadastro de Fornecedor</div>
+            <div className={styles.tabActiveMaterial}>CADASTRO DE FORNECEDOR</div>
           </div>
         </div>
         <aside className={styles['aside-material']}>
           <img src={logo} alt="MegaPlate logo" />
         </aside>
         <main className={styles['form-content-material']}>
+          {progresso === 1 && (
+            <>
+              <div className={styles['input-group']}>
+                <p>CNPJ
+                  <span style={{}}> </span>
+                  <span style={{ color: "red" }}>*</span>
+                </p>
+                <input
+                  placeholder="Digite o CNPJ"
+                  type="text"
+                  inputMode='numeric'
+                  value={formData.cnpj}
+                  onChange={(e) => setFormData({ ...formData, cnpj: formatarCNPJ(e.target.value) })}
+                  maxLength={18}
+                />
+              </div>
+              <div className={styles['input-group']}>
+                <p>I.E (Opcional)
+                  <span style={{}}> </span>
+                </p>
+                <input
+                  placeholder="Digite o I.E (Inscrição Estadual)"
+                  type="text"
+                  inputMode='numeric'
+                  value={formData.ie}
+                  onChange={(e) => setFormData({ ...formData, ie: formatarIE (e.target.value) })}
+                  maxLength={12}
+                />
+              </div>
+              <div className={styles['input-group']}>
+                <p>Razão Social
+                  <span style={{}}> </span>
+                  <span style={{ color: "red" }}>*</span>
+                </p>
+                <input
+                  placeholder="Digite a razão social"
+                  type="text"
+                  value={formData.razaoSocial}
+                  onChange={(e) => setFormData({ ...formData, razaoSocial: e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '') })}
+                />
+              </div>
+              <div className={styles['input-group']}>
+                <p>Nome fantasia
+                  <span style={{}}> </span>
+                  <span style={{ color: "red" }}>*</span>
+                </p>
+                <input
+                  placeholder="Digite o Nome Fantasia"
+                  type="text"
+                  value={formData.nomeFantasia}
+                  onChange={(e) => setFormData({ ...formData, nomeFantasia: e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '') })}
+                />
+              </div>
+            </>
+          )}
+
+          {progresso === 2 && (
+            <>
+              <div className={styles['input-group']}>
+                <p>CEP
+                  <span style={{}}> </span>
+                  <span style={{ color: "red" }}>*</span>
+                </p>
+                <input
+                  placeholder="Digite o CEP"
+                  type="text"
+                  inputMode='numeric'
+                  value={formData.cep}
+                  onChange={(e) => setFormData({ ...formData, cep: formatarCEP(e.target.value) })}
+                  maxLength={9}
+                />
+              </div>
+              <div className={styles['input-group']}>
+                <p>Endereço</p>
+                <input
+                  placeholder="Digite o Endereço"
+                  type="text"
+                  value={formData.endereco}
+                  onChange={(e) => setFormData({ ...formData, endereco: e.target.value.replace(/[^a-zA-ZÀ-ÿ0-9\s]/g, '') })}
+                />
+              </div>
+              <div className={styles['input-group']}>
+                <p>Número
+                  <span style={{}}> </span>
+                  <span style={{ color: "red" }}>*</span></p>
+                <input
+                  placeholder="Digite o Número"
+                  type="text"
+                  value={formData.numero}
+                  inputMode='numeric'
+                  onChange={(e) => setFormData({ ...formData, numero: e.target.value.replace(/\D/g, '') })}
+                />
+              </div>
+            </>
+          )}
+
+          {progresso === 3 && (
+            <>
+              <div className={styles['input-group']}>
+                <p>Responsável <span style={{}}> </span>
+                  <span style={{ color: "red" }}>*</span></p>
+                <input
+                  placeholder="Digite o nome do Responsável"
+                  type="text"
+                  inputMode='text'
+                  value={formData.responsavel}
+                  onChange={(e) =>
+                    setFormData({ ...formData, responsavel: e.target.value })}
+                />
+              </div>
+              <div className={styles['input-group']}>
+                <p>Cargo <span style={{}}> </span>
+                  <span style={{ color: "red" }}>*</span></p>
+                <input
+                  placeholder="Digite o cargo do Responsável"
+                  type="text"
+                  inputMode='text'
+                  value={formData.cargo}
+                  onChange={(e) =>
+                    setFormData({ ...formData, cargo: e.target.value })}
+                />
+              </div>
+              <div className={styles['input-group']}>
+                <p>Telefone <span style={{}}> </span>
+                  <span style={{ color: "red" }}>*</span></p>
+                <input
+                  placeholder="Digite o Telefone"
+                  type="text"
+                  inputMode='numeric'
+                  maxLength={15}
+                  value={formData.telefone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, telefone: formatarTelefone(e.target.value) })}
+                />
+              </div>
+              <div className={styles['input-group']}>
+                <p>Email <span style={{}}> </span>
+                  <span style={{ color: "red" }}>*</span></p>
+                <input
+                  placeholder="Digite o Email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+            </>
+          )}
+
           {/* ... mantém os inputs iguais */}
           <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
             {progresso > 1 && (
