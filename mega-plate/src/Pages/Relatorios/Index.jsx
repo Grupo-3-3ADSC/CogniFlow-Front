@@ -180,7 +180,7 @@ tituloCell.fill = {
       col.width = maxLength + 5;
     });
 
-    const ultimaLinha = sheet.rowCount + 1;
+/*     const ultimaLinha = sheet.rowCount + 1;
 
     // Texto "Total:"
     sheet.getCell(`B${ultimaLinha}`).value = "Total:";
@@ -243,7 +243,7 @@ tituloCell.fill = {
       fgColor: { argb: "1D597B" },
     };
     sheet.getCell(`I${ultimaLinha}`).alignment = { horizontal: "center" };
-
+ */
 
     // Salvar arquivo
     const buffer = await workbook.xlsx.writeBuffer();
