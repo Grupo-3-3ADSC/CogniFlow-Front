@@ -240,7 +240,7 @@ export function Relatorios() {
       col.width = maxLength + 5;
     });
 
-    const ultimaLinha = sheet.rowCount + 1;
+/*     const ultimaLinha = sheet.rowCount + 1;
 
     // Texto "Total:"
     // sheet.getCell(`B${ultimaLinha}`).value = "Total:";
@@ -304,6 +304,17 @@ export function Relatorios() {
     // };
     // sheet.getCell(`I${ultimaLinha}`).alignment = { horizontal: "center" };
 
+    sheet.getCell(`I${ultimaLinha}`).value = {
+      formula: `SUM(I10:I${sheet.rowCount})`,
+    };
+    sheet.getCell(`I${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheet.getCell(`I${ultimaLinha}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" },
+    };
+    sheet.getCell(`I${ultimaLinha}`).alignment = { horizontal: "center" };
+ */
 
     // Salvar arquivo
     const buffer = await workbook.xlsx.writeBuffer();

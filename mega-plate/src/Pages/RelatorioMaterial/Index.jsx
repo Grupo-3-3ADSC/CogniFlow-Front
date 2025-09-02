@@ -190,79 +190,82 @@ export function RelatorioMaterial() {
       });
       col.width = maxLength + 2;
     });
+/*     const ultimaLinha = sheetEntradas.rowCount + 1;
 
-     // Texto "Total:"
-    sheet.getCell(`D${ultimaLinha}`).value = "Total:";
-    sheet.getCell(`D${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheet.getCell(`D${ultimaLinha}`).alignment = { horizontal: "center", vertical: "middle" };
-    sheet.getCell(`D${ultimaLinha}`).fill = {
+
+    // Texto "Total:"
+    sheetEntradas.getCell(`B${ultimaLinha}`).value = "Total:";
+    sheetEntradas.getCell(`B${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheetEntradas.getCell(`B${ultimaLinha}`).alignment = { horizontal: "center", vertical: "middle" };
+    sheetEntradas.getCell(`B${ultimaLinha}`).fill = {
       type: "pattern",
       pattern: "solid",
       fgColor: { argb: "1D597B" },
     };
 
-    // Soma do Preço unitário (coluna F)
-    sheet.getCell(`E${ultimaLinha}`).value = {
-      formula: `SUM(E10:E${sheet.rowCount})`
-    };
-    sheet.getCell(`E${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheet.getCell(`E${ultimaLinha}`).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "1D597B" },
-    };
-    sheet.getCell(`F${ultimaLinha}`).alignment = { horizontal: "center" };
-
-    sheet.getCell(`F${ultimaLinha}`).value = {
-      formula: `SUM(F10:F${sheet.rowCount})`,
-
-    };
-    sheet.getCell(`F${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheet.getCell(`F${ultimaLinha}`).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "1D597B" },
-    };
-    sheet.getCell(`F${ultimaLinha}`).alignment = { horizontal: "center" };
-
-    // Soma do Preço total do pedido (coluna H ou J, conforme sua tabela)
-    sheet.getCell(`G${ultimaLinha}`).value = {
-      formula: `SUM(G10:G${sheet.rowCount})`,
+    // Soma da Quantidade (coluna C)
+    sheetEntradas.getCell(`C${ultimaLinha}`).value = {
+      formula: `SUM(D10:D${sheetEntradas.rowCount})`,
       result: 0,
     };
-    sheet.getCell(`G${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheet.getCell(`G${ultimaLinha}`).fill = {
+    sheetEntradas.getCell(`C${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheetEntradas.getCell(`C${ultimaLinha}`).fill = {
       type: "pattern",
       pattern: "solid",
       fgColor: { argb: "1D597B" },
     };
-    sheet.getCell(`G${ultimaLinha}`).alignment = { horizontal: "center" };
+    sheetEntradas.getCell(`C${ultimaLinha}`).alignment = { horizontal: "center" };
 
-
-
-    sheet.getCell(`I${ultimaLinha}`).alignment = { horizontal: "center" };
-
-    sheet.getCell(`I${ultimaLinha}`).value = {
-      formula: `SUM(I10:I${sheet.rowCount})`,
+    // Soma do Preço unitário (coluna D)
+    sheetEntradas.getCell(`D${ultimaLinha}`).value = {
+      formula: `SUM(D10:D${sheetEntradas.rowCount})`,
+      result: 0,
     };
-    sheet.getCell(`I${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheet.getCell(`I${ultimaLinha}`).fill = {
+    sheetEntradas.getCell(`D${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheetEntradas.getCell(`D${ultimaLinha}`).fill = {
       type: "pattern",
       pattern: "solid",
       fgColor: { argb: "1D597B" },
     };
-    sheet.getCell(`I${ultimaLinha}`).alignment = { horizontal: "center" };
+    sheetEntradas.getCell(`D${ultimaLinha}`).alignment = { horizontal: "center" };
 
+
+    // Soma do Preço Total do Pedido (coluna E)
+    sheetEntradas.getCell(`E${ultimaLinha}`).value = {
+      formula: `SUM(E10:E${sheetEntradas.rowCount})`,
+      result: 0,
+    };
+    sheetEntradas.getCell(`E${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheetEntradas.getCell(`E${ultimaLinha}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" },
+    };
+    sheetEntradas.getCell(`E${ultimaLinha}`).alignment = { horizontal: "center" };
+
+    // Soma do Valor Total do Pedido (coluna G)
+    sheetEntradas.getCell(`G${ultimaLinha}`).value = {
+      formula: `SUM(G10:G${sheetEntradas.rowCount})`,
+      result: 0,
+    };
+    sheetEntradas.getCell(`G${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheetEntradas.getCell(`G${ultimaLinha}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "1D597B" },
+    };
+    sheetEntradas.getCell(`G${ultimaLinha}`).alignment = { horizontal: "center" };
+ */
 
     // ======== Aba de Transferências ========
     const sheetSaidas = workbook.addWorksheet("Transferências");
 
-    sheetSaidas.mergeCells("B1:D4");
-    const faixaSaida = sheetSaidas.getCell("B1");
+    sheetSaidas.mergeCells("A1:C4");
+    const faixaSaida = sheetSaidas.getCell("A1");
     faixaSaida.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "1D597B" },
+      fgColor: { argb: "05314C" },
     };
 
     sheetSaidas.addImage(imageId, {
@@ -271,8 +274,8 @@ export function RelatorioMaterial() {
     });
 
     // Título
-    sheetSaidas.mergeCells("B6:D6");
-    const tituloSaidas = sheetSaidas.getCell("B6");
+    sheetSaidas.mergeCells("A6:C6");
+    const tituloSaidas = sheetSaidas.getCell("A6");
     tituloSaidas.value = `Saídas do material: ${material}`;
     tituloSaidas.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
     tituloSaidas.alignment = { horizontal: "center" };
@@ -282,16 +285,23 @@ export function RelatorioMaterial() {
       fgColor: { argb: "FFB22222" },
     };
 
-    const headerS = sheetSaidas.addRow(["Data", "Destino", "Quantidade"]);
+const headerSaidas = sheetSaidas.addRow(["Data", "Destino", "Quantidade"]);
 
-     const headerSaida = sheetSaidas.addRow(headerS);
-
-    headerSaida.eachCell((cell) => {
-      cell.font = { color: { argb: "FFFFFFFF" }, bold: true };
-      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFB22222" } };
-      cell.alignment = { horizontal: "center" };
-      cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
-    });
+headerSaidas.eachCell((cell) => {
+  cell.font = { color: { argb: "FFFFFFFF" }, bold: true };
+  cell.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFB22222" }, // Vermelho
+  };
+  cell.alignment = { horizontal: "center" };
+  cell.border = {
+    top: { style: "thin" },
+    left: { style: "thin" },
+    bottom: { style: "thin" },
+    right: { style: "thin" },
+  };
+});
 
 
     saidas.forEach(s => {
@@ -311,6 +321,32 @@ export function RelatorioMaterial() {
       col.width = maxLength + 2;
     });
 
+/*     const ultimaLinhaS = sheetSaidas.rowCount + 1;
+
+
+     // Texto "Total:"
+    sheetSaidas.getCell(`B${ultimaLinhaS}`).value = "Total:";
+    sheetSaidas.getCell(`B${ultimaLinhaS}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheetSaidas.getCell(`B${ultimaLinhaS}`).alignment = { horizontal: "center", vertical: "middle" };
+    sheetSaidas.getCell(`B${ultimaLinhaS}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFB22222" },
+    };
+
+    // Soma da Quantidade (coluna C)
+    sheetSaidas.getCell(`C${ultimaLinhaS}`).value = {
+      formula: `SUM(C10:C${sheetSaidas.rowCount})`,
+      result: 0,
+    };
+    sheetSaidas.getCell(`C${ultimaLinhaS}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    sheetSaidas.getCell(`C${ultimaLinhaS}`).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFB22222" },
+    };
+    sheetSaidas.getCell(`C${ultimaLinhaS}`).alignment = { horizontal: "center" }; */
+    
     // ======== Salvar arquivo ========
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), `Movimentacoes_${material}.xlsx`);

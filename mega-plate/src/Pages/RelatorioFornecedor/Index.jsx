@@ -8,7 +8,7 @@ import setaRightImg from "../../assets/setaRight.png";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../provider/api.js";
 import ExcelJS from "exceljs";
-import { saveAs } from "file-saver"; 
+import { saveAs } from "file-saver";
 
 
 
@@ -42,85 +42,148 @@ export function RelatorioFornecedor() {
     f.nomeFantasia.toLowerCase().includes(filtroNome.toLowerCase().trim())
   );
 
-// 🔹 Função para gerar Excel
-async function baixarExcelFornecedores(ordensDeCompra, fornecedorSelecionado, anoSelecionado) {
-  const workbook = new ExcelJS.Workbook();
-  const sheet = workbook.addWorksheet("Entradas");
+  // 🔹 Função para gerar Excel
+  async function baixarExcelFornecedores(ordensDeCompra, fornecedorSelecionado, anoSelecionado) {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Entradas");
 
-  const header = [
-    "Data",
-    "Fornecedor",
-    "Ordem de compra",
-    "Produto",
-    "Quantidade solicitada",
-    "Preço unitário",
-    "Preço total do pedido",
-    "IPI",
-    "Valor total",
-  ];
+    const response = await fetch(logoMegaPlate);
+    const blob = await response.blob();
+    const imageBuffer = await blob.arrayBuffer();
 
-  const headerRow = sheet.addRow(header);
+    const imageId = workbook.addImage({
+      buffer: imageBuffer,
+      extension: "png",
+    });
 
-  // Estilo do cabeçalho
-  headerRow.eachCell((cell) => {
-    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-    cell.fill = {
+    // === Faixa azul do topo ===
+    sheetEntradas.mergeCells("A1:G4");
+    const faixa = sheetEntradas.getCell("A1");
+    faixa.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FF2A80B9" }, // azul
+      fgColor: { argb: "05314c" }, // azul médio
     };
-    cell.alignment = { horizontal: "center" };
-    cell.border = {
-      top: { style: "thin" },
-      left: { style: "thin" },
-      bottom: { style: "thin" },
-      right: { style: "thin" },
+
+    // Adiciona logo (colocado dentro da faixa azul)
+    sheetEntradas.addImage(imageId, {
+      tl: { col: 1.2, row: 0.2 }, // canto esquerdo
+      ext: { width: 120, height: 60 },
+    });
+
+    // === Título do relatório ===
+    const titleRow = sheet.addRow([]);
+    titleRow.height = 30;
+    sheet.mergeCells("A6:I6");
+
+    const tituloCell = sheet.getCell("A6");
+    tituloCell.value = `Relatório de Entradas - ${anoSelecionado}`;
+    tituloCell.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } }; // Cor do texto branca
+    tituloCell.alignment = { horizontal: "center", vertical: "middle" };
+    tituloCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF05314C" }, // Azul escuro
     };
-  });
 
-  // Filtra fornecedor
-  const ordensFiltradas = fornecedorSelecionado
-    ? ordensDeCompra.filter((ordem) => ordem.fornecedor === fornecedorSelecionado)
-    : ordensDeCompra;
 
-  ordensFiltradas.forEach((ordem) => {
-    sheet.addRow([
-      ordem.data,
-      ordem.fornecedor,
-      ordem.ordemCompra,
-      ordem.produto,
-      ordem.quantidade,
-      `R$ ${ordem.precoUnitario.toFixed(2).replace(".", ",")}`,
-      `R$ ${ordem.precoTotalPedido.toFixed(2).replace(".", ",")}`,
-      `${ordem.ipi.toFixed(2).replace(".", ",")}%`,
-      `R$ ${ordem.valorTotal.toFixed(2).replace(".", ",")}`,
-    ]);
-  });
+    const header = [
+      "Data",
+      "Fornecedor",
+      "Ordem de compra",
+      "Produto",
+      "Quantidade solicitada",
+      "Preço unitário",
+      "Preço total do pedido",
+      "IPI",
+      "Valor total",
+    ];
 
-  sheet.columns.forEach((col) => (col.width = 20));
+    const headerRow = sheet.addRow(header);
 
-  const buffer = await workbook.xlsx.writeBuffer();
-  saveAs(
-    new Blob([buffer]),
-    `entradas_${fornecedorSelecionado || "todos"}_${anoSelecionado}.xlsx`
-  );
-}
 
-// 🔹 Exemplo de dados mockados (até integrar API de ordens)
-const ordensDeCompra = [
-  { data: "08/01/2025", fornecedor: "ABC", ordemCompra: 1, produto: "SAE1023", quantidade: 30, precoUnitario: 250, precoTotalPedido: 7500, ipi: 10, valorTotal: 8250 },
-  { data: "08/02/2025", fornecedor: "ABC", ordemCompra: 2, produto: "SAE1025", quantidade: 50, precoUnitario: 500, precoTotalPedido: 25000, ipi: 0, valorTotal: 25000 },
-];
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF1D597B" }, // azul do cabeçalho
+      };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
 
-// 🔹 Geração dos anos
-function gerarListaAnos(anoInicial) {
-  const anoAtual = new Date().getFullYear();
-  const anos = [];
-  for (let ano = anoAtual; ano >= anoInicial; ano--) {
-    anos.push(ano);
+
+
+
+    // Adiciona dados
+    ordensDeCompra.forEach((ordem, index) => {
+      const row = sheet.addRow([
+        ordem.data,
+        ordem.fornecedor,
+        ordem.ordemCompra,
+        ordem.produto,
+        ordem.quantidade,
+        ordem.precoUnitario,
+        ordem.precoTotalPedido,
+        ordem.ipi / 100,
+        ordem.valorTotal,
+      ]);
+
+      // Formatação de células
+      row.getCell(6).numFmt = '"R$"#,##0.00';
+      row.getCell(7).numFmt = '"R$"#,##0.00';
+      row.getCell(8).numFmt = '0.00%';
+      row.getCell(9).numFmt = '"R$"#,##0.00';
+
+      // Zebra
+      if (index % 2 === 0) {
+        row.eachCell((cell) => {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFEFEFEF" },
+          };
+        });
+      }
+    });
+
+    // Ajuste automático de largura
+    sheet.columns.forEach((col) => {
+      let maxLength = 0;
+      col.eachCell({ includeEmpty: true }, (cell) => {
+        const cellValue = cell.value ? cell.value.toString() : "";
+        if (cellValue.length > maxLength) maxLength = cellValue.length;
+      });
+      col.width = maxLength + 5;
+    });
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(
+      new Blob([buffer]),
+      `entradas_${fornecedorSelecionado || "todos"}_${anoSelecionado}.xlsx`
+    );
   }
-  return anos;
-}
+
+  // 🔹 Exemplo de dados mockados (até integrar API de ordens)
+  const ordensDeCompra = [
+    { data: "08/01/2025", fornecedor: "ABC", ordemCompra: 1, produto: "SAE1023", quantidade: 30, precoUnitario: 250, precoTotalPedido: 7500, ipi: 10, valorTotal: 8250 },
+    { data: "08/02/2025", fornecedor: "ABC", ordemCompra: 2, produto: "SAE1025", quantidade: 50, precoUnitario: 500, precoTotalPedido: 25000, ipi: 0, valorTotal: 25000 },
+  ];
+
+  // 🔹 Geração dos anos
+  function gerarListaAnos(anoInicial) {
+    const anoAtual = new Date().getFullYear();
+    const anos = [];
+    for (let ano = anoAtual; ano >= anoInicial; ano--) {
+      anos.push(ano);
+    }
+    return anos;
+  }
 
   return (
     <>
