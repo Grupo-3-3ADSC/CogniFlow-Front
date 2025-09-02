@@ -2,7 +2,7 @@
 
 :root {
     --primary-color: #05314C;
-    --secondary-color: #4586AB;
+    --secondary-color: #1D597B;
     --third-color: #1d597b;
 }
 
@@ -37,7 +37,7 @@
     align-items: center;
     width: 216px;
     height: 524px;
-    background-color: var(--secondary-color);
+    background-color:#1D597B;
     border-radius: 20px 0px 0px 20px;
 }
 
