@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import NavBar from "../../components/NavBar.jsx";
 import { toastSuccess, toastError } from "../../components/toastify/ToastifyService.jsx";
 import styles from "./relatorioFornecedor.module.css";
+import logoMegaPlate from '../../assets/logo-megaplate.png';
 import iconBaixar from '../../assets/icon-baixar.png';
 import setaImg from "../../assets/seta.png";
 import setaRightImg from "../../assets/setaRight.png";
@@ -18,6 +19,8 @@ export function RelatorioFornecedor() {
   const [inicio, setInicio] = useState(0);
   const todosAnos = gerarListaAnos(2018);
   const [anoSelecionado, setAnoSelecionado] = useState(null);
+  const [ordensDeCompra, setOrdensDeCompra] = useState([]); // Estado para armazenar as ordens de compra
+
 
   const anosVisiveis = todosAnos.slice(inicio, inicio + 5);
   const avancarAno = () => { if (inicio + 5 < todosAnos.length) setInicio(inicio + 1); };
@@ -43,9 +46,9 @@ export function RelatorioFornecedor() {
   );
 
   // 🔹 Função para gerar Excel
-  async function baixarExcelFornecedores(ordensDeCompra, fornecedorSelecionado, anoSelecionado) {
+  async function baixarExcelFornecedores(ordens, fornecedorSelecionado, anoSelecionado) {
     const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet("Entradas");
+    // const sheet = workbook.addWorksheet("Entradas");
 
     const response = await fetch(logoMegaPlate);
     const blob = await response.blob();
@@ -55,6 +58,8 @@ export function RelatorioFornecedor() {
       buffer: imageBuffer,
       extension: "png",
     });
+
+    const sheetEntradas = workbook.addWorksheet("Entradas");
 
     // === Faixa azul do topo ===
     sheetEntradas.mergeCells("A1:G4");
@@ -72,11 +77,11 @@ export function RelatorioFornecedor() {
     });
 
     // === Título do relatório ===
-    const titleRow = sheet.addRow([]);
+    const titleRow = sheetEntradas.addRow([]);
     titleRow.height = 30;
-    sheet.mergeCells("A6:I6");
+    sheetEntradas.mergeCells("A6:I6");
 
-    const tituloCell = sheet.getCell("A6");
+    const tituloCell = sheetEntradas.getCell("A6");
     tituloCell.value = `Relatório de Entradas - ${anoSelecionado}`;
     tituloCell.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } }; // Cor do texto branca
     tituloCell.alignment = { horizontal: "center", vertical: "middle" };
@@ -99,7 +104,7 @@ export function RelatorioFornecedor() {
       "Valor total",
     ];
 
-    const headerRow = sheet.addRow(header);
+    const headerRow = sheetEntradas.addRow(header);
 
 
     headerRow.eachCell((cell) => {
@@ -119,21 +124,33 @@ export function RelatorioFornecedor() {
     });
 
 
+    function formatarDataBrasileira(dataISO) {
+      if (!dataISO) return "N/A";
 
+      // Pega só a parte da data, ignorando a hora
+      const [ano, mes, dia] = dataISO.split("T")[0].split("-");
+
+      return `${dia}/${mes}/${ano}`;
+    }
 
     // Adiciona dados
-    ordensDeCompra.forEach((ordem, index) => {
-      const row = sheet.addRow([
-        ordem.data,
-        ordem.fornecedor,
-        ordem.ordemCompra,
-        ordem.produto,
-        ordem.quantidade,
-        ordem.precoUnitario,
-        ordem.precoTotalPedido,
-        ordem.ipi / 100,
-        ordem.valorTotal,
+
+
+    ordens.forEach((ordem, index) => {
+      console.log(fornecedoresFiltrados);
+      const row = sheetEntradas.addRow([
+        formatarDataBrasileira(ordem.dataDeEmissao) || "N/A", // Data de emissão formatada (DD/MM/YYYY)
+        ordem.fornecedorId || "Desconhecido", // Nome do fornecedor
+        ordem.id || "N/A", // ID da ordem de compra
+        ordem.descricaoMaterial || "N/A", // Descrição do material
+        ordem.quantidade || 0, // Quantidade solicitada
+        ordem.valorUnitario || 0, // Valor unitário
+        (ordem.valorUnitario) * ordem.quantidade || 0, // Quantidade * Valor unitário
+        (ordem.ipi || 0) / 100, // IPI em formato decimal (ex.: 10% -> 0.10)
+        (ordem.valorUnitario * ordem.quantidade) * (1 + (ordem.ipi || 0) / 100) || 0, // Valor total com IPI
       ]);
+
+
 
       // Formatação de células
       row.getCell(6).numFmt = '"R$"#,##0.00';
@@ -153,8 +170,9 @@ export function RelatorioFornecedor() {
       }
     });
 
+
     // Ajuste automático de largura
-    sheet.columns.forEach((col) => {
+    sheetEntradas.columns.forEach((col) => {
       let maxLength = 0;
       col.eachCell({ includeEmpty: true }, (cell) => {
         const cellValue = cell.value ? cell.value.toString() : "";
@@ -170,10 +188,6 @@ export function RelatorioFornecedor() {
   }
 
   // 🔹 Exemplo de dados mockados (até integrar API de ordens)
-  const ordensDeCompra = [
-    { data: "08/01/2025", fornecedor: "ABC", ordemCompra: 1, produto: "SAE1023", quantidade: 30, precoUnitario: 250, precoTotalPedido: 7500, ipi: 10, valorTotal: 8250 },
-    { data: "08/02/2025", fornecedor: "ABC", ordemCompra: 2, produto: "SAE1025", quantidade: 50, precoUnitario: 500, precoTotalPedido: 25000, ipi: 0, valorTotal: 25000 },
-  ];
 
   // 🔹 Geração dos anos
   function gerarListaAnos(anoInicial) {
@@ -184,6 +198,8 @@ export function RelatorioFornecedor() {
     }
     return anos;
   }
+
+  
 
   return (
     <>
@@ -234,7 +250,7 @@ export function RelatorioFornecedor() {
                   <tr key={fornecedor.id}>
                     <td>
                       <b><h4>FORNECEDOR</h4></b>
-                      <p>ID: {fornecedor.id}</p>
+                      <p>ID: {fornecedor.fornecedorId}</p>
                     </td>
                     <td>
                       <b><h4>NOME FANTASIA</h4></b>
@@ -246,7 +262,7 @@ export function RelatorioFornecedor() {
                     </td>
                     <td>
                       <b><h4>CONTATO</h4></b>
-                      <p>{fornecedor.contato}</p>
+                      <p>{fornecedor.telefone}</p>
                     </td>
                     <td>
                       <button
@@ -255,7 +271,7 @@ export function RelatorioFornecedor() {
                           if (!anoSelecionado) {
                             toastError("Por favor, selecione um ano antes de baixar o relatório."); return;
                           }
-                          baixarExcelFornecedores(ordensDeCompra, fornecedor.nomeFantasia, anoSelecionado);
+                          baixarExcelFornecedores(ordensDoFornecedor, fornecedor.nomeFantasia, anoSelecionado);
                           toastSuccess("Relatório Excel gerado com sucesso!");
                         }}
                       >
