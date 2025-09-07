@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import NavBar from "../../components/NavBar.jsx";
 import { api } from "../../provider/api.js";
-import { toastSuccess, toastError, toastInfo } from "../../components/toastify/ToastifyService.jsx";
+import {
+  toastSuccess,
+  toastError,
+} from "../../components/toastify/ToastifyService.jsx";
 import styles from "./relatorioMaterial.module.css";
 import setaImg from "../../assets/seta.png";
 import setaRightImg from "../../assets/setaRight.png";
@@ -10,22 +13,14 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import logoMegaPlate from "../../assets/logo-megaplate.png";
 
-
-
-
 function gerarListaAnos(anoInicial) {
   const anoAtual = new Date().getFullYear();
   const anos = [];
-
   for (let ano = anoAtual; ano >= anoInicial; ano--) {
     anos.push(ano);
   }
-
   return anos;
 }
-
-
-
 
 export function RelatorioMaterial() {
   const [materiais, setMateriais] = useState([]);
@@ -33,10 +28,10 @@ export function RelatorioMaterial() {
   const [filtroNome, setFiltroNome] = useState("");
   const todosAnos = gerarListaAnos(2018);
   const [inicio, setInicio] = useState(0);
-  const [anoSelecionado, setAnoSelecionado] = useState(null);
+  const [anoSelecionado, setAnoSelecionado] = useState(
+    new Date().getFullYear()
+  );
   const navigate = useNavigate();
-
-
 
   const anosVisiveis = todosAnos.slice(inicio, inicio + 5);
 
@@ -47,105 +42,142 @@ export function RelatorioMaterial() {
     if (inicio > 0) setInicio(inicio - 1);
   };
 
-
-  const MOCK_MODE = true;
-
-  const MOCK_ENTRADAS = [
-    { data: "01/08/2025", fornecedor: "Fornecedor X", quantidade: 50, precoUnitario: 20, total: 1000 },
-    { data: "05/08/2025", fornecedor: "Fornecedor Y", quantidade: 30, precoUnitario: 22, total: 660 }
-  ];
-
-  const MOCK_SAIDAS = [
-    { data: "06/08/2025", destino: "Cliente A", quantidade: 20, mediaPreco: 21, total: 420 },
-    { data: "07/08/2025", destino: "Cliente B", quantidade: 40, mediaPreco: 20, total: 800 }
-  ];
-
-
   const buscarMateriais = async () => {
     try {
-      if (MOCK_MODE) {
-        setMateriais([
-          { id: 1, material: "SAE 1020" },
-          { id: 2, material: "SAE 1040" },
-          { id: 3, material: "HARDOX" },
-        ]);
-        toastInfo("Materiais carregados no modo MOCK."); // opcional para feedback
-      } else {
-        const token = sessionStorage.getItem("authToken");
-        const res = await api.get("/materiais", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setMateriais(res.data);
-        toastSuccess("Materiais carregados com sucesso!");
-      }
+      const token = sessionStorage.getItem("authToken");
+      const res = await api.get("/estoque", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const adaptados = res.data.map((m) => ({
+        id: m.id,
+        material: m.tipoMaterial,
+        quantidade: m.quantidadeAtual,
+        rastreabilidade: m.rastreabilidade,
+      }));
+
+      setMateriais(adaptados);
+      toastSuccess("Materiais carregados com sucesso!");
     } catch (error) {
+      console.error(error);
       toastError("Erro ao carregar materiais");
     }
   };
 
+  const buscarMovimentacoes = async (materialId) => {
+    try {
+      const token = sessionStorage.getItem("authToken");
 
+      // tenta buscar os endpoints normais
+      const [entradasRes, saidasRes] = await Promise.all([
+        api.get(`/ordemDeCompra/material/${materialId}?ano=${anoSelecionado}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        api.get(`/transferencias/material/${materialId}?ano=${anoSelecionado}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
 
+      return {
+        ordens: entradasRes.data || [],
+        transferencias: saidasRes.data || [],
+      };
+    } catch (err) {
+      console.error(
+        "Endpoints específicos falharam, tentando fallback. erro:",
+        err.response?.status || err
+      );
+      try {
+        const ordensRes = await api.get("/ordemDeCompra", {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem("authToken")}`,
+          },
+        });
+        const transferenciasRes = await api.get("/transferencias", {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem("authToken")}`,
+          },
+        });
+
+        const ordens =
+          ordensRes.data?.filter(
+            (o) =>
+              o.tipoMaterial ===
+              materiais.find((m) => m.id === materialId)?.material
+          ) || [];
+        const transferencias =
+          transferenciasRes.data?.filter(
+            (t) =>
+              t.tipoMaterial ===
+              materiais.find((m) => m.id === materialId)?.material
+          ) || [];
+
+        console.log("Fallback ordens:", ordens);
+        console.log("Fallback transferencias:", transferencias);
+
+        return { ordens, transferencias };
+      } catch (err2) {
+        console.error("Erro no fallback:", err2);
+        toastError("Erro ao buscar movimentações");
+        return { ordens: [], transferencias: [] };
+      }
+    }
+  };
 
   useEffect(() => {
     buscarMateriais();
   }, []);
 
-
   const materiaisFiltrados = materiais.filter((m) => {
-    const nomeMatch = (m.material ?? "").toLowerCase().includes(filtroNome.toLowerCase().trim());
-    const tipoMatch = filtroMaterial === "todos" || m.material === filtroMaterial;
+    const nomeMatch = (m.material ?? "")
+      .toLowerCase()
+      .includes(filtroNome.toLowerCase().trim());
+    const tipoMatch =
+      filtroMaterial === "todos" || m.material === filtroMaterial;
     return nomeMatch && tipoMatch;
   });
 
-  async function baixarExcelMaterial(material, entradas, saidas) {
+  const baixarExcelMaterial = async (material, ordens, transferencias) => {
     const workbook = new ExcelJS.Workbook();
 
-    // ======== Aba de Entradas ========
+    // ==================== Aba de Entradas ====================
     const sheetEntradas = workbook.addWorksheet("Entradas");
-
     const response = await fetch(logoMegaPlate);
     const blob = await response.blob();
     const imageBuffer = await blob.arrayBuffer();
-
     const imageId = workbook.addImage({
       buffer: imageBuffer,
       extension: "png",
     });
 
-    // === Faixa azul do topo ===
     sheetEntradas.mergeCells("A1:G4");
-    const faixa = sheetEntradas.getCell("A1");
-    faixa.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "05314c" }, // azul médio
-    };
-
-    // Adiciona logo (colocado dentro da faixa azul)
     sheetEntradas.addImage(imageId, {
-      tl: { col: 1.2, row: 0.2 }, // canto esquerdo
+      tl: { col: 1.2, row: 0.2 },
       ext: { width: 120, height: 60 },
     });
 
-    // Título
     sheetEntradas.mergeCells("A6:G6");
-    const tituloEntradas = sheetEntradas.getCell("A6");
-    tituloEntradas.value = `Entradas do material: ${material}`;
-    tituloEntradas.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
-    tituloEntradas.alignment = { horizontal: "center" };
-    tituloEntradas.fill = {
+    const titulo = sheetEntradas.getCell("A6");
+    titulo.value = `Entradas do material: ${material}`;
+    titulo.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
+    titulo.alignment = { horizontal: "center" };
+    titulo.fill = {
       type: "pattern",
       pattern: "solid",
       fgColor: { argb: "05314c" },
     };
 
-    // Cabeçalho
-    const header = ["Data", "Fornecedor", "Quantidade", "Preço Unitário", "Preço Total do Pedido", "IPI", " Valor Total"]
-
-    const headerEntradas = sheetEntradas.addRow(header);
-
-
-    headerEntradas.eachCell((cell) => {
+    const header = [
+      "Data",
+      "Fornecedor",
+      "Quantidade",
+      "Preço Unitário",
+      "Preço Total do Pedido",
+      "IPI",
+      "Valor Total",
+    ];
+    const headerRow = sheetEntradas.addRow(header);
+    headerRow.eachCell((cell) => {
       cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
       cell.fill = {
         type: "pattern",
@@ -161,198 +193,98 @@ export function RelatorioMaterial() {
       };
     });
 
-    entradas.forEach((e) => {
+    ordens.forEach((ordem) => {
       const row = sheetEntradas.addRow([
-        new Date(e.data),
-        e.fornecedor,
-        e.quantidade,
-        e.precoUnitario,
-        e.precoTotalPedido,
-        e.ipi,
-        e.valorTotal
+        new Date(ordem.dataDeEmissao),
+        ordem.nomeFornecedor || "Desconhecido",
+        ordem.quantidade || 0,
+        ordem.valorUnitario || 0,
+        (ordem.valorUnitario || 0) * (ordem.quantidade || 0),
+        (ordem.ipi || 0) / 100,
+        (ordem.valorUnitario || 0) *
+          (ordem.quantidade || 0) *
+          (1 + (ordem.ipi || 0) / 100),
       ]);
 
       row.eachCell((cell, colNumber) => {
-        cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
-
-        if (colNumber === 1) cell.numFmt = "dd/mm/yyyy"; // Data
-        if (colNumber === 4 || colNumber === 5 || colNumber === 7) cell.numFmt = '"R$"#,##0.00';
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+        if (colNumber === 1) cell.numFmt = "dd/mm/yyyy";
+        if ([4, 5, 7].includes(colNumber)) cell.numFmt = '"R$"#,##0.00';
         if (colNumber === 6) cell.numFmt = "0.00%";
       });
     });
 
-    // Ajuste de largura
-    sheetEntradas.columns.forEach(col => {
+    sheetEntradas.columns.forEach((col) => {
       let maxLength = 0;
       col.eachCell({ includeEmpty: true }, (cell) => {
-        const columnLength = cell.value ? cell.value.toString().length : 10;
-        if (columnLength > maxLength) maxLength = columnLength;
+        maxLength = Math.max(maxLength, cell.value?.toString().length || 10);
       });
       col.width = maxLength + 2;
     });
-/*     const ultimaLinha = sheetEntradas.rowCount + 1;
 
-
-    // Texto "Total:"
-    sheetEntradas.getCell(`B${ultimaLinha}`).value = "Total:";
-    sheetEntradas.getCell(`B${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheetEntradas.getCell(`B${ultimaLinha}`).alignment = { horizontal: "center", vertical: "middle" };
-    sheetEntradas.getCell(`B${ultimaLinha}`).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "1D597B" },
-    };
-
-    // Soma da Quantidade (coluna C)
-    sheetEntradas.getCell(`C${ultimaLinha}`).value = {
-      formula: `SUM(D10:D${sheetEntradas.rowCount})`,
-      result: 0,
-    };
-    sheetEntradas.getCell(`C${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheetEntradas.getCell(`C${ultimaLinha}`).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "1D597B" },
-    };
-    sheetEntradas.getCell(`C${ultimaLinha}`).alignment = { horizontal: "center" };
-
-    // Soma do Preço unitário (coluna D)
-    sheetEntradas.getCell(`D${ultimaLinha}`).value = {
-      formula: `SUM(D10:D${sheetEntradas.rowCount})`,
-      result: 0,
-    };
-    sheetEntradas.getCell(`D${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheetEntradas.getCell(`D${ultimaLinha}`).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "1D597B" },
-    };
-    sheetEntradas.getCell(`D${ultimaLinha}`).alignment = { horizontal: "center" };
-
-
-    // Soma do Preço Total do Pedido (coluna E)
-    sheetEntradas.getCell(`E${ultimaLinha}`).value = {
-      formula: `SUM(E10:E${sheetEntradas.rowCount})`,
-      result: 0,
-    };
-    sheetEntradas.getCell(`E${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheetEntradas.getCell(`E${ultimaLinha}`).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "1D597B" },
-    };
-    sheetEntradas.getCell(`E${ultimaLinha}`).alignment = { horizontal: "center" };
-
-    // Soma do Valor Total do Pedido (coluna G)
-    sheetEntradas.getCell(`G${ultimaLinha}`).value = {
-      formula: `SUM(G10:G${sheetEntradas.rowCount})`,
-      result: 0,
-    };
-    sheetEntradas.getCell(`G${ultimaLinha}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheetEntradas.getCell(`G${ultimaLinha}`).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "1D597B" },
-    };
-    sheetEntradas.getCell(`G${ultimaLinha}`).alignment = { horizontal: "center" };
- */
-
-    // ======== Aba de Transferências ========
+    // ==================== Aba de Saídas ====================
     const sheetSaidas = workbook.addWorksheet("Transferências");
-
     sheetSaidas.mergeCells("A1:C4");
-    const faixaSaida = sheetSaidas.getCell("A1");
-    faixaSaida.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "05314C" },
-    };
-
     sheetSaidas.addImage(imageId, {
       tl: { col: 1.2, row: 0.2 },
       ext: { width: 120, height: 60 },
     });
 
-    // Título
     sheetSaidas.mergeCells("A6:C6");
-    const tituloSaidas = sheetSaidas.getCell("A6");
-    tituloSaidas.value = `Saídas do material: ${material}`;
-    tituloSaidas.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
-    tituloSaidas.alignment = { horizontal: "center" };
-    tituloSaidas.fill = {
+    const tituloSaida = sheetSaidas.getCell("A6");
+    tituloSaida.value = `Saídas do material: ${material}`;
+    tituloSaida.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
+    tituloSaida.alignment = { horizontal: "center" };
+    tituloSaida.fill = {
       type: "pattern",
       pattern: "solid",
       fgColor: { argb: "FFB22222" },
     };
 
-const headerSaidas = sheetSaidas.addRow(["Data", "Destino", "Quantidade"]);
+    const headerSaida = sheetSaidas.addRow(["Data", "Destino", "Quantidade"]);
+    headerSaida.eachCell((cell) => {
+      cell.font = { color: { argb: "FFFFFFFF" }, bold: true };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFB22222" },
+      };
+      cell.alignment = { horizontal: "center" };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
 
-headerSaidas.eachCell((cell) => {
-  cell.font = { color: { argb: "FFFFFFFF" }, bold: true };
-  cell.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FFB22222" }, // Vermelho
-  };
-  cell.alignment = { horizontal: "center" };
-  cell.border = {
-    top: { style: "thin" },
-    left: { style: "thin" },
-    bottom: { style: "thin" },
-    right: { style: "thin" },
-  };
-});
-
-
-    saidas.forEach(s => {
-      const row = sheetSaidas.addRow([new Date(s.data), s.destino, s.quantidade]);
+    transferencias.forEach((t) => {
+      const row = sheetSaidas.addRow([
+        new Date(t.ultimaMovimentacao),
+        t.setor || t.destino,
+        t.quantidadeTransferida || t.quantidade,
+      ]);
       row.eachCell((cell, colNumber) => {
-        cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
         if (colNumber === 1) cell.numFmt = "dd/mm/yyyy";
       });
     });
 
-    sheetSaidas.columns.forEach(col => {
+    sheetSaidas.columns.forEach((col) => {
       let maxLength = 0;
       col.eachCell({ includeEmpty: true }, (cell) => {
-        const columnLength = cell.value ? cell.value.toString().length : 10;
-        if (columnLength > maxLength) maxLength = columnLength;
+        maxLength = Math.max(maxLength, cell.value?.toString().length || 10);
       });
       col.width = maxLength + 2;
     });
 
-/*     const ultimaLinhaS = sheetSaidas.rowCount + 1;
-
-
-     // Texto "Total:"
-    sheetSaidas.getCell(`B${ultimaLinhaS}`).value = "Total:";
-    sheetSaidas.getCell(`B${ultimaLinhaS}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheetSaidas.getCell(`B${ultimaLinhaS}`).alignment = { horizontal: "center", vertical: "middle" };
-    sheetSaidas.getCell(`B${ultimaLinhaS}`).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FFB22222" },
-    };
-
-    // Soma da Quantidade (coluna C)
-    sheetSaidas.getCell(`C${ultimaLinhaS}`).value = {
-      formula: `SUM(C10:C${sheetSaidas.rowCount})`,
-      result: 0,
-    };
-    sheetSaidas.getCell(`C${ultimaLinhaS}`).font = { bold: true, color: { argb: "FFFFFFFF" } };
-    sheetSaidas.getCell(`C${ultimaLinhaS}`).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FFB22222" },
-    };
-    sheetSaidas.getCell(`C${ultimaLinhaS}`).alignment = { horizontal: "center" }; */
-    
-    // ======== Salvar arquivo ========
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), `Movimentacoes_${material}.xlsx`);
-  }
-
-
+  };
 
   return (
     <>
@@ -366,20 +298,28 @@ headerSaidas.eachCell((cell) => {
               className={styles.seta}
               onClick={() => navigate("/relatorios")}
             />
-            <h1>RELATÓRIO DE MOVIMENTAÇÕES {anoSelecionado && ` - ${anoSelecionado}`}</h1>
+            <h1>
+              RELATÓRIO DE MOVIMENTAÇÕES{" "}
+              {anoSelecionado && ` - ${anoSelecionado}`}
+            </h1>
           </div>
-          <div className={styles.filtro}>
-            <select value={filtroMaterial} onChange={(e) => setFiltroMaterial(e.target.value)} className={styles.selectFiltro}>
-              <option value="todos">Todos os Materias</option>
-              <option value="SAE 1020">SAE 1020</option>
-              <option value="SAE 1040">SAE 1040</option>
-              <option value="HARDOX">HARDOX</option>
-            </select>
 
+          <div className={styles.filtro}>
+            <select
+              value={filtroMaterial}
+              onChange={(e) => setFiltroMaterial(e.target.value)}
+              className={styles.selectFiltro}
+            >
+            <option value="todos">Todos os Materias</option>
+              {materiais.map((m) => (
+                <option key={m.id} value={m.material}>
+                  {m.material}
+                </option>
+              ))}
+            </select>
 
             <input
               type="text"
-              id="filtro-nome"
               placeholder="Digite o nome do material..."
               value={filtroNome}
               onChange={(e) => setFiltroNome(e.target.value)}
@@ -388,13 +328,29 @@ headerSaidas.eachCell((cell) => {
 
             <div className={styles.filtroAno}>
               <div className={styles.anoContent}>
-                <img src={setaImg} alt="seta esquerda" className={styles.setaAno} onClick={voltarAno} />
+                <img
+                  src={setaImg}
+                  alt="seta esquerda"
+                  className={styles.setaAno}
+                  onClick={voltarAno}
+                />
                 {anosVisiveis.map((ano) => (
-                  <div key={ano} className={`${styles.ano} ${anoSelecionado === ano ? styles.ativo : ""}`} onClick={() => setAnoSelecionado(ano)}>
+                  <div
+                    key={ano}
+                    className={`${styles.ano} ${
+                      anoSelecionado === ano ? styles.ativo : ""
+                    }`}
+                    onClick={() => setAnoSelecionado(ano)}
+                  >
                     {ano}
                   </div>
                 ))}
-                <img src={setaRightImg} alt="seta direita" className={styles.setaAno} onClick={avancarAno} />
+                <img
+                  src={setaRightImg}
+                  alt="seta direita"
+                  className={styles.setaAno}
+                  onClick={avancarAno}
+                />
               </div>
             </div>
           </div>
@@ -407,38 +363,43 @@ headerSaidas.eachCell((cell) => {
             {materiaisFiltrados.map((material) => (
               <div key={material.id} className={styles.cardMaterial}>
                 <div className={styles.info}>
-                  <p><b>Material</b></p>
-                  <p>#{material.id} - {material.material}</p>
+                  <p>
+                    <b>Material</b>
+                  </p>
+                  <p>
+                    #{material.id} - {material.material}
+                  </p>
                 </div>
                 <button
                   className={styles.btnBaixar}
-                  onClick={() => {
-                    if (!anoSelecionado) {
-                      toastError("Por favor, selecione um ano antes de baixar o relatório.");
-                      return;
-                    }
+                  onClick={async () => {
+                    if (!anoSelecionado)
+                      return toastError(
+                        "Selecione um ano antes de baixar o relatório."
+                      );
 
-                    baixarExcelMaterial(
+                    const { ordens, transferencias } =
+                      await buscarMovimentacoes(material.id);
+                    await baixarExcelMaterial(
                       material.material,
-                      MOCK_ENTRADAS,
-                      MOCK_SAIDAS
+                      ordens,
+                      transferencias
                     );
                     toastSuccess("Relatório gerado com sucesso!");
                   }}
-
                 >
                   Baixar Relatório
                 </button>
-
               </div>
             ))}
 
             {materiaisFiltrados.length === 0 && (
-              <p className={styles.mensagemVazia}>Nenhum material encontrado.</p>
+              <p className={styles.mensagemVazia}>
+                Nenhum material encontrado.
+              </p>
             )}
           </div>
         </div>
-
       </div>
     </>
   );
