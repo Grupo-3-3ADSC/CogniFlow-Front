@@ -20,33 +20,39 @@ export function RelatorioFornecedor() {
   const todosAnos = gerarListaAnos(2018);
   const [anoSelecionado, setAnoSelecionado] = useState(null);
   const [ordensDeCompra, setOrdensDeCompra] = useState([]); // Estado para armazenar as ordens de compra
-
-
+  const [fornecedorSelecionado, setFornecedorSelecionado] = useState(null);
   const anosVisiveis = todosAnos.slice(inicio, inicio + 5);
   const avancarAno = () => { if (inicio + 5 < todosAnos.length) setInicio(inicio + 1); };
   const voltarAno = () => { if (inicio > 0) setInicio(inicio - 1); };
-
   const navigate = useNavigate();
 
-  function getFornecedores() {
+  async function buscarFornecedores() {
     const token = sessionStorage.getItem("authToken");
-    api
-      .get("/fornecedores", { headers: { Authorization: `Bearer ${token}` } })
-      .then((resposta) => setFornecedores(resposta.data))
-      .catch((erro) => {
-        toastError("Erro ao buscar fornecedores");
-        console.error(erro);
-      });
+    const res = await api.get("/fornecedores", { headers: { Authorization: `Bearer ${token}` } });
+    return res.data;
   }
 
-  useEffect(() => { getFornecedores(); }, []);
+  async function buscarOrdensDeCompra(fornecedorId, anoSelecionado) {
+    const token = sessionStorage.getItem("authToken");
+    const res = await api.get(`/ordemDeCompra/relatorioFornecedor/${fornecedorId}?ano=${anoSelecionado}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
+  }
+
+
+  useEffect(() => {
+    buscarFornecedores().then(data => setFornecedores(data));
+  }, []);
 
   const fornecedoresFiltrados = fornecedores.filter(f =>
     f.nomeFantasia.toLowerCase().includes(filtroNome.toLowerCase().trim())
   );
 
   // 🔹 Função para gerar Excel
-  async function baixarExcelFornecedores(ordens, fornecedorSelecionado, anoSelecionado) {
+  async function baixarExcelFornecedores(ordens, anoSelecionado) {
+    if (!ordens || ordens.length === 0) return;
+
     const workbook = new ExcelJS.Workbook();
     // const sheet = workbook.addWorksheet("Entradas");
 
@@ -140,7 +146,7 @@ export function RelatorioFornecedor() {
       console.log(fornecedoresFiltrados);
       const row = sheetEntradas.addRow([
         formatarDataBrasileira(ordem.dataDeEmissao) || "N/A", // Data de emissão formatada (DD/MM/YYYY)
-        ordem.fornecedorId || "Desconhecido", // Nome do fornecedor
+        ordem.fornecedor?.nomeFantasia || "Desconhecido", // Nome do fornecedor
         ordem.id || "N/A", // ID da ordem de compra
         ordem.descricaoMaterial || "N/A", // Descrição do material
         ordem.quantidade || 0, // Quantidade solicitada
@@ -199,7 +205,7 @@ export function RelatorioFornecedor() {
     return anos;
   }
 
-  
+
 
   return (
     <>
@@ -247,7 +253,7 @@ export function RelatorioFornecedor() {
             <table className={styles.tabela}>
               <tbody>
                 {fornecedoresFiltrados.map((fornecedor) => (
-                  <tr key={fornecedor.id}>
+                  <tr key={fornecedor.fornecedorId}>
                     <td>
                       <b><h4>FORNECEDOR</h4></b>
                       <p>ID: {fornecedor.fornecedorId}</p>
@@ -267,11 +273,20 @@ export function RelatorioFornecedor() {
                     <td>
                       <button
                         className={styles.baixar}
-                        onClick={() => {
+                        onClick={async () => {
                           if (!anoSelecionado) {
-                            toastError("Por favor, selecione um ano antes de baixar o relatório."); return;
+                            toastError("Por favor, selecione um ano antes de baixar o relatório.");
+                            return;
                           }
-                          baixarExcelFornecedores(ordensDoFornecedor, fornecedor.nomeFantasia, anoSelecionado);
+                          
+                          const ordens = await buscarOrdensDeCompra(fornecedor.fornecedorId, anoSelecionado);
+
+                          if (!ordens || ordens.length === 0) {
+                            toastError("Nenhuma ordem encontrada para este fornecedor neste ano.");
+                            return;
+                          }
+
+                          await baixarExcelFornecedores(ordens, anoSelecionado);
                           toastSuccess("Relatório Excel gerado com sucesso!");
                         }}
                       >
