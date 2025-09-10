@@ -77,11 +77,16 @@ export function Relatorios() {
       const res = await api.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      console.log("Res da API ordens:", res.data); // <-- debug aqui
+
       setOrdens(res.data);
     } catch (error) {
+      console.error("Erro ao carregar ordens de compra:", error);
       toastError("Erro ao carregar ordens de compra");
     }
   };
+
 
   const anosVisiveis = todosAnos.slice(inicio, inicio + 7);
 
@@ -204,7 +209,7 @@ export function Relatorios() {
         formatarDataBrasileira(ordem.dataDeEmissao) || "N/A", // Data de emissão formatada (DD/MM/YYYY)
         ordem.nomeFornecedor || "Desconhecido", // Nome do fornecedor
         ordem.id || "N/A", // ID da ordem de compra
-        ordem.descricaoMaterial || "N/A", // Descrição do material
+        ordem.tipoMaterial, // Descrição do material
         ordem.quantidade || 0, // Quantidade solicitada
         ordem.valorUnitario || 0, // Valor unitário
         (ordem.valorUnitario) * ordem.quantidade || 0, // Quantidade * Valor unitário
@@ -486,10 +491,10 @@ export function Relatorios() {
                         return;
 
                       }
-                      baixarExcelEntradas(ordensDeCompra.filter(o => {
-                        const ano = o.data.split("/")[2]; // pega "2025"
+                      baixarExcelEntradas (console.log ("Ordens filtradas para Excel:", ordens.filter(o => {
+                        const ano = o.prazoEntrega.split("-")[0]; // "2025" de "2025-07-26"
                         return ano === String(anoSelecionado);
-                      }));
+                      })));
                       toastSuccess("Relatório gerado com sucesso!");
                     }}
                   >

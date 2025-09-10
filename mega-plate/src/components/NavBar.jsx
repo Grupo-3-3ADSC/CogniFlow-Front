@@ -178,7 +178,7 @@ const NavBar = () => {
               <ul className="submenu-list">
                 <li onClick={() => navigate('/HistoricoOrdemDeCompra')}>Histórico de Ordem de Compra</li>
 
-                <li onClick={() => navigate('/HistoricoTranferencias')}>Histórico de Transferências</li>
+                <li onClick={() => navigate('/HistoricoTransferencia')}>Histórico de Transferências</li>
               </ul>
             )}
           </ul>
