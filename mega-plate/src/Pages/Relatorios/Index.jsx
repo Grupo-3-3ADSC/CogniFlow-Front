@@ -30,7 +30,9 @@ export function Relatorios() {
   const [filtroRelatorio, setFiltroRelatorio] = useState("todos");
   const todosAnos = gerarListaAnos(2018);
   const [inicio, setInicio] = useState(0);
-  const [anoSelecionado, setAnoSelecionado] = useState(null);
+  const [anoSelecionado, setAnoSelecionado] = useState(
+      new Date().getFullYear()
+    );
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
   const [isGestor, setIsGestor] = useState(false);
   const [ordens, setOrdens] = useState([]);
@@ -115,7 +117,7 @@ export function Relatorios() {
 
   const relatoriosFiltrados = listaRelatorios.filter(r => filtroRelatorio === "todos" || r.tipo === filtroRelatorio);
 
-  async function baixarExcelEntradas(ordensDeCompra) {
+  async function baixarExcelEntradas(ordens) {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Entradas");
 
@@ -209,7 +211,7 @@ export function Relatorios() {
         formatarDataBrasileira(ordem.dataDeEmissao) || "N/A", // Data de emissão formatada (DD/MM/YYYY)
         ordem.nomeFornecedor || "Desconhecido", // Nome do fornecedor
         ordem.id || "N/A", // ID da ordem de compra
-        ordem.tipoMaterial, // Descrição do material
+        ordem.tipoMaterial || "N/A", // Descrição do material
         ordem.quantidade || 0, // Quantidade solicitada
         ordem.valorUnitario || 0, // Valor unitário
         (ordem.valorUnitario) * ordem.quantidade || 0, // Quantidade * Valor unitário
@@ -491,10 +493,10 @@ export function Relatorios() {
                         return;
 
                       }
-                      baixarExcelEntradas (console.log ("Ordens filtradas para Excel:", ordens.filter(o => {
+                      baixarExcelEntradas ( ordens.filter(o => {
                         const ano = o.prazoEntrega.split("-")[0]; // "2025" de "2025-07-26"
                         return ano === String(anoSelecionado);
-                      })));
+                      }));
                       toastSuccess("Relatório gerado com sucesso!");
                     }}
                   >

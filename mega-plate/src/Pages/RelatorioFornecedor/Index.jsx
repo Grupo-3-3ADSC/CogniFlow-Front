@@ -18,7 +18,9 @@ export function RelatorioFornecedor() {
   const [filtroNome, setFiltroNome] = useState("");
   const [inicio, setInicio] = useState(0);
   const todosAnos = gerarListaAnos(2018);
-  const [anoSelecionado, setAnoSelecionado] = useState(null);
+  const [anoSelecionado, setAnoSelecionado] = useState(
+      new Date().getFullYear()
+    );
   const [ordensDeCompra, setOrdensDeCompra] = useState([]); // Estado para armazenar as ordens de compra
   const [fornecedorSelecionado, setFornecedorSelecionado] = useState(null);
   const anosVisiveis = todosAnos.slice(inicio, inicio + 5);
