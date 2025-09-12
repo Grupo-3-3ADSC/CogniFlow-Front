@@ -12,6 +12,8 @@ import { useNavigate } from "react-router-dom";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import logoMegaPlate from "../../assets/logo-megaplate.png";
+import { jwtDecode } from "jwt-decode";
+
 
 function gerarListaAnos(anoInicial) {
   const anoAtual = new Date().getFullYear();
@@ -22,18 +24,33 @@ function gerarListaAnos(anoInicial) {
   return anos;
 }
 
+// ... (imports e funções auxiliares iguais)
+
 export function RelatorioMaterial() {
   const [materiais, setMateriais] = useState([]);
   const [filtroMaterial, setFiltroMaterial] = useState("todos");
   const [filtroNome, setFiltroNome] = useState("");
+   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
   const todosAnos = gerarListaAnos(2018);
   const [inicio, setInicio] = useState(0);
-  const [anoSelecionado, setAnoSelecionado] = useState(
-    new Date().getFullYear()
-  );
+  const [anoSelecionado, setAnoSelecionado] = useState(new Date().getFullYear());
   const navigate = useNavigate();
-
   const anosVisiveis = todosAnos.slice(inicio, inicio + 5);
+
+ useEffect(() => {
+    const token = sessionStorage.getItem("authToken");
+    if (!token) {
+      navigate("/");
+    } else {
+      const { exp } = jwtDecode(token);
+      if (Date.now() >= exp * 1000) {
+        sessionStorage.removeItem("authToken");
+        navigate("/");
+      } else {
+        setAutenticacaoPassou(true);
+      }
+    }
+  }, [navigate]);
 
   const avancarAno = () => {
     if (inicio + 5 < todosAnos.length) setInicio(inicio + 1);
@@ -49,33 +66,37 @@ export function RelatorioMaterial() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const adaptados = res.data.map((m) => ({
+      const adaptados = (res.data || []).map((m) => ({
         id: m.id,
-        material: m.tipoMaterial,
-        quantidade: m.quantidadeAtual,
-        rastreabilidade: m.rastreabilidade,
+        material: m.tipoMaterial ?? "Não informado",
+        quantidade: m.quantidadeAtual ?? 0,
+        rastreabilidade: m.rastreabilidade ?? "-",
       }));
 
       setMateriais(adaptados);
-      toastSuccess("Materiais carregados com sucesso!");
+
     } catch (error) {
       console.error(error);
       toastError("Erro ao carregar materiais");
     }
   };
 
-  const buscarMovimentacoes = async (materialId) => {
+  const buscarMovimentacoes = async (material) => {
     try {
       const token = sessionStorage.getItem("authToken");
-
-      // tenta buscar os endpoints normais
       const [entradasRes, saidasRes] = await Promise.all([
-        api.get(`/ordemDeCompra/material/${materialId}?ano=${anoSelecionado}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        api.get(`/transferencias/material/${materialId}?ano=${anoSelecionado}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+        api.get(
+          `/ordemDeCompra/material/${material.id}?ano=${anoSelecionado}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        ),
+        api.get(
+          `/transferencias/material/${material.material}?ano=${anoSelecionado}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        ),
       ]);
 
       return {
@@ -84,9 +105,10 @@ export function RelatorioMaterial() {
       };
     } catch (err) {
       console.error(
-        "Endpoints específicos falharam, tentando fallback. erro:",
+        "Endpoints específicos falharam, tentando fallback:",
         err.response?.status || err
       );
+
       try {
         const ordensRes = await api.get("/ordemDeCompra", {
           headers: {
@@ -99,21 +121,24 @@ export function RelatorioMaterial() {
           },
         });
 
-        const ordens =
-          ordensRes.data?.filter(
-            (o) =>
-              o.tipoMaterial ===
-              materiais.find((m) => m.id === materialId)?.material
-          ) || [];
-        const transferencias =
-          transferenciasRes.data?.filter(
-            (t) =>
-              t.tipoMaterial ===
-              materiais.find((m) => m.id === materialId)?.material
-          ) || [];
+        const materialSelecionado = materiais.find(
+          (m) => m.id === material.id
+        )?.material;
 
-        console.log("Fallback ordens:", ordens);
-        console.log("Fallback transferencias:", transferencias);
+        const filtrarPorAno = (data) =>
+          data ? new Date(data).getFullYear() === anoSelecionado : false;
+
+        const ordens = (ordensRes.data || []).filter(
+          (o) =>
+            o.tipoMaterial === materialSelecionado &&
+            filtrarPorAno(o.dataDeEmissao)
+        );
+
+        const transferencias = (transferenciasRes.data || []).filter(
+          (t) =>
+            t.tipoMaterial === materialSelecionado &&
+            filtrarPorAno(t.ultimaMovimentacao)
+        );
 
         return { ordens, transferencias };
       } catch (err2) {
@@ -137,10 +162,14 @@ export function RelatorioMaterial() {
     return nomeMatch && tipoMatch;
   });
 
-  const baixarExcelMaterial = async (material, ordens, transferencias) => {
+  const baixarExcelMaterial = async (
+    material,
+    ordens = [],
+    transferencias = []
+  ) => {
     const workbook = new ExcelJS.Workbook();
 
-    // ==================== Aba de Entradas ====================
+    // --- Entradas ---
     const sheetEntradas = workbook.addWorksheet("Entradas");
     const response = await fetch(logoMegaPlate);
     const blob = await response.blob();
@@ -150,7 +179,14 @@ export function RelatorioMaterial() {
       extension: "png",
     });
 
+    // Entradas
     sheetEntradas.mergeCells("A1:G4");
+    const faixaEntrada = sheetEntradas.getCell("A1");
+    faixaEntrada.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF05314C" }, // azul
+    };
     sheetEntradas.addImage(imageId, {
       tl: { col: 1.2, row: 0.2 },
       ext: { width: 120, height: 60 },
@@ -158,13 +194,13 @@ export function RelatorioMaterial() {
 
     sheetEntradas.mergeCells("A6:G6");
     const titulo = sheetEntradas.getCell("A6");
-    titulo.value = `Entradas do material: ${material}`;
+    titulo.value = `Entradas do material: ${material ?? "Não informado"}`;
     titulo.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
     titulo.alignment = { horizontal: "center" };
     titulo.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "05314c" },
+      fgColor: { argb: "FF05314C" },
     };
 
     const header = [
@@ -182,7 +218,7 @@ export function RelatorioMaterial() {
       cell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "1D597B" },
+        fgColor: { argb: "FF05314C" },
       };
       cell.alignment = { horizontal: "center", vertical: "middle" };
       cell.border = {
@@ -193,9 +229,10 @@ export function RelatorioMaterial() {
       };
     });
 
-    ordens.forEach((ordem) => {
+    // --- Entradas ---
+    (ordens || []).forEach((ordem, index) => {
       const row = sheetEntradas.addRow([
-        new Date(ordem.dataDeEmissao),
+        ordem.dataDeEmissao ? new Date(ordem.dataDeEmissao) : "",
         ordem.nomeFornecedor || "Desconhecido",
         ordem.quantidade || 0,
         ordem.valorUnitario || 0,
@@ -217,19 +254,38 @@ export function RelatorioMaterial() {
         if ([4, 5, 7].includes(colNumber)) cell.numFmt = '"R$"#,##0.00';
         if (colNumber === 6) cell.numFmt = "0.00%";
       });
+
+      // zebra stripes
+      if (index % 2 === 0) {
+        row.eachCell((cell) => {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFEFEFEF" },
+          };
+        });
+      }
     });
 
+    // ajuste de largura só aqui no final
     sheetEntradas.columns.forEach((col) => {
       let maxLength = 0;
       col.eachCell({ includeEmpty: true }, (cell) => {
-        maxLength = Math.max(maxLength, cell.value?.toString().length || 10);
+        const cellValue = cell.value ? cell.value.toString() : "";
+        if (cellValue.length > maxLength) maxLength = cellValue.length;
       });
-      col.width = maxLength + 2;
+      col.width = maxLength + 5;
     });
 
-    // ==================== Aba de Saídas ====================
+    // --- Transferências ---
     const sheetSaidas = workbook.addWorksheet("Transferências");
     sheetSaidas.mergeCells("A1:C4");
+    const faixaSaida = sheetSaidas.getCell("A1");
+    faixaSaida.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF05314C" }, // azul
+    };
     sheetSaidas.addImage(imageId, {
       tl: { col: 1.2, row: 0.2 },
       ext: { width: 120, height: 60 },
@@ -237,24 +293,24 @@ export function RelatorioMaterial() {
 
     sheetSaidas.mergeCells("A6:C6");
     const tituloSaida = sheetSaidas.getCell("A6");
-    tituloSaida.value = `Saídas do material: ${material}`;
+    tituloSaida.value = `Saídas do material: ${material ?? "Não informado"}`;
     tituloSaida.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
-    tituloSaida.alignment = { horizontal: "center" };
+    tituloSaida.alignment = { horizontal: "center", vertical: "middle" };
     tituloSaida.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FFB22222" },
+      fgColor: { argb: "FF05314C" }, // azul escuro
     };
 
-    const headerSaida = sheetSaidas.addRow(["Data", "Destino", "Quantidade"]);
+    const headerSaida = sheetSaidas.addRow(["Data", "Quantidade", "Destino"]);
     headerSaida.eachCell((cell) => {
-      cell.font = { color: { argb: "FFFFFFFF" }, bold: true };
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
       cell.fill = {
         type: "pattern",
         pattern: "solid",
         fgColor: { argb: "FFB22222" },
       };
-      cell.alignment = { horizontal: "center" };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
       cell.border = {
         top: { style: "thin" },
         left: { style: "thin" },
@@ -263,27 +319,46 @@ export function RelatorioMaterial() {
       };
     });
 
-    transferencias.forEach((t) => {
+  function formatarDataBrasileira(dataISO) {
+      if (!dataISO) return "N/A";
+
+      // Pega só a parte da data, ignorando a hora
+      const [ano, mes, dia] = dataISO.split("T")[0].split("-");
+
+      return `${dia}/${mes}/${ano}`;
+    }
+
+    (transferencias || []).forEach((t, index) => {
       const row = sheetSaidas.addRow([
-        new Date(t.ultimaMovimentacao),
-        t.setor || t.destino,
-        t.quantidadeTransferida || t.quantidade,
+        formatarDataBrasileira(t.ultimaMovimentacao),
+        t.quantidadeTransferida,
+        t.setor,
       ]);
-      row.eachCell((cell, colNumber) => {
-        if (colNumber === 1) cell.numFmt = "dd/mm/yyyy";
-      });
+
+      // zebra stripes
+      if (index % 2 === 0) {
+        row.eachCell((cell) => {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFEFEFEF" },
+          };
+        });
+      }
     });
 
+    // ajuste de largura no final
     sheetSaidas.columns.forEach((col) => {
       let maxLength = 0;
       col.eachCell({ includeEmpty: true }, (cell) => {
-        maxLength = Math.max(maxLength, cell.value?.toString().length || 10);
+        const cellValue = cell.value ? cell.value.toString() : "";
+        if (cellValue.length > maxLength) maxLength = cellValue.length;
       });
-      col.width = maxLength + 2;
+      col.width = maxLength + 5;
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `Movimentacoes_${material}.xlsx`);
+    saveAs(new Blob([buffer]), `Movimentacoes_${material ?? "material"}.xlsx`);
   };
 
   return (
@@ -300,7 +375,7 @@ export function RelatorioMaterial() {
             />
             <h1>
               RELATÓRIO DE MOVIMENTAÇÕES{" "}
-              {anoSelecionado && ` - ${anoSelecionado}`}
+              {anoSelecionado ? `- ${anoSelecionado}` : ""}
             </h1>
           </div>
 
@@ -310,8 +385,8 @@ export function RelatorioMaterial() {
               onChange={(e) => setFiltroMaterial(e.target.value)}
               className={styles.selectFiltro}
             >
-            <option value="todos">Todos os Materias</option>
-              {materiais.map((m) => (
+              <option value="todos">Todos os Materiais</option>
+              {(materiais || []).map((m) => (
                 <option key={m.id} value={m.material}>
                   {m.material}
                 </option>
@@ -360,14 +435,14 @@ export function RelatorioMaterial() {
           </p>
 
           <div className={styles.gridMateriais}>
-            {materiaisFiltrados.map((material) => (
+            {(materiaisFiltrados || []).map((material) => (
               <div key={material.id} className={styles.cardMaterial}>
                 <div className={styles.info}>
                   <p>
                     <b>Material</b>
                   </p>
                   <p>
-                    #{material.id} - {material.material}
+                    #{material.id} - {material.material ?? "Não informado"}
                   </p>
                 </div>
                 <button
@@ -377,9 +452,8 @@ export function RelatorioMaterial() {
                       return toastError(
                         "Selecione um ano antes de baixar o relatório."
                       );
-
                     const { ordens, transferencias } =
-                      await buscarMovimentacoes(material.id);
+                      await buscarMovimentacoes(material);
                     await baixarExcelMaterial(
                       material.material,
                       ordens,
@@ -404,5 +478,4 @@ export function RelatorioMaterial() {
     </>
   );
 }
-
 export default RelatorioMaterial;
