@@ -12,6 +12,68 @@
     --dashboard-margin: 3%;
 }
 
+.material-navigation-container {
+  margin-top: 15px;
+  border-top: 1px solid #ddd;
+  padding-top: 15px;
+}
+
+.material-header {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.material-header h5 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.material-navigation-arrows {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.material-counter {
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.nav-arrow {
+  background: #4586AB;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.nav-arrow:hover {
+  background: #05314C;
+  transform: scale(1.1);
+}
+
+.nav-arrow:active {
+  transform: scale(0.95);
+}
+
+.prev-arrow {
+  margin-right: 10px;
+}
+
+.next-arrow {
+  margin-left: 10px;
+}
+
 /* Main Layout */
 .IndexFornecedor {
     background-image: url('../../assets/background.png');

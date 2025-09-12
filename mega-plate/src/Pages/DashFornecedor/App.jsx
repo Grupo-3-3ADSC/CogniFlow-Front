@@ -268,11 +268,10 @@ function App() {
   const [endDate, setEndDate] = useState("");
 
   // Estados para dados
-  const [fornecedores, setFornecedores] = useState([]); // Lista completa de fornecedores
-  const [filteredSuppliers, setFilteredSuppliers] = useState([]); // Lista filtrada
+  const [fornecedores, setFornecedores] = useState([]);
+  const [filteredSuppliers, setFilteredSuppliers] = useState([]);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
-  const [materiais, setMateriais] = useState([]);
   const [ordemDeCompra, setOrdemDeCompra] = useState([]);
   const [estoque, setEstoque] = useState([]);
   const [kpiData, setKpiData] = useState([]);
@@ -285,22 +284,8 @@ function App() {
 
   const fornecedoresPorPagina = 6;
 
-  const fileInputRef = useRef(null);
-
-  const handlePhotoChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setUserPhoto(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleProfileClick = () => {
-    fileInputRef.current.click();
-  };
+  // Estado para controlar o carrossel de materiais
+  const [materialIndices, setMaterialIndices] = useState({});
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -324,7 +309,7 @@ function App() {
       .get("/fornecedores")
       .then((response) => {
         const fornecedores = response.data;
-        setFornecedores(fornecedores); // Guarda a lista completa
+        setFornecedores(fornecedores);
         console.log("Fornecedores carregados:", fornecedores);
       })
       .catch((error) => {
@@ -354,13 +339,6 @@ function App() {
         const estoqueData = response.data;
         setEstoque(estoqueData);
         console.log("Estoque carregado:", estoqueData);
-
-        // Criar mapeamento de materiais
-        const materiaisMap = {};
-        estoqueData.forEach((item) => {
-          materiaisMap[item.id] = item.tipoMaterial;
-        });
-        setMateriais(materiaisMap);
       })
       .catch((error) => {
         console.error("Erro ao buscar estoque:", error);
@@ -394,18 +372,15 @@ function App() {
   const parseDate = (dateString) => {
     if (!dateString) return null;
 
-    // Se for formato ISO (2024-01-15T10:30:00Z)
     if (dateString.includes("T")) {
       return new Date(dateString);
     }
 
-    // Se for formato DD/MM/YYYY
     if (dateString.includes("/")) {
       const [day, month, year] = dateString.split("/");
       return new Date(year, month - 1, day);
     }
 
-    // Tenta parsing direto
     return new Date(dateString);
   };
 
@@ -465,21 +440,18 @@ function App() {
   };
 
   const handleSearch = () => {
-    // Se não há dados, não filtra
     if (fornecedores.length === 0 || ordemDeCompra.length === 0) {
       setFilteredSuppliers([]);
       return;
     }
 
-    // Primeiro, filtra as ordens de compra baseado nos critérios
+    // Filtra ordens de compra
     const ordensFiltered = ordemDeCompra.filter((ordem) => {
-      // Filtro por material
       const materialMatch =
         !selectedMaterial ||
         ordem?.estoque?.tipoMaterial === selectedMaterial ||
         ordem?.descricaoMaterialCompleta?.includes(selectedMaterial);
 
-      // Filtro por data
       let dateInRange = true;
       if (startDate || endDate) {
         const ordemDate = parseDate(ordem.dataDeEmissao);
@@ -494,17 +466,13 @@ function App() {
       return materialMatch && dateInRange;
     });
 
-    console.log("Ordens filtradas por material e data:", ordensFiltered.length);
-
-    // MUDANÇA PRINCIPAL: Filtra TODOS os fornecedores globalmente
-    const todosFornecedoresFiltrados = fornecedores.filter((fornecedor) => {
-      // Filtro por nome
+    // Filtra fornecedores
+    const fornecedoresFiltrados = fornecedores.filter((fornecedor) => {
       const nameMatch =
         !searchTerm ||
         fornecedor.nomeFantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         fornecedor.razaoSocial?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      // Verifica se o fornecedor tem ordens que passaram pelos filtros de material/data
       const temOrdemValida = ordensFiltered.some(
         (ordem) =>
           ordem.fornecedorId === fornecedor.id ||
@@ -521,20 +489,20 @@ function App() {
     const itemsPerPage = fornecedoresPorPagina || 6;
     const startIndex = paginaAtual * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    const fornecedoresPaginados = todosFornecedoresFiltrados.slice(startIndex, endIndex);
+    const fornecedoresPaginados = fornecedoresFiltrados.slice(startIndex, endIndex);
 
     // Atualiza o estado de fornecedoresPage com os resultados paginados
     setFornecedoresPage(fornecedoresPaginados);
 
     // Atualiza informações de paginação baseado nos dados filtrados
-    const totalPaginasFiltradas = Math.ceil(todosFornecedoresFiltrados.length / itemsPerPage);
+    const totalPaginasFiltradas = Math.ceil(fornecedoresFiltrados.length / itemsPerPage);
     setPaginasTotais(totalPaginasFiltradas);
-    setTotalItems(todosFornecedoresFiltrados.length);
+    setTotalItems(fornecedoresFiltrados.length);
     setHasNext(paginaAtual < totalPaginasFiltradas - 1);
     setHasPrevious(paginaAtual > 0);
 
     // Mantém compatibilidade com o estado filteredSuppliers se necessário
-    setFilteredSuppliers(todosFornecedoresFiltrados);
+    setFilteredSuppliers(fornecedoresFiltrados);
 
     // Salvar as ordens filtradas em um estado separado
     setOrdensFiltradasParaGrafico(ordensFiltered);
@@ -606,16 +574,15 @@ function App() {
 
   if (!autenticacaoPassou) return null;
 
-  // Função para gerar KPI CORRIGIDA - agora considera os filtros aplicados
+  // Função para gerar KPI
   function gerarDadosKPI(ordens) {
     var statsPorFornecedor = {};
 
-    // Processa todas as ordens de compra
     for (var i = 0; i < ordens.length; i++) {
       var ordem = ordens[i];
       var fornecedorId = ordem.fornecedorId || ordem.fornecedor?.id;
 
-      if (!fornecedorId) continue; // Pula se não tem ID do fornecedor
+      if (!fornecedorId) continue;
 
       var fornecedorNome =
         ordem.nomeFornecedor ||
@@ -628,35 +595,22 @@ function App() {
       var quantidade = Number(ordem.quantidade || 0);
       var valorTotalOrdem = valorUnitario * quantidade;
 
-      // Inicializa o fornecedor se não existir
       if (!statsPorFornecedor[fornecedorId]) {
         statsPorFornecedor[fornecedorId] = {
           valorTotalAcumulado: 0,
           totalQuantity: 0,
           nome: fornecedorNome,
           materiais: new Set(),
-          maiorValorUnitario: 0,
-          materialMaiorValor: "N/A",
-          estoqueIdMaiorValor: null,
           numeroOrdens: 0,
         };
       }
 
-      // Acumula os valores
       statsPorFornecedor[fornecedorId].valorTotalAcumulado += valorTotalOrdem;
       statsPorFornecedor[fornecedorId].totalQuantity += quantidade;
       statsPorFornecedor[fornecedorId].materiais.add(material);
       statsPorFornecedor[fornecedorId].numeroOrdens++;
-
-      // Atualiza maior valor unitário
-      if (valorUnitario > statsPorFornecedor[fornecedorId].maiorValorUnitario) {
-        statsPorFornecedor[fornecedorId].maiorValorUnitario = valorUnitario;
-        statsPorFornecedor[fornecedorId].materialMaiorValor = material;
-        statsPorFornecedor[fornecedorId].estoqueIdMaiorValor = ordem.estoqueId;
-      }
     }
 
-    // Se filtro por fornecedor
     if (selectedFornecedor) {
       var kpisPorMaterial = [];
       var fornecedorSelecionado = null;
@@ -708,13 +662,8 @@ function App() {
           });
         });
       }
-      return kpisPorMaterial
-
-      // return kpisPorMaterial.slice(0, 3);
-    }
-
-    // Se filtro por material
-    else if (selectedMaterial) {
+      return kpisPorMaterial;
+    } else if (selectedMaterial) {
       var listaFinal = [];
       for (var fornecedorId in statsPorFornecedor) {
         var stats = statsPorFornecedor[fornecedorId];
@@ -733,33 +682,25 @@ function App() {
             fornecedorId: fornecedorId,
             supplierName: stats.nome,
             valorTotalAcumulado: stats.valorTotalAcumulado,
-            maiorValorUnitario: stats.maiorValorUnitario,
             quantidadeTotal: stats.totalQuantity,
             precoMedioUnitario:
               stats.totalQuantity > 0
                 ? stats.valorTotalAcumulado / stats.totalQuantity
                 : 0,
-            materialMaiorValor: stats.materialMaiorValor,
-            estoqueId: stats.estoqueIdMaiorValor,
-            tiposMateriais: Array.from(stats.materiais),
             tiposMateriaisString: Array.from(stats.materiais).join(", "),
             numeroOrdens: stats.numeroOrdens,
           });
         }
       }
 
-      return listaFinal
-        .sort((a, b) => b.valorTotalAcumulado - a.valorTotalAcumulado)
-      // .slice(0, 3);
-    }
-
-    // Sem filtro
-    else {
+      return listaFinal.sort(
+        (a, b) => b.valorTotalAcumulado - a.valorTotalAcumulado
+      );
+    } else {
       var listaFinal = [];
       for (var fornecedorId in statsPorFornecedor) {
         var stats = statsPorFornecedor[fornecedorId];
 
-        // monta os materiais detalhados deste fornecedor
         var materiaisDetalhados = [];
         Array.from(stats.materiais).forEach(function (material) {
           var valorMaterial = 0;
@@ -795,45 +736,22 @@ function App() {
           fornecedorId: fornecedorId,
           supplierName: stats.nome,
           valorTotalAcumulado: stats.valorTotalAcumulado,
-          maiorValorUnitario: stats.maiorValorUnitario,
           quantidadeTotal: stats.totalQuantity,
           precoMedioUnitario:
             stats.totalQuantity > 0
               ? stats.valorTotalAcumulado / stats.totalQuantity
               : 0,
-          materialMaiorValor: stats.materialMaiorValor,
-          estoqueId: stats.estoqueIdMaiorValor,
-          tiposMateriais: Array.from(stats.materiais),
           tiposMateriaisString: Array.from(stats.materiais).join(", "),
           numeroOrdens: stats.numeroOrdens,
-          materiaisDetalhados: materiaisDetalhados, // <-- aqui!
+          materiaisDetalhados: materiaisDetalhados,
         });
       }
 
-      return listaFinal
-        .sort((a, b) => b.valorTotalAcumulado - a.valorTotalAcumulado)
-      // .slice(0, 3);
+      return listaFinal.sort(
+        (a, b) => b.valorTotalAcumulado - a.valorTotalAcumulado
+      );
     }
   }
-
-  // Gerar dados do gráfico de linha
-  const generateLineData = (suppliers) => {
-    const days = ["01", "05", "10", "15", "20", "25", "30"];
-    const baseConsumption =
-      suppliers.length > 0
-        ? suppliers.reduce((sum, s) => sum + (s.quantity || 100), 0) / 10
-        : 50;
-
-    return [
-      ["Dia", "Consumo"],
-      ...days.map((day, index) => {
-        const variation = Math.floor(Math.random() * 40) - 20;
-        return [day, Math.floor(baseConsumption + variation)];
-      }),
-    ];
-  };
-
-  const lineData = generateLineData(filteredSuppliers);
 
   // Função para lidar com clique no fornecedor
   const handleSupplierClick = (supplier) => {
@@ -845,23 +763,7 @@ function App() {
 
     setSelectedSupplier({
       ...supplier,
-      material:
-        ordem?.estoque?.tipoMaterial ||
-        ordem?.descricaoMaterialCompleta ||
-        "Não informado",
-      dataPedido: ordem?.dataDeEmissao?.split("T")[0] || "Data não disponível",
-      preco: ordem?.valorUnitario || 0,
-      quantidade: ordem?.quantidade || 0,
-      statusEntrega: ordem?.prazoEntrega
-        ? `Prazo: ${ordem.prazoEntrega} dias`
-        : "Prazo não informado",
-      descricaoMaterial: ordem?.descricaoMaterial || "Descrição não informada",
-      valorKg: ordem?.valorKg || 0,
-      valorPeca: ordem?.valorPeca || 0,
-      condPagamento: ordem?.condPagamento || "Não informada",
-      ipi: ordem?.ipi || 0,
-      rastreabilidade: ordem?.rastreabilidade || "Não informada",
-      idFornecedor: ordem?.fornecedorId || supplier.id,
+      fornecedorId: supplier.id,
     });
     setShowPopup(true);
   };
@@ -969,6 +871,25 @@ function App() {
     setSelectedSupplier(null);
   };
 
+  // Funções do carrossel
+  const handlePrevMaterial = (fornecedorId) => {
+    setMaterialIndices(prev => ({
+      ...prev,
+      [fornecedorId]: Math.max(0, (prev[fornecedorId] || 0) - 1)
+    }));
+  };
+
+  const handleNextMaterial = (fornecedorId) => {
+    const kpiItem = kpiData.find(item => item.fornecedorId === fornecedorId);
+    if (kpiItem && kpiItem.materiaisDetalhados) {
+      const maxIndex = kpiItem.materiaisDetalhados.length - 1;
+      setMaterialIndices(prev => ({
+        ...prev,
+        [fornecedorId]: Math.min(maxIndex, (prev[fornecedorId] || 0) + 1)
+      }));
+    }
+  };
+
   return (
     <div className="IndexFornecedor">
       <NavBar />
@@ -1054,6 +975,11 @@ function App() {
             <div id="charts-superior">
               <div id="Kpi">
                 {kpiData.map(function (item, index) {
+                  const currentMaterialIndex = materialIndices[item.fornecedorId] || 0;
+                  const currentMaterial = item.materiaisDetalhados && item.materiaisDetalhados.length > 0
+                    ? item.materiaisDetalhados[currentMaterialIndex]
+                    : null;
+
                   return (
                     <React.Fragment key={item.fornecedorId}>
                       <div
@@ -1096,12 +1022,16 @@ function App() {
                           </div>
                         </div>
 
-                        {/* Detalhes por material */}
-                        <div className="kpi-materials">
-                          {item.materiaisDetalhados &&
-                            item.materiaisDetalhados.map((mat, i) => (
-                              <div key={i} className="kpi-material">
-                                <strong>{mat.material}</strong>
+                        {/* Detalhes por material com carrossel funcional */}
+                        {item.materiaisDetalhados && item.materiaisDetalhados.length > 0 && (
+                          <div className="material-navigation-container">
+                            <div className="material-header">
+                              <h5>Detalhes por Material</h5>
+                            </div>
+                            
+                            <div className="kpi-materials">
+                              <div className="kpi-material">
+                                <strong>{currentMaterial.material}</strong>
                                 <div className="material-details">
                                   <div>
                                     <span>Gastos:</span>
@@ -1109,13 +1039,13 @@ function App() {
                                       {new Intl.NumberFormat("pt-BR", {
                                         style: "currency",
                                         currency: "BRL",
-                                      }).format(mat.valorTotalAcumulado)}
+                                      }).format(currentMaterial.valorTotalAcumulado)}
                                     </span>
                                   </div>
                                   <div>
                                     <span>Quantidade:</span>
                                     <span className="value-green">
-                                      {mat.quantidadeTotal}
+                                      {currentMaterial.quantidadeTotal}
                                     </span>
                                   </div>
                                   <div>
@@ -1124,41 +1054,47 @@ function App() {
                                       {new Intl.NumberFormat("pt-BR", {
                                         style: "currency",
                                         currency: "BRL",
-                                      }).format(mat.precoMedioUnitario)}
+                                      }).format(currentMaterial.precoMedioUnitario)}
                                     </span>
                                   </div>
                                 </div>
                               </div>
-                            ))}
-                        </div>
+                            </div>
+                            
+                            {/* Setas de navegação funcionais */}
+                            {item.materiaisDetalhados.length > 1 && (
+                              <div className="material-navigation-arrows">
+                                <button 
+                                  onClick={() => handlePrevMaterial(item.fornecedorId)}
+                                  className="nav-arrow prev-arrow"
+                                  title="Material anterior"
+                                  disabled={currentMaterialIndex === 0}
+                                >
+                                  &#8249;
+                                </button>
+                                <span className="material-counter">
+                                  {currentMaterialIndex + 1} / {item.materiaisDetalhados.length}
+                                </span>
+                                <button 
+                                  onClick={() => handleNextMaterial(item.fornecedorId)}
+                                  className="nav-arrow next-arrow"
+                                  title="Próximo material"
+                                  disabled={currentMaterialIndex === item.materiaisDetalhados.length - 1}
+                                >
+                                  &#8250;
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </React.Fragment>
                   );
                 })}
               </div>
             </div>
-            {/* <div id="charts-inferior">
-              <div id="bar_chart" className="chart">
-                <Chart
-                  chartType="ColumnChart"
-                  data={barData}
-                  options={{
-                    title: `Entrada Mensal de material (${filteredSuppliers.length} fornecedores)`,
-                    backgroundColor: "transparent",
-                    legend: "none",
-                    titleTextStyle: { color: "white" },
-                    hAxis: { textStyle: { color: "white" } },
-                    vAxis: { textStyle: { color: "white" } },
-                    colors: ["#4586AB", "#05314C"],
-                    width: "100%",
-                    height: "40vh",
-                  }}
-                  width="100%"
-                  height="100%"
-                />
-              </div>
-            </div> */}
           </div>
+          
           <div className="supplier-table-container-fornecedor">
             <h3>Fornecedores</h3>
             <div className="table-wrapper">
@@ -1227,7 +1163,7 @@ function App() {
             </div>
 
             <div className="popup-body">
-              {/* CONTATO - segue com selectedSupplier */}
+              {/* CONTATO */}
               <div className="popup-section">
                 <h4>Contato</h4>
                 <div className="info-grid">
@@ -1274,5 +1210,4 @@ function App() {
     </div>
   );
 }
-
 export default App;
