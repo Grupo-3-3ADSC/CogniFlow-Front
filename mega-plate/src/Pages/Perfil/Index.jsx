@@ -289,7 +289,7 @@ function Perfil() {
                                 cursor: isUploadingFoto ? 'not-allowed' : 'pointer'
                             }}
                         >
-                            {isUploadingFoto ? 'Enviando...' : 'clique aqui para modificar a imagem'}
+                            {isUploadingFoto ? 'Enviando...' : 'Clique aqui para modificar a imagem'}
                         </label>
                     </div>
                     <div className={style['inputs']}>

@@ -9,6 +9,7 @@ import iconHistorico from '../assets/icon-historico.png';
 import iconGroup from '../assets/icon-group.png';
 import logoMega from '../assets/logo-megaplate.png';
 import menuHamburger from '../assets/menu-hamburguer.png';
+import iconHistoricos from '../assets/icon-historico.png';
 import user from '../assets/User.png';
 import { useEffect } from 'react';
 import { api } from '../provider/api';
@@ -129,10 +130,12 @@ const NavBar = () => {
               <img className="icons-menu" src={iconTransferencia} alt="Transferência" />
               <span>Transferência</span>
             </li>
+            {usuarioLista?.cargo?.id === 2 && (
              <li title="Relatórios" onClick={() => navigate('/relatorios')}>
               <img className="icons-menu" src={iconFormularios} alt="Relatórios" />
               <span>Relatórios</span>
             </li>
+            )}
             <li className="has-submenu" title="Dashboards" onClick={toggleDashSubmenu}>
               <img className="icons-menu" src={iconDash} alt="Dashboards" />
               <span>Dashboards</span>
@@ -167,6 +170,7 @@ const NavBar = () => {
                 )}
               </ul>
             )}
+            {usuarioLista?.cargo?.id === 2 && (
             <li className="has-submenu" title="Históricos" onClick={toggleHistoricoSubmenu}>
               <img className="icons-historico" src={iconHistorico} alt="Históricos" />
               <span>Históricos</span>
@@ -174,8 +178,11 @@ const NavBar = () => {
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </li>
+            )}
             {showHistoricoSubmenu && (
               <ul className="submenu-list">
+
+                
                 <li onClick={() => navigate('/HistoricoOrdemDeCompra')}>Histórico de Ordem de Compra</li>
 
                 <li onClick={() => navigate('/HistoricoTransferencia')}>Histórico de Transferências</li>

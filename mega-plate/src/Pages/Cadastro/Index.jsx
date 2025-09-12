@@ -164,7 +164,7 @@ export function Cadastro() {
       <section className={styles.cadastro}>
         <div className={styles["bloco-fundo"]}>
           <div className={styles["tab-container-user"]}>
-            <div className={styles.tabActiveUsuario}>Cadastro de Usuário</div>
+            <div className={styles.tabActiveUsuario}>CADASTRO DE USUÁRIO</div>
           </div>
         </div>
         <aside className={styles["aside-cadastro"]}>
@@ -172,7 +172,11 @@ export function Cadastro() {
         </aside>
         <main className={styles["form-content"]}>
           <div className={styles["input-group"]}>
-            <p id="textCadastro">Nome e Sobrenome</p>
+            <p id="textCadastro">
+              Nome e Sobrenome
+              <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span>
+            </p>
             <input
               placeholder="Marcos Antonio"
               type="text"
@@ -187,7 +191,11 @@ export function Cadastro() {
           </div>
 
           <div className={styles["input-group"]}>
-            <p id="textCadastro">Email</p>
+            <p id="textCadastro">
+              Email
+              <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span>
+            </p>
             <input
               placeholder="exemplo@dominio.com"
               type="email"
@@ -197,7 +205,11 @@ export function Cadastro() {
           </div>
 
           <div className={styles["input-group"]}>
-            <p>Cargo</p>
+            <p>
+              Cargo
+              <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span>
+            </p>
             <select
               value={formData.cargo?.id || 1}
               onChange={(e) => {
@@ -217,7 +229,11 @@ export function Cadastro() {
           </div>
 
           <div className={styles["input-group"]}>
-            <p id="textCadastro">Senha</p>
+            <p id="textCadastro">
+              Senha
+              <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span>
+            </p>
             <input
               placeholder="********"
               type="password"
@@ -225,10 +241,11 @@ export function Cadastro() {
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
           </div>
-
-          <button id="buttonCadastrar" className={styles.buttonCadastrar} onClick={cadastrar}>
-            CADASTRAR
-          </button>
+          <div>
+            <button id="buttonCadastrar" className={styles.buttonCadastrar} onClick={cadastrar}>
+              CADASTRAR
+            </button>
+          </div>
         </main>
       </section>
     </>
