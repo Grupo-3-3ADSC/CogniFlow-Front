@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
 import NavBar from "../../components/NavBar.jsx";
-import { toastSuccess, toastError } from "../../components/toastify/ToastifyService.jsx";
+import {
+  toastSuccess,
+  toastError,
+  toastInfo
+} from "../../components/toastify/ToastifyService.jsx";
 import styles from "./relatorioFornecedor.module.css";
-import logoMegaPlate from '../../assets/logo-megaplate.png';
-import iconBaixar from '../../assets/icon-baixar.png';
+import logoMegaPlate from "../../assets/logo-megaplate.png";
+import iconBaixar from "../../assets/icon-baixar.png";
 import setaImg from "../../assets/seta.png";
 import setaRightImg from "../../assets/setaRight.png";
 import { useNavigate } from "react-router-dom";
@@ -11,48 +15,70 @@ import { api } from "../../provider/api.js";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 
-
-
 export function RelatorioFornecedor() {
   const [fornecedores, setFornecedores] = useState([]);
   const [filtroNome, setFiltroNome] = useState("");
   const [inicio, setInicio] = useState(0);
   const todosAnos = gerarListaAnos(2018);
   const [anoSelecionado, setAnoSelecionado] = useState(
-      new Date().getFullYear()
-    );
+    new Date().getFullYear()
+  );
   const [ordensDeCompra, setOrdensDeCompra] = useState([]); // Estado para armazenar as ordens de compra
   const [fornecedorSelecionado, setFornecedorSelecionado] = useState(null);
   const anosVisiveis = todosAnos.slice(inicio, inicio + 5);
-  const avancarAno = () => { if (inicio + 5 < todosAnos.length) setInicio(inicio + 1); };
-  const voltarAno = () => { if (inicio > 0) setInicio(inicio - 1); };
+
+  useEffect(() => {
+      const token = sessionStorage.getItem("authToken");
+      if (!token) {
+        navigate("/");
+      } else {
+        const { exp } = jwtDecode(token);
+        if (Date.now() >= exp * 1000) {
+          sessionStorage.removeItem("authToken");
+          navigate("/");
+        } else {
+          setAutenticacaoPassou(true);
+        }
+      }
+    }, [navigate]);
+  const avancarAno = () => {
+    if (inicio + 5 < todosAnos.length) setInicio(inicio + 1);
+  };
+  const voltarAno = () => {
+    if (inicio > 0) setInicio(inicio - 1);
+  };
   const navigate = useNavigate();
 
   async function buscarFornecedores() {
     const token = sessionStorage.getItem("authToken");
-    const res = await api.get("/fornecedores", { headers: { Authorization: `Bearer ${token}` } });
+    const res = await api.get("/fornecedores", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     return res.data;
   }
 
   async function buscarOrdensDeCompra(fornecedorId, anoSelecionado) {
     const token = sessionStorage.getItem("authToken");
-    const res = await api.get(`/ordemDeCompra/relatorioFornecedor/${fornecedorId}?ano=${anoSelecionado}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const res = await api.get(
+      `/ordemDeCompra/relatorioFornecedor/${fornecedorId}?ano=${anoSelecionado}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     return res.data;
   }
 
-
   useEffect(() => {
-    buscarFornecedores().then(data => setFornecedores(data));
+    buscarFornecedores().then((data) => setFornecedores(data));
   }, []);
 
-  const fornecedoresFiltrados = fornecedores.filter(f =>
+  const fornecedoresFiltrados = fornecedores.filter((f) =>
     f.nomeFantasia.toLowerCase().includes(filtroNome.toLowerCase().trim())
   );
 
   // 🔹 Função para gerar Excel
-  async function baixarExcelFornecedores(ordens, anoSelecionado) {
+async function baixarExcelFornecedores(ordens, anoSelecionado, nomeFornecedor) {
+  if (!ordens || ordens.length === 0) return;
     if (!ordens || ordens.length === 0) return;
 
     const workbook = new ExcelJS.Workbook();
@@ -99,7 +125,6 @@ export function RelatorioFornecedor() {
       fgColor: { argb: "FF05314C" }, // Azul escuro
     };
 
-
     const header = [
       "Data",
       "Fornecedor",
@@ -113,7 +138,6 @@ export function RelatorioFornecedor() {
     ];
 
     const headerRow = sheetEntradas.addRow(header);
-
 
     headerRow.eachCell((cell) => {
       cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
@@ -131,7 +155,6 @@ export function RelatorioFornecedor() {
       };
     });
 
-
     function formatarDataBrasileira(dataISO) {
       if (!dataISO) return "N/A";
 
@@ -143,7 +166,6 @@ export function RelatorioFornecedor() {
 
     // Adiciona dados
 
-
     ordens.forEach((ordem, index) => {
       console.log(fornecedoresFiltrados);
       const row = sheetEntradas.addRow([
@@ -153,17 +175,16 @@ export function RelatorioFornecedor() {
         ordem.descricaoMaterial || "N/A", // Descrição do material
         ordem.quantidade || 0, // Quantidade solicitada
         ordem.valorUnitario || 0, // Valor unitário
-        (ordem.valorUnitario) * ordem.quantidade || 0, // Quantidade * Valor unitário
+        ordem.valorUnitario * ordem.quantidade || 0, // Quantidade * Valor unitário
         (ordem.ipi || 0) / 100, // IPI em formato decimal (ex.: 10% -> 0.10)
-        (ordem.valorUnitario * ordem.quantidade) * (1 + (ordem.ipi || 0) / 100) || 0, // Valor total com IPI
+        ordem.valorUnitario * ordem.quantidade * (1 + (ordem.ipi || 0) / 100) ||
+          0, // Valor total com IPI
       ]);
-
-
 
       // Formatação de células
       row.getCell(6).numFmt = '"R$"#,##0.00';
       row.getCell(7).numFmt = '"R$"#,##0.00';
-      row.getCell(8).numFmt = '0.00%';
+      row.getCell(8).numFmt = "0.00%";
       row.getCell(9).numFmt = '"R$"#,##0.00';
 
       // Zebra
@@ -178,7 +199,6 @@ export function RelatorioFornecedor() {
       }
     });
 
-
     // Ajuste automático de largura
     sheetEntradas.columns.forEach((col) => {
       let maxLength = 0;
@@ -189,9 +209,15 @@ export function RelatorioFornecedor() {
       col.width = maxLength + 5;
     });
     const buffer = await workbook.xlsx.writeBuffer();
+const nomeArquivo = nomeFornecedor
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9-_ ]/g, "")
+    .replace(/\s+/g, "_");
+
     saveAs(
       new Blob([buffer]),
-      `entradas_${fornecedorSelecionado || "todos"}_${anoSelecionado}.xlsx`
+      `entradas_${nomeArquivo}_${anoSelecionado}.xlsx`
     );
   }
 
@@ -207,16 +233,22 @@ export function RelatorioFornecedor() {
     return anos;
   }
 
-
-
   return (
     <>
       <NavBar />
       <div className={styles.container}>
         <div className={styles.background}>
           <div className={styles.header}>
-            <img src={setaImg} alt="Voltar" className={styles.seta} onClick={() => navigate("/relatorios")} />
-            <h1>RELATÓRIO COMPARATIVO DE FORNECEDORES {anoSelecionado && ` - ${anoSelecionado}`}</h1>
+            <img
+              src={setaImg}
+              alt="Voltar"
+              className={styles.seta}
+              onClick={() => navigate("/relatorios")}
+            />
+            <h1>
+              RELATÓRIO COMPARATIVO DE FORNECEDORES{" "}
+              {anoSelecionado && ` - ${anoSelecionado}`}
+            </h1>
           </div>
 
           <div className={styles.filtro}>
@@ -232,17 +264,29 @@ export function RelatorioFornecedor() {
             </div>
             <div className={styles.filtroAno}>
               <div className={styles.anoContent}>
-                <img src={setaImg} alt="seta esquerda" className={styles.setaAno} onClick={voltarAno} />
+                <img
+                  src={setaImg}
+                  alt="seta esquerda"
+                  className={styles.setaAno}
+                  onClick={voltarAno}
+                />
                 {anosVisiveis.map((ano) => (
                   <div
                     key={ano}
-                    className={`${styles.ano} ${anoSelecionado === ano ? styles.ativo : ""}`}
+                    className={`${styles.ano} ${
+                      anoSelecionado === ano ? styles.ativo : ""
+                    }`}
                     onClick={() => setAnoSelecionado(ano)}
                   >
                     {ano}
                   </div>
                 ))}
-                <img src={setaRightImg} alt="seta direita" className={styles.setaAno} onClick={avancarAno} />
+                <img
+                  src={setaRightImg}
+                  alt="seta direita"
+                  className={styles.setaAno}
+                  onClick={avancarAno}
+                />
               </div>
             </div>
           </div>
@@ -257,43 +301,55 @@ export function RelatorioFornecedor() {
                 {fornecedoresFiltrados.map((fornecedor) => (
                   <tr key={fornecedor.fornecedorId}>
                     <td>
-                      <b><h4>FORNECEDOR</h4></b>
+                      <b>
+                        <h4>FORNECEDOR</h4>
+                      </b>
                       <p>ID: {fornecedor.fornecedorId}</p>
                     </td>
                     <td>
-                      <b><h4>NOME FANTASIA</h4></b>
+                      <b>
+                        <h4>NOME FANTASIA</h4>
+                      </b>
                       <p>{fornecedor.nomeFantasia}</p>
                     </td>
                     <td>
-                      <b><h4>CNPJ</h4></b>
+                      <b>
+                        <h4>CNPJ</h4>
+                      </b>
                       <p>{fornecedor.cnpj}</p>
                     </td>
                     <td>
-                      <b><h4>CONTATO</h4></b>
+                      <b>
+                        <h4>CONTATO</h4>
+                      </b>
                       <p>{fornecedor.telefone}</p>
                     </td>
                     <td>
-                      <button
-                        className={styles.baixar}
-                        onClick={async () => {
-                          if (!anoSelecionado) {
-                            toastError("Por favor, selecione um ano antes de baixar o relatório.");
-                            return;
-                          }
-                          
-                          const ordens = await buscarOrdensDeCompra(fornecedor.fornecedorId, anoSelecionado);
+<button
+  className={styles.baixar}
+  onClick={async () => {
+    if (!anoSelecionado) {
+      toastError("Por favor, selecione um ano antes de baixar o relatório.");
+      return;
+    }
 
-                          if (!ordens || ordens.length === 0) {
-                            toastError("Nenhuma ordem encontrada para este fornecedor neste ano.");
-                            return;
-                          }
+    const ordens = await buscarOrdensDeCompra(
+      fornecedor.fornecedorId,
+      anoSelecionado
+    );
 
-                          await baixarExcelFornecedores(ordens, anoSelecionado);
-                          toastSuccess("Relatório Excel gerado com sucesso!");
-                        }}
-                      >
-                        <img className="icons-baixar" src={iconBaixar} alt="Baixar" />
-                      </button>
+    if (!ordens || ordens.length === 0) {
+      toastInfo("Nenhuma ordem encontrada para este fornecedor neste ano.");
+      return;
+    }
+
+    await baixarExcelFornecedores(ordens, anoSelecionado, fornecedor.nomeFantasia);
+    toastSuccess("Relatório gerado com sucesso!");
+  }}
+>
+  <img className="icons-baixar" src={iconBaixar} alt="Baixar" />
+</button>
+
                     </td>
                   </tr>
                 ))}

@@ -156,7 +156,7 @@ h2 {
 
 
 .tabela {
-  width: 80%;
+  width: 86%;
   border-collapse: collapse;
   background-color: #1d597b;
   border-radius: 12px;
@@ -183,8 +183,8 @@ h2 {
 .baixar {
   background-color: #05314c;
   color: white;
-  width: 6vh;
-  height: 6vh;
+  width: 8vh;
+  height: 8vh;
   border-radius: 20px;
   font-size: 10px;
   font-weight: bold;

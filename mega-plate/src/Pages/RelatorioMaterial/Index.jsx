@@ -4,6 +4,7 @@ import { api } from "../../provider/api.js";
 import {
   toastSuccess,
   toastError,
+  toastInfo
 } from "../../components/toastify/ToastifyService.jsx";
 import styles from "./relatorioMaterial.module.css";
 import setaImg from "../../assets/seta.png";
@@ -13,7 +14,6 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import logoMegaPlate from "../../assets/logo-megaplate.png";
 import { jwtDecode } from "jwt-decode";
-
 
 function gerarListaAnos(anoInicial) {
   const anoAtual = new Date().getFullYear();
@@ -30,14 +30,16 @@ export function RelatorioMaterial() {
   const [materiais, setMateriais] = useState([]);
   const [filtroMaterial, setFiltroMaterial] = useState("todos");
   const [filtroNome, setFiltroNome] = useState("");
-   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
+  const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
   const todosAnos = gerarListaAnos(2018);
   const [inicio, setInicio] = useState(0);
-  const [anoSelecionado, setAnoSelecionado] = useState(new Date().getFullYear());
+  const [anoSelecionado, setAnoSelecionado] = useState(
+    new Date().getFullYear()
+  );
   const navigate = useNavigate();
   const anosVisiveis = todosAnos.slice(inicio, inicio + 5);
 
- useEffect(() => {
+  useEffect(() => {
     const token = sessionStorage.getItem("authToken");
     if (!token) {
       navigate("/");
@@ -74,7 +76,6 @@ export function RelatorioMaterial() {
       }));
 
       setMateriais(adaptados);
-
     } catch (error) {
       console.error(error);
       toastError("Erro ao carregar materiais");
@@ -319,7 +320,7 @@ export function RelatorioMaterial() {
       };
     });
 
-  function formatarDataBrasileira(dataISO) {
+    function formatarDataBrasileira(dataISO) {
       if (!dataISO) return "N/A";
 
       // Pega só a parte da data, ignorando a hora
@@ -358,7 +359,10 @@ export function RelatorioMaterial() {
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `Movimentacoes_${material ?? "material"}.xlsx`);
+    saveAs(
+      new Blob([buffer]),
+      `Movimentacoes_${material ?? "material"}_${anoSelecionado}.xlsx`
+    );
   };
 
   return (
@@ -452,8 +456,20 @@ export function RelatorioMaterial() {
                       return toastError(
                         "Selecione um ano antes de baixar o relatório."
                       );
+
                     const { ordens, transferencias } =
                       await buscarMovimentacoes(material);
+
+                    if (
+                      (!ordens || ordens.length === 0) &&
+                      (!transferencias || transferencias.length === 0)
+                    ) {
+                      toastInfo(
+                        "Nenhuma movimentação encontrada para este material neste ano."
+                      );
+                      return; // para a execução
+                    }
+
                     await baixarExcelMaterial(
                       material.material,
                       ordens,

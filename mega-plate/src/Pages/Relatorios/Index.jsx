@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import NavBar from "../../components/NavBar";
 import styles from "./relatorios.module.css";
-import { toastSuccess, toastError, toastInfo } from "../../components/toastify/ToastifyService.jsx";
+import {
+  toastSuccess,
+  toastError,
+  toastInfo
+} from "../../components/toastify/ToastifyService.jsx";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import setaImg from "../../assets/seta.png";
@@ -10,7 +14,6 @@ import logoMegaPlate from "../../assets/logo-megaplate.png";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../provider/api.js";
-
 
 // Função para criar lista de anos (ano atual até ano inicial)
 function gerarListaAnos(anoInicial) {
@@ -31,8 +34,8 @@ export function Relatorios() {
   const todosAnos = gerarListaAnos(2018);
   const [inicio, setInicio] = useState(0);
   const [anoSelecionado, setAnoSelecionado] = useState(
-      new Date().getFullYear()
-    );
+    new Date().getFullYear()
+  );
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
   const [isGestor, setIsGestor] = useState(false);
   const [ordens, setOrdens] = useState([]);
@@ -89,7 +92,6 @@ export function Relatorios() {
     }
   };
 
-
   const anosVisiveis = todosAnos.slice(inicio, inicio + 7);
 
   const avancarAno = () => {
@@ -101,21 +103,45 @@ export function Relatorios() {
 
   const dadosEntradasFake = [
     { label: "Total do Valor Gasto", valor: "R$ 1.450.000,00" },
-    { label: "Material mais comprado", valor: "Chapa Aço 1020" }
+    { label: "Material mais comprado", valor: "Chapa Aço 1020" },
   ];
   const dadosSaidasFake = [
     { label: "Total de Saídas", valor: "R$ 980.000,00" },
-    { label: "Material mais saído", valor: "Bobina Galvanizada" }
+    { label: "Material mais saído", valor: "Bobina Galvanizada" },
   ];
 
   const listaRelatorios = [
-    { tipo: "entradas", titulo: "Relatório Geral de Entradas", descricao: "Análise anual geral de preços com foco em fornecedores, sazonalidades e oscilações críticas que impactaram os custos.", botao: "BAIXAR RELATÓRIO COMPARATIVO ANUAL" },
-    { tipo: "saidas", titulo: "Relatório Geral de Saídas", descricao: "Análise anual geral de saídas com comparativo de saídas internas e externas.", botao: "BAIXAR RELATÓRIO COMPARATIVO ANUAL" },
-    { tipo: "fornecedores", titulo: "Relatório Comparativo de Fornecedores", descricao: "Análise dos fornecedores mais utilizados e desempenho anual.", botao: "FORNECEDORES" },
-    { tipo: "materiais", titulo: "Relatório de Movimentações por Materiais", descricao: "Visão geral dos materiais mais movimentados no período.", botao: "MATERIAS" }
+    {
+      tipo: "entradas",
+      titulo: "Relatório Geral de Entradas",
+      descricao:
+        "Análise anual geral de preços com foco em fornecedores, sazonalidades e oscilações críticas que impactaram os custos.",
+      botao: "BAIXAR RELATÓRIO COMPARATIVO ANUAL",
+    },
+    {
+      tipo: "saidas",
+      titulo: "Relatório Geral de Saídas",
+      descricao:
+        "Análise anual geral de saídas com comparativo de saídas internas e externas.",
+      botao: "BAIXAR RELATÓRIO COMPARATIVO ANUAL",
+    },
+    {
+      tipo: "fornecedores",
+      titulo: "Relatório Comparativo de Fornecedores",
+      descricao: "Análise dos fornecedores mais utilizados e desempenho anual.",
+      botao: "FORNECEDORES",
+    },
+    {
+      tipo: "materiais",
+      titulo: "Relatório de Movimentações por Materiais",
+      descricao: "Visão geral dos materiais mais movimentados no período.",
+      botao: "MATERIAS",
+    },
   ];
 
-  const relatoriosFiltrados = listaRelatorios.filter(r => filtroRelatorio === "todos" || r.tipo === filtroRelatorio);
+  const relatoriosFiltrados = listaRelatorios.filter(
+    (r) => filtroRelatorio === "todos" || r.tipo === filtroRelatorio
+  );
 
   async function baixarExcelEntradas(ordens) {
     const workbook = new ExcelJS.Workbook();
@@ -140,8 +166,6 @@ export function Relatorios() {
       fgColor: { argb: "05314c" }, // azul médio
     };
 
-
-
     // Adiciona logo (colocado dentro da faixa azul)
     sheet.addImage(imageId, {
       tl: { col: 1.2, row: 0.2 }, // canto esquerdo
@@ -163,7 +187,6 @@ export function Relatorios() {
       fgColor: { argb: "FF05314C" }, // Azul escuro
     };
 
-
     // === Cabeçalho da tabela ===
     const header = [
       "Data",
@@ -177,7 +200,6 @@ export function Relatorios() {
       "Valor total",
     ];
     const headerRow = sheet.addRow(header);
-
 
     headerRow.eachCell((cell) => {
       cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
@@ -204,7 +226,6 @@ export function Relatorios() {
       return `${dia}/${mes}/${ano}`;
     }
 
-
     // Adiciona dados
     ordens.forEach((ordem, index) => {
       const row = sheet.addRow([
@@ -214,15 +235,16 @@ export function Relatorios() {
         ordem.tipoMaterial || "N/A", // Descrição do material
         ordem.quantidade || 0, // Quantidade solicitada
         ordem.valorUnitario || 0, // Valor unitário
-        (ordem.valorUnitario) * ordem.quantidade || 0, // Quantidade * Valor unitário
+        ordem.valorUnitario * ordem.quantidade || 0, // Quantidade * Valor unitário
         (ordem.ipi || 0) / 100, // IPI em formato decimal (ex.: 10% -> 0.10)
-        (ordem.valorUnitario * ordem.quantidade) * (1 + (ordem.ipi || 0) / 100) || 0, // Valor total com IPI
+        ordem.valorUnitario * ordem.quantidade * (1 + (ordem.ipi || 0) / 100) ||
+          0, // Valor total com IPI
       ]);
 
       // Formatação de células
       row.getCell(6).numFmt = '"R$"#,##0.00';
       row.getCell(7).numFmt = '"R$"#,##0.00';
-      row.getCell(8).numFmt = '0.00%';
+      row.getCell(8).numFmt = "0.00%";
       row.getCell(9).numFmt = '"R$"#,##0.00';
 
       // Zebra
@@ -296,8 +318,6 @@ export function Relatorios() {
     // };
     // sheet.getCell(`G${ultimaLinha}`).alignment = { horizontal: "center" };
 
-
-
     // sheet.getCell(`I${ultimaLinha}`).alignment = { horizontal: "center" };
 
     // sheet.getCell(`I${ultimaLinha}`).value = {
@@ -311,32 +331,50 @@ export function Relatorios() {
     // };
     // sheet.getCell(`I${ultimaLinha}`).alignment = { horizontal: "center" };
 
-
     // Salvar arquivo
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), `entradas_${anoSelecionado}.xlsx`);
   }
 
   const ordensDeCompra = [
-    { data: "15/01/2025", fornecedor: "Fornecedor A", ordemCompra: "OC-123", produto: "Aço SAE1020", quantidade: 50, precoUnitario: 200, precoTotalPedido: 10000, ipi: 10, valorTotal: 11000 },
-    { data: "20/02/2025", fornecedor: "Fornecedor B", ordemCompra: "OC-456", produto: "Bobina Galvanizada", quantidade: 30, precoUnitario: 500, precoTotalPedido: 15000, ipi: 5, valorTotal: 15750 },
+    {
+      data: "15/01/2025",
+      fornecedor: "Fornecedor A",
+      ordemCompra: "OC-123",
+      produto: "Aço SAE1020",
+      quantidade: 50,
+      precoUnitario: 200,
+      precoTotalPedido: 10000,
+      ipi: 10,
+      valorTotal: 11000,
+    },
+    {
+      data: "20/02/2025",
+      fornecedor: "Fornecedor B",
+      ordemCompra: "OC-456",
+      produto: "Bobina Galvanizada",
+      quantidade: 30,
+      precoUnitario: 500,
+      precoTotalPedido: 15000,
+      ipi: 5,
+      valorTotal: 15750,
+    },
   ];
-
 
   // ====================== Saídas ======================
   const [transferencias, setTransferencias] = useState([]);
 
   useEffect(() => {
     const token = sessionStorage.getItem("authToken");
-    api.get("/transferencias", {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => setTransferencias(res.data))
+    api
+      .get("/transferencias", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setTransferencias(res.data))
       .catch(() => toastError("Erro ao carregar transferências"));
   }, []);
 
   async function baixarExcelSaidas(transferencias) {
-
     function formatarDataBrasileira(dataISO) {
       if (!dataISO) return "N/A";
       const [ano, mes, dia] = dataISO.split("T")[0].split("-");
@@ -346,7 +384,6 @@ export function Relatorios() {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Saídas");
 
-
     const response = await fetch(logoMegaPlate);
     const blob = await response.blob();
     const imageBuffer = await blob.arrayBuffer();
@@ -355,7 +392,6 @@ export function Relatorios() {
       buffer: imageBuffer,
       extension: "png",
     });
-
 
     sheet.mergeCells("A1:D4");
     const faixa = sheet.getCell("A1");
@@ -373,8 +409,6 @@ export function Relatorios() {
     sheet.addRow([]);
     sheet.addRow([]);
 
-
-
     sheet.mergeCells("A6:D6");
     const titulo = sheet.getCell("A6");
     titulo.value = `Relatório de Saídas - ${anoSelecionado}`;
@@ -389,7 +423,6 @@ export function Relatorios() {
     const header = ["Data", "Material", "Quantidade Solicitada", "Destino"];
 
     const headerRow = sheet.addRow(header);
-
 
     headerRow.eachCell((cell) => {
       cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
@@ -408,7 +441,12 @@ export function Relatorios() {
     });
 
     transferencias.forEach((t, index) => {
-      const row = sheet.addRow([formatarDataBrasileira(t.ultimaMovimentacao), t.tipoMaterial, t.quantidadeTransferida, t.setor]);
+      const row = sheet.addRow([
+        formatarDataBrasileira(t.ultimaMovimentacao),
+        t.tipoMaterial,
+        t.quantidadeTransferida,
+        t.setor,
+      ]);
       row.getCell(4).numFmt = '"R$"#,##0.00';
 
       if (index % 2 === 0) {
@@ -438,12 +476,20 @@ export function Relatorios() {
 
   // Exemplo de uso
   const transferenciasMock = [
-    { data: "8/1/2025", material: "SAE1023", qtdSolicitada: 100, destino: "C1" },
-    { data: "8/2/2025", material: "SAE1024", qtdSolicitada: 200, destino: "C2" },
+    {
+      data: "8/1/2025",
+      material: "SAE1023",
+      qtdSolicitada: 100,
+      destino: "C1",
+    },
+    {
+      data: "8/2/2025",
+      material: "SAE1024",
+      qtdSolicitada: 200,
+      destino: "C2",
+    },
     // ... adicione todos os outros dados aqui
   ];
-
-
 
   return (
     <>
@@ -453,7 +499,11 @@ export function Relatorios() {
           <h1>RELATÓRIOS DE DESEMPENHO</h1>
 
           <div className={styles.filtro}>
-            <select value={filtroRelatorio} onChange={(e) => setFiltroRelatorio(e.target.value)} className={styles.selectFiltro}>
+            <select
+              value={filtroRelatorio}
+              onChange={(e) => setFiltroRelatorio(e.target.value)}
+              className={styles.selectFiltro}
+            >
               <option value="todos">Todos os Relatórios</option>
               <option value="entradas">Relatório Geral de Entradas</option>
               <option value="saidas">Relatório Geral de Saídas</option>
@@ -463,13 +513,29 @@ export function Relatorios() {
 
             <div className={styles.filtroAno}>
               <div className={styles.anoContent}>
-                <img src={setaImg} alt="seta esquerda" className={styles.seta} onClick={voltarAno} />
+                <img
+                  src={setaImg}
+                  alt="seta esquerda"
+                  className={styles.seta}
+                  onClick={voltarAno}
+                />
                 {anosVisiveis.map((ano) => (
-                  <div key={ano} className={`${styles.ano} ${anoSelecionado === ano ? styles.ativo : ""}`} onClick={() => setAnoSelecionado(ano)}>
+                  <div
+                    key={ano}
+                    className={`${styles.ano} ${
+                      anoSelecionado === ano ? styles.ativo : ""
+                    }`}
+                    onClick={() => setAnoSelecionado(ano)}
+                  >
                     {ano}
                   </div>
                 ))}
-                <img src={setaRightImg} alt="seta direita" className={styles.seta} onClick={avancarAno} />
+                <img
+                  src={setaRightImg}
+                  alt="seta direita"
+                  className={styles.seta}
+                  onClick={avancarAno}
+                />
               </div>
             </div>
           </div>
@@ -479,7 +545,10 @@ export function Relatorios() {
               <div key={index} className={styles.relatorio}>
                 <h3>
                   {relatorio.titulo}
-                  {(relatorio.tipo === "entradas" || relatorio.tipo === "saidas") && anoSelecionado && ` - ${anoSelecionado}`}
+                  {(relatorio.tipo === "entradas" ||
+                    relatorio.tipo === "saidas") &&
+                    anoSelecionado &&
+                    ` - ${anoSelecionado}`}
                 </h3>
 
                 <p>{relatorio.descricao}</p>
@@ -491,18 +560,26 @@ export function Relatorios() {
                       if (!anoSelecionado) {
                         toastError("Selecione um ano para gerar o relatório.");
                         return;
-
                       }
-                      baixarExcelEntradas ( ordens.filter(o => {
-                        const ano = o.prazoEntrega.split("-")[0]; // "2025" de "2025-07-26"
+
+                      const ordensFiltradas = ordens.filter((o) => {
+                        const ano = o.prazoEntrega.split("-")[0]; // pega "2025" de "2025-07-26"
                         return ano === String(anoSelecionado);
-                      }));
+                      });
+
+                      if (ordensFiltradas.length === 0) {
+                        toastInfo(
+                          `Nenhuma ordem de compra encontrada para o ano ${anoSelecionado}.`
+                        );
+                        return;
+                      }
+
+                      baixarExcelEntradas(ordensFiltradas);
                       toastSuccess("Relatório gerado com sucesso!");
                     }}
                   >
                     {relatorio.botao}
                   </button>
-
                 )}
 
                 {relatorio.tipo === "saidas" && (
@@ -510,10 +587,25 @@ export function Relatorios() {
                     className={styles.botao}
                     onClick={() => {
                       if (!anoSelecionado) {
-                        toastError("Por favor, selecione um ano antes de baixar o relatório.");
+                        toastError(
+                          "Por favor, selecione um ano antes de baixar o relatório."
+                        );
                         return;
                       }
-                      baixarExcelSaidas(transferencias.filter(t => t.ultimaMovimentacao.includes(anoSelecionado)));
+
+                      const transferenciasFiltradas = transferencias.filter(
+                        (t) =>
+                          t.ultimaMovimentacao.includes(String(anoSelecionado))
+                      );
+
+                      if (transferenciasFiltradas.length === 0) {
+                        toastInfo(
+                          `Nenhuma transferência encontrada para o ano ${anoSelecionado}.`
+                        );
+                        return;
+                      }
+
+                      baixarExcelSaidas(transferenciasFiltradas);
                       toastSuccess("Relatório gerado com sucesso!");
                     }}
                   >
@@ -522,15 +614,29 @@ export function Relatorios() {
                 )}
 
                 {relatorio.tipo === "fornecedores" && (
-                  <button className={styles.botao} onClick={() => navigate("/relatorioFornecedor")}>
+                  <button
+                    className={styles.botao}
+                    onClick={() => navigate("/relatorioFornecedor")}
+                  >
                     {relatorio.botao}
-                    <img src={setaRightImg} alt="seta" className={styles.iconeSeta} />
+                    <img
+                      src={setaRightImg}
+                      alt="seta"
+                      className={styles.iconeSeta}
+                    />
                   </button>
                 )}
                 {relatorio.tipo === "materiais" && (
-                  <button className={styles.botao} onClick={() => navigate("/relatorioMaterial")}>
+                  <button
+                    className={styles.botao}
+                    onClick={() => navigate("/relatorioMaterial")}
+                  >
                     {relatorio.botao}
-                    <img src={setaRightImg} alt="seta" className={styles.iconeSeta} />
+                    <img
+                      src={setaRightImg}
+                      alt="seta"
+                      className={styles.iconeSeta}
+                    />
                   </button>
                 )}
               </div>
