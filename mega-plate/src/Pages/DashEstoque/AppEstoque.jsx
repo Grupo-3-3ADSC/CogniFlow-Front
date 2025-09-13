@@ -13,6 +13,8 @@ import {
 import "./styleEstoque.css";
 import NavBar from "../../components/NavBar";
 import { api } from "../../provider/api";
+import { IconContext } from "react-icons";
+import { FaPencilAlt } from "react-icons/fa";
 
 // Estilos do Pop-up padronizados com o Dashboard Material
 const popupStyles = `
@@ -273,7 +275,10 @@ function App() {
   const [showPopup, setShowPopup] = useState(false);
   const [ordemDeCompra, setOrdemDeCompra] = useState([]);
   const [pendencias, setPendencias] = useState({});
-
+const [isEditingIPI, setIsEditingIPI] = useState(false);
+const [tempIPIValue, setTempIPIValue] = useState('');
+const [isLoading, setIsLoading] = useState(false);
+const [valorIPI, setValorIPI] = useState(0);
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
@@ -326,6 +331,35 @@ function App() {
         console.log("Transferências:", resposta.data);
       })
       .catch((err) => console.log("Erro ao buscar transferências:", err));
+  }
+
+  function editarCampoEstoque() {
+    setIsLoading(true); // Indica que está carregando
+    
+    const dto = {
+      ipi: Number(tempIPIValue), // Usa o valor temporário
+      tipoMaterial: selectedStockItem.tipoMaterial,
+    };  
+
+    api
+      .patch(`/estoque/atualizarInfo`, dto)
+      .then((resposta) => {
+        console.log("Resposta do servidor:", resposta.data);
+        // Atualiza o selectedStockItem com o novo valor do IPI
+        setSelectedStockItem(prev => ({
+          ...prev,
+          ipi: Number(tempIPIValue)
+        }));
+        setValorIPI(Number(tempIPIValue));
+        setIsLoading(false);
+        setIsEditingIPI(false);
+      })
+      .catch((err) => {
+        console.error("Erro ao editar campo de estoque:", err.response?.data || err.message);
+        setIsLoading(false);
+        // Reverte para o valor anterior em caso de erro
+        setTempIPIValue(selectedStockItem.ipi);
+      });
   }
 
   // Helper para agrupar pendentes por estoqueId
@@ -475,16 +509,19 @@ function App() {
     return ultimasOrdens;
   }
   function calcularTransferenciasPorSetor(transferencias, tipoMaterial, setor) {
-  return transferencias
-    .filter(transferencia => 
-      transferencia.tipoMaterial?.toUpperCase() === tipoMaterial?.toUpperCase() &&
-      transferencia.setor?.toUpperCase() === setor?.toUpperCase()
-    )
-    .reduce((total, transferencia) => 
-      total + (Number(transferencia.quantidadeTransferida) || 0), 0
-    );
-}
-  
+    return transferencias
+      .filter(
+        (transferencia) =>
+          transferencia.tipoMaterial?.toUpperCase() ===
+            tipoMaterial?.toUpperCase() &&
+          transferencia.setor?.toUpperCase() === setor?.toUpperCase()
+      )
+      .reduce(
+        (total, transferencia) =>
+          total + (Number(transferencia.quantidadeTransferida) || 0),
+        0
+      );
+  }
 
   // Modificação no useEffect
   const [pendenciasPorMaterial, setPendenciasPorMaterial] = useState({});
@@ -540,7 +577,6 @@ function App() {
   //   ? pendenciasPorMaterial[materialHARDOX.toUpperCase()] || 0
   //   : 0;
 
-  
   return (
     <div className="IndexFornecedor">
       <NavBar />
@@ -622,7 +658,7 @@ function App() {
                   {filteredStockItems.map((item, index) => {
                     // Busca a ordem de compra correspondente ao material ou ID
                     const quantidadeTotal = ordensDeCompra
-                     
+
                       .filter(
                         (ordem) =>
                           ordem.descricaoMaterialCompleta?.toUpperCase() ===
@@ -634,10 +670,26 @@ function App() {
                           total + (Number(ordem.quantidade) || 0),
                         0
                       );
-                       const quantidadeC1 = calcularTransferenciasPorSetor(transferencias, item.tipoMaterial, "C1");
-                      const quantidadeC2 = calcularTransferenciasPorSetor(transferencias, item.tipoMaterial, "C2");
-                      const quantidadeC3 = calcularTransferenciasPorSetor(transferencias, item.tipoMaterial, "C3");
-                      const quantidadeC4 = calcularTransferenciasPorSetor(transferencias, item.tipoMaterial, "C4")
+                    const quantidadeC1 = calcularTransferenciasPorSetor(
+                      transferencias,
+                      item.tipoMaterial,
+                      "C1"
+                    );
+                    const quantidadeC2 = calcularTransferenciasPorSetor(
+                      transferencias,
+                      item.tipoMaterial,
+                      "C2"
+                    );
+                    const quantidadeC3 = calcularTransferenciasPorSetor(
+                      transferencias,
+                      item.tipoMaterial,
+                      "C3"
+                    );
+                    const quantidadeC4 = calcularTransferenciasPorSetor(
+                      transferencias,
+                      item.tipoMaterial,
+                      "C4"
+                    );
                     return (
                       <tr
                         key={index}
@@ -664,18 +716,34 @@ function App() {
                           {quantidadeTotal}
                         </td>
 
-                        <td style={{ color: quantidadeC1 > 0 ? "green" : "inherit" }}>
-          {quantidadeC1}
-        </td>
-        <td style={{ color: quantidadeC2 > 0 ? "green" : "inherit" }}>
-          {quantidadeC2}
-        </td>
-        <td style={{ color: quantidadeC3 > 0 ? "green" : "inherit" }}>
-          {quantidadeC3}
-        </td>
-        <td style={{ color: quantidadeC4 > 0 ? "green" : "inherit" }}>
-          {quantidadeC4}
-        </td>
+                        <td
+                          style={{
+                            color: quantidadeC1 > 0 ? "green" : "inherit",
+                          }}
+                        >
+                          {quantidadeC1}
+                        </td>
+                        <td
+                          style={{
+                            color: quantidadeC2 > 0 ? "green" : "inherit",
+                          }}
+                        >
+                          {quantidadeC2}
+                        </td>
+                        <td
+                          style={{
+                            color: quantidadeC3 > 0 ? "green" : "inherit",
+                          }}
+                        >
+                          {quantidadeC3}
+                        </td>
+                        <td
+                          style={{
+                            color: quantidadeC4 > 0 ? "green" : "inherit",
+                          }}
+                        >
+                          {quantidadeC4}
+                        </td>
                       </tr>
                     );
                   })}
@@ -721,6 +789,46 @@ function App() {
                     <span className="info-value">
                       {selectedStockItem.quantidadeAtual} unidades
                     </span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">IPI:</span>
+                    {isEditingIPI ? (
+                      <input
+                        type="number"
+                        className="info-value"
+                        value={tempIPIValue}
+                        onChange={(e) => setTempIPIValue(e.target.value)}
+                        onBlur={() => {
+                          if (tempIPIValue !== selectedStockItem.ipi) {
+                            editarCampoEstoque();
+                          }
+                        }}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            if (tempIPIValue !== selectedStockItem.ipi) {
+                              editarCampoEstoque();
+                            }
+                          }
+                        }}
+                        disabled={isLoading}
+                        autoFocus
+                      />
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span className="info-value">
+                          {isLoading ? 'Atualizando...' : `${selectedStockItem.ipi} %`}
+                        </span>
+                        <IconContext.Provider value={{ color: '#fff', size: '1.2em' }}>
+                          <FaPencilAlt
+                            onClick={() => {
+                              setIsEditingIPI(true);
+                              setTempIPIValue(selectedStockItem.ipi);
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          />
+                        </IconContext.Provider>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
