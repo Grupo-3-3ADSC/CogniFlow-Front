@@ -214,15 +214,32 @@ h2 {
   margin-right: 1rem;
 }
 
+
 .inputFiltro {
   flex: 1;
   min-width: 180px;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #ccc;
   border-radius: 40px;
   font-size: 0.9rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  font-weight: bold;
+  border: none;
+  margin-right: 20px;
+  outline: none;
+  background-color: var(--secondary-color);
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  transition: background-color 0.3s;
 }
+
+.inputFiltro::placeholder {
+  color: white;       
+  opacity: 1;            
+}
+
 
 .inputFiltro:focus {
   border-color: #007bff;

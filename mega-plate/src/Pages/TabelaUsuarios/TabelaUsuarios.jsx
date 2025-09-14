@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import NavBar from "../../components/NavBar";
 import { api } from "../../provider/api.js";
 import Swal from "sweetalert2";
-import { toastSuccess, toastError, toastInfo } from "../../components/toastify/ToastifyService.jsx";
+import {
+  toastSuccess,
+  toastError,
+  toastInfo,
+} from "../../components/toastify/ToastifyService.jsx";
 import styles from "./tabela.module.css";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
@@ -16,8 +20,10 @@ export function TabelaUsuarios() {
   const [filtroEmail, setFiltroEmail] = useState("");
   const [filtroCargo, setFiltroCargo] = useState("todos");
   const [fade, setFade] = useState(true);
+  const [carregando, setCarregando] = useState(false);
   const navigate = useNavigate();
 
+  // 🔐 Autenticação
   useEffect(() => {
     const token = sessionStorage.getItem("authToken");
     if (!token) {
@@ -28,21 +34,24 @@ export function TabelaUsuarios() {
         sessionStorage.removeItem("authToken");
         navigate("/");
       } else {
-        setAutenticacaoPassou(true);
+        setAutenticacaoPassou(true); // só libera depois da autenticação
       }
     }
   }, [navigate]);
 
+  // 🔍 Buscar usuários (só depois da autenticação)
   useEffect(() => {
+    if (!autenticacaoPassou) return; // trava se ainda não autenticou
+
     setFade(false); // inicia fade out
     const timeout = setTimeout(() => {
-      setUsuarios([]);
-      buscarUsuarios();
-      setFade(true); // inicia fade in depois de buscar
-    }, 200); // tempo de fade out antes de buscar
+      buscarUsuarios().then(() => {
+        setFade(true); // inicia fade in depois da busca
+      });
+    }, 200);
 
     return () => clearTimeout(timeout);
-  }, [filtroStatus]);
+  }, [filtroStatus, autenticacaoPassou]);
 
   const buscarUsuarios = async () => {
     const token = sessionStorage.getItem("authToken");
@@ -54,16 +63,21 @@ export function TabelaUsuarios() {
     if (filtroStatus === "ativos") url = "/usuarios/listarAtivos";
     if (filtroStatus === "inativos") url = "/usuarios/listarInativos";
 
+    setCarregando(true);
     try {
       const res = await api.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUsuarios(res.data);
+      setUsuarios(res.data || []);
+      console.log("Usuários recebidos:", res.data);
     } catch (error) {
       Swal.fire("Erro ao carregar usuários", "", "error");
+    } finally {
+      setCarregando(false);
     }
   };
 
+  // 🔄 Ativar/Desativar usuário
   const handleToggleStatus = async (id, ativo) => {
     const result = await Swal.fire({
       title: ativo
@@ -98,6 +112,7 @@ export function TabelaUsuarios() {
     }
   };
 
+  // ❌ Deletar usuário
   const handleDeletarUsuario = async (id) => {
     const result = await Swal.fire({
       title: "Deseja excluir este usuário?",
@@ -112,23 +127,20 @@ export function TabelaUsuarios() {
     if (result.isConfirmed) {
       const token = sessionStorage.getItem("authToken");
       try {
-        await api.delete(`/usuarios/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        )
+        await api.delete(`/usuarios/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         Swal.fire("Usuário deletado com sucesso!", "", "success");
         buscarUsuarios();
-      }
-
-      catch (error) {
+      } catch (error) {
         Swal.fire("Erro ao atualizar status", "", "error");
       }
-
     }
-  }
+  };
+
+  // 🔎 Filtros de nome, email, cargo
   const usuariosFiltrados = usuarios
     .filter((usuario) =>
       usuario.nome?.toLowerCase().includes(filtroNome.toLowerCase())
@@ -148,12 +160,9 @@ export function TabelaUsuarios() {
       <NavBar />
       <div className={styles.container}>
         <div className={styles.background}>
-          <h1>Lista de Usuários</h1>
+          <h1>Listagem de Usuários</h1>
 
           <div className={styles.filtro}>
-
-
-
             <input
               type="text"
               id="filtro-nome"
@@ -192,17 +201,15 @@ export function TabelaUsuarios() {
               <option value="gestor">Gestor</option>
               <option value="comum">Comum</option>
             </select>
-
-
           </div>
-
 
           <p className={styles.qtdUsuarios}>
             {usuariosFiltrados.length} usuário(s) encontrado(s)
           </p>
 
-
-          {usuarios.length === 0 ? (
+          {carregando ? (
+            <p>Carregando usuários...</p>
+          ) : usuariosFiltrados.length === 0 ? (
             <p className={styles.mensagemVazia}>
               {filtroStatus === "ativos" && "Nenhum usuário ativo encontrado."}
               {filtroStatus === "inativos" &&
@@ -213,8 +220,9 @@ export function TabelaUsuarios() {
           ) : (
             <div className={styles.tabelaWrapper}>
               <table
-                className={`${styles.tabela} ${fade ? styles.fadeIn : styles.fadeOut
-                  }`}
+                className={`${styles.tabela} ${
+                  fade ? styles.fadeIn : styles.fadeOut
+                }`}
               >
                 <thead>
                   <tr>
@@ -225,46 +233,49 @@ export function TabelaUsuarios() {
                   </tr>
                 </thead>
                 <tbody>
+                  {usuariosFiltrados.map((usuario, index) => (
+                    <tr key={usuario.id || `usuario-${index}`}>
+                      <td data-label="Nome">{String(usuario.nome || "—")}</td>
+                      <td data-label="Email">{String(usuario.email || "—")}</td>
 
-
-                  {usuariosFiltrados.map((usuario) => (
-
-                    <tr key={usuario.id}>
-                      <td data-label="Nome">{usuario.nome}</td>
-                      <td data-label="Email">{usuario.email}</td>
                       <td data-label="Cargo">
                         {Number(usuario.cargo?.id) === 2 ? "Gestor" : "Comum"}
                       </td>
                       <td data-label="Status">
                         <div className={styles.statusColuna}>
                           <span className={styles.statusTexto}>
-                            {usuario.ativo ? "Ativo" : "Inativo"}
+                            {usuario?.ativo ? "Ativo" : "Inativo"}
                           </span>
-                          {isGestor && String(sessionStorage.getItem("usuario")) !== String(usuario.id) && (
-                            <button
-                              className={
-                                usuario.ativo
-                                  ? styles.textDesativar
-                                  : styles.textAtivar
-                              }
-                              onClick={() =>
-                                handleToggleStatus(usuario.id, usuario.ativo)
-                              }
-                            >
-                              {usuario.ativo ? "Desativar" : "Ativar"}
-                            </button>
-                          )}
 
-                          {isGestor && String(sessionStorage.getItem("usuario")) !== String(usuario.id) && (
-                            <button
-                              className={styles.textExcluir}
-                              onClick={() =>
-                                handleDeletarUsuario(usuario.id)
-                              }
-                            >
-                              Excluir
-                            </button>
-                          )}
+                          {isGestor &&
+                            String(sessionStorage.getItem("usuario")) !==
+                              String(usuario?.id || "") && (
+                              <>
+                                <button
+                                  className={
+                                    usuario?.ativo
+                                      ? styles.textDesativar
+                                      : styles.textAtivar
+                                  }
+                                  onClick={() =>
+                                    handleToggleStatus(
+                                      usuario?.id,
+                                      usuario?.ativo
+                                    )
+                                  }
+                                >
+                                  {usuario?.ativo ? "Desativar" : "Ativar"}
+                                </button>
+                                <button
+                                  className={styles.textExcluir}
+                                  onClick={() =>
+                                    handleDeletarUsuario(usuario?.id)
+                                  }
+                                >
+                                  Excluir
+                                </button>
+                              </>
+                            )}
                         </div>
                       </td>
                     </tr>

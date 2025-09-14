@@ -85,8 +85,8 @@
 button {
     background-color: var(--secondary-color);
     border-radius: 80px;
-    width: 160px;
-    height: 44px;
+    width: 180px;
+    height: 50px;
     color: white;
     font-size: 20px;
     font-weight: bold;
@@ -162,7 +162,7 @@ button:hover {
     width: 100%;
     max-width: 766px;
     margin: 0 auto; /* Centralizar na página */
-    padding: 0 20px; /* Adicionado padding lateral */
+    padding: 0 0px; /* Adicionado padding lateral */
 }
 
 .botao-acao {

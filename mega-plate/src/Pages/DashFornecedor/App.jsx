@@ -970,7 +970,7 @@ function App() {
 
         <div className="containerDashFornecedor">
           <div className="dashboardFornecedor">
-            <h2>Dashboard Fornecedor</h2>
+            <h2>Custos por Fornecedor</h2>
 
             <div id="charts-superior">
               <div id="Kpi">

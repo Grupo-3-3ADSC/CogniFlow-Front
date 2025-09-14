@@ -40,7 +40,7 @@
 
 /* Quando o mouse passa por cima, expande */
 .menu-lateral:hover {
-    width: 250px;
+    width: 280px;
 }
 
 .menu-logo{
@@ -116,6 +116,12 @@
 }
 
 .icons-historico {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+}
+
+.icons-cifrao {
     width: 30px;
     height: 30px;
     object-fit: contain;
@@ -212,4 +218,5 @@
   .hamburger-icon {
     display: block;
   }
+  
 }

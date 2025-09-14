@@ -33,10 +33,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  padding-top: 4px;
 }
 
 .material-counter {
-  color: #666;
+  color:whitesmoke;
+  padding-top: 4px;
   font-size: 14px;
   font-weight: 500;
 }
@@ -126,7 +128,7 @@
     transition: var(--transition);
     backdrop-filter: blur(10px);
     min-width: 120px;
-    max-width: 140px;
+    max-width: 20      0px;
     height: 32px;
     border: 2px solid #ffffff;
 }
