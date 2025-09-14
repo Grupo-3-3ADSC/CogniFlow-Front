@@ -7,6 +7,7 @@
   width: 100%;
   padding-top: 80px; /* Altura da navbar */
   height: calc(100vh - 20px); 
+  margin-top: 20px;
 }
 
 #inputs{
@@ -50,10 +51,11 @@
   height: 10vh;
   margin-bottom: 30px;
   border-radius: 30px;
+  margin-left: 5.3vw;
 }
 
 .formContent {
-  background-color: #1D597B;
+  background-color: #05314C;
   border-radius: 20px;
   width: 100%;
   max-width: 1000px;
@@ -65,12 +67,12 @@
   padding: 2rem;
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4);
   overflow-y: auto;
+  margin-left: 5.3vw;
 }
 
 .spanTitulo {
-  width: 270px;
+  width: 70%;
   height: 40px;
-  background-color: #05314C;
   margin-bottom: 50px;
   display: flex;
   justify-content: center;
@@ -98,8 +100,8 @@
   padding: 10px 40px 10px 10px;
   border-radius: 40px;
   border: 1px solid #ccc;
-  background-color: #05314C;
-  color: white;
+  background-color: whitesmoke;
+  color: black;
   font-size: medium;
   box-sizing: border-box;
 }
@@ -111,6 +113,7 @@
   justify-content: space-between;
   padding: 1rem 2rem;
   box-sizing: border-box;
+  margin-left: 15px;
 }
 
 .botoes button {
@@ -121,7 +124,7 @@
   height: 50px;
   border: none;
   color: white;
-  border-radius: 20px;
+  border-radius: 80px;
   display: block;
   text-align: center;
   font-weight: bold;
@@ -142,7 +145,7 @@
   height: 8vh;
   border: none;
   color: white;
-  border-radius: 60px;
+  border-radius: 80px;
   display: block;
   text-align: center;
   font-weight: bold;

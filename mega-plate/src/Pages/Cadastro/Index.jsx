@@ -1,132 +1,157 @@
-import styles from './cadastro.module.css';
-import logo from '../../assets/logo-megaplate.png';
-import { useEffect, useState } from 'react';
-import { api } from '../../provider/api.js';
-import NavBar from '../../components/NavBar'; // Importando a NavBar
-import { useNavigate } from 'react-router-dom';
-import { toastSucess, toastError } from '../../components/toastify/ToastifyService.jsx';
-import {jwtDecode} from "jwt-decode";
-import Swal from 'sweetalert2'
-
+import styles from "./cadastro.module.css";
+import logo from "../../assets/logo-megaplate.png";
+import { useEffect, useState } from "react";
+import { api } from "../../provider/api.js";
+import NavBar from "../../components/NavBar";
+import { useNavigate } from "react-router-dom";
+import { toastSuccess, toastError, toastWarning } from "../../components/toastify/ToastifyService.jsx";
+import { jwtDecode } from "jwt-decode";
 
 export function Cadastro() {
-
   const navigate = useNavigate();
-
-  // let mensagem = '';
-
-  
-
   const [formData, setFormData] = useState({
-    nome: '',
-    email: '',
+    nome: "",
+    email: "",
     cargo: {
       id: 1,
-      nome: 'comum'
+      nome: "comum",
     },
-    password: '',
+    password: "",
   });
 
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
 
-    useEffect(() => {
-      const token = sessionStorage.getItem('authToken');
-      if(!token){
-        navigate('/');
-      }else{
-        const {exp} = jwtDecode(token)
-        if(Date.now() >= exp * 1000) {
-          sessionStorage.removeItem('authToken');
-          navigate('/');
-        }else{
-        setAutenticacaoPassou(true);
-        }
-      }
-    }, []);
-
-    if(!autenticacaoPassou) return null;
-
-  const cadastrar = () => {
-    if (!formData.nome || !formData.email || !formData.cargo || !formData.password) {
-      Swal.fire({
-        title: "Preencha as informações",
-        icon: "info",
-        confirmButtonColor: "#3085d6",
-      });
-      return;
-    }
-
-    const token = sessionStorage.getItem('authToken');
-
-    // console.log('Token:', token); // verificação se o token esta sendo pego corretamente
-
+  useEffect(() => {
+    const token = sessionStorage.getItem("authToken");
+    const cargo = parseInt(sessionStorage.getItem("cargoUsuario"), 10);
     if (!token) {
-      toastError('Token de autenticação não encontrado. Faça login novamente.');
-      navigate('/')
+      navigate("/");
+    } else if (cargo !== 2) {
+      toastError("Você não tem permissão para acessar esta página.");
+      navigate("/material");
+    } else {
+      const { exp } = jwtDecode(token);
+      if (Date.now() >= exp * 1000) {
+        sessionStorage.removeItem("authToken");
+        navigate("/");
+      } else {
+        setAutenticacaoPassou(true);
+      }
+    }
+  }, []);
+
+  if (!autenticacaoPassou) return null;
+
+  // Funções de validação
+  function validarNome(nome) {
+    if (typeof nome !== "string") return false;
+    const nomeLimpo = nome.trim();
+    return /^[a-zA-ZÀ-ÿ\s]+$/.test(nomeLimpo) && nomeLimpo.split(/\s+/).length >= 2;
+  }
+
+  function validarEmail(email) {
+    const regex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{3,}$/;
+    return regex.test(email.trim());
+  }
+
+  function validarSenha(senha) {
+    return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{6,}$/.test(senha);
+  }
+
+  function validarCargo(cargo) {
+    return cargo === 1 || cargo === 2;
+  }
+
+  // Função para cadastrar usuário
+  const cadastrar = () => {
+    if (!formData.nome || !formData.email || !formData.cargo.id || !formData.password) {
+      toastError("Por favor, preencha todos os campos!");
       return;
     }
 
-    
+    if (!validarNome(formData.nome)) {
+      toastError("Nome inválido. É necessário ter nome e sobrenome.");
+      return;
+    }
+
+    if (!validarEmail(formData.email)) {
+      toastError("E-mail inválido. Ex: email@exemplo.com");
+      return;
+    }
+
+    if (!validarSenha(formData.password)) {
+      toastError("Senha inválida. Deve ter pelo menos 6 caracteres, uma letra, um número e um caractere especial.");
+      return;
+    }
+
+    if (!validarCargo(formData.cargo?.id)) {
+      toastError("Cargo inválido.");
+      return;
+    }
+
+    const token = sessionStorage.getItem("authToken");
+    if (!token) {
+      toastError("Token de autenticação não encontrado. Faça login novamente.");
+      navigate("/");
+      return;
+    }
+
     const userData = {
       nome: formData.nome.trim(),
       email: formData.email.trim(),
       cargo: {
         id: formData.cargo.id,
-        nome: formData.cargo.id === 1 ? 'comum' : 'gestor'
+        nome: formData.cargo.id === 1 ? "comum" : "gestor",
       },
-      password: formData.password.trim()
+      password: formData.password.trim(),
     };
 
-     
-        const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
-            if (sqlPattern.test(userData.email) || 
-            sqlPattern.test(userData.nome) ||
-            sqlPattern.test(userData.password)) {
-                return toastError('Por favor não cadastrar com comandos especiais...');
-            }
-            if (/<script.*?>.*?<\/script>/gi.test(userData.email) ||
-             /<script.*?>.*?<\/script>/gi.test(userData.nome) ||
-            /<script.*?>.*?<\/script>/gi.test(userData.password)) {
-                return toastError('Por favor não cadastrar com comandos especiais...');
-            }  
+    const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
+    if (sqlPattern.test(userData.email) || sqlPattern.test(userData.nome) || sqlPattern.test(userData.password)) {
+      toastError("Por favor não cadastrar com comandos especiais...");
+      return;
+    }
 
-    const endpoint = formData.cargo.id === 2 ? '/usuarios/gestor' : '/usuarios';
+    if (
+      /<script.*?>.*?<\/script>/gi.test(userData.email) ||
+      /<script.*?>.*?<\/script>/gi.test(userData.nome) ||
+      /<script.*?>.*?<\/script>/gi.test(userData.password)
+    ) {
+      toastError("Por favor não cadastrar com comandos especiais...");
+      return;
+    }
 
-    api.post(endpoint, userData, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
+    const endpoint = formData.cargo.id === 2 ? "/usuarios/gestor" : "/usuarios";
 
-
+    api
+      .post(endpoint, userData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
       .then((response) => {
-        console.log('Resposta do servidor:', response.data);
-        Swal.fire({
-          title: "Usuário cadastrado com sucesso!",
-          icon: "success",
-          confirmButtonColor: "#3085d6",
+        console.log("Resposta do servidor:", response.data);
+        toastSuccess("Usuário cadastrado com sucesso!");
+        setFormData({
+          nome: "",
+          email: "",
+          password: "",
+          cargo: { id: 1, nome: "comum" },
         });
-        setFormData({ nome: '', email: '', password: '' });
       })
       .catch((error) => {
-        console.error('Erro completo:', error);
         if (error.response) {
-          console.log('Status do erro:', error.response.status);
-          console.log('Dados do erro:', error.response.data);
-
           if (error.response.status === 400) {
-
-            toastError('Dados inválidos: ' + (error.response.data.message || 'Verifique as informações'));
-
+            toastError(error.response.data.message || "Dados inválidos. Verifique as informações.");
           } else if (error.response.status === 401) {
-            toastError('Sessão expirada. Por favor, faça login novamente.');
-            navigate('/login');
+            toastError("Sessão expirada, faça login novamente!");
+            navigate("/login");
           } else {
-            toastError('Erro ao cadastrar usuário: ' + (error.response.data?.message || 'Tente novamente mais tarde.'));
+            toastError(error.response.data?.message || "Erro ao cadastrar usuário. Tente novamente mais tarde.");
           }
         } else {
-          toastError('Erro de conexão. Verifique sua internet e tente novamente.');
+          toastError("Erro de conexão. Verifique sua internet e tente novamente.");
         }
       });
   };
@@ -135,31 +160,42 @@ export function Cadastro() {
     <>
       <NavBar />
 
-      <div className={styles['tab-container']}>
-      </div>
+      <div className={styles["tab-container"]}></div>
       <section className={styles.cadastro}>
-        <div className={styles['bloco-fundo']}>
-          <div className={styles['tab-container-user']}>
-            <div className={styles.tabActiveUsuario}>Usuario</div>
-
+        <div className={styles["bloco-fundo"]}>
+          <div className={styles["tab-container-user"]}>
+            <div className={styles.tabActiveUsuario}>CADASTRO DE USUÁRIO</div>
           </div>
         </div>
-        <aside className={styles['aside-cadastro']}>
+        <aside className={styles["aside-cadastro"]}>
           <img src={logo} alt="MegaPlate logo" />
         </aside>
-        <main className={styles['form-content']}>
-          <div className={styles['input-group']}>
-            <p id='textCadastro'>Nome</p>
+        <main className={styles["form-content"]}>
+          <div className={styles["input-group"]}>
+            <p id="textCadastro">
+              Nome e Sobrenome
+              <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span>
+            </p>
             <input
               placeholder="Marcos Antonio"
               type="text"
               value={formData.nome}
-              onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  nome: e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, ""),
+                })
+              }
             />
           </div>
 
-          <div className={styles['input-group']}>
-            <p id='textCadastro'>Email</p>
+          <div className={styles["input-group"]}>
+            <p id="textCadastro">
+              Email
+              <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span>
+            </p>
             <input
               placeholder="exemplo@dominio.com"
               type="email"
@@ -168,8 +204,12 @@ export function Cadastro() {
             />
           </div>
 
-          <div className={styles['input-group']}>
-            <p>Cargo</p>
+          <div className={styles["input-group"]}>
+            <p>
+              Cargo
+              <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span>
+            </p>
             <select
               value={formData.cargo?.id || 1}
               onChange={(e) => {
@@ -178,21 +218,22 @@ export function Cadastro() {
                   ...formData,
                   cargo: {
                     id: selectedId,
-                    nome: selectedId === 1 ? 'comum' : 'gestor'
-                  }
+                    nome: selectedId === 1 ? "comum" : "gestor",
+                  },
                 });
               }}
             >
               <option value={1}>Usuário Comum</option>
-
-
               <option value={2}>Gestor</option>
-
             </select>
           </div>
 
-          <div className={styles['input-group']}>
-            <p id='textCadastro'>Senha</p>
+          <div className={styles["input-group"]}>
+            <p id="textCadastro">
+              Senha
+              <span style={{}}> </span>
+              <span style={{ color: "red" }}>*</span>
+            </p>
             <input
               placeholder="********"
               type="password"
@@ -200,9 +241,11 @@ export function Cadastro() {
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
           </div>
-
-          <button id='buttonCadastrar' onClick={cadastrar}>CADASTRAR</button>
-
+          <div>
+            <button id="buttonCadastrar" className={styles.buttonCadastrar} onClick={cadastrar}>
+              CADASTRAR
+            </button>
+          </div>
         </main>
       </section>
     </>

@@ -5,8 +5,12 @@ import iconDash from '../assets/icon-dash.png';
 import iconLogout from '../assets/icon-logout.png';
 import iconTransferencia from '../assets/icon-transferencia.png';
 import iconFormularios from '../assets/icon-formularios.png';
+import iconHistorico from '../assets/icon-historico.png';
+import iconGroup from '../assets/icon-group.png';
+import iconCifrao from '../assets/icon-cifrao.png';
 import logoMega from '../assets/logo-megaplate.png';
 import menuHamburger from '../assets/menu-hamburguer.png';
+import iconHistoricos from '../assets/icon-historico.png';
 import user from '../assets/User.png';
 import { useEffect } from 'react';
 import { api } from '../provider/api';
@@ -15,40 +19,62 @@ const NavBar = () => {
   const navigate = useNavigate();
   const [showDashSubmenu, setShowDashSubmenu] = useState(false);
   const [showFormSubmenu, setShowFormSubmenu] = useState(false);
+  const [showHistoricoSubmenu, setShowHistoricoSubmenu] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 520);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [nomeUsuario, setNomeUsuario] = useState("Usuario");
+  const [fotoUrl, setFotoUrl] = useState(null); // Mudança: usar fotoUrl específico
+  const [fotoError, setFotoError] = useState(false);
+  const [usuarioLista, setUsuarioLista] = useState([]);
 
   const token = sessionStorage.getItem('authToken');
   const userId = sessionStorage.getItem('usuario');
 
   function getFoto() {
-
     if (token) {
+      setFotoError(false);
+
       api.get(`/usuarios/${userId}/foto`, {
         headers: {
           Authorization: `Bearer ${token}`
-        }
+        },
+        responseType: 'blob',
+        timeout: 10000
       }).then((resposta) => {
-        setFile(resposta.data);
+        if (resposta.data && resposta.data.size > 0) {
+          if (fotoUrl && fotoUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(fotoUrl);
+          }
+
+          const imageUrl = URL.createObjectURL(resposta.data);
+          console.log("NAVBAR: Nova URL criada:", imageUrl);
+          setFotoUrl(imageUrl);
+          setFotoError(false);
+        } else {
+          console.log("NAVBAR: Resposta vazia ou sem dados");
+          setFotoUrl(null);
+          setFotoError(true);
+        }
       }).catch((err) => {
-        console.log("Erro de resgatar foto:", err);
+        setFotoUrl(null);
+        setFotoError(true);
       });
     }
   }
 
   function getUsuario() {
-    if(token){
+    if (token) {
       api.get(`/usuarios/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }).then((resposta) => {
-      setNomeUsuario(resposta.data.nome);
-    }).catch((err) => {
-      console.log("erro: ", err);
-    });
-  }
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }).then((resposta) => {
+        setNomeUsuario(resposta.data.nome);
+        setUsuarioLista(resposta.data);
+      }).catch((err) => {
+        console.log("erro: ", err);
+      });
+    }
   }
 
   useEffect(() => {
@@ -63,8 +89,20 @@ const NavBar = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (fotoUrl && fotoUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(fotoUrl);
+      }
+    };
+  }, [fotoUrl]);
+
+
   const toggleDashSubmenu = () => setShowDashSubmenu(prev => !prev);
   const toggleFormSubmenu = () => setShowFormSubmenu(prev => !prev);
+  const toggleHistoricoSubmenu = () => setShowHistoricoSubmenu(prev => !prev);
+
+
 
   return (
     <header className="navbar-transferencia">
@@ -85,9 +123,24 @@ const NavBar = () => {
               <img className="icons-menu" src={user} alt="Perfil de usuário" />
               <span>Perfil</span>
             </li>
+            <li title='Tabela de Usuários' onClick={() => navigate('/TabelaUsuarios')}>
+              <img className='icons-menu' src={iconGroup} alt="Tabela de Usuários" />
+              <span>Listagem de Usuários</span>
+            </li>
             <li title="Transferência" onClick={() => navigate('/transferencia')}>
               <img className="icons-menu" src={iconTransferencia} alt="Transferência" />
               <span>Transferência</span>
+            </li>
+             
+            {usuarioLista?.cargo?.id === 2 && (
+             <li title="Relatórios" onClick={() => navigate('/relatorios')}>
+              <img className="icons-menu" src={iconFormularios} alt="Relatórios" />
+              <span>Relatórios</span>
+            </li>
+            )}
+            <li title="Fornecedores" onClick={() => navigate('/Fornecedor')}>
+              <img className="icons-cifrao" src={iconCifrao} alt="Fornecedor" />
+              <span>Custos por Fornecedor</span>
             </li>
             <li className="has-submenu" title="Dashboards" onClick={toggleDashSubmenu}>
               <img className="icons-menu" src={iconDash} alt="Dashboards" />
@@ -98,7 +151,6 @@ const NavBar = () => {
             </li>
             {showDashSubmenu && (
               <ul className="submenu-list">
-                <li onClick={() => navigate('/Fornecedor')}>Dashboard Fornecedor</li>
                 <li onClick={() => navigate('/Material')}>Dashboard Material</li>
                 <li onClick={() => navigate('/DashEstoque')}>Dashboard Estoque</li>
               </ul>
@@ -110,11 +162,35 @@ const NavBar = () => {
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </li>
+
             {showFormSubmenu && (
               <ul className="submenu-list">
                 <li onClick={() => navigate('/ordemDeCompra')}>Ordem de Compra</li>
-                <li onClick={() => navigate('/cadastro')}>Cadastrar Usuários</li>
-                <li onClick={() => navigate ('/CadastroFornecedor')}>Cadastro de Fornecedor</li>
+
+                {usuarioLista?.cargo?.id === 2 && ( // Verifica se o cargo do usuário logado é gestor (id === 2)
+                  <li onClick={() => navigate('/cadastro')}>Cadastrar Usuários</li>
+                )}
+                {usuarioLista?.cargo?.id === 2 && (
+                  <li onClick={() => navigate('/CadastroFornecedor')}>Cadastro de Fornecedor</li>
+                )}
+              </ul>
+            )}
+            {usuarioLista?.cargo?.id === 2 && (
+            <li className="has-submenu" title="Históricos" onClick={toggleHistoricoSubmenu}>
+              <img className="icons-historico" src={iconHistorico} alt="Históricos" />
+              <span>Históricos</span>
+              <svg className={`arrow-icon ${showHistoricoSubmenu ? 'rotate' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </li>
+            )}
+            {showHistoricoSubmenu && (
+              <ul className="submenu-list">
+
+                
+                <li onClick={() => navigate('/HistoricoOrdemDeCompra')}>Histórico de Ordem de Compra</li>
+
+                <li onClick={() => navigate('/HistoricoTransferencia')}>Histórico de Transferências</li>
               </ul>
             )}
           </ul>
@@ -128,12 +204,14 @@ const NavBar = () => {
       <div className="perfil">
         <span>Olá, {nomeUsuario}!</span>
         <img
-          src={`${import.meta.env.VITE_API_URL}/usuarios/${userId}/foto`}
+          src={fotoUrl || user}
           alt="imagem de usuário"
           className="icons-menu"
+          onClick={() => navigate('/Perfil')}
           onError={(e) => {
             e.target.onError = null;
             e.target.src = user;
+            setFotoError(true);
           }}
         />
       </div>

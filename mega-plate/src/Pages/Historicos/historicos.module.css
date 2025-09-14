@@ -1,0 +1,483 @@
+:root {
+  --primary-color: #05314c;
+  --secondary-color: #4586ab;
+  --dashboard-margin: 5%;
+}
+
+.container {
+  margin-top: 15vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 90%;
+  margin-left: var(--dashboard-margin);
+  margin-right: var(--dashboard-margin);
+}
+
+.background {
+  background: var(--primary-color);
+  color: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  min-height: 70vh;
+  width: 90%;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.backgroundPages {
+  background: var(--primary-color);
+  color: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  min-height: 10vh;
+  width: 90%;
+  max-width: 100%;
+  display: flex;
+  justify-content: center; /* centraliza na horizontal */
+  align-items: center;     /* centraliza na vertical */
+  flex-direction: row;     /* <-- aqui a mudança */
+  gap: 10px;               /* espaço entre os círculos */
+  margin-top: 4vh;
+  margin-bottom: 2vh;
+}
+
+.circle {
+  width: 80px;
+  height: 80px;
+  border: 3px solid #2c5aa0;
+  border-radius: 50%;
+  background-color: #2c5aa0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 28px;
+  font-weight: bold;
+  margin: 20px;
+  cursor: pointer;
+}
+
+.circleSmall {
+  width: 50px;
+  height: 50px;
+  font-size: 18px;
+  border-width: 2px;
+}
+
+h2 {
+  color: white;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.tabela {
+  width: 80%;
+  border-collapse: collapse;
+  background-color: #1d597b;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  align-items: center;
+}
+
+.tabela thead {
+  background-color: var(--secondary-color);
+}
+
+.tabela th {
+  padding: 14px 18px;
+  text-align: left;
+  font-weight: bold;
+  font-size: 15px;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 130px;
+}
+
+.baixar {
+  background-color: #05314c;
+  color: white;
+  width: 6vh;
+  height: 6vh;
+  border-radius: 15px;
+  font-size: 10px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
+.baixarRelatorio {
+  background-color: #05314c;
+  color: white;
+  width: 6vh;
+  height: 6vh;
+  border-radius: 15px;
+  font-size: 10px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
+.cancelar {
+  background-color: #af1414;
+  color: white;
+  width: 18vh;
+  height: 6vh;
+  border-radius: 80px;
+  font-size: 14px;
+  font-weight: bold;
+  font-family: 'Poppins';
+  border: none;
+  cursor: pointer;
+}
+
+.ativar {
+  background-color: #029600;
+  color: white;
+  width: 18vh;
+  height: 6vh;
+  border-radius: 80px;
+  font-size: 14px;
+  font-weight: bold;
+  font-family: 'Poppins';
+  border: none;
+  cursor: pointer;
+}
+
+.tabela td {
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 15px;
+  color: white;
+  transition: background-color 0.2s ease;
+}
+
+.containerDados {
+  text-align: center;
+  align-items: center;
+}
+
+.containerTitulos {
+  text-align: center;
+}
+
+.tabela tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+}
+
+.tabela tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tabelaWrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  display: flex;
+  justify-content: center
+}
+
+
+
+.statusColuna {
+  position: relative;
+  color: white;
+  font-weight: 600;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 82px;
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  align-items: center;
+}
+
+.labelFiltro {
+  font-weight: bold;
+  margin-right: 1rem;
+}
+
+
+.inputFiltro {
+  flex: 1;
+  min-width: 180px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 40px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  border: none;
+  margin-right: 20px;
+  outline: none;
+  background-color: var(--secondary-color);
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.inputFiltro::placeholder {
+  color: white;       
+  opacity: 1;            
+}
+
+
+.inputFiltro:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+.selectFiltro {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  color: #333;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.selectFiltro:hover {
+  border-color: #4caf50;
+  background-color: #f1fef3;
+}
+
+.selectFiltro:focus {
+  outline: none;
+  border-color: #28a745;
+  background-color: #fff;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3);
+}
+
+
+.qtdUsuarios {
+  padding: 30px 0 15px 0;
+  font-weight: 500;
+  font-size: 16px;
+  color: white;
+}
+
+.mensagemVazia {
+  text-align: center;
+  color: #ccc;
+  margin-top: 2rem;
+  font-size: 1.2rem;
+  font-style: italic;
+}
+
+.fadeIn {
+  opacity: 1;
+  transition: opacity 0.3s ease-in;
+}
+
+.fadeOut {
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+
+.ativar:disabled {
+  background-color: #cccccc !important;
+  color: #666666 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+}
+
+.cancelar:disabled {
+  background-color: #cccccc !important;
+  color: #666666 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+}
+
+@media (max-width: 1230px) {
+  .tabela {
+    border: none;
+  }
+
+  .tabela thead {
+    display: none;
+  }
+
+  .tabela tr {
+    display: block;
+    background-color: #1d597b;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 4px 6px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .tabela td {
+    display: block;
+    text-align: left;
+    padding: 10px 10px 10px 50%;
+    position: relative;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .tabela td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    font-weight: bold;
+    color: #ccc;
+    text-transform: uppercase;
+    font-size: 12px;
+  }
+
+  .tabelaWrapper {
+    min-width: 300px;
+    overflow-x: auto;
+  }
+
+  .statusColuna {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .textAtivar,
+  .textDesativar {
+    align-items: flex-start;
+  }
+
+  .container {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .background {
+    width: 95vw;
+    padding: 15px;
+    margin-left: 0;
+    width: 95vw;
+  }
+}
+
+/* @media (max-width: 900px){
+
+  .tabela th,
+  .tabela td{
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+
+  .container{
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
+} */
+
+@media (max-width: 830px) {
+  .tabela {
+    border: none;
+  }
+
+  .tabela thead {
+    display: none;
+  }
+
+  .tabela tr {
+    display: block;
+    background-color: #1d597b;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 4px 6px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .tabela td {
+    display: block;
+    text-align: left;
+    padding: 10px 10px 10px 50%;
+    position: relative;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .tabela td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    font-weight: bold;
+    color: #ccc;
+    text-transform: uppercase;
+    font-size: 12px;
+  }
+
+  .tabelaWrapper {
+    min-width: 300px;
+    overflow-x: auto;
+  }
+
+  .statusColuna {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .textAtivar,
+  .textDesativar {
+    align-items: flex-start;
+  }
+
+  .container {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .background {
+    width: 95vw;
+    padding: 15px;
+    margin-left: 0;
+    width: 95vw;
+  }
+}
+
+
+@media (max-width: 768px) {
+
+  .textAtivar,
+  .textDesativar {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+}
+
+/* 🖥 MENU LATERAL (a partir de 601px) */
+@media (min-width: 601px) {
+  .background {
+    width: calc(100% - 280px);
+    /* ocupa o restante da tela com uma folguinha */
+    margin-left: auto;
+    margin-right: auto;
+    padding: 25px;
+  }
+}

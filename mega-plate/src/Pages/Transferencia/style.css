@@ -2,7 +2,7 @@
 
 :root {
     --primary-color: #05314C;
-    --secondary-color: #4586AB;
+    --secondary-color: #1D597B;
     --third-color: #1d597b;
 }
 
@@ -26,6 +26,7 @@
     min-width: 90vw;
     margin-top: 10vh;
     min-height: 80vh;
+    margin-left: 80px;
     flex-wrap: wrap; /* Permite que os elementos se reorganizem em telas menores */
 }
 
@@ -36,7 +37,7 @@
     align-items: center;
     width: 216px;
     height: 524px;
-    background-color: var(--secondary-color);
+    background-color:#1D597B;
     border-radius: 20px 0px 0px 20px;
 }
 
@@ -84,8 +85,8 @@
 button {
     background-color: var(--secondary-color);
     border-radius: 80px;
-    width: 160px;
-    height: 44px;
+    width: 180px;
+    height: 50px;
     color: white;
     font-size: 20px;
     font-weight: bold;
@@ -161,7 +162,7 @@ button:hover {
     width: 100%;
     max-width: 766px;
     margin: 0 auto; /* Centralizar na página */
-    padding: 0 20px; /* Adicionado padding lateral */
+    padding: 0 0px; /* Adicionado padding lateral */
 }
 
 .botao-acao {
@@ -182,6 +183,10 @@ button:hover {
     transition: background-color 0.3s ease;
     width: 100%;
     max-width: 403px;
+}
+input::placeholder {
+  color: #888888; /* Substitua por qualquer cor que quiser */
+  opacity: 1; /* Garante visibilidade total em alguns navegadores */
 }
 
 .botao-acao button:hover {
@@ -355,7 +360,7 @@ button:hover {
     
     .box-campos input,
     .box-campos select {
-        height: 42px;
+        /* height: 42px; */
         font-size: 14px;
     }
     
@@ -398,7 +403,7 @@ button:hover {
     
     .box-campos input,
     .box-campos select {
-        height: 38px;
+        /* height: 38px; */
         font-size: 13px;
     }
     

@@ -7,6 +7,7 @@
     padding: 4rem 0 4rem 0rem;
     z-index: 1;
     margin-top: 2.5vh;
+    margin-left: 5.2vw;
 }
 
 #textMaterial {
@@ -51,6 +52,7 @@
     position: relative;
     z-index: 1;
     box-shadow: -10px 0px 20px rgba(0, 0, 0, 0.4);
+    
 }
 
 .aside-material img {
@@ -72,6 +74,7 @@
     padding: 2rem;
     border: 3px solid #ccc;
     box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4);
+    
 }
 
 .tab-container {
@@ -84,6 +87,7 @@
     margin-top: 10vh;
     position: relative;
     z-index: 2;
+    
 }
 
 .tabActiveMaterial {
@@ -116,7 +120,7 @@
 .input-group input {
     width: 100%;
     padding: 10px 40px 10px 10px;
-    border-radius: 15px;
+    border-radius: 40px;
     border: 1px solid #ccc;
     box-sizing: border-box;
     font-size: 12px;
@@ -144,6 +148,43 @@
     cursor: pointer;
 }
 
+#buttonProximo{    background-color: #1D597B;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    color: white;
+    border-radius: 20px;
+    display: block;
+    text-align: center;
+    font-weight: bold;
+    border: none;
+    outline: none;
+}
+
+#buttonProximo:hover {
+    background-color: #1a4e6d;
+    cursor: pointer;
+}
+
+#buttonVoltar {
+    background-color: #1D597B;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    color: white;
+    border-radius: 20px;
+    display: block;
+    text-align: center;
+    font-weight: bold;
+    border: none;
+    outline: none;
+}
+
+#buttonVoltar:hover {
+    background-color: #1a4e6d;
+    cursor: pointer;
+}
+
 .material a {
     color: rgb(218, 218, 218);
     text-decoration: none;
@@ -165,6 +206,7 @@
     transform: translate(-50%, -50%);
     z-index: 0;
     border-radius: 20px;
+    
 }
 
 .aside-material,
@@ -249,7 +291,9 @@
         border-radius: 25px 25px 0 0;
         box-shadow: 0px -10px 20px rgba(0, 0, 0, 0.4);
         z-index: 1;
+        margin-top: 150px;
     }
+
 
     .form-content-material {
         max-width: 90vw;
@@ -265,5 +309,10 @@
         padding-left: 5%;
         margin-top: 2vh;
         justify-content: center;
+    }
+}
+@media screen and (max-width: 480px) {
+     button {
+        font-size: 10px;
     }
 }

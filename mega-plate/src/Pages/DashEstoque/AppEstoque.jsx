@@ -1,9 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, Package, Calendar, Clock, User, Truck, Ruler, Layers } from 'lucide-react';
-import './styleEstoque.css';
-import NavBar from '../../components/NavBar';
-import { api } from '../../provider/api';
-
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import {
+  Search,
+  X,
+  Package,
+  Calendar,
+  Clock,
+  User,
+  Truck,
+  Ruler,
+  Layers,
+} from "lucide-react";
+import "./styleEstoque.css";
+import NavBar from "../../components/NavBar";
+import { api } from "../../provider/api";
+import { IconContext } from "react-icons";
+import { FaPencilAlt } from "react-icons/fa";
 
 // Estilos do Pop-up padronizados com o Dashboard Material
 const popupStyles = `
@@ -248,21 +259,26 @@ const popupStyles = `
 `;
 
 // Adicionar estilos ao documento
-if (typeof document !== 'undefined') {
+if (typeof document !== "undefined") {
   const styleSheet = document.createElement("style");
   styleSheet.innerText = popupStyles;
   document.head.appendChild(styleSheet);
 }
 
 function App() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMaterial, setSelectedMaterial] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMaterial, setSelectedMaterial] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [filteredStockItems, setFilteredStockItems] = useState([]);
   const [selectedStockItem, setSelectedStockItem] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
-
+  const [ordemDeCompra, setOrdemDeCompra] = useState([]);
+  const [pendencias, setPendencias] = useState({});
+const [isEditingIPI, setIsEditingIPI] = useState(false);
+const [tempIPIValue, setTempIPIValue] = useState('');
+const [isLoading, setIsLoading] = useState(false);
+const [valorIPI, setValorIPI] = useState(0);
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
@@ -279,46 +295,144 @@ function App() {
     setEndDate(e.target.value);
   };
 
-
-
   // Dados expandidos de exemplo para a tabela de estoque
   const [stockData, setStockData] = useState([]);
-  const [tipoMaterial, setTipoMaterial] = useState("");
 
   function getEstoque() {
-    api.get('/estoque').then((resposta) => {
-      setStockData(resposta.data);
-    }).catch((err) => {
-      console.log('erro:', err);
-    });
+    api
+      .get("/estoque")
+      .then((resposta) => {
+        setStockData(resposta.data);
+      })
+      .catch((err) => {
+        console.log("erro:", err);
+      });
   }
+  // Estado para armazenar as ordens de compra
+  const [ordensDeCompra, setOrdensDeCompra] = useState([]);
+
+  // Função para carregar as ordens de compra
+  function getOrdemDeCompra() {
+    api
+      .get("/ordemDeCompra")
+      .then((resposta) => {
+        setOrdensDeCompra(resposta.data || []);
+        console.log("Ordens de compra:", resposta.data);
+      })
+      .catch((err) => console.log("Erro ao buscar ordens de compra:", err));
+  }
+  const [transferencias, setTransferencias] = useState([]);
+
+  function getTransferencias() {
+    api
+      .get("/transferencias")
+      .then((resposta) => {
+        setTransferencias(resposta.data || []);
+        console.log("Transferências:", resposta.data);
+      })
+      .catch((err) => console.log("Erro ao buscar transferências:", err));
+  }
+
+  function editarCampoEstoque() {
+    setIsLoading(true); // Indica que está carregando
+    
+    const dto = {
+      ipi: Number(tempIPIValue), // Usa o valor temporário
+      tipoMaterial: selectedStockItem.tipoMaterial,
+    };  
+
+    api
+      .patch(`/estoque/atualizarInfo`, dto)
+      .then((resposta) => {
+        console.log("Resposta do servidor:", resposta.data);
+        // Atualiza o selectedStockItem com o novo valor do IPI
+        setSelectedStockItem(prev => ({
+          ...prev,
+          ipi: Number(tempIPIValue)
+        }));
+        setValorIPI(Number(tempIPIValue));
+        setIsLoading(false);
+        setIsEditingIPI(false);
+      })
+      .catch((err) => {
+        console.error("Erro ao editar campo de estoque:", err.response?.data || err.message);
+        setIsLoading(false);
+        // Reverte para o valor anterior em caso de erro
+        setTempIPIValue(selectedStockItem.ipi);
+      });
+  }
+
+  // Helper para agrupar pendentes por estoqueId
+  const pendentesPorEstoqueId = useMemo(() => {
+    if (!Array.isArray(ordensDeCompra)) return {};
+    return ordensDeCompra.reduce((acc, oc) => {
+      const id = oc?.estoqueId;
+      const qtd = Number(oc?.quantidade) || 0;
+      if (id == null) return acc;
+      acc[id] = (acc[id] || 0) + qtd; // Soma todas as OCs do mesmo estoque
+      return acc;
+    }, {});
+  }, [ordensDeCompra]);
+
+  // Helper para fallback por nome (caso algum item não bata pelo id)
+  const pendentesPorNome = useMemo(() => {
+    if (!Array.isArray(ordensDeCompra)) return {};
+    return ordensDeCompra.reduce((acc, oc) => {
+      const nome = oc?.descricaoMaterialCompleta?.trim();
+      const qtd = Number(oc?.quantidade) || 0;
+      if (!nome) return acc;
+      acc[nome] = (acc[nome] || 0) + qtd;
+      return acc;
+    }, {});
+  }, [ordensDeCompra]);
+
+  // Cria o array já combinado (estoque + pendente)
+  // const stockWithOrders = useMemo(() => {
+  //   if (!Array.isArray(filteredStockItems)) return [];
+  //   return filteredStockItems.map((it) => {
+  //     const byId = pendentesPorEstoqueId[it?.id] || 0;
+  //     const byName = it?.tipoMaterial
+  //       ? (pendentesPorNome[it.tipoMaterial] || 0)
+  //       : 0;
+
+  //     // Prioriza o match por id; se não houver, usa o nome
+  //     const pendente = byId > 0 ? byId : byName;
+
+  //     return { ...it, pendente };
+  //   });
+  // }, [filteredStockItems, pendentesPorEstoqueId, pendentesPorNome]);
 
   useEffect(() => {
     getEstoque();
+    getOrdemDeCompra();
+    getTransferencias();
   }, []);
 
   const parseDate = (dateString) => {
-  return new Date(dateString); // já funciona com formato YYYY-MM-DD
-};
-
+    return new Date(dateString); // já funciona com formato YYYY-MM-DD
+  };
 
   const handleSearch = () => {
-     const filtered = stockData.filter(item => {
+    const filtered = stockData.filter((item) => {
       const itemDate = parseDate(item.ultimaMovimentacao);
       const startDateObj = startDate ? new Date(startDate) : null;
       const endDateObj = endDate ? new Date(endDate) : null;
 
       // Filtro por tipo de material (select)
-      const materialMatch = !selectedMaterial || item.tipoMaterial === selectedMaterial;
-      
+      const materialMatch =
+        !selectedMaterial || item.tipoMaterial === selectedMaterial;
+
       // Filtro por data
-      const dateInRange = (!startDateObj || itemDate >= startDateObj) &&
+      const dateInRange =
+        (!startDateObj || itemDate >= startDateObj) &&
         (!endDateObj || itemDate <= endDateObj);
-      
+
       // Filtro por busca de texto
-      const searchMatch = !searchTerm ||
+      const searchMatch =
+        !searchTerm ||
         item.tipoMaterial.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.lote && item.lote.toLowerCase().includes(searchTerm.toLowerCase()));
+        (item.lote &&
+          item.lote.toLowerCase().includes(searchTerm.toLowerCase()));
 
       return materialMatch && dateInRange && searchMatch;
     });
@@ -346,39 +460,150 @@ function App() {
 
   const getStatusClass = (status) => {
     switch (status) {
-      case 'Em estoque':
-        return 'status-high';
-      case 'Estoque baixo':
-        return 'status-medium';
-      case 'Reservado':
-        return 'status-low';
+      case "Em estoque":
+        return "status-high";
+      case "Estoque baixo":
+        return "status-medium";
+      case "Reservado":
+        return "status-low";
       default:
-        return '';
+        return "";
     }
   };
+  function calcularPendencias(ordens) {
+    const hoje = new Date();
+    const pendencias = {};
+
+    ordens.forEach((ordem) => {
+      const prazo = new Date(ordem.prazoEntrega);
+
+      // Se ainda não chegou o prazo
+      if (prazo > hoje) {
+        const descricaoMaterial =
+          ordem.descricaoMaterialCompleta?.toUpperCase();
+
+        if (!pendencias[descricaoMaterial]) {
+          pendencias[descricaoMaterial] = 0;
+        }
+
+        pendencias[descricaoMaterial] += ordem.quantidade;
+      }
+    });
+
+    return pendencias;
+  }
+  function buscarUltimasOrdensPorMaterial(ordens) {
+    const ultimasOrdens = {};
+
+    ordens.forEach((ordem) => {
+      const material = ordem.descricaoMaterialCompleta?.toUpperCase();
+
+      if (
+        !ultimasOrdens[material] ||
+        new Date(ordem.dataOrdem) > new Date(ultimasOrdens[material].dataOrdem)
+      ) {
+        ultimasOrdens[material] = ordem;
+      }
+    });
+
+    return ultimasOrdens;
+  }
+  function calcularTransferenciasPorSetor(transferencias, tipoMaterial, setor) {
+    return transferencias
+      .filter(
+        (transferencia) =>
+          transferencia.tipoMaterial?.toUpperCase() ===
+            tipoMaterial?.toUpperCase() &&
+          transferencia.setor?.toUpperCase() === setor?.toUpperCase()
+      )
+      .reduce(
+        (total, transferencia) =>
+          total + (Number(transferencia.quantidadeTransferida) || 0),
+        0
+      );
+  }
+
+  // Modificação no useEffect
+  const [pendenciasPorMaterial, setPendenciasPorMaterial] = useState({});
+  const [ultimasOrdensPorMaterial, setUltimasOrdensPorMaterial] = useState({});
+  const [materialAtual, setMaterialAtual] = useState("");
+  useEffect(() => {
+    if (ordemDeCompra.length) {
+      // Calcular pendências
+      const pendenciasCalculadas = calcularPendencias(ordemDeCompra);
+      setPendenciasPorMaterial(pendenciasCalculadas);
+
+      // Buscar últimas ordens por material
+      const ultimasOrdens = buscarUltimasOrdensPorMaterial(ordemDeCompra);
+      setUltimasOrdensPorMaterial(ultimasOrdens);
+
+      // console.log("Pendências calculadas:", pendenciasCalculadas);
+      // console.log("Últimas ordens por material:", ultimasOrdens);
+    }
+    // console.log(temPendenciasParaMaterial(materialAtual, ultimasOrdensPorMaterial, pendenciasPorMaterial));
+  }, [ordemDeCompra]);
+
+  // function temPendenciasParaMaterial(material) {
+  //   const materialUpper = material?.toUpperCase();
+  //   const ultimaOrdem = ultimasOrdensPorMaterial[materialUpper];
+
+  //   if (!ultimaOrdem) return false;
+
+  //   const hoje = new Date();
+  //   const prazoUltimaOrdem = new Date(ultimaOrdem.prazoEntrega);
+
+  //   // Tem pendência se a última ordem ainda não venceu o prazo
+  //   return prazoUltimaOrdem > hoje;
+  // }
+
+  // Para usar na tabela (exemplo para cada linha):
+  // Supondo que você tenha uma variável 'material' para cada linha da tabela
+
+  // Para SAE 1020:
+  // const materialSAE1020 = "SAE 1020";
+  // const pendenciasSAE1020 = temPendenciasParaMaterial(materialSAE1020)
+  //   ? pendenciasPorMaterial[materialSAE1020.toUpperCase()] || 0
+  //   : 0;
+
+  // // Para SAE 1045:
+  // const materialSAE1045 = "SAE 1045";
+  // const pendenciasSAE1045 = temPendenciasParaMaterial(materialSAE1045)
+  //   ? pendenciasPorMaterial[materialSAE1045.toUpperCase()] || 0
+  //   : 0;
+
+  // // Para HARDOX:
+  // const materialHARDOX = "HARDOX";
+  // const pendenciasHARDOX = temPendenciasParaMaterial(materialHARDOX)
+  //   ? pendenciasPorMaterial[materialHARDOX.toUpperCase()] || 0
+  //   : 0;
 
   return (
-    <div className='IndexFornecedor'>
+    <div className="IndexFornecedor">
       <NavBar />
 
       <div className="container">
-        <div className="filter-header">
+        <div className="filter-headerEstoque">
           <select
             id="select-Filtro-Fornecedor"
             value={selectedMaterial}
             onChange={handleMaterialChange} // Usando a função correta
           >
             <option value="">Todos Materiais</option>
-            {[...new Set(stockData.map(item => item.tipoMaterial))].map(tipo => (
-              <option key={tipo} value={tipo}>
-                {tipo}
-              </option>
-            ))}
+            {[...new Set(stockData.map((item) => item.tipoMaterial))].map(
+              (tipo) => (
+                <option key={tipo} value={tipo}>
+                  {tipo}
+                </option>
+              )
+            )}
           </select>
 
-          <div id='FiltroData'>
-            <span id='textFiltro'><h5>Início:</h5></span>
-            <input className='inputEstoque'
+          <div id="FiltroData">
+            <span id="textFiltro">
+              <h5>Início:</h5>
+            </span>
+            <input
+              className="inputEstoque"
               type="date"
               id="dateInput"
               value={startDate}
@@ -386,9 +611,12 @@ function App() {
             />
           </div>
 
-          <div id='FiltroData'>
-            <span id='textFiltro'><h5>Fim:</h5></span>
-            <input className='inputEstoque'
+          <div id="FiltroData">
+            <span id="textFiltro">
+              <h5>Fim:</h5>
+            </span>
+            <input
+              className="inputEstoque"
               type="date"
               id="dateInput"
               value={endDate}
@@ -412,37 +640,118 @@ function App() {
 
         <div className="containerDash">
           <div className="supplier-table-container">
-            <h3>Tabela de Estoque</h3>
-            <table className="supplier-table">
-              <thead>
-                <tr>
-                  <th>Material</th>
-                  <th>Quantidade mininma</th>
-                  <th>Quantidade máxima</th>
-                  <th>Qtd. Externo</th>
-                  <th>Qtd. Interno</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredStockItems.map((item, index) => (
-                  <tr
-                    key={index}
-                    onClick={() => handleStockItemClick(item)}
-                    style={{ cursor: 'pointer' }}
-                    onMouseEnter={(e) => e.target.parentElement.style.backgroundColor = 'rgba(69, 134, 171, 0.1)'}
-                    onMouseLeave={(e) => e.target.parentElement.style.backgroundColor = 'transparent'}
-                  >
-                    <td>{item.tipoMaterial}</td>
-                    <td>{item.quantidadeMinima}</td>
-                    <td>{item.quantidadeMaxima}</td>
-                    <td>{item.externo || 0}</td>
-                    <td>{item.interno || 0}</td>                    
+            <div className="table-wrapper2">
+              <h3>Tabela de Estoque</h3>
+              <table className="supplier-table">
+                <thead>
+                  <tr>
+                    <th>Material</th>
+                    <th>Quantidade</th>
+                    <th>Pendente</th>
+                    <th>C1</th>
+                    <th>C2</th>
+                    <th>C3</th>
+                    <th>C4</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="search-results">
-              <p>{filteredStockItems.length} itens encontrados</p>
+                </thead>
+                <tbody>
+                  {filteredStockItems.map((item, index) => {
+                    // Busca a ordem de compra correspondente ao material ou ID
+                    const quantidadeTotal = ordensDeCompra
+
+                      .filter(
+                        (ordem) =>
+                          ordem.descricaoMaterialCompleta?.toUpperCase() ===
+                            item.tipoMaterial?.toUpperCase() &&
+                          ordem.pendenciaAlterada === false
+                      )
+                      .reduce(
+                        (total, ordem) =>
+                          total + (Number(ordem.quantidade) || 0),
+                        0
+                      );
+                    const quantidadeC1 = calcularTransferenciasPorSetor(
+                      transferencias,
+                      item.tipoMaterial,
+                      "C1"
+                    );
+                    const quantidadeC2 = calcularTransferenciasPorSetor(
+                      transferencias,
+                      item.tipoMaterial,
+                      "C2"
+                    );
+                    const quantidadeC3 = calcularTransferenciasPorSetor(
+                      transferencias,
+                      item.tipoMaterial,
+                      "C3"
+                    );
+                    const quantidadeC4 = calcularTransferenciasPorSetor(
+                      transferencias,
+                      item.tipoMaterial,
+                      "C4"
+                    );
+                    return (
+                      <tr
+                        key={index}
+                        onClick={() => handleStockItemClick(item)}
+                        style={{ cursor: "pointer" }}
+                        onMouseEnter={(e) =>
+                        (e.target.parentElement.style.backgroundColor =
+                          "rgba(69, 134, 171, 0.1)")
+                        }
+                        onMouseLeave={(e) =>
+                        (e.target.parentElement.style.backgroundColor =
+                          "transparent")
+                        }
+                      >
+                        <td>{item.tipoMaterial}</td>
+                        <td>{item.quantidadeAtual}</td>
+
+                        {/* PENDENTE vindo das OCs */}
+                        <td
+                          style={{
+                            color: quantidadeTotal > 0 ? "orange" : "inherit",
+                          }}
+                        >
+                          {quantidadeTotal}
+                        </td>
+
+                        <td
+                          style={{
+                            color: quantidadeC1 > 0 ? "green" : "inherit",
+                          }}
+                        >
+                          {quantidadeC1}
+                        </td>
+                        <td
+                          style={{
+                            color: quantidadeC2 > 0 ? "green" : "inherit",
+                          }}
+                        >
+                          {quantidadeC2}
+                        </td>
+                        <td
+                          style={{
+                            color: quantidadeC3 > 0 ? "green" : "inherit",
+                          }}
+                        >
+                          {quantidadeC3}
+                        </td>
+                        <td
+                          style={{
+                            color: quantidadeC4 > 0 ? "green" : "inherit",
+                          }}
+                        >
+                          {quantidadeC4}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <div className="search-results">
+                <p>{filteredStockItems.length} itens encontrados</p>
+              </div>
             </div>
           </div>
         </div>
@@ -471,39 +780,58 @@ function App() {
                 <div className="info-grid">
                   <div className="info-item">
                     <span className="info-label">Material:</span>
-                    <span className="info-value">{selectedStockItem.tipoMaterial}</span>
+                    <span className="info-value">
+                      {selectedStockItem.tipoMaterial}
+                    </span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Quantidade:</span>
-                    <span className="info-value">{selectedStockItem.quantidadeAtual} unidades</span>
+                    <span className="info-value">
+                      {selectedStockItem.quantidadeAtual} unidades
+                    </span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">IPI:</span>
+                    {isEditingIPI ? (
+                      <input
+                        type="number"
+                        className="info-value"
+                        value={tempIPIValue}
+                        onChange={(e) => setTempIPIValue(e.target.value)}
+                        onBlur={() => {
+                          if (tempIPIValue !== selectedStockItem.ipi) {
+                            editarCampoEstoque();
+                          }
+                        }}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            if (tempIPIValue !== selectedStockItem.ipi) {
+                              editarCampoEstoque();
+                            }
+                          }
+                        }}
+                        disabled={isLoading}
+                        autoFocus
+                      />
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span className="info-value">
+                          {isLoading ? 'Atualizando...' : `${selectedStockItem.ipi} %`}
+                        </span>
+                        <IconContext.Provider value={{ color: '#fff', size: '1.2em' }}>
+                          <FaPencilAlt
+                            onClick={() => {
+                              setIsEditingIPI(true);
+                              setTempIPIValue(selectedStockItem.ipi);
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          />
+                        </IconContext.Provider>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-
-              {/* <div className="popup-section">
-                <h4>
-                  <Ruler size={20} />
-                  Dimensões
-                </h4>
-                <div className="info-grid">
-                  <div className="info-item">
-                    <span className="info-label">Largura:</span>
-                    <span className="info-value">{selectedStockItem.largura}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Espessura:</span>
-                    <span className="info-value">{selectedStockItem.espessura}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Localização:</span>
-                    <span className="info-value">{selectedStockItem.localizacao}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Valor Unitário:</span>
-                    <span className="info-value">R$ {selectedStockItem.valorUnitario.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div> */}
 
               <div className="popup-section">
                 <h4>
@@ -512,14 +840,21 @@ function App() {
                 </h4>
                 <div className="info-grid">
                   <div className="info-item">
-                    <span className="info-label">Ultima movimentação:</span>
-                    <span className="info-value">{selectedStockItem.ultimaMovimentacao  &&
-    new Date(selectedStockItem.ultimaMovimentacao).toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    })
-  }</span>
+                    <span className="info-value">
+                      {selectedStockItem.ultimaMovimentacao
+                        ? isNaN(new Date(selectedStockItem.ultimaMovimentacao))
+                          ? "Data inválida"
+                          : new Date(
+                            selectedStockItem.ultimaMovimentacao
+                          ).toLocaleString("pt-BR", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "Sem movimentação"}
+                    </span>
                   </div>
                   {/* <div className="info-item">
                     <span className="info-label">Hora de Entrada:</span>

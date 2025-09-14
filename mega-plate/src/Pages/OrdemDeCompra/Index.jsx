@@ -1,106 +1,102 @@
 import style from "./ordemDeCompra.module.css";
-import progressoImg from '../../assets/progressoOrdemDeCompra.png';
-import progressoConcluido from '../../assets/progresso1Concluido.png';
-import progresso2Concluido from '../../assets/progresso2Concluido.png';
-import progresso3Concluido from '../../assets/progresso3Concluido.png';
-import { useEffect, useState, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { api } from '../../provider/api';
-import { jsPDF } from 'jspdf';
-import NavBar from '../../components/NavBar';
-import { toastError, toastSucess } from '../../components/toastify/ToastifyService';
-import ExcelJS from 'exceljs';
+import progressoImg from "../../assets/progressoOrdemDeCompra.png";
+import progressoConcluido from "../../assets/progresso1Concluido.png";
+import progresso2Concluido from "../../assets/progresso2Concluido.png";
+import progresso3Concluido from "../../assets/progresso3Concluido.png";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { api } from "../../provider/api";
+import { jwtDecode } from "jwt-decode";
+import { jsPDF } from "jspdf";
+import NavBar from "../../components/NavBar";
+import {toastError,toastSuccess} from "../../components/toastify/ToastifyService";
+import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import baixarOrdemDeCompraPDF from "../../tools/baixarOrdemDeCompraPDF";
 
 export function OrdemDeCompra() {
-  const navigate = useNavigate();
-  
-  // Lista mockada de fornecedores
-  const fornecedoresMock = [
-    {
-      fornecedorId: 1,
-      nomeFantasia: "MetalTech Indústria",
-      cnpj: "12.345.678/0001-90",
-      telefone: "(11) 3456-7890",
-      complemento: "Rua das Indústrias, 123 - São Paulo/SP"
-    },
-    {
-      fornecedorId: 2,
-      nomeFantasia: "SteelMax Suprimentos",
-      cnpj: "23.456.789/0001-80",
-      telefone: "(11) 9876-5432",
-      complemento: "Av. Industrial, 456 - Guarulhos/SP"
-    },
-    {
-      fornecedorId: 3,
-      nomeFantasia: "IronWorks Distribuidora",
-      cnpj: "34.567.890/0001-70",
-      telefone: "(11) 5555-1234",
-      complemento: "Rua do Ferro, 789 - Osasco/SP"
-    },
-    {
-      fornecedorId: 4,
-      nomeFantasia: "AlumCorp Materiais",
-      cnpj: "45.678.901/0001-60",
-      telefone: "(11) 2222-9999",
-      complemento: "Estrada dos Metais, 321 - Barueri/SP"
-    },
-    {
-      fornecedorId: 5,
-      nomeFantasia: "Bronze & Cia Ltda",
-      cnpj: "56.789.012/0001-50",
-      telefone: "(11) 7777-3333",
-      complemento: "Alameda Industrial, 654 - Diadema/SP"
-    }
-  ];
-
-  // Lista mockada de materiais
-  const materiaisMock = [
-    {
-      id: 1,
-      tipoMaterial: "Aço Carbono 1020"
-    },
-    {
-      id: 2,
-      tipoMaterial: "Alumínio 6061"
-    },
-    {
-      id: 3,
-      tipoMaterial: "Cobre Eletrolítico"
-    },
-    {
-      id: 4,
-      tipoMaterial: "Bronze Fosforoso"
-    },
-    {
-      id: 5,
-      tipoMaterial: "Aço Inoxidável 304"
-    },
-    {
-      id: 6,
-      tipoMaterial: "Ferro Fundido Cinzento"
-    }
-  ];
-
-  const [listaFornecedores, setListaFornecedores] = useState(fornecedoresMock);
-  const [listaMateriais, setListaMateriais] = useState(materiaisMock);
+  const [listaFornecedores, setListaFornecedores] = useState([]);
+  const [listaMateriais, setListaMateriais] = useState([]);
   const [ordemDeCompra, setOrdemDeCompra] = useState([]);
+
+  function getFornecedores() {
+    api
+      .get("/fornecedores")
+      .then((resposta) => {
+        setListaFornecedores(resposta.data);
+      })
+      .catch((erro) => {
+        toastError("Erro ao buscar usuários", erro);
+      });
+  }
+
+  const navigate = useNavigate();
+  const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
+
+  function getUsuarioIdDoToken() {
+    const token = sessionStorage.getItem("authToken");
+    if (!token) return null;
+
+    try {
+      const decoded = jwtDecode(token);
+      return decoded.id; // ou decoded.sub ou decoded.usuarioId, dependendo do seu backend
+    } catch (err) {
+      console.error("Erro ao decodificar token:", err);
+      return null;
+    }
+  }
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("authToken");
+    if (!token) {
+      navigate("/");
+    } else {
+      const { exp } = jwtDecode(token);
+      if (Date.now() >= exp * 1000) {
+        sessionStorage.removeItem("authToken");
+        navigate("/");
+      } else {
+        setAutenticacaoPassou(true);
+      }
+    }
+  }, []);
+
+  function getMateriaPrima() {
+    api
+      .get("/estoque")
+      .then((resposta) => {
+        setListaMateriais(resposta.data);
+      })
+      .catch((erro) => {
+        console.error("Erro ao buscar usuários", erro);
+      });
+  }
+
+  useEffect(() => {
+    getFornecedores();
+    getMateriaPrima();
+  }, []);
+
   const [progresso, setProgresso] = useState(1);
   const [valoresInput, setValoresInput] = useState({});
   const [errosValidacao, setErrosValidacao] = useState({});
 
   // Funções de formatação
-  const formatarIE = (valor) => {
-    const nums = valor.replace(/\D/g, '');
-    if (nums.length <= 3) return nums;
-    if (nums.length <= 6) return `${nums.slice(0, 3)}.${nums.slice(3)}`;
-    if (nums.length <= 9) return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6)}`;
-    return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6, 9)}.${nums.slice(9, 12)}`;
-  };
+  // const formatarIE = (valor) => {
+  //   const nums = valor.replace(/\D/g, "");
+  //   if (nums.length <= 3) return nums;
+  //   if (nums.length <= 6) return `${nums.slice(0, 3)}.${nums.slice(3)}`;
+  //   if (nums.length <= 9)
+  //     return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6)}`;
+  //   return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(
+  //     6,
+  //     9
+  //   )}.${nums.slice(9, 12)}`;
+  // };
 
   const formatarPagamento = (valor) => {
-    const nums = valor.replace(/\D/g, '');
-    if (nums.length === 0) return '';
+    const nums = valor.replace(/\D/g, "");
+    if (nums.length === 0) return "";
     if (nums.length <= 2) return `${nums} dias`;
     if (nums.length <= 4) return `${nums.slice(0, 2)}/${nums.slice(2)} dias`;
     return `${nums.slice(0, 2)}/${nums.slice(2, 4)} dias`;
@@ -108,261 +104,252 @@ export function OrdemDeCompra() {
 
   // Função de formatação corrigida para valores monetários
   const formatarValorMonetario = (valor) => {
-    const nums = valor.replace(/[^\d]/g, '');
-    if (nums.length === 0) return '';
-    
+    const nums = valor.replace(/[^\d]/g, "");
+    if (nums.length === 0) return "";
+
     // Converte para número e formata corretamente
     const numero = parseInt(nums);
-    if (numero === 0) return '';
-    
+    if (numero === 0) return "";
+
     // Se tem apenas 1 dígito, trata como centavos
     if (nums.length === 1) return `0,0${nums}`;
     // Se tem 2 dígitos, trata como centavos
     if (nums.length === 2) return `0,${nums}`;
-    
+
     // Para mais de 2 dígitos, separa os centavos
     const inteiros = nums.slice(0, -2);
     const decimais = nums.slice(-2);
-    
+
     // Remove zeros à esquerda dos inteiros
-    const inteirosLimpos = inteiros.replace(/^0+/, '') || '0';
-    
+    const inteirosLimpos = inteiros.replace(/^0+/, "") || "0";
+
     // Adiciona separadores de milhares
-    const inteirosFormatados = inteirosLimpos.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    
+    const inteirosFormatados = inteirosLimpos.replace(
+      /\B(?=(\d{3})+(?!\d))/g,
+      "."
+    );
+
     return `${inteirosFormatados},${decimais}`;
   };
 
   // CORREÇÃO: Limitando o campo de rastreabilidade a 20 caracteres
   const formatarRastreio = (valor) => {
-    const formatted = valor.toUpperCase().replace(/[^A-Z0-9\-\/]/g, '');
+    const formatted = valor.toUpperCase().replace(/[^A-Z0-9\-\/]/g, "");
     return formatted.substring(0, 20); // Limite de 20 caracteres
   };
 
   const formatarIPI = (valor) => {
-    const nums = valor.replace(/[^\d,]/g, '');
-    if (nums.includes(',')) {
-      const partes = nums.split(',');
-      return `${partes[0]},${partes[1].slice(0, 2)}%`;
+    const nums = valor.replace(/[^\d,]/g, "");
+    if (nums.includes(",")) {
+      const partes = nums.split(",");
+      return `${partes[0]},${partes[1].slice(0, 2)}`;
     }
-    return nums ? `${nums}%` : '';
+    return nums ? `${nums}` : "";
   };
 
   const formatarQuantidade = (valor) => {
-    return valor.replace(/\D/g, '');
+    return valor.replace(/\D/g, "");
   };
 
-  // Função para validação condicional dos campos valor
   const validarCamposValor = (valoresInput) => {
     const valorKg = valoresInput["Valor por Kg"];
     const valorPeca = valoresInput["Valor por peça"];
-    
+
     // Se nenhum dos dois estiver preenchido, ambos são obrigatórios
     if (!valorKg && !valorPeca) {
       return {
         "Valor por Kg": "Preencha o valor por Kg OU o valor por peça",
-        "Valor por peça": "Preencha o valor por Kg OU o valor por peça"
+        "Valor por peça": "Preencha o valor por Kg OU o valor por peça",
       };
     }
-    
+
     return {}; // Nenhum erro se pelo menos um estiver preenchido
   };
 
   // Configuração das etapas otimizada
-  const etapas = useMemo(() => ({
-    1: {
-      inputs: [
-        {
-          id: "fornecedor",
-          titulo: "Fornecedor",
-          tipo: "select",
-          options: listaFornecedores,
-          optionLabel: "nomeFantasia",
-          optionValue: "fornecedorId",
-          required: true,
-          placeholder: "Selecione o fornecedor da lista",
-          validationMessage: "Selecione um fornecedor válido.",
-        },
-        {
-          id: "prazo",
-          titulo: "Prazo de entrega",
-          tipo: "date",
-          placeholder: "Selecione a data de entrega",
-          required: true,
-          validationMessage: "Informe uma data de entrega válida",
-        },
-        {
-          id: "ie",
-          titulo: "I.E",
-          tipo: "text",
-          placeholder: "Ex: 123.456.789.000",
-          pattern: "^\\d{3}\\.\\d{3}\\.\\d{3}\\.\\d{3}$",
-          required: true,
-          validationMessage: "Inscrição estadual inválida. Use: 123.456.789.000",
-          formatador: formatarIE
-        },
-        {
-          id: "pagamento",
-          titulo: "Cond. Pagamento",
-          tipo: "text",
-          placeholder: "Ex: 30 dias ou 30/60 dias",
-          pattern: "^\\d{1,3}(\\/\\d{1,3})?\\s?dias?$",
-          required: true,
-          validationMessage: "Use formato: 30 dias ou 30/60 dias",
-          color: "black",
-          formatador: formatarPagamento
-        },
-      ],
-      imagem: progressoImg,
-    },
-    2: {
-      inputs: [
-        {
-          id: "valorkg",
-          titulo: "Valor por Kg",
-          tipo: "double",
-          placeholder: "Digite o valor por Kg (Ex: 12,50)",
-          pattern: "^\\d+([,.]\\d{1,2})?$",
-          required: false, // Não é mais sempre obrigatório
-          validationMessage: "Valor inválido. Use formato: 12,50",
-          formatador: formatarValorMonetario
-        },
-        {
-          id: "rastreio",
-          titulo: "Rastreabilidade",
-          tipo: "text",
-          placeholder: "Código de rastreamento (Max 20 caracteres)",
-          pattern: "^[A-Za-z0-9\\-\\/]{3,20}$", // CORREÇÃO: Limite ajustado para 20
-          required: true,
-          validationMessage: "Código inválido. Use 3-20 caracteres alfanuméricos.", // CORREÇÃO: Mensagem atualizada
-          formatador: formatarRastreio
-        },
-        {
-          id: "material",
-          titulo: "Material",
-          tipo: "select",
-          options: listaMateriais,
-          optionLabel: "tipoMaterial",
-          optionValue: "id",
-          required: true,
-          placeholder: "Escolha o material desejado",
-          validationMessage: "Selecione um material válido.",
-        },
-        {
-          id: "valorpeca",
-          titulo: "Valor por peça",
-          tipo: "double",
-          placeholder: "Preço unitário da peça (Ex: 5,00)",
-          pattern: "^\\d+([,.]\\d{1,2})?$",
-          required: false, // Não é mais sempre obrigatório
-          validationMessage: "Valor inválido. Use formato: 5,00",
-          formatador: formatarValorMonetario
-        },
-        {
-          id: "descricao",
-          titulo: "Descrição do material",
-          tipo: "text",
-          placeholder: "Descreva detalhadamente o material (Ex: Parafuso galvanizado M6)",
-          pattern: "^[\\w\\s\\-\\.]{3,100}$",
-          required: true,
-          validationMessage: "Descrição deve ter entre 3 e 100 caracteres.",
-        },
-      ],
-      imagem: progressoConcluido,
-    },
-    3: {
-      inputs: [
-        {
-          id: "valorunit",
-          titulo: "Valor Unitário",
-          tipo: "text",
-          placeholder: "Valor final por unidade (Ex: 9,90)",
-          pattern: "^\\d+([,.]\\d{1,2})?$",
-          required: true,
-          validationMessage: "Valor inválido. Use formato: 9,90",
-          formatador: formatarValorMonetario
-        },
-        {
-          id: "ipi",
-          titulo: "IPI",
-          tipo: "text",
-          placeholder: "Percentual do imposto (Ex: 12%)",
-          pattern: "^\\d{1,2}([,.]\\d{1,2})?%?$",
-          required: true,
-          validationMessage: "IPI inválido. Use formato: 12% ou 12",
-          formatador: formatarIPI
-        },
-        {
-          id: "quantidade",
-          titulo: "Quantidade",
-          tipo: "text",
-          placeholder: "Número de peças/unidades (Ex: 100)",
-          pattern: "^\\d{1,5}$",
-          required: true,
-          validationMessage: "Quantidade inválida. Use apenas números (1-99999).",
-          formatador: formatarQuantidade
-        },
-        {
-          id: "total",
-          titulo: "Total",
-          tipo: "text",
-          placeholder: "Valor calculado automaticamente",
-          disabled: true,
-        },
-      ],
-      imagem: progresso2Concluido,
-    },
-    4: {
-      inputs: [],
-      imagem: progresso3Concluido,
-    },
-  }), [listaFornecedores, listaMateriais]);
+  const etapas = useMemo(
+    () => ({
+      1: {
+        inputs: [
+          {
+            id: "fornecedor",
+            titulo: "Fornecedor",
+            tipo: "select",
+            options: listaFornecedores,
+            optionLabel: "nomeFantasia",
+            optionValue: "fornecedorId",
+            required: true,
+            placeholder: "Selecione o fornecedor da lista",
+            validationMessage: "Selecione um fornecedor válido.",
+          },
+          {
+            id: "prazo",
+            titulo: "Prazo de entrega",
+            tipo: "date",
+            placeholder: "Selecione a data de entrega",
+            required: true,
+            validationMessage: "Informe uma data de entrega válida",
+          },
+          // {
+          //   id: "ie",
+          //   titulo: "I.E",
+          //   tipo: "text",
+          //   placeholder: "Ex: 123.456.789.000",
+          //   pattern: "^\\d{3}\\.\\d{3}\\.\\d{3}\\.\\d{3}$",
+          //   required: true,
+          //   validationMessage:
+          //     "Inscrição estadual inválida. Use: 123.456.789.000",
+          //   formatador: formatarIE,
+          // },
+          {
+            id: "pagamento",
+            titulo: "Cond. Pagamento",
+            tipo: "text",
+            placeholder: "Ex: 30 dias ou 30/60 dias",
+            pattern: "^\\d{1,3}(\\/\\d{1,3})?\\s?dias?$",
+            required: true,
+            validationMessage: "Use formato: 30 dias ou 30/60 dias",
+            color: "black",
+            formatador: formatarPagamento,
+          },
+        ],
+        imagem: progressoImg,
+      },
+      2: {
+        inputs: [
+          {
+            id: "valorkg",
+            titulo: "Valor por Kg",
+            tipo: "double",
+            placeholder: "Digite o valor por Kg (Ex: 12,50)",
+            pattern: "^\\d+([,.]\\d{1,2})?$",
+            required: false, // Não é mais sempre obrigatório
+            validationMessage: "Valor inválido. Use formato: 12,50",
+            formatador: formatarValorMonetario,
+          },
+          {
+            id: "rastreio",
+            titulo: "Rastreabilidade",
+            tipo: "text",
+            placeholder: "Código de rastreamento (Max 20 caracteres)",
+            pattern: "^[A-Za-z0-9\\-\\/]{16,20}$", // CORREÇÃO: Limite ajustado para 20
+            required: true,
+            validationMessage:
+              "Código inválido. Use 16-20 caracteres alfanuméricos.", // CORREÇÃO: Mensagem atualizada
+            formatador: formatarRastreio,
+          },
+          {
+            id: "MaterialId",
+            titulo: "Material",
+            tipo: "select",
+            options: listaMateriais,
+            optionLabel: "tipoMaterial",
+            optionValue: "id",
+            required: true,
+            placeholder: "Escolha o material desejado",
+            validationMessage: "Selecione um material válido.",
+          },
+          {
+            id: "valorpeca",
+            titulo: "Valor por peça",
+            tipo: "double",
+            placeholder: "Preço unitário da peça (Ex: 5,00)",
+            pattern: "^\\d+([,.]\\d{1,2})?$",
+            required: false, // Não é mais sempre obrigatório
+            validationMessage: "Valor inválido. Use formato: 5,00",
+            formatador: formatarValorMonetario,
+          },
+          {
+            id: "descricao",
+            titulo: "Descrição do material",
+            tipo: "text",
+            placeholder:
+              "Descreva detalhadamente o material (Ex: Parafuso galvanizado M6)",
+            pattern: "^[\\w\\s\\-\\.]{3,100}$",
+            required: true,
+            validationMessage: "Descrição deve ter entre 3 e 100 caracteres.",
+          },
+        ],
+        imagem: progressoConcluido,
+      },
+      3: {
+        inputs: [
+          {
+            id: "valorunit",
+            titulo: "Valor Unitário",
+            tipo: "text",
+            placeholder: "Valor final por unidade (Ex: 9,90)",
+            pattern: "^\\d+([,.]\\d{1,2})?$",
+            required: true,
+            validationMessage: "Valor inválido. Use formato: 9,90",
+            formatador: formatarValorMonetario,
+          },
+          // {
+            // id: "ipi",
+            // titulo: "IPI",
+            // tipo: "text",
+            // placeholder: "Percentual do imposto (Ex: 12)",
+            // pattern: "^\\d{1,2}([,.]\\d{1,2})?%?$",
+            // required: true,
+            // validationMessage: "IPI inválido. Use números",
+            // formatador: formatarIPI,
+          // },
+          {
+            id: "quantidade",
+            titulo: "Quantidade",
+            tipo: "text",
+            placeholder: "Número de peças/unidades (Ex: 100)",
+            pattern: "^\\d{1,5}$",
+            required: true,
+            validationMessage:
+              "Quantidade inválida. Use apenas números (1-99999).",
+            formatador: formatarQuantidade,
+          },
+          {
+            id: "total",
+            titulo: "Total",
+            tipo: "text",
+            placeholder: "Valor calculado automaticamente",
+            disabled: true,
+          },
+        ],
+        imagem: progresso2Concluido,
+      },
+      4: {
+        inputs: [],
+        imagem: progresso3Concluido,
+      },
+    }),
+    [listaFornecedores, listaMateriais]
+  );
 
   // Estados derivados
   const image = etapas[progresso]?.imagem || progressoImg;
-  const titulo = progresso === 4 ? "FORMULÁRIO FINALIZADO COM SUCESSO!" : "ORDEM DE COMPRA";
+  const titulo =
+    progresso === 4 ? "FORMULÁRIO FINALIZADO COM SUCESSO!" : "ORDEM DE COMPRA";
   const nomeBotao = progresso === 3 ? "FINALIZAR" : "PRÓXIMO";
-
-  // Fetch data (comentado para usar dados mockados)
-  const fetchData = useCallback(async () => {
-    try {
-      // Simulando carregamento da API
-      console.log("Usando dados mockados...");
-      
-      // Descomente as linhas abaixo quando quiser usar a API real:
-      // const [fornecedores, materiais] = await Promise.all([
-      //   api.get("/fornecedores/listarFornecedorCompleto"),
-      //   api.get("/estoque")
-      // ]);
-      // setListaFornecedores(fornecedores.data);
-      // setListaMateriais(materiais.data);
-      
-    } catch (error) {
-      console.error("Erro ao carregar dados:", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   // CORREÇÃO: Cálculo automático do total incluindo quantidade
   useEffect(() => {
-    const valorUnit = parseFloat((valoresInput["Valor Unitário"] || "").replace(",", ".")) || 0;
+    const valorUnit =
+      parseFloat((valoresInput["Valor Unitário"] || "").replace(",", ".")) || 0;
     const quantidade = parseInt(valoresInput["Quantidade"] || "0") || 0;
     const total = valorUnit * quantidade;
 
     if (total > 0) {
-      setValoresInput(prev => ({ ...prev, Total: total.toFixed(2).replace(".", ",") }));
+      setValoresInput((prev) => ({
+        ...prev,
+        Total: total.toFixed(2).replace(".", ","),
+      }));
     } else {
-      setValoresInput(prev => ({ ...prev, Total: "" }));
+      setValoresInput((prev) => ({ ...prev, Total: "" }));
     }
   }, [valoresInput["Valor Unitário"], valoresInput["Quantidade"]]);
 
   // Validação
   const validarCampo = useCallback((input, valor) => {
     if (!input.required) return { valido: true };
-    
+
     if (!valor || valor.trim() === "") {
       return { valido: false, erro: `${input.titulo} é obrigatório` };
     }
@@ -374,11 +361,11 @@ export function OrdemDeCompra() {
     return { valido: true };
   }, []);
 
-  // Função de validação atualizada
   const validarFormulario = useCallback(() => {
     const inputs = etapas[progresso]?.inputs || [];
     const novosErros = {};
     let temErro = false;
+    let mensagensErro = []; // Array para coletar mensagens de erro
 
     // Validação especial para campos de valor na etapa 2
     if (progresso === 2) {
@@ -386,53 +373,104 @@ export function OrdemDeCompra() {
       Object.assign(novosErros, errosValor);
       if (Object.keys(errosValor).length > 0) {
         temErro = true;
+        // Adicionar mensagens de erro dos campos de valor
+        Object.values(errosValor).forEach((erro) => {
+          if (erro && !mensagensErro.includes(erro)) {
+            mensagensErro.push(erro);
+          }
+        });
       }
     }
 
     for (let input of inputs) {
       if (input.titulo === "Total" && input.disabled) continue;
-      
+
+      // Validação específica para prazo de entrega (não pode ser anterior a hoje)
+      if (input.titulo === "Prazo de entrega") {
+        const dataHoje = new Date();
+        dataHoje.setHours(0, 0, 0, 0); // Zera hora para comparação só da data
+
+        const dataInput = new Date(valoresInput["Prazo de entrega"]);
+        dataInput.setHours(0, 0, 0, 0);
+
+        if (dataInput < dataHoje) {
+          const erroMsg =
+            "A data do prazo de entrega não pode ser anterior a hoje.";
+          novosErros["Prazo de entrega"] = erroMsg;
+          temErro = true;
+          if (!mensagensErro.includes(erroMsg)) {
+            mensagensErro.push(erroMsg);
+          }
+        }
+      }
+
       // Pula validação de obrigatoriedade para campos de valor se o outro estiver preenchido
-      if (progresso === 2 && (input.titulo === "Valor por Kg" || input.titulo === "Valor por peça")) {
+      if (
+        progresso === 2 &&
+        (input.titulo === "Valor por Kg" || input.titulo === "Valor por peça")
+      ) {
         const valorKg = valoresInput["Valor por Kg"];
         const valorPeca = valoresInput["Valor por peça"];
-        
+
         // Se um dos campos estiver preenchido, o outro não é obrigatório
-        if ((input.titulo === "Valor por Kg" && valorPeca) || 
-            (input.titulo === "Valor por peça" && valorKg)) {
+        if (
+          (input.titulo === "Valor por Kg" && valorPeca) ||
+          (input.titulo === "Valor por peça" && valorKg)
+        ) {
           continue;
         }
       }
-      
-      const valor = input.tipo === "select" 
-        ? valoresInput[input.titulo + "Id"] 
-        : valoresInput[input.titulo];
-      
+
+      const valor =
+        input.tipo === "select"
+          ? valoresInput[input.titulo + "Id"]
+          : valoresInput[input.titulo];
+
       const validacao = validarCampo(input, valor);
       if (!validacao.valido && !novosErros[input.titulo]) {
         novosErros[input.titulo] = validacao.erro;
         temErro = true;
+        // Adicionar mensagem de erro única
+        if (!mensagensErro.includes(validacao.erro)) {
+          mensagensErro.push(validacao.erro);
+        }
       }
     }
 
     // Validação de segurança
-    const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
+    const sqlPattern =
+      /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
     const scriptPattern = /<script.*?>.*?<\/script>/gi;
-    
+
     for (let input of inputs) {
       const valor = valoresInput[input.titulo];
-      if (typeof valor === 'string') {
+      if (typeof valor === "string") {
         if (sqlPattern.test(valor)) {
-          novosErros[input.titulo] = 'Comandos SQL não são permitidos';
+          const erroMsg = "Comandos SQL não são permitidos";
+          novosErros[input.titulo] = erroMsg;
           temErro = true;
+          if (!mensagensErro.includes(erroMsg)) {
+            mensagensErro.push(erroMsg);
+          }
           break;
         }
         if (scriptPattern.test(valor)) {
-          novosErros[input.titulo] = 'Scripts não são permitidos';
+          const erroMsg = "Scripts não são permitidos";
+          novosErros[input.titulo] = erroMsg;
           temErro = true;
+          if (!mensagensErro.includes(erroMsg)) {
+            mensagensErro.push(erroMsg);
+          }
           break;
         }
       }
+    }
+
+    // Exibir toastError para cada mensagem de erro única
+    if (mensagensErro.length > 0) {
+      mensagensErro.forEach((mensagem) => {
+        toastError(mensagem);
+      });
     }
 
     setErrosValidacao(novosErros);
@@ -441,41 +479,57 @@ export function OrdemDeCompra() {
 
   // CORREÇÃO: Finalizar ordem - simulando sucesso para chegar na tela 4
   const finalizarOrdemDeCompra = useCallback(async () => {
+    const usuarioId = getUsuarioIdDoToken();
+    // console.log(Number(valoresInput["MaterialId"]));
     const dadosApi = {
-      fornecedorId: valoresInput["FornecedorId"],
+      usuarioId: getUsuarioIdDoToken(),
+      fornecedorId: Number(valoresInput["FornecedorId"]), // ✅
       prazoEntrega: valoresInput["Prazo de entrega"],
-      ie: valoresInput["I.E"],
+      // ie: (valoresInput["I.E"] || "").replace(/\./g, ""),
       condPagamento: valoresInput["Cond. Pagamento"],
-      valorKg: valoresInput["Valor por Kg"],
+      valorKg: parseFloat(valoresInput["Valor por Kg"]?.replace(",", ".") || 0),
       rastreabilidade: valoresInput["Rastreabilidade"],
-      estoqueId: valoresInput["MaterialId"],
-      valorPeca: valoresInput["Valor por peça"],
+      estoqueId: Number(valoresInput["MaterialId"]),
+      valorPeca: parseFloat(
+        valoresInput["Valor por peça"]?.replace(",", ".") || 0
+      ),
       descricaoMaterial: valoresInput["Descrição do material"],
-      valorUnitario: valoresInput["Valor Unitário"],
-      ipi: valoresInput["IPI"],
-      total: valoresInput["Total"],
-      quantidade: valoresInput["Quantidade"],
+      valorUnitario: parseFloat(
+        valoresInput["Valor Unitário"]?.replace(",", ".") || 0
+      ),
+      // ipi: parseFloat(valoresInput["IPI"]?.replace(",", ".") || 0),
+       quantidade: parseFloat(valoresInput["Quantidade"]?.replace(",", ".") || 1),      
     };
+    //  console.log(dadosApi);
+    // console.log("listaMateriais", listaMateriais);
+    // console.log("valoresInput", valoresInput);
 
-    try {
-      // CORREÇÃO: Simulando resposta da API para permitir ir para a tela 4
-      // const res = await api.post("/ordemDeCompra", dadosApi);
-      // setOrdemDeCompra(res.data);
-      
-      // Simulando resposta de sucesso
-      const ordemSimulada = {
-        id: Math.floor(Math.random() * 10000),
-        ...dadosApi
-      };
-      
-      setOrdemDeCompra(ordemSimulada);
-      setProgresso(4);
-      toastSucess("Ordem de compra criada com sucesso!");
-    } catch (error) {
-      console.error("Erro ao criar ordem:", error);
-      toastError("Erro ao criar ordem de compra. Verifique os dados.");
-      setErrosValidacao({ geral: "Erro ao criar ordem de compra. Verifique os dados." });
-    }
+    api
+      .post("/ordemDeCompra", dadosApi)
+      .then((res) => {
+        const novaId = res?.data?.id;
+
+        if (!novaId || isNaN(novaId)) {
+          console.error("ID inválido retornado:", res?.data);
+          toastError("Erro ao obter o ID da nova ordem de compra.");
+          return;
+        }
+
+        return api.get(`/ordemDeCompra/${novaId}`);
+      })
+      .then((resDetalhado) => {
+        if (!resDetalhado) return;
+        setOrdemDeCompra(resDetalhado.data);
+        toastSuccess("Ordem cadastrada com sucesso!");
+        setProgresso(4);
+      })
+      .catch((err) => {
+        // console.error("Erro ao criar ordem:", err);
+        toastError(err.response.data?.message || "Erro ao criar ordem de compra");
+        setErrosValidacao({
+          geral: "Erro ao criar ordem de compra. Verifique os dados.",
+        });
+      });
   }, [valoresInput]);
 
   // Navegação
@@ -485,13 +539,13 @@ export function OrdemDeCompra() {
     if (progresso === 3) {
       finalizarOrdemDeCompra();
     } else {
-      setProgresso(prev => prev + 1);
+      setProgresso((prev) => prev + 1);
     }
   }, [progresso, validarFormulario, finalizarOrdemDeCompra]);
 
   const voltarProgresso = useCallback(() => {
     if (progresso > 1) {
-      setProgresso(prev => prev - 1);
+      setProgresso((prev) => prev - 1);
       setErrosValidacao({});
     }
   }, [progresso]);
@@ -502,65 +556,196 @@ export function OrdemDeCompra() {
     setErrosValidacao({});
   }, []);
 
-  // Handler para limpar o campo oposto quando um dos valores for preenchido
-  const handleInputChange = useCallback((titulo, valor, isSelect = false, formatador = null) => {
-    let valorFormatado = valor;
-    
-    // Aplicar formatação se existir
-    if (formatador && !isSelect) {
-      valorFormatado = formatador(valor);
-    }
-    
-    setValoresInput(prev => {
-      const newState = {
-        ...prev,
-        [titulo]: valorFormatado,
-        ...(isSelect && { [titulo + "Id"]: valor })
-      };
-      
-      return newState;
-    });
-    
-    // Lógica para limpar erros dos campos de valor quando um for preenchido
-    if (titulo === "Valor por Kg" && valorFormatado) {
-      // Limpa erro do campo "Valor por peça" quando "Valor por Kg" for preenchido
-      setErrosValidacao(prevErros => ({
-        ...prevErros,
-        "Valor por peça": ""
-      }));
-    } else if (titulo === "Valor por peça" && valorFormatado) {
-      // Limpa erro do campo "Valor por Kg" quando "Valor por peça" for preenchido
-      setErrosValidacao(prevErros => ({
-        ...prevErros,
-        "Valor por Kg": ""
-      }));
-    }
-    
-    // Limpar erro específico do campo atual
-    if (errosValidacao[titulo]) {
-      setErrosValidacao(prev => ({ ...prev, [titulo]: '' }));
-    }
-  }, [errosValidacao]);
+  const handleInputChange = useCallback(
+    (titulo, valor, isSelect = false, formatador = null) => {
+      let valorFormatado = valor;
 
-  // Geração de documentos (versão simplificada)
-  const gerarPDF = useCallback(() => {
-    const doc = new jsPDF();
-    doc.text('Ordem de Compra', 20, 20);
-    doc.text(`ID: ${ordemDeCompra.id}`, 20, 30);
-    doc.text(`Fornecedor: ${valoresInput["Fornecedor"]}`, 20, 40);
-    doc.text(`Total: R$ ${valoresInput["Total"]}`, 20, 50);
-    doc.save(`ordem_${ordemDeCompra.id}.pdf`);
-  }, [ordemDeCompra, valoresInput]);
+      // Aplicar formatação se existir
+      if (formatador && !isSelect) {
+        valorFormatado = formatador(valor);
+      }
 
-  const baixarDocumentos = useCallback(async () => {
-    try {
-      gerarPDF();
-      toastSucess("Documentos baixados com sucesso!");
-    } catch (error) {
-      toastError("Erro ao gerar documentos");
-      setErrosValidacao({ geral: "Erro ao gerar documentos" });
-    }
-  }, [gerarPDF]);
+      setValoresInput((prev) => {
+        const newState = {
+          ...prev,
+          [titulo]: valorFormatado,
+          ...(isSelect && { [titulo + "Id"]: valor }),
+        };
+
+        return newState;
+      });
+
+      // Limpar erros (manter apenas para lógica interna, não para exibição)
+      if (errosValidacao[titulo]) {
+        setErrosValidacao((prev) => ({ ...prev, [titulo]: "" }));
+      }
+    },
+    [errosValidacao]
+  );
+
+
+  // async function baixarExcel() {
+  //   const workbook = new ExcelJS.Workbook();
+  //   const sheet = workbook.addWorksheet("Ordem de Compra");
+
+  //   const fornecedor = ordemDeCompra.fornecedor;
+
+  //   const fornecedorDetalhes = listaFornecedores.find(
+  //     (f) => f.fornecedorId === parseInt(valoresInput["FornecedorId"])
+  //   );
+
+  //   const corPrimaria = "2A80B9"; // Azul
+  //   const corSecundaria = "95A5A6"; // Cinza
+  //   const corTexto = "2C3E50";
+
+  //   sheet.mergeCells("A1:E1");
+
+  //   sheet.getCell("A1").value = `MegaPlate LTDA`;
+
+  //   sheet.getCell("A1").fill = {
+  //     type: "pattern",
+  //     pattern: "solid",
+  //     fgColor: { argb: corPrimaria },
+  //   };
+  //   sheet.getCell("A1").font = {
+  //     color: { argb: "FFFFFF" },
+  //     bold: true,
+  //     size: 16,
+  //   };
+  //   sheet.getCell("A1").alignment = { vertical: "middle", horizontal: "left" };
+
+  //   sheet.addRow([]);
+
+  //   if (fornecedor || fornecedorDetalhes) {
+  //     sheet.addRow([
+  //       `CNPJ: ${fornecedorDetalhes?.cnpj || "N/A"}`,
+  //       "",
+  //       "",
+  //       `Endereço: ${fornecedorDetalhes.complemento || "N/A"}`,
+  //     ]);
+  //     sheet.addRow([`Telefone: ${fornecedorDetalhes.telefone || "N/A"}`]);
+  //   } else {
+  //     sheet.addRow(["Dados do fornecedor não disponíveis"]);
+  //   }
+
+  //   const dataAtual = new Date();
+  //   const dataFormatada = dataAtual.toLocaleDateString("pt-BR");
+  //   const horaFormatada = dataAtual.toLocaleTimeString("pt-BR");
+
+  //   sheet.addRow([]);
+  //   sheet.addRow([`Ordem de Compra Nº: ${ordemDeCompra.id}`]);
+  //   sheet.addRow([`Data: ${dataFormatada}`, `Hora: ${horaFormatada}`]);
+
+  //   sheet.addRow([]);
+  //   sheet.addRow(["DADOS DO FORNECEDOR"]);
+  //   sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true, size: 12 };
+
+  //   if (fornecedor || fornecedorDetalhes) {
+  //     sheet.addRow([`Nome: ${fornecedorDetalhes?.nomeFantasia}`]);
+  //     if (fornecedorDetalhes?.cnpj)
+  //       sheet.addRow([`CNPJ: ${fornecedorDetalhes?.cnpj}`]);
+  //     if (fornecedorDetalhes.complemento)
+  //       sheet.addRow([`Endereço: ${fornecedorDetalhes.complemento}`]);
+  //   } else {
+  //     sheet.addRow(["Fornecedor não encontrado"]);
+  //   }
+
+  //   sheet.addRow([]);
+  //   sheet.addRow(["DESCRIÇÃO DOS MATERIAIS"]);
+  //   sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true, size: 12 };
+
+  //   // Cabeçalho da tabela
+  //   const header = ["ITEM", "DESCRIÇÃO", "QTD", "VALOR UNIT.", "TOTAL"];
+  //   const headerRow = sheet.addRow(header);
+  //   headerRow.eachCell((cell) => {
+  //     cell.fill = {
+  //       type: "pattern",
+  //       pattern: "solid",
+  //       fgColor: { argb: "F0F0F0" },
+  //     };
+  //     cell.font = { bold: true };
+  //     cell.border = {
+  //       top: { style: "thin" },
+  //       bottom: { style: "thin" },
+  //       left: { style: "thin" },
+  //       right: { style: "thin" },
+  //     };
+  //   });
+
+  //   // Dados do material
+  //   const material = listaMateriais.find(
+  //     (m) => m.id === parseInt(valoresInput["MaterialId"])
+  //   );
+  //   const descricao = material?.tipoMaterial || "Material não encontrado";
+  //   const quantidade = parseFloat(valoresInput["Quantidade"]) || 0;
+  //   const valorUnit = parseFloat(valoresInput["Valor Unitário"]) || 0;
+  //   const total = parseFloat(valoresInput["Total"]) || valorUnit * quantidade;
+  //   const ipi = parseFloat(valoresInput["IPI"]) || 0;
+  //   const totalGeral = total + ipi;
+
+  //   sheet.addRow([
+  //     "001",
+  //     descricao.substring(0, 50),
+  //     quantidade,
+  //     `R$ ${valorUnit.toFixed(2).replace(".", ",")}`,
+  //     `R$ ${total.toFixed(2).replace(".", ",")}`,
+  //   ]);
+
+  //   sheet.addRow([]);
+  //   sheet.addRow([
+  //     "SUBTOTAL:",
+  //     "",
+  //     "",
+  //     "",
+  //     `R$ ${total.toFixed(2).replace(".", ",")}`,
+  //   ]);
+  //   sheet.addRow([
+  //     "IPI:",
+  //     "",
+  //     "",
+  //     "",
+  //     `R$ ${ipi.toFixed(2).replace(".", ",")}`,
+  //   ]);
+  //   sheet.addRow([
+  //     "TOTAL GERAL:",
+  //     "",
+  //     "",
+  //     "",
+  //     `R$ ${totalGeral.toFixed(2).replace(".", ",")}`,
+  //   ]);
+
+  //   sheet.addRow([]);
+  //   sheet.addRow(["OBSERVAÇÕES:"]);
+  //   sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true };
+  //   const observacoes = [
+  //     "• Documento gerado automaticamente pelo sistema",
+  //     "• Válido como comprovante de compra",
+  //     "• IPI calculado conforme percentual informado",
+  //     "• Para dúvidas, entre em contato conosco",
+  //   ];
+  //   observacoes.forEach((obs) => sheet.addRow([obs]));
+
+  //   sheet.addRow([]);
+  //   sheet.addRow([
+  //     `Documento gerado em ${new Date().toLocaleString("pt-BR")}`,
+  //     "",
+  //     "",
+  //     "",
+  //     "www.megaplate.com.br | vendas@megaplate.com.br",
+  //   ]);
+
+  //   // Ajustar largura das colunas
+  //   sheet.columns.forEach((col) => {
+  //     col.width = 25;
+  //   });
+
+  //   // Gerar o arquivo
+  //   const buffer = await workbook.xlsx.writeBuffer();
+  //   const nomeArquivo = `ordem_de_compra_${
+  //     ordemDeCompra.id
+  //   }_${dataFormatada.replace(/\//g, "-")}.xlsx`;
+  //   saveAs(new Blob([buffer]), nomeArquivo);
+  // }
 
   return (
     <>
@@ -571,32 +756,41 @@ export function OrdemDeCompra() {
         </div>
 
         <main className={style.formContent}>
-          <span className={style.spanTitulo} style={progresso === 4 ? 
-            { backgroundColor: "#1D597B", width: "330px", height: "200px" } : 
-            { backgroundColor: "#05314C" }}>
+          <span className={style.spanTitulo}>
             <h1>{titulo}</h1>
           </span>
 
           <div className={style.inputs}>
             {etapas[progresso]?.inputs.map((input) => (
               <div key={input.id} className={style.inputGroup}>
-                <p>{input.titulo} {input.required && <span style={{color: 'red'}}>*</span>}</p>
+                <p>
+                  {input.titulo}{" "}
+                  {input.required && <span style={{ color: "red" }}>*</span>}
+                </p>
                 {input.tipo === "select" ? (
                   <select
                     value={valoresInput[input.titulo + "Id"] || ""}
                     onChange={(e) => {
                       const valor = e.target.value;
-                      const opcao = input.options.find(opt => 
-                        String(opt[input.optionValue]) === valor
-                      );
-                      handleInputChange(input.titulo, opcao?.[input.optionLabel] || "", true);
-                      setValoresInput(prev => ({ ...prev, [input.titulo + "Id"]: valor }));
+                      setValoresInput((prev) => ({
+                        ...prev,
+                        [input.titulo]:
+                          input.options.find(
+                            (opt) => String(opt[input.optionValue]) === valor
+                          )?.[input.optionLabel] || "",
+                        [input.titulo + "Id"]: valor,
+                      }));
                     }}
-                    style={errosValidacao[input.titulo] ? { borderColor: 'red' } : {}}
+                    style={
+                      errosValidacao[input.titulo] ? { borderColor: "red" } : {}
+                    }
                   >
                     <option value="">{input.placeholder}</option>
                     {input.options.map((opt) => (
-                      <option key={opt[input.optionValue]} value={opt[input.optionValue]}>
+                      <option
+                        key={opt[input.optionValue]}
+                        value={opt[input.optionValue]}
+                      >
                         {opt[input.optionLabel]}
                       </option>
                     ))}
@@ -606,15 +800,19 @@ export function OrdemDeCompra() {
                     type={input.tipo}
                     placeholder={input.placeholder}
                     value={valoresInput[input.titulo] || ""}
-                    onChange={(e) => handleInputChange(input.titulo, e.target.value, false, input.formatador)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        input.titulo,
+                        e.target.value,
+                        false,
+                        input.formatador
+                      )
+                    }
                     disabled={input.disabled}
-                    style={errosValidacao[input.titulo] ? { borderColor: 'red' } : {}}
+                    style={
+                      errosValidacao[input.titulo] ? { borderColor: "red" } : {}
+                    }
                   />
-                )}
-                {errosValidacao[input.titulo] && (
-                  <small style={{ color: 'red', fontSize: '12px', marginTop: '5px', display: 'block' }}>
-                    {errosValidacao[input.titulo]}
-                  </small>
                 )}
               </div>
             ))}
@@ -622,9 +820,7 @@ export function OrdemDeCompra() {
 
           {progresso === 4 && (
             <div className={style.botaoPdf}>
-              <button onClick={baixarDocumentos}>
-                BAIXAR ORDEM DE COMPRA
-              </button>
+              <button onClick={() => baixarOrdemDeCompraPDF(ordemDeCompra.id)}>BAIXAR ORDEM DE COMPRA</button>              
             </div>
           )}
         </main>
@@ -635,16 +831,12 @@ export function OrdemDeCompra() {
           )}
 
           {progresso < 4 && (
-            <button onClick={avancarProgresso}>
-              {nomeBotao}
-            </button>
+            <button onClick={avancarProgresso}>{nomeBotao}</button>
           )}
 
           {progresso === 4 && (
             <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={reiniciar}>
-                CRIAR NOVA ORDEM DE COMPRA
-              </button>
+              <button onClick={reiniciar}>CRIAR NOVA ORDEM DE COMPRA</button>
               <button onClick={() => navigate("/Material")}>
                 IR PARA DASHBOARD
               </button>
