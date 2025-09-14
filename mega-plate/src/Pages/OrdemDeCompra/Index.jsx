@@ -284,16 +284,16 @@ export function OrdemDeCompra() {
             validationMessage: "Valor inválido. Use formato: 9,90",
             formatador: formatarValorMonetario,
           },
-          {
-            id: "ipi",
-            titulo: "IPI",
-            tipo: "text",
-            placeholder: "Percentual do imposto (Ex: 12)",
-            pattern: "^\\d{1,2}([,.]\\d{1,2})?%?$",
-            required: true,
-            validationMessage: "IPI inválido. Use números",
-            formatador: formatarIPI,
-          },
+          // {
+            // id: "ipi",
+            // titulo: "IPI",
+            // tipo: "text",
+            // placeholder: "Percentual do imposto (Ex: 12)",
+            // pattern: "^\\d{1,2}([,.]\\d{1,2})?%?$",
+            // required: true,
+            // validationMessage: "IPI inválido. Use números",
+            // formatador: formatarIPI,
+          // },
           {
             id: "quantidade",
             titulo: "Quantidade",
@@ -497,8 +497,8 @@ export function OrdemDeCompra() {
       valorUnitario: parseFloat(
         valoresInput["Valor Unitário"]?.replace(",", ".") || 0
       ),
-      ipi: parseFloat(valoresInput["IPI"]?.replace(",", ".") || 0),
-      quantidade: parseFloat(valoresInput["Quantidade"]?.replace(",", ".") || 1),      
+      // ipi: parseFloat(valoresInput["IPI"]?.replace(",", ".") || 0),
+       quantidade: parseFloat(valoresInput["Quantidade"]?.replace(",", ".") || 1),      
     };
     //  console.log(dadosApi);
     // console.log("listaMateriais", listaMateriais);

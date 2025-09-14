@@ -140,10 +140,10 @@ if (valorKg > 0) {
 
     const item = "001";
     const descricao = materialSelecionado?.tipoMaterial || "Material não encontrado";
-    const quantidade = ordemDeCompra.pendentes || 0;
+    const quantidade = ordemDeCompra.quantidade || 0;
     const valorUnitario = ordemDeCompra.valorUnitario || 0;
     const total = valorUnitario * quantidade;
-    const ipi = parseFloat(String(ordemDeCompra.ipi)?.replace(",", ".")) || 0;
+    const ipi = parseFloat(String(materialSelecionado?.ipi || "0").replace(",", ".")) || 0;
 
 
     posicaoY += 10;
@@ -152,21 +152,21 @@ if (valorKg > 0) {
     doc.text(descricao.substring(0, 25), 45, posicaoY);
     doc.text(quantidade.toString(), 120, posicaoY);
     doc.text(`R$ ${valorUnitario.toFixed(2).replace(".", ",")}`, 140, posicaoY);
-    doc.text(`R$ ${total.toFixed(2).replace(".", ",")}`, 170, posicaoY);
+    doc.text(`R$ ${total.toFixed(2).replace()}`, 170, posicaoY);
     doc.line(20, posicaoY + 3, 190, posicaoY + 3);
 
     posicaoY += 15;
     doc.setFillColor(240, 240, 240);
     doc.rect(130, posicaoY - 5, 60, 25, "F");
 
-    const totalGeral = total + ipi;
+    const totalGeral = total + (total * (ipi / 100));
 
     doc.setFont("helvetica", "bold");
     doc.text("SUBTOTAL:", 135, posicaoY);
     doc.text(`R$ ${total.toFixed(2).replace(".", ",")}`, 170, posicaoY);
 
     doc.text(`IPI:`, 135, posicaoY + 8);
-    doc.text(`R$ ${ipi.toFixed(2).replace(".", ",")}`, 170, posicaoY + 8);
+    doc.text(`${ipi.toFixed(2).replace(".", ",")} %`, 170, posicaoY + 8);
 
     doc.setFontSize(11);
     doc.text("TOTAL GERAL:", 135, posicaoY + 16);

@@ -1153,7 +1153,7 @@ function App() {
                     options={{
                       backgroundColor: "transparent",
                       chartArea: {
-                        width: "70%",
+                        width: "80%", // Ajustado para dar espaço à legenda
                         height: "75%",
                       },
                       pieHole: 0.4,
@@ -1164,7 +1164,12 @@ function App() {
                         bold: true,
                       },
                       legend: {
-                        position: "none",
+                        position: "right", // Alterado de 'none' para 'right'
+                        textStyle: { 
+                          color: "white", // Cor do texto da legenda
+                          fontSize: 12 
+                        },
+                        alignment: "center"
                       },
                       colors: [
                         "#4586AB",
@@ -1181,7 +1186,7 @@ function App() {
                         showColorCode: true,
                         textStyle: {
                           color: '#05314C',
-                          fontSize: 13
+                          fontSize: 0.1
                         },
                       },
                       animation: {
