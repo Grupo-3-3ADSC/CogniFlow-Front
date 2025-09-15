@@ -174,7 +174,7 @@ async function baixarExcelFornecedores(ordens, anoSelecionado, nomeFornecedor) {
         formatarDataBrasileira(ordem.dataDeEmissao) || "N/A", // Data de emissão formatada (DD/MM/YYYY)
         ordem.fornecedor?.nomeFantasia || "Desconhecido", // Nome do fornecedor
         ordem.id || "N/A", // ID da ordem de compra
-        ordem.descricaoMaterial || "N/A", // Descrição do material
+        ordem.tipoMaterial || "N/A", // Descrição do material
         ordem.quantidade || 0, // Quantidade solicitada
         ordem.valorUnitario || 0, // Valor unitário
         ordem.valorUnitario * ordem.quantidade || 0, // Quantidade * Valor unitário

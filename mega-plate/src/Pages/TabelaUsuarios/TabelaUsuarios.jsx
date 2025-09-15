@@ -160,7 +160,7 @@ export function TabelaUsuarios() {
       <NavBar />
       <div className={styles.container}>
         <div className={styles.background}>
-          <h1>Listagem de Usuários</h1>
+          <h1>LISTAGEM DE USUÁRIOS</h1>
 
           <div className={styles.filtro}>
             <input
