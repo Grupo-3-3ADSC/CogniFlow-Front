@@ -17,10 +17,10 @@ import { saveAs } from "file-saver";
 import { jwtDecode } from "jwt-decode";
 
 export function RelatorioFornecedor() {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [fornecedores, setFornecedores] = useState([]);
   const [filtroNome, setFiltroNome] = useState("");
-    const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
+  const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
   const [inicio, setInicio] = useState(0);
   const todosAnos = gerarListaAnos(2018);
   const [anoSelecionado, setAnoSelecionado] = useState(
@@ -30,26 +30,26 @@ export function RelatorioFornecedor() {
   const [fornecedorSelecionado, setFornecedorSelecionado] = useState(null);
   const anosVisiveis = todosAnos.slice(inicio, inicio + 5);
   useEffect(() => {
-      const token = sessionStorage.getItem("authToken");
-      if (!token) {
+    const token = sessionStorage.getItem("authToken");
+    if (!token) {
+      navigate("/");
+    } else {
+      const { exp } = jwtDecode(token);
+      if (Date.now() >= exp * 1000) {
+        sessionStorage.removeItem("authToken");
         navigate("/");
       } else {
-        const { exp } = jwtDecode(token);
-        if (Date.now() >= exp * 1000) {
-          sessionStorage.removeItem("authToken");
-          navigate("/");
-        } else {
-          setAutenticacaoPassou(true);
-        }
+        setAutenticacaoPassou(true);
       }
-    }, [navigate]);
+    }
+  }, [navigate]);
   const avancarAno = () => {
     if (inicio + 5 < todosAnos.length) setInicio(inicio + 1);
   };
   const voltarAno = () => {
     if (inicio > 0) setInicio(inicio - 1);
   };
-  
+
 
   async function buscarFornecedores() {
     const token = sessionStorage.getItem("authToken");
@@ -79,8 +79,8 @@ export function RelatorioFornecedor() {
   );
 
   // 🔹 Função para gerar Excel
-async function baixarExcelFornecedores(ordens, anoSelecionado, nomeFornecedor) {
-  if (!ordens || ordens.length === 0) return;
+  async function baixarExcelFornecedores(ordens, anoSelecionado, nomeFornecedor) {
+    if (!ordens || ordens.length === 0) return;
     if (!ordens || ordens.length === 0) return;
 
     const workbook = new ExcelJS.Workbook();
@@ -98,7 +98,7 @@ async function baixarExcelFornecedores(ordens, anoSelecionado, nomeFornecedor) {
     const sheetEntradas = workbook.addWorksheet("Entradas");
 
     // === Faixa azul do topo ===
-    sheetEntradas.mergeCells("A1:I4");
+    sheetEntradas.mergeCells("A1:H4");
     const faixa = sheetEntradas.getCell("A1");
     faixa.fill = {
       type: "pattern",
@@ -115,7 +115,7 @@ async function baixarExcelFornecedores(ordens, anoSelecionado, nomeFornecedor) {
     // === Título do relatório ===
     const titleRow = sheetEntradas.addRow([]);
     titleRow.height = 30;
-    sheetEntradas.mergeCells("A6:I6");
+    sheetEntradas.mergeCells("A6:H6");
 
     const tituloCell = sheetEntradas.getCell("A6");
     tituloCell.value = `Relatório de Entradas - ${anoSelecionado}`;
@@ -129,7 +129,7 @@ async function baixarExcelFornecedores(ordens, anoSelecionado, nomeFornecedor) {
 
     const header = [
       "Data",
-      "Fornecedor",
+      // "Fornecedor",
       "Ordem de compra",
       "Produto",
       "Quantidade solicitada",
@@ -172,7 +172,7 @@ async function baixarExcelFornecedores(ordens, anoSelecionado, nomeFornecedor) {
       console.log(fornecedoresFiltrados);
       const row = sheetEntradas.addRow([
         formatarDataBrasileira(ordem.dataDeEmissao) || "N/A", // Data de emissão formatada (DD/MM/YYYY)
-        ordem.fornecedor?.nomeFantasia || "Desconhecido", // Nome do fornecedor
+        // ordem.fornecedor?.nomeFantasia || "Desconhecido", // Nome do fornecedor
         ordem.id || "N/A", // ID da ordem de compra
         ordem.tipoMaterial || "N/A", // Descrição do material
         ordem.quantidade || 0, // Quantidade solicitada
@@ -180,7 +180,7 @@ async function baixarExcelFornecedores(ordens, anoSelecionado, nomeFornecedor) {
         ordem.valorUnitario * ordem.quantidade || 0, // Quantidade * Valor unitário
         (ordem.ipi || 0) / 100, // IPI em formato decimal (ex.: 10% -> 0.10)
         ordem.valorUnitario * ordem.quantidade * (1 + (ordem.ipi || 0) / 100) ||
-          0, // Valor total com IPI
+        0, // Valor total com IPI
       ]);
 
       // Formatação de células
@@ -211,11 +211,11 @@ async function baixarExcelFornecedores(ordens, anoSelecionado, nomeFornecedor) {
       col.width = maxLength + 5;
     });
     const buffer = await workbook.xlsx.writeBuffer();
-const nomeArquivo = nomeFornecedor
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9-_ ]/g, "")
-    .replace(/\s+/g, "_");
+    const nomeArquivo = nomeFornecedor
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9-_ ]/g, "")
+      .replace(/\s+/g, "_");
 
     saveAs(
       new Blob([buffer]),
@@ -275,9 +275,8 @@ const nomeArquivo = nomeFornecedor
                 {anosVisiveis.map((ano) => (
                   <div
                     key={ano}
-                    className={`${styles.ano} ${
-                      anoSelecionado === ano ? styles.ativo : ""
-                    }`}
+                    className={`${styles.ano} ${anoSelecionado === ano ? styles.ativo : ""
+                      }`}
                     onClick={() => setAnoSelecionado(ano)}
                   >
                     {ano}
@@ -327,30 +326,30 @@ const nomeArquivo = nomeFornecedor
                       <p>{fornecedor.telefone}</p>
                     </td>
                     <td>
-<button
-  className={styles.baixar}
-  onClick={async () => {
-    if (!anoSelecionado) {
-      toastError("Por favor, selecione um ano antes de baixar o relatório.");
-      return;
-    }
+                      <button
+                        className={styles.baixar}
+                        onClick={async () => {
+                          if (!anoSelecionado) {
+                            toastError("Por favor, selecione um ano antes de baixar o relatório.");
+                            return;
+                          }
 
-    const ordens = await buscarOrdensDeCompra(
-      fornecedor.fornecedorId,
-      anoSelecionado
-    );
+                          const ordens = await buscarOrdensDeCompra(
+                            fornecedor.fornecedorId,
+                            anoSelecionado
+                          );
 
-    if (!ordens || ordens.length === 0) {
-      toastInfo("Nenhuma ordem encontrada para este fornecedor neste ano.");
-      return;
-    }
+                          if (!ordens || ordens.length === 0) {
+                            toastInfo("Nenhuma ordem encontrada para este fornecedor neste ano.");
+                            return;
+                          }
 
-    await baixarExcelFornecedores(ordens, anoSelecionado, fornecedor.nomeFantasia);
-    toastSuccess("Relatório gerado com sucesso!");
-  }}
->
-  <img className="icons-baixar" src={iconBaixar} alt="Baixar" />
-</button>
+                          await baixarExcelFornecedores(ordens, anoSelecionado, fornecedor.nomeFantasia);
+                          toastSuccess("Relatório gerado com sucesso!");
+                        }}
+                      >
+                        <img className="icons-baixar" src={iconBaixar} alt="Baixar" />
+                      </button>
 
                     </td>
                   </tr>
