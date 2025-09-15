@@ -14,10 +14,13 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../../provider/api.js";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import { jwtDecode } from "jwt-decode";
 
 export function RelatorioFornecedor() {
+  const navigate = useNavigate(); 
   const [fornecedores, setFornecedores] = useState([]);
   const [filtroNome, setFiltroNome] = useState("");
+    const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
   const [inicio, setInicio] = useState(0);
   const todosAnos = gerarListaAnos(2018);
   const [anoSelecionado, setAnoSelecionado] = useState(
@@ -26,7 +29,6 @@ export function RelatorioFornecedor() {
   const [ordensDeCompra, setOrdensDeCompra] = useState([]); // Estado para armazenar as ordens de compra
   const [fornecedorSelecionado, setFornecedorSelecionado] = useState(null);
   const anosVisiveis = todosAnos.slice(inicio, inicio + 5);
-
   useEffect(() => {
       const token = sessionStorage.getItem("authToken");
       if (!token) {
@@ -47,7 +49,7 @@ export function RelatorioFornecedor() {
   const voltarAno = () => {
     if (inicio > 0) setInicio(inicio - 1);
   };
-  const navigate = useNavigate();
+  
 
   async function buscarFornecedores() {
     const token = sessionStorage.getItem("authToken");
@@ -96,7 +98,7 @@ async function baixarExcelFornecedores(ordens, anoSelecionado, nomeFornecedor) {
     const sheetEntradas = workbook.addWorksheet("Entradas");
 
     // === Faixa azul do topo ===
-    sheetEntradas.mergeCells("A1:G4");
+    sheetEntradas.mergeCells("A1:I4");
     const faixa = sheetEntradas.getCell("A1");
     faixa.fill = {
       type: "pattern",

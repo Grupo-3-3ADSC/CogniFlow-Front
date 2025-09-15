@@ -29,7 +29,7 @@ function gerarListaAnos(anoInicial) {
 
 /* ---------- Componente principal ---------- */
 export function Relatorios() {
-  const navigate = useNavigate();
+  const navigate = useNavigate();  
   const [filtroRelatorio, setFiltroRelatorio] = useState("todos");
   const todosAnos = gerarListaAnos(2018);
   const [inicio, setInicio] = useState(0);
