@@ -282,7 +282,7 @@ function App() {
   const [hasNext, setHasNext] = useState(false);
   const [hasPrevious, setHasPrevious] = useState(false);
 
-  const fornecedoresPorPagina = 6;
+  const fornecedoresPorPagina = 5;
 
   // Estado para controlar o carrossel de materiais
   const [materialIndices, setMaterialIndices] = useState({});
