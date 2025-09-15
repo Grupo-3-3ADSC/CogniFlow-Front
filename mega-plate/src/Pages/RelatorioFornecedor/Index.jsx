@@ -184,10 +184,10 @@ export function RelatorioFornecedor() {
       ]);
 
       // Formatação de células
+      row.getCell(5).numFmt = '"R$"#,##0.00';
       row.getCell(6).numFmt = '"R$"#,##0.00';
-      row.getCell(7).numFmt = '"R$"#,##0.00';
-      row.getCell(8).numFmt = "0.00%";
-      row.getCell(9).numFmt = '"R$"#,##0.00';
+      row.getCell(7).numFmt = "0.00%";
+      row.getCell(8).numFmt = '"R$"#,##0.00';
 
       // Zebra
       if (index % 2 === 0) {
