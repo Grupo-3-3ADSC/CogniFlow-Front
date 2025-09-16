@@ -6,11 +6,13 @@ import iconLogout from '../assets/icon-logout.png';
 import iconTransferencia from '../assets/icon-transferencia.png';
 import iconFormularios from '../assets/icon-formularios.png';
 import iconHistorico from '../assets/icon-historico.png';
-import iconGroup from '../assets/icon-group.png';
+/* import iconGroup from '../assets/icon-group.png';
+ */
+import iconPasta from '../assets/icon-pasta.png';
+import iconCaixa from '../assets/icon-caixa.png';
 import iconCifrao from '../assets/icon-cifrao.png';
 import logoMega from '../assets/logo-megaplate.png';
 import menuHamburger from '../assets/menu-hamburguer.png';
-import iconHistoricos from '../assets/icon-historico.png';
 import user from '../assets/User.png';
 import { useEffect } from 'react';
 import { api } from '../provider/api';
@@ -18,6 +20,7 @@ import { api } from '../provider/api';
 const NavBar = () => {
   const navigate = useNavigate();
   const [showDashSubmenu, setShowDashSubmenu] = useState(false);
+  const [showGestaoSubmenu, setShowGestaoSubmenu] = useState(false);
   const [showFormSubmenu, setShowFormSubmenu] = useState(false);
   const [showHistoricoSubmenu, setShowHistoricoSubmenu] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 520);
@@ -97,7 +100,7 @@ const NavBar = () => {
     };
   }, [fotoUrl]);
 
-
+  const toggleGestaoSubmenu = () => setShowGestaoSubmenu(prev => !prev);
   const toggleDashSubmenu = () => setShowDashSubmenu(prev => !prev);
   const toggleFormSubmenu = () => setShowFormSubmenu(prev => !prev);
   const toggleHistoricoSubmenu = () => setShowHistoricoSubmenu(prev => !prev);
@@ -119,30 +122,36 @@ const NavBar = () => {
         <img src={logoMega} alt="Logo" className="menu-logo" />
         <nav className="menu-items">
           <ul className="menu-list">
-            <li title="Perfil" onClick={() => navigate('/Perfil')}>
-              <img className="icons-menu" src={user} alt="Perfil de usuário" />
-              <span>Perfil</span>
+
+            <li title="Ordem de Compra" onClick={() => navigate('/ordemDeCompra')}>
+              <img className="icons-menu" src={iconCaixa} alt="Ordem_de_Compra" />
+              <span>Ordem de Compra</span>
             </li>
-            <li title='Tabela de Usuários' onClick={() => navigate('/TabelaUsuarios')}>
-              <img className='icons-menu' src={iconGroup} alt="Tabela de Usuários" />
-              <span>Listagem de Usuários</span>
-            </li>
+
             <li title="Transferência" onClick={() => navigate('/transferencia')}>
               <img className="icons-menu" src={iconTransferencia} alt="Transferência" />
               <span>Transferência</span>
             </li>
-             
-            {usuarioLista?.cargo?.id === 2 && (
-             <li title="Relatórios" onClick={() => navigate('/relatorios')}>
-              <img className="icons-menu" src={iconFormularios} alt="Relatórios" />
-              <span>Relatórios</span>
+
+
+            {/*            <li title='Tabela de Usuários' onClick={() => navigate('/TabelaUsuarios')}>
+              <img className='icons-menu' src={iconGroup} alt="Tabela de Usuários" />
+              <span>Listagem de Usuários</span>
+            </li> */}
+
+            <li className="has-submenu" title="Gestão" onClick={toggleGestaoSubmenu}>
+              <img className="icons-menu" src={iconPasta} alt="Gestão" />
+              <span>Gestão</span>
+              <svg className={`arrow-icon ${showGestaoSubmenu ? 'rotate' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
             </li>
+            {showGestaoSubmenu && (
+              <ul className="submenu-list">
+                <li onClick={() => navigate('/TabelaUsuarios')}>Listagem de Usuários</li>
+              </ul>
             )}
-            <li title="Fornecedores" onClick={() => navigate('/Fornecedor')}>
-              <img className="icons-cifrao" src={iconCifrao} alt="Fornecedor" />
-              <span>Custos por Fornecedor</span>
-            </li>
-            <li className="has-submenu" title="Dashboards" onClick={toggleDashSubmenu}>
+             <li className="has-submenu" title="Dashboards" onClick={toggleDashSubmenu}>
               <img className="icons-menu" src={iconDash} alt="Dashboards" />
               <span>Dashboards</span>
               <svg className={`arrow-icon ${showDashSubmenu ? 'rotate' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -155,45 +164,71 @@ const NavBar = () => {
                 <li onClick={() => navigate('/DashEstoque')}>Dashboard Estoque</li>
               </ul>
             )}
+              <li title="Fornecedores" onClick={() => navigate('/Fornecedor')}>
+              <img className="icons-cifrao" src={iconCifrao} alt="Fornecedor" />
+              <span>Custos por Fornecedor</span>
+            </li>
+            {usuarioLista?.cargo?.id === 2 && ( 
             <li className="has-submenu" title="Formulários" onClick={toggleFormSubmenu}>
               <img className="icons-menu" src={iconFormularios} alt="Formulários" />
-              <span>Formulários</span>
+              <span>Cadastros</span>
               <svg className={`arrow-icon ${showFormSubmenu ? 'rotate' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </li>
-
+             )}
             {showFormSubmenu && (
               <ul className="submenu-list">
-                <li onClick={() => navigate('/ordemDeCompra')}>Ordem de Compra</li>
 
-                {usuarioLista?.cargo?.id === 2 && ( // Verifica se o cargo do usuário logado é gestor (id === 2)
+       
+               {usuarioLista?.cargo?.id === 2 && ( // Verifica se o cargo do usuário logado é gestor (id === 2)
                   <li onClick={() => navigate('/cadastro')}>Cadastrar Usuários</li>
-                )}
-                {usuarioLista?.cargo?.id === 2 && (
+              )} 
+               {usuarioLista?.cargo?.id === 2 && ( // Verifica se o cargo do usuário logado é gestor (id === 2)
                   <li onClick={() => navigate('/CadastroFornecedor')}>Cadastro de Fornecedor</li>
-                )}
+               )} 
               </ul>
             )}
-            {usuarioLista?.cargo?.id === 2 && (
-            <li className="has-submenu" title="Históricos" onClick={toggleHistoricoSubmenu}>
-              <img className="icons-historico" src={iconHistorico} alt="Históricos" />
-              <span>Históricos</span>
-              <svg className={`arrow-icon ${showHistoricoSubmenu ? 'rotate' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </li>
-            )}
+         
+            {usuarioLista?.cargo?.id === 2 && ( 
+              <li className="has-submenu" title="Históricos" onClick={toggleHistoricoSubmenu}>
+                <img className="icons-historico" src={iconHistorico} alt="Históricos" />
+                <span>Históricos</span>
+                <svg className={`arrow-icon ${showHistoricoSubmenu ? 'rotate' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </li>
+             )} 
             {showHistoricoSubmenu && (
               <ul className="submenu-list">
 
-                
+
                 <li onClick={() => navigate('/HistoricoOrdemDeCompra')}>Histórico de Ordem de Compra</li>
 
                 <li onClick={() => navigate('/HistoricoTransferencia')}>Histórico de Transferências</li>
               </ul>
+
+
             )}
+            
+          
+         {usuarioLista?.cargo?.id === 2 && ( 
+              <li title="Relatórios" onClick={() => navigate('/relatorios')}>
+                <img className="icons-menu" src={iconFormularios} alt="Relatórios" />
+                <span>Relatórios</span>
+              </li>
+         )}
+           
+
+
+            <li title="Perfil" onClick={() => navigate('/Perfil')}>
+              <img className="icons-menu" src={user} alt="Perfil de usuário" />
+              <span>Perfil</span>
+            </li>
+
           </ul>
+
+
         </nav>
         <div className="logout" onClick={() => navigate('/')}>
           <img src={iconLogout} alt="Logout" title="Logout" />
