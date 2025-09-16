@@ -44,7 +44,7 @@ export function Relatorios() {
   const [filtroStatus, setFiltroStatus] = useState("todos");
   const [fade, setFade] = useState(true);
 
- /*  useEffect(() => {
+  useEffect(() => {
     const token = sessionStorage.getItem("authToken");
     if (!token) {
       navigate("/");
@@ -58,7 +58,7 @@ export function Relatorios() {
       }
     }
   }, [navigate]);
- */
+
   useEffect(() => {
     setFade(false); // inicia fade out
     const timeout = setTimeout(() => {
