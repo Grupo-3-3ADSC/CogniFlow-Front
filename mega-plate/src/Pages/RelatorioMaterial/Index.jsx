@@ -163,207 +163,237 @@ export function RelatorioMaterial() {
     return nomeMatch && tipoMatch;
   });
 
-  const baixarExcelMaterial = async (
-    material,
-    ordens = [],
-    transferencias = []
-  ) => {
-    const workbook = new ExcelJS.Workbook();
+const baixarExcelMaterial = async (material, ordens = [], transferencias = []) => {
+  const workbook = new ExcelJS.Workbook();
 
-    // --- Entradas ---
-    const sheetEntradas = workbook.addWorksheet("Entradas");
-    const response = await fetch(logoMegaPlate);
+
+// ==============================
+  // 📑 ABA DE ENTRADAS
+  // ==============================
+  const sheetEntradas = workbook.addWorksheet("Entradas");
+
+    // --- Adiciona imagem/logo ---
+   const response = await fetch(logoMegaPlate);
     const blob = await response.blob();
     const imageBuffer = await blob.arrayBuffer();
+  
     const imageId = workbook.addImage({
       buffer: imageBuffer,
       extension: "png",
     });
-
-    // Entradas
+  
     sheetEntradas.mergeCells("A1:G4");
-    const faixaEntrada = sheetEntradas.getCell("A1");
-    faixaEntrada.fill = {
+    const faixa = sheetEntradas.getCell("A1");
+    faixa.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FF05314C" }, // azul
+      fgColor: { argb: "05314c" },
     };
+  
     sheetEntradas.addImage(imageId, {
       tl: { col: 1.2, row: 0.2 },
       ext: { width: 120, height: 60 },
     });
+  
 
-    sheetEntradas.mergeCells("A6:G6");
-    const titulo = sheetEntradas.getCell("A6");
-    titulo.value = `Entradas do material: ${material ?? "Não informado"}`;
-    titulo.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
-    titulo.alignment = { horizontal: "center" };
-    titulo.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF05314C" },
-    };
+  sheetEntradas.mergeCells("A6:G6");
+  const titulo = sheetEntradas.getCell("A6");
+  titulo.value = `Entradas do material: ${material ?? "Não informado"}`;
+  titulo.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
+  titulo.alignment = { horizontal: "center", vertical: "middle" };
+  titulo.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF05314C" } };
 
-    const header = [
-      "Data",
-      "Fornecedor",
-      "Quantidade",
-      "Preço Unitário",
-      "Preço Total do Pedido",
-      "IPI",
-      "Valor Total",
-    ];
-    const headerRow = sheetEntradas.addRow(header);
-    headerRow.eachCell((cell) => {
-      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF05314C" },
-      };
-      cell.alignment = { horizontal: "center", vertical: "middle" };
-      cell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" },
-      };
-    });
+  // Cabeçalho
+  const header = ["Data", "Fornecedor", "Quantidade", "Preço Unitário", "Preço Total do Pedido", "IPI", "Valor Total"];
+  const headerRow = sheetEntradas.addRow(header);
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1D597B" } };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+    cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
+  });
 
-    // --- Entradas ---
-    (ordens || []).forEach((ordem, index) => {
-      const row = sheetEntradas.addRow([
-        ordem.dataDeEmissao ? new Date(ordem.dataDeEmissao) : "",
-        ordem.nomeFornecedor || "Desconhecido",
-        ordem.quantidade || 0,
-        ordem.valorUnitario || 0,
-        (ordem.valorUnitario || 0) * (ordem.quantidade || 0),
-        (ordem.ipi || 0) / 100,
-        (ordem.valorUnitario || 0) *
-          (ordem.quantidade || 0) *
-          (1 + (ordem.ipi || 0) / 100),
-      ]);
-
-      row.eachCell((cell, colNumber) => {
-        cell.border = {
-          top: { style: "thin" },
-          left: { style: "thin" },
-          bottom: { style: "thin" },
-          right: { style: "thin" },
-        };
-        if (colNumber === 1) cell.numFmt = "dd/mm/yyyy";
-        if ([4, 5, 7].includes(colNumber)) cell.numFmt = '"R$"#,##0.00';
-        if (colNumber === 6) cell.numFmt = "0.00%";
-      });
-
-      // zebra stripes
-      if (index % 2 === 0) {
-        row.eachCell((cell) => {
-          cell.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "FFEFEFEF" },
-          };
-        });
-      }
-    });
-
-    // ajuste de largura só aqui no final
-    sheetEntradas.columns.forEach((col) => {
-      let maxLength = 0;
-      col.eachCell({ includeEmpty: true }, (cell) => {
-        const cellValue = cell.value ? cell.value.toString() : "";
-        if (cellValue.length > maxLength) maxLength = cellValue.length;
-      });
-      col.width = maxLength + 5;
-    });
-
-    // --- Transferências ---
-    const sheetSaidas = workbook.addWorksheet("Transferências");
-    sheetSaidas.mergeCells("A1:C4");
-    const faixaSaida = sheetSaidas.getCell("A1");
-    faixaSaida.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF05314C" }, // azul
-    };
-    sheetSaidas.addImage(imageId, {
-      tl: { col: 1.2, row: 0.2 },
-      ext: { width: 120, height: 60 },
-    });
-
-    sheetSaidas.mergeCells("A6:C6");
-    const tituloSaida = sheetSaidas.getCell("A6");
-    tituloSaida.value = `Saídas do material: ${material ?? "Não informado"}`;
-    tituloSaida.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
-    tituloSaida.alignment = { horizontal: "center", vertical: "middle" };
-    tituloSaida.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF05314C" }, // azul escuro
-    };
-
-    const headerSaida = sheetSaidas.addRow(["Data", "Quantidade", "Destino"]);
-    headerSaida.eachCell((cell) => {
-      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFB22222" },
-      };
-      cell.alignment = { horizontal: "center", vertical: "middle" };
-      cell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" },
-      };
-    });
-
-    function formatarDataBrasileira(dataISO) {
-      if (!dataISO) return "N/A";
-
-      // Pega só a parte da data, ignorando a hora
-      const [ano, mes, dia] = dataISO.split("T")[0].split("-");
-
-      return `${dia}/${mes}/${ano}`;
-    }
-
-    (transferencias || []).forEach((t, index) => {
-      const row = sheetSaidas.addRow([
-        formatarDataBrasileira(t.ultimaMovimentacao),
-        t.quantidadeTransferida,
-        t.setor,
-      ]);
-
-      // zebra stripes
-      if (index % 2 === 0) {
-        row.eachCell((cell) => {
-          cell.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "FFEFEFEF" },
-          };
-        });
-      }
-    });
-
-    // ajuste de largura no final
-    sheetSaidas.columns.forEach((col) => {
-      let maxLength = 0;
-      col.eachCell({ includeEmpty: true }, (cell) => {
-        const cellValue = cell.value ? cell.value.toString() : "";
-        if (cellValue.length > maxLength) maxLength = cellValue.length;
-      });
-      col.width = maxLength + 5;
-    });
-
-    const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(
-      new Blob([buffer]),
-      `Movimentacoes_${material ?? "material"}_${anoSelecionado}.xlsx`
-    );
+  // Filtro automático
+  sheetEntradas.autoFilter = {
+    from: { row: headerRow.number, column: 1 },
+    to: { row: headerRow.number, column: header.length },
   };
+
+  // Linhas de dados
+  let totalGeralEntradas = 0;
+  (ordens || []).forEach((ordem, index) => {
+    const valorTotal = (ordem.valorUnitario || 0) * (ordem.quantidade || 0) * (1 + (ordem.ipi || 0) / 100);
+    totalGeralEntradas += valorTotal;
+
+    const row = sheetEntradas.addRow([
+      ordem.dataDeEmissao ? new Date(ordem.dataDeEmissao) : "",
+      ordem.nomeFornecedor || "Desconhecido",
+      ordem.quantidade || 0,
+      ordem.valorUnitario || 0,
+      (ordem.valorUnitario || 0) * (ordem.quantidade || 0),
+      (ordem.ipi || 0) / 100,
+      valorTotal,
+    ]);
+
+    row.eachCell((cell, colNumber) => {
+      cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
+      if (colNumber === 1) cell.numFmt = "dd/mm/yyyy";
+      if ([4, 5, 7].includes(colNumber)) cell.numFmt = '"R$"#,##0.00';
+      if (colNumber === 6) cell.numFmt = "0.00%";
+    });
+
+    // Zebra
+    if (index % 2 === 0) {
+      row.eachCell((cell) => {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEFEFEF" } };
+      });
+    }
+  });
+
+  // Total no fim
+  if (ordens.length > 0) {
+    const ultimaLinha = sheetEntradas.rowCount + 1;
+const totalRow = sheetEntradas.addRow([
+  "Total:",
+  "",
+  { formula: `SUM(C8:C${sheetEntradas.rowCount})` }, // Quantidade
+  "",
+  { formula: `SUM(E8:E${sheetEntradas.rowCount})` }, // Preço total pedido
+  "",
+  { formula: `SUM(G8:G${sheetEntradas.rowCount})` }, // Valor total
+]);
+
+// Formatar as colunas de valores em Real (BRL)
+totalRow.getCell(5).numFmt = 'R$ #,##0.00'; // Coluna E → Preço total pedido
+totalRow.getCell(7).numFmt = 'R$ #,##0.00'; // Coluna G  → Valor total
+
+    totalRow.eachCell((cell, colNumber) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1D597B" } };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      if (colNumber === 7) cell.numFmt = '"R$"#,##0.00';
+    });
+  }
+
+  sheetEntradas.columns.forEach((col) => {
+    let maxLength = 0;
+    col.eachCell({ includeEmpty: true }, (cell) => {
+      const cellValue = cell.value ? cell.value.toString() : "";
+      if (cellValue.length > maxLength) maxLength = cellValue.length;
+    });
+    col.width = maxLength + 10;
+  });
+
+  // ==============================
+  // 📑 ABA DE TRANSFERÊNCIAS
+  // ==============================
+  const sheetSaidas = workbook.addWorksheet("Transferências");
+
+ // --- Adiciona imagem/logo ---
+
+  // Faixa azul atrás da logo
+sheetSaidas.mergeCells("A1:C4");
+const faixaRange = sheetSaidas.getCell("A1");
+faixaRange.value = ""; // opcional, só pra garantir que não tenha texto
+
+// Aplicar a cor em todas as células mescladas
+for (let row = 1; row <= 4; row++) {
+  for (let col = 1; col <= 3; col++) {
+    const cell = sheetSaidas.getCell(row, col);
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "05314c" },
+    };
+  }
+}
+
+// Logo
+sheetSaidas.addImage(imageId, {
+  tl: { col: 1.2, row: 0.2 },
+  ext: { width: 120, height: 60 },
+});
+
+  sheetSaidas.mergeCells("A6:C6");
+  const tituloSaida = sheetSaidas.getCell("A6");
+  tituloSaida.value = `Saídas do material: ${material ?? "Não informado"}`;
+  tituloSaida.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
+  tituloSaida.alignment = { horizontal: "center", vertical: "middle" };
+  tituloSaida.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF05314C" } };
+
+  // Cabeçalho
+  const headerSaida = ["Data", "Quantidade", "Destino"];
+  const headerRowSaida = sheetSaidas.addRow(headerSaida);
+  headerRowSaida.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1D597B" } };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+    cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
+  });
+
+  // Filtro automático
+  sheetSaidas.autoFilter = {
+    from: { row: headerRowSaida.number, column: 1 },
+    to: { row: headerRowSaida.number, column: headerSaida.length },
+  };
+
+  // Linhas de dados
+  let totalSaidas = 0;
+  (transferencias || []).forEach((t, index) => {
+    totalSaidas += t.quantidadeTransferida || 0;
+
+    const row = sheetSaidas.addRow([
+      formatarDataBrasileira(t.ultimaMovimentacao),
+      t.quantidadeTransferida,
+      t.setor,
+    ]);
+
+    row.eachCell((cell) => {
+      cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
+    });
+
+    // Zebra
+    if (index % 2 === 0) {
+      row.eachCell((cell) => {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEFEFEF" } };
+      });
+    }
+  });
+
+  // Total no fim
+  if (transferencias.length > 0) {
+    const totalRowSaida = sheetSaidas.addRow([ "TOTAL", totalSaidas, ""]);
+    totalRowSaida.eachCell((cell, colNumber) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1D597B" } };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+    });
+  }
+
+  sheetSaidas.columns.forEach((col) => {
+    let maxLength = 0;
+    col.eachCell({ includeEmpty: true }, (cell) => {
+      const cellValue = cell.value ? cell.value.toString() : "";
+      if (cellValue.length > maxLength) maxLength = cellValue.length;
+    });
+    col.width = maxLength + 10;
+  });
+
+  // ==============================
+  // 📥 SALVAR
+  // ==============================
+  const buffer = await workbook.xlsx.writeBuffer();
+  saveAs(new Blob([buffer]), `Movimentacoes_${material ?? "material"}_${anoSelecionado}.xlsx`);
+};
+
+
+// Função auxiliar para formatar datas brasileiras
+function formatarDataBrasileira(dataISO) {
+  if (!dataISO) return "";
+  const data = new Date(dataISO);
+  return data.toLocaleDateString("pt-BR");
+}
+
 
   return (
     <>

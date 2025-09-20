@@ -80,148 +80,173 @@ export function RelatorioFornecedor() {
 
   // 🔹 Função para gerar Excel
   async function baixarExcelFornecedores(ordens, anoSelecionado, nomeFornecedor) {
-    if (!ordens || ordens.length === 0) return;
-    if (!ordens || ordens.length === 0) return;
+  if (!ordens || ordens.length === 0) return;
 
-    const workbook = new ExcelJS.Workbook();
-    // const sheet = workbook.addWorksheet("Entradas");
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Entradas");
 
-    const response = await fetch(logoMegaPlate);
-    const blob = await response.blob();
-    const imageBuffer = await blob.arrayBuffer();
+  // === Logo ===
+  const response = await fetch(logoMegaPlate);
+  const blob = await response.blob();
+  const imageBuffer = await blob.arrayBuffer();
 
-    const imageId = workbook.addImage({
-      buffer: imageBuffer,
-      extension: "png",
-    });
+  const imageId = workbook.addImage({
+    buffer: imageBuffer,
+    extension: "png",
+  });
 
-    const sheetEntradas = workbook.addWorksheet("Entradas");
+  sheet.mergeCells("A1:H4");
+  const faixa = sheet.getCell("A1");
+  faixa.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "05314c" },
+  };
 
-    // === Faixa azul do topo ===
-    sheetEntradas.mergeCells("A1:H4");
-    const faixa = sheetEntradas.getCell("A1");
-    faixa.fill = {
+  sheet.addImage(imageId, {
+    tl: { col: 1.2, row: 0.2 },
+    ext: { width: 120, height: 60 },
+  });
+
+  // === Título ===
+  sheet.mergeCells("A6:H6");
+  const tituloCell = sheet.getCell("A6");
+  tituloCell.value = `Relatório de Entradas - ${nomeFornecedor} - ${anoSelecionado}`;
+  tituloCell.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
+  tituloCell.alignment = { horizontal: "center", vertical: "middle" };
+  tituloCell.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FF05314C" },
+  };
+
+  // === Cabeçalho ===
+  const header = [
+    "Data",
+    "Ordem de compra",
+    "Produto",
+    "Quantidade solicitada",
+    "Preço unitário",
+    "Preço total do pedido",
+    "IPI",
+    "Valor total",
+  ];
+  const headerRow = sheet.addRow(header);
+
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
+    cell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "05314c" }, // azul médio
+      fgColor: { argb: "FF1D597B" },
     };
-
-    // Adiciona logo (colocado dentro da faixa azul)
-    sheetEntradas.addImage(imageId, {
-      tl: { col: 1.2, row: 0.2 }, // canto esquerdo
-      ext: { width: 120, height: 60 },
-    });
-
-    // === Título do relatório ===
-    const titleRow = sheetEntradas.addRow([]);
-    titleRow.height = 30;
-    sheetEntradas.mergeCells("A6:H6");
-
-    const tituloCell = sheetEntradas.getCell("A6");
-    tituloCell.value = `Relatório de Entradas - ${anoSelecionado}`;
-    tituloCell.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } }; // Cor do texto branca
-    tituloCell.alignment = { horizontal: "center", vertical: "middle" };
-    tituloCell.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF05314C" }, // Azul escuro
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+    cell.border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
     };
+  });
 
-    const header = [
-      "Data",
-      // "Fornecedor",
-      "Ordem de compra",
-      "Produto",
-      "Quantidade solicitada",
-      "Preço unitário",
-      "Preço total do pedido",
-      "IPI",
-      "Valor total",
-    ];
-
-    const headerRow = sheetEntradas.addRow(header);
-
-    headerRow.eachCell((cell) => {
-      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF1D597B" }, // azul do cabeçalho
-      };
-      cell.alignment = { horizontal: "center", vertical: "middle" };
-      cell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" },
-      };
-    });
-
-    function formatarDataBrasileira(dataISO) {
-      if (!dataISO) return "N/A";
-
-      // Pega só a parte da data, ignorando a hora
-      const [ano, mes, dia] = dataISO.split("T")[0].split("-");
-
-      return `${dia}/${mes}/${ano}`;
-    }
-
-    // Adiciona dados
-
-    ordens.forEach((ordem, index) => {
-      console.log(fornecedoresFiltrados);
-      const row = sheetEntradas.addRow([
-        formatarDataBrasileira(ordem.dataDeEmissao) || "N/A", // Data de emissão formatada (DD/MM/YYYY)
-        // ordem.fornecedor?.nomeFantasia || "Desconhecido", // Nome do fornecedor
-        ordem.id || "N/A", // ID da ordem de compra
-        ordem.tipoMaterial || "N/A", // Descrição do material
-        ordem.quantidade || 0, // Quantidade solicitada
-        ordem.valorUnitario || 0, // Valor unitário
-        ordem.valorUnitario * ordem.quantidade || 0, // Quantidade * Valor unitário
-        (ordem.ipi || 0) / 100, // IPI em formato decimal (ex.: 10% -> 0.10)
-        ordem.valorUnitario * ordem.quantidade * (1 + (ordem.ipi || 0) / 100) ||
-        0, // Valor total com IPI
-      ]);
-
-      // Formatação de células
-      row.getCell(5).numFmt = '"R$"#,##0.00';
-      row.getCell(6).numFmt = '"R$"#,##0.00';
-      row.getCell(7).numFmt = "0.00%";
-      row.getCell(8).numFmt = '"R$"#,##0.00';
-
-      // Zebra
-      if (index % 2 === 0) {
-        row.eachCell((cell) => {
-          cell.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "FFEFEFEF" },
-          };
-        });
-      }
-    });
-
-    // Ajuste automático de largura
-    sheetEntradas.columns.forEach((col) => {
-      let maxLength = 0;
-      col.eachCell({ includeEmpty: true }, (cell) => {
-        const cellValue = cell.value ? cell.value.toString() : "";
-        if (cellValue.length > maxLength) maxLength = cellValue.length;
-      });
-      col.width = maxLength + 5;
-    });
-    const buffer = await workbook.xlsx.writeBuffer();
-    const nomeArquivo = nomeFornecedor
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-zA-Z0-9-_ ]/g, "")
-      .replace(/\s+/g, "_");
-
-    saveAs(
-      new Blob([buffer]),
-      `entradas_${nomeArquivo}_${anoSelecionado}.xlsx`
-    );
+  function formatarDataBrasileira(dataISO) {
+    if (!dataISO) return "N/A";
+    const [ano, mes, dia] = dataISO.split("T")[0].split("-");
+    return `${dia}/${mes}/${ano}`;
   }
+
+  // === Linhas com zebra ===
+  ordens.forEach((ordem, index) => {
+    const row = sheet.addRow([
+      formatarDataBrasileira(ordem.dataDeEmissao),
+      ordem.id || "N/A",
+      ordem.tipoMaterial || "N/A",
+      ordem.quantidade || 0,
+      ordem.valorUnitario || 0,
+      ordem.valorUnitario * ordem.quantidade || 0,
+      ordem.ipi || 0,
+      ordem.valorUnitario * ordem.quantidade * (1 + (ordem.ipi || 0) / 100) || 0,
+    ]);
+
+    // formatos numéricos
+    row.getCell(5).numFmt = '"R$"#,##0.00';
+    row.getCell(6).numFmt = '"R$"#,##0.00';
+    row.getCell(7).numFmt = '0.00"%"';
+    row.getCell(8).numFmt = '"R$"#,##0.00';
+
+    if (index % 2 === 0) {
+      row.eachCell((cell) => {
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFEFEFEF" },
+        };
+      });
+    }
+  });
+
+// === Linha de totais ===
+const ultimaLinha = sheet.rowCount + 1;
+const totalRow = sheet.addRow([
+  "Total:",
+  "",
+  "",
+  { formula: `SUM(D8:D${sheet.rowCount})` }, // Quantidade
+  "",
+  { formula: `SUM(F8:F${sheet.rowCount})` }, // Preço total pedido
+  "",
+  { formula: `SUM(H8:H${sheet.rowCount})` }, // Valor total
+]);
+
+// Formatar as colunas de valores em Real (BRL)
+totalRow.getCell(6).numFmt = 'R$ #,##0.00'; // Coluna F → Preço total pedido
+totalRow.getCell(8).numFmt = 'R$ #,##0.00'; // Coluna H → Valor total
+
+// Estilizar linha de totais
+totalRow.eachCell((cell) => {
+  cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+  cell.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FF1D597B" },
+  };
+  cell.alignment = { horizontal: "center", vertical: "middle" };
+  cell.border = {
+    top: { style: "thin" },
+    left: { style: "thin" },
+    bottom: { style: "thin" },
+    right: { style: "thin" },
+  };
+});
+
+
+  // === Filtros ===
+  sheet.autoFilter = {
+    from: "A7",
+    to: `H${ultimaLinha - 1}`,
+  };
+
+  // === Ajuste de largura ===
+  sheet.columns.forEach((col) => {
+    let maxLength = 0;
+    col.eachCell({ includeEmpty: true }, (cell) => {
+      const val = cell.value ? cell.value.toString() : "";
+      if (val.length > maxLength) maxLength = val.length;
+    });
+    col.width = maxLength + 5;
+  });
+
+  // === Salvar ===
+  const buffer = await workbook.xlsx.writeBuffer();
+  const nomeArquivo = nomeFornecedor
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9-_ ]/g, "")
+    .replace(/\s+/g, "_");
+
+  saveAs(new Blob([buffer]), `entradas_${nomeArquivo}_${anoSelecionado}.xlsx`);
+}
+
 
   // 🔹 Exemplo de dados mockados (até integrar API de ordens)
 
