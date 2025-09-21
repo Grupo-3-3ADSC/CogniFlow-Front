@@ -191,11 +191,11 @@ const totalRow = sheet.addRow([
   "Total:",
   "",
   "",
-  { formula: `SUM(D8:D${sheet.rowCount})` }, // Quantidade
+{ formula: `SUBTOTAL(9,D8:D${sheet.rowCount})` }, // Quantidade
   "",
-  { formula: `SUM(F8:F${sheet.rowCount})` }, // Preço total pedido
+{ formula: `SUBTOTAL(9,F8:F${sheet.rowCount})` }, // Preço total do pedido
   "",
-  { formula: `SUM(H8:H${sheet.rowCount})` }, // Valor total
+{ formula: `SUBTOTAL(9,H8:H${sheet.rowCount})` }, // Valor total
 ]);
 
 // Formatar as colunas de valores em Real (BRL)

@@ -256,11 +256,11 @@ const baixarExcelMaterial = async (material, ordens = [], transferencias = []) =
 const totalRow = sheetEntradas.addRow([
   "Total:",
   "",
-  { formula: `SUM(C8:C${sheetEntradas.rowCount})` }, // Quantidade
+{ formula: `SUBTOTAL(9,C8:C${sheet.rowCount})` }, // Quantidade
   "",
-  { formula: `SUM(E8:E${sheetEntradas.rowCount})` }, // Preço total pedido
+{ formula: `SUBTOTAL(9,E8:E${sheet.rowCount})` }, // Preço total do pedido
   "",
-  { formula: `SUM(G8:G${sheetEntradas.rowCount})` }, // Valor total
+{ formula: `SUBTOTAL(9,G8:G${sheet.rowCount})` }, // Valor total
 ]);
 
 // Formatar as colunas de valores em Real (BRL)

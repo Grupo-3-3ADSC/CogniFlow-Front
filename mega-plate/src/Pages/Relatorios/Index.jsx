@@ -251,11 +251,11 @@ async function baixarExcelEntradas(ordens) {
     "",
     "",
     "",
-    { formula: `SUM(E8:E${sheet.rowCount})` }, // Quantidade
+{ formula: `SUBTOTAL(9,E8:E${sheet.rowCount})` }, // Quantidade
     "", // preço unitário não soma
-    { formula: `SUM(G8:G${sheet.rowCount})` }, // Preço total do pedido
+{ formula: `SUBTOTAL(9,G8:G${sheet.rowCount})` }, // Preço total do pedido
 "",
-    { formula: `SUM(I8:I${sheet.rowCount})` }, // Valor total
+{ formula: `SUBTOTAL(9,I8:I${sheet.rowCount})` }, // Valor total
   ]);
 
   // Formatar as colunas de valores em Real (BRL)
@@ -405,7 +405,7 @@ async function baixarExcelSaidas(transferencias) {
   const totalRow = sheet.addRow([
     "Total:",
     "",
-    { formula: `SUM(C8:C${sheet.rowCount})` }, // só soma Quantidade
+{ formula: `SUBTOTAL(9,C8:C${sheet.rowCount})` }, // Quantidade
     "",
   ]);
 
