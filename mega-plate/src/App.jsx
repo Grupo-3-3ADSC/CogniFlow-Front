@@ -19,6 +19,7 @@ import CadastroFornecedor from './Pages/CadastroFornecedor/Fornecedor';
 import { TabelaUsuarios } from './Pages/TabelaUsuarios/TabelaUsuarios';
 import { Historicos } from './Pages/Historicos/Historicos';
 import { HistoricoTransferencia } from './Pages/Historicos/HistoricoTransferencia';
+import ListagemFornecedor from './Pages/ListagemFornecedor/ListagemFornecedor';
 
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
         <Route path='/RelatorioFornecedor' element={<RelatorioFornecedor />} />
         <Route path='/HistoricoOrdemDeCompra' element={<Historicos />} />
         <Route path='/HistoricoTransferencia' element={<HistoricoTransferencia />} />
+        <Route path='/ListagemFornecedor' element={<ListagemFornecedor />} />
       </Routes>
     </Router>
     <ToastContainer position="top-right" autoClose={1500} closeButton={false}/>
