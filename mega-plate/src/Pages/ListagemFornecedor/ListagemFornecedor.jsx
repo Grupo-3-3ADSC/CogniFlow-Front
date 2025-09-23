@@ -18,7 +18,6 @@ export function ListagemFornecedor() {
     const [filtroStatus, setFiltroStatus] = useState("todos");
     const [filtroNome, setFiltroNome] = useState("");
     const [filtroEmail, setFiltroEmail] = useState("");
-    const [filtroCargo, setFiltroCargo] = useState("todos");
     const [fade, setFade] = useState(true);
     const [carregando, setCarregando] = useState(false);
     const navigate = useNavigate();
@@ -55,6 +54,9 @@ export function ListagemFornecedor() {
 
     async function buscarFornecedores() {
         const token = sessionStorage.getItem("authToken");
+        const cargoUsuario = sessionStorage.getItem("cargoUsuario");
+        setIsGestor(Number(cargoUsuario) === 2);
+
         const res = await api.get("/fornecedores", {
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -65,43 +67,8 @@ export function ListagemFornecedor() {
         buscarFornecedores().then((data) => setFornecedores(data));
     }, []);
 
-    // 🔄 Ativar/Desativar usuário
-    const handleToggleStatus = async (id, ativo) => {
-        const result = await Swal.fire({
-            title: ativo
-                ? "Deseja desativar este usuário?"
-                : "Deseja ativar este usuário?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: ativo ? "Desativar" : "Ativar",
-            cancelButtonText: "Cancelar",
-            confirmButtonColor: ativo ? "#d33" : "#28a745",
-        });
-
-        if (result.isConfirmed) {
-            const token = sessionStorage.getItem("authToken");
-            try {
-                await api.patch(
-                    `/usuarios/desativarUsuario/${id}`,
-                    { ativo: !ativo },
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-
-                toastSuccess("Status atualizado com sucesso!");
-                buscarUsuarios(); // Recarrega a lista do banco
-            } catch (error) {
-                console.error("Erro ao atualizar status:", error);
-                toastError("Erro ao atualizar status");
-            }
-        }
-    };
-
     // ❌ Deletar usuário
-    const handleDeletarUsuario = async (id) => {
+    const handleDeletarFornecedor = async (id) => {
         const result = await Swal.fire({
             title: "Deseja excluir este fornecedor?",
             text: "Essa ação é irreversível!",
@@ -120,10 +87,10 @@ export function ListagemFornecedor() {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                Swal.fire("Usuário deletado com sucesso!", "", "success");
-                buscarUsuarios();
+                toastSuccess("Fornecedor deletado com sucesso!", "", "success");
+                buscarFornecedores();
             } catch (error) {
-                Swal.fire("Erro ao atualizar status", "", "error");
+                toastError("Erro ao atualizar status", "", "error");
             }
         }
     };
@@ -158,25 +125,6 @@ export function ListagemFornecedor() {
                             onChange={(e) => setFiltroEmail(e.target.value)}
                             className={styles.inputFiltro}
                         />
-                        <select
-                            id="filtro"
-                            value={filtroStatus}
-                            onChange={(e) => setFiltroStatus(e.target.value)}
-                            className={styles.selectFiltro}
-                        >
-                            <option value="todos">Todos os Status</option>
-                            <option value="ativos">Ativos</option>
-                            <option value="inativos">Inativos</option>
-                        </select>
-
-                        <select
-                            id="filtroCargo"
-                            value={filtroCargo}
-                            onChange={(e) => setFiltroCargo(e.target.value)}
-                            className={styles.selectFiltro}
-                        >
-                            <option value="todos">Todos os Fornecedores</option>
-                        </select>
                     </div>
 
                     <p className={styles.qtdUsuarios}>
@@ -186,13 +134,7 @@ export function ListagemFornecedor() {
                     {carregando ? (
                         <p>Carregando fornecedores...</p>
                     ) : fornecedoresFiltrados.length === 0 ? (
-                        <p className={styles.mensagemVazia}>
-                            {filtroStatus === "ativos" && "Nenhum fornecedor ativo encontrado."}
-                            {filtroStatus === "inativos" &&
-                                "Nenhum usuário inativo encontrado."}
-                            {filtroStatus === "todos" &&
-                                "Nenhum fornecedor cadastrado no sistema."}
-                        </p>
+                        <p>Nenhum fornecedor encontrado.</p>
                     ) : (
                         <div className={styles.tabelaWrapper}>
                             <table
@@ -200,11 +142,13 @@ export function ListagemFornecedor() {
                                     }`}
                             >
                                 <thead>
-                                    <tr>
-                                        <th>NOME FANTASIA</th>
-                                        <th>EMAIL</th>
-                                        <th>CNPJ</th>
-                                        <th>CONTATO</th>
+                                    <tr className={styles.containerTitulos}>
+                                        <th id="titulo">NOME FANTASIA</th>
+                                        <th id="titulo">EMAIL</th>
+                                        <th id="titulo">CNPJ</th>
+                                        <th id="titulo">I.E</th>
+                                        <th id="titulo">CONTATO</th>
+                                        <th id="titulo">EXCLUIR</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -213,40 +157,27 @@ export function ListagemFornecedor() {
                                             <td data-label="Nome">{String(fornecedor.nomeFantasia || "—")}</td>
                                             <td data-label="Email">{String(fornecedor.email || "—")}</td>
                                             <td data-label="Cnpj">{String(fornecedor.cnpj || "—")}</td>
+                                            <td data-label="I.e">{String(fornecedor.ie || "—")}</td>
+                                            <td data-label="Cargo">{String(fornecedor.cargo || "—")}</td>
+                                            <td data-label="Responsável">{String(fornecedor.responsavel || "—")}</td>
                                             <td data-label="Contato">{String(fornecedor.telefone || "—")}</td>
                                             <td>
                                                 <div className={styles.statusColuna}>
-
-
                                                     {isGestor &&
                                                         String(sessionStorage.getItem("fornecedor")) !==
                                                         String(fornecedor?.id || "") && (
                                                             <>
                                                                 <button
-                                                                    className={
-                                                                        fornecedor?.ativo
-                                                                            ? styles.textDesativar
-                                                                            : styles.textAtivar
-                                                                    }
-                                                                    onClick={() =>
-                                                                        handleToggleStatus(
-                                                                            fornecedor?.id,
-                                                                            fornecedor?.ativo
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    {usuario?.ativo ? "Desativar" : "Ativar"}
-                                                                </button>
-                                                                <button
                                                                     className={styles.textExcluir}
                                                                     onClick={() =>
-                                                                        handleDeletarUsuario(fornecedor?.id)
+                                                                        handleDeletarFornecedor(fornecedor?.fornecedorId)
                                                                     }
                                                                 >
                                                                     Excluir
                                                                 </button>
                                                             </>
-                                                        )}
+                                                        )
+                                                    }
                                                 </div>
                                             </td>
                                         </tr>

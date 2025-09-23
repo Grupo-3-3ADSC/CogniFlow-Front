@@ -236,6 +236,10 @@ h2 {
 
 }
 
+.containerTitulos {
+  text-align: center;
+}
+
 @media (max-width: 1230px) {
   .tabela {
     border: none;
