@@ -64,8 +64,12 @@ export function ListagemFornecedor() {
     }
 
     useEffect(() => {
-        buscarFornecedores().then((data) => setFornecedores(data));
+        buscarFornecedores().then((data) => {
+            console.log("RESPOSTA /fornecedores:", data);
+            setFornecedores(data);
+        });
     }, []);
+
 
     // ❌ Deletar usuário
     const handleDeletarFornecedor = async (id) => {
@@ -96,9 +100,19 @@ export function ListagemFornecedor() {
     };
 
     // 🔎 Filtros de nome, email, cargo
-    const fornecedoresFiltrados = fornecedores.filter((f) =>
-        f.nomeFantasia.toLowerCase().includes(filtroNome.toLowerCase().trim())
-    );
+    const fornecedoresFiltrados = fornecedores.filter((f) => {
+        const nomeOk = f.nomeFantasia
+            ?.toLowerCase()
+            .includes(filtroNome.toLowerCase().trim());
+
+        const emailOk = f.email
+            ?.toLowerCase()
+            .includes(filtroEmail.toLowerCase().trim());
+
+        // mostra apenas fornecedores que batem com ambos filtros
+        return nomeOk && emailOk;
+    });
+
 
     return (
         <>
@@ -147,13 +161,15 @@ export function ListagemFornecedor() {
                                         <th id="titulo">EMAIL</th>
                                         <th id="titulo">CNPJ</th>
                                         <th id="titulo">I.E</th>
+                                        <th id="titulo">CARGO</th>
+                                        <th id="titulo">RESPONSÁVEL</th>
                                         <th id="titulo">CONTATO</th>
                                         <th id="titulo">EXCLUIR</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {fornecedoresFiltrados.map((fornecedor, index) => (
-                                        <tr key={fornecedor.id || `fornecedor-${index}`}>
+                                        <tr key={fornecedor.fornecedorId || `fornecedor-${index}`}>
                                             <td data-label="Nome">{String(fornecedor.nomeFantasia || "—")}</td>
                                             <td data-label="Email">{String(fornecedor.email || "—")}</td>
                                             <td data-label="Cnpj">{String(fornecedor.cnpj || "—")}</td>
@@ -165,7 +181,7 @@ export function ListagemFornecedor() {
                                                 <div className={styles.statusColuna}>
                                                     {isGestor &&
                                                         String(sessionStorage.getItem("fornecedor")) !==
-                                                        String(fornecedor?.id || "") && (
+                                                        String(fornecedor?.fornecedorId || "") && (
                                                             <>
                                                                 <button
                                                                     className={styles.textExcluir}
@@ -173,7 +189,7 @@ export function ListagemFornecedor() {
                                                                         handleDeletarFornecedor(fornecedor?.fornecedorId)
                                                                     }
                                                                 >
-                                                                    Excluir
+                                                                    EXCLUIR
                                                                 </button>
                                                             </>
                                                         )
