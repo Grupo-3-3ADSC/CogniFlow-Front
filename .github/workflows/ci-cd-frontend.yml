@@ -27,7 +27,8 @@ jobs:
       # Instalar dependências
       - name: Install dependencies
         run: npm install
+        working-directory: ./mega-plate   # entra na pasta do front
 
-      # Build do projeto
       - name: Build project
         run: npm run build
+        working-directory: ./mega-plate 
