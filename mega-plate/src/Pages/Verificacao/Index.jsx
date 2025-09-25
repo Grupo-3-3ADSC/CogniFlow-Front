@@ -83,7 +83,7 @@ export function Verificacao() {
                 try {
                     const userId = await buscarUsuarioPorEmail(email);
                     toastSuccess('Código verificado com sucesso!');
-                    navigate(`/Redefinicao/${userId}`);
+                    navigate(`/Redefinicao/${email}`);
                 } catch (error) {
                     toastError('Erro ao encontrar usuário. Tente novamente.');
                 }

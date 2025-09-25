@@ -5,13 +5,13 @@ import {
     toastError,
     toastSuccess,
 } from "../../components/toastify/ToastifyService.jsx";
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useState } from 'react';
 
 export function Redefinicao() {
     const navigate = useNavigate();
-    const { userId } = useParams();
 
+    const [email] = useSearchParams();
     const [visivel, setVisivel] = useState(false);
     const [senha, setSenha] = useState('');
     const [confirmarSenha, setConfirmarSenha] = useState('');
@@ -22,10 +22,9 @@ export function Redefinicao() {
         setVisivel(!visivel);
     };
 
-    // ✅ DESCOMENTADO - Função necessária!
-    const atualizarSenha = async (userId, novaSenha) => {
+    const atualizarSenha = async (email, novaSenha) => {
         try {
-            const response = await fetch(`http://localhost:8080/usuarios/${userId}/senha`, {
+            const response = await fetch(`http://localhost:8080/usuarios/${email}/senha`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -62,15 +61,16 @@ export function Redefinicao() {
             toastError('A senha deve ter pelo menos 6 caracteres.');
             return;
         }
-        if (!userId) {
-            toastError('ID do usuário não encontrado.');
+
+       if (!email){
+        toastError('Email do usuário não encontrado.');
             return;
-        }
+       }
 
         setCarregando(true);
 
         try {
-            await atualizarSenha(userId, senha);
+            await atualizarSenha(email, senha);
             toastSuccess('Senha atualizada com sucesso!');
             navigate('/');
         } catch (error) {
