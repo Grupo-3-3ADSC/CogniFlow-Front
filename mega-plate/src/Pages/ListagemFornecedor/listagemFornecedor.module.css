@@ -156,7 +156,7 @@ h2 {
   justify-content: center;
 }
 
-.textAtivar {
+/* .textAtivar {
   background-color: #28a745;
   color: #fff;
   font-weight: 560;
@@ -169,13 +169,15 @@ h2 {
   font-weight: 600;
   padding: 10px;
   border-radius: 80px;
-}
+} */
 
 .textExcluir {
   background-color: #d33;
   font-weight: 600;
+  font-size: medium;
   padding: 10px;
   border-radius: 80px;
+  width: 150px;
 }
 
 .statusColuna {
