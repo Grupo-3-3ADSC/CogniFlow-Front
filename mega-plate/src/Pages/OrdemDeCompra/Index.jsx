@@ -232,10 +232,10 @@ export function OrdemDeCompra() {
             titulo: "Rastreabilidade",
             tipo: "text",
             placeholder: "Código de rastreamento (Max 20 caracteres)",
-            pattern: "^[A-Za-z0-9\\-\\/]{16,20}$", // CORREÇÃO: Limite ajustado para 20
+            pattern: "^[A-Za-z0-9\\-\\/]{5,20}$", // CORREÇÃO: Limite ajustado para 20
             required: true,
             validationMessage:
-              "Código inválido. Use 16-20 caracteres alfanuméricos.", // CORREÇÃO: Mensagem atualizada
+              "Código inválido. Use 5-20 caracteres alfanuméricos.", // CORREÇÃO: Mensagem atualizada
             formatador: formatarRastreio,
           },
           {
