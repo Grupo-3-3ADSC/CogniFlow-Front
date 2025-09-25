@@ -352,7 +352,7 @@ export function CadastroFornecedor() {
                 />
               </div>
               <div className={styles['input-group']}>
-                <p>I.E (Opcional)
+                <p>I.E 
                   <span style={{}}> </span>
                 </p>
                 <input
@@ -388,6 +388,7 @@ export function CadastroFornecedor() {
                   onChange={(e) => setFormData({ ...formData, nomeFantasia: e.target.value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '') })}
                 />
               </div>
+              
             </>
           )}
 

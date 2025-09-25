@@ -73,6 +73,7 @@ export function HistoricoTransferencia() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setTransferencias(res.data);
+            console.log(res)
         } catch (error) {
             Swal.fire("Erro ao carregar transferências", "", "error");
         }

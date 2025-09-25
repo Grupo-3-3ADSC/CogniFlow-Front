@@ -283,7 +283,7 @@ option {
 }
 
 #chart-aviso::before {
-    background: linear-gradient(90deg, #FF5252, #FF8A80);
+    background: linear-gradient(90deg, #ff0000, #ff4f3f);
 }
 
 #chart-aviso2::before {
@@ -316,6 +316,7 @@ option {
     width: 40vh;
     background: var(--chart-gradient);
     margin-top: 10px;
+    
     
    
 }
