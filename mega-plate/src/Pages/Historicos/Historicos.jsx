@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import NavBar from "../../components/NavBar.jsx";
 import { api } from "../../provider/api.js";
 import Swal from "sweetalert2";
-import {toastError,toastSuccess} from "../../components/toastify/ToastifyService";
+import { toastError, toastSuccess } from "../../components/toastify/ToastifyService";
 import styles from "./historicos.module.css";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
@@ -257,93 +257,96 @@ export function Historicos() {
     }
 
 
-    const ordensFiltradas = ordensPaginadas.filter((ordem) => {
-        const matchId = filtroId
-            ? String(ordem?.id ?? "").includes(filtroId)
-            : true;
-
-        const matchDia = filtroDia
-            ? (ordem?.dataDeEmissao ?? "")
-                .toLowerCase()
-                .includes(filtroDia.toLowerCase())
-            : true;
-
-        const matchPrazo = filtroPrazo
-            ? (ordem?.prazoEntrega ?? "")
-                .toLowerCase()
-                .includes(filtroPrazo.toLowerCase())
-            : true;
-
-        const matchPendentes =
-            filtroPendentes && filtroPendentes !== "todos"
-                ? (ordem?.pendenciaAlterada ? "entregue" : "pendente") === filtroPendentes.toLowerCase()
+    const ordensFiltradas = ordensPaginadas
+        .filter((ordem) => {
+            const matchId = filtroId
+                ? String(ordem?.id ?? "").includes(filtroId)
                 : true;
 
+            const matchDia = filtroDia
+                ? (ordem?.dataDeEmissao ?? "")
+                    .toLowerCase()
+                    .includes(filtroDia.toLowerCase())
+                : true;
 
-        return matchId && matchDia && matchPrazo && matchPendentes;
-    });
+            const matchPrazo = filtroPrazo
+                ? (ordem?.prazoEntrega ?? "")
+                    .toLowerCase()
+                    .includes(filtroPrazo.toLowerCase())
+                : true;
+
+            const matchPendentes =
+                filtroPendentes && filtroPendentes !== "todos"
+                    ? (ordem?.pendenciaAlterada ? "entregue" : "pendente") === filtroPendentes.toLowerCase()
+                    : true;
+
+            return matchId && matchDia && matchPrazo && matchPendentes;
+        })
+        .sort((a, b) => new Date(b.dataDeEmissao) - new Date(a.dataDeEmissao));
+    // 👆 do mais novo para o mais antigo
+
 
 
     function gerarPaginas() {
-    const paginas = [];
-    const maxPaginasVisiveis = 3;
-    
-    // Calcular o range de páginas a mostrar
-    let paginaInicio = Math.max(0, paginaAtual - Math.floor(maxPaginasVisiveis / 2));
-    let paginaFim = Math.min(paginasTotais - 1, paginaInicio + maxPaginasVisiveis - 1);
-    
-    // Ajustar o início se estivermos muito próximos do fim
-    if (paginaFim - paginaInicio < maxPaginasVisiveis - 1) {
-        paginaInicio = Math.max(0, paginaFim - maxPaginasVisiveis + 1);
+        const paginas = [];
+        const maxPaginasVisiveis = 3;
+
+        // Calcular o range de páginas a mostrar
+        let paginaInicio = Math.max(0, paginaAtual - Math.floor(maxPaginasVisiveis / 2));
+        let paginaFim = Math.min(paginasTotais - 1, paginaInicio + maxPaginasVisiveis - 1);
+
+        // Ajustar o início se estivermos muito próximos do fim
+        if (paginaFim - paginaInicio < maxPaginasVisiveis - 1) {
+            paginaInicio = Math.max(0, paginaFim - maxPaginasVisiveis + 1);
+        }
+
+        // Seta para esquerda (mostrar páginas anteriores)
+        if (paginaInicio > 0) {
+            paginas.push(
+                <div
+                    key="prev"
+                    className={`${styles.circle} ${styles.circleSmall}`}
+                    onClick={() => {
+                        const novaPagina = Math.max(0, paginaInicio - maxPaginasVisiveis);
+                        setPaginaAtual(novaPagina + Math.floor(maxPaginasVisiveis / 2));
+                    }}
+                >
+                    {"<"}
+                </div>
+            );
+        }
+
+        // Páginas numeradas
+        for (let i = paginaInicio; i <= paginaFim; i++) {
+            paginas.push(
+                <div
+                    key={i}
+                    className={`${styles.circle} ${styles.circleSmall} ${paginaAtual === i ? styles.active : ""}`}
+                    onClick={() => setPaginaAtual(i)}
+                >
+                    {i + 1}
+                </div>
+            );
+        }
+
+        // Seta para direita (mostrar páginas seguintes)
+        if (paginaFim < paginasTotais - 1) {
+            paginas.push(
+                <div
+                    key="next"
+                    className={`${styles.circle} ${styles.circleSmall}`}
+                    onClick={() => {
+                        const novaPagina = Math.min(paginasTotais - 1, paginaFim + 1);
+                        setPaginaAtual(novaPagina);
+                    }}
+                >
+                    {">"}
+                </div>
+            );
+        }
+
+        return paginas;
     }
-    
-    // Seta para esquerda (mostrar páginas anteriores)
-    if (paginaInicio > 0) {
-        paginas.push(
-            <div
-                key="prev"
-                className={`${styles.circle} ${styles.circleSmall}`}
-                onClick={() => {
-                    const novaPagina = Math.max(0, paginaInicio - maxPaginasVisiveis);
-                    setPaginaAtual(novaPagina + Math.floor(maxPaginasVisiveis / 2));
-                }}
-            >
-                {"<"}
-            </div>
-        );
-    }
-    
-    // Páginas numeradas
-    for (let i = paginaInicio; i <= paginaFim; i++) {
-        paginas.push(
-            <div
-                key={i}
-                className={`${styles.circle} ${styles.circleSmall} ${paginaAtual === i ? styles.active : ""}`}
-                onClick={() => setPaginaAtual(i)}
-            >
-                {i + 1}
-            </div>
-        );
-    }
-    
-    // Seta para direita (mostrar páginas seguintes)
-    if (paginaFim < paginasTotais - 1) {
-        paginas.push(
-            <div
-                key="next"
-                className={`${styles.circle} ${styles.circleSmall}`}
-                onClick={() => {
-                    const novaPagina = Math.min(paginasTotais - 1, paginaFim + 1);
-                    setPaginaAtual(novaPagina);
-                }}
-            >
-                {">"}
-            </div>
-        );
-    }
-    
-    return paginas;
-}
 
     return (
         <>
@@ -360,14 +363,14 @@ export function Historicos() {
                             className={styles.inputFiltro}
                             onChange={(e) => setFiltroId(e.target.value)}
                         />
-                        <label htmlFor="">Filtrar por data de emissão</label>
+                        <label htmlFor="">Data de Emissão</label>
                         <input
                             type="date"
                             value={filtroDia}
                             onChange={(e) => setFiltroDia(e.target.value)}
                             className={styles.inputFiltro}
                         />
-                        <label htmlFor="">Filtrar por prazo de entrega</label>
+                        <label htmlFor="">Prazo</label>
                         <input
                             type="date"
                             placeholder="Filtrar por data de prazo"
