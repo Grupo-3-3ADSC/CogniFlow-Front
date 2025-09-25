@@ -1,0 +1,34 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - fix/tabela-formatada
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Pegar o código do repositório
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      # Instalar Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      # Instalar dependências
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./mega-plate   # entra na pasta do front
+
+      - name: Build project
+        run: npm run build
+        working-directory: ./mega-plate   # mesmo caminho
