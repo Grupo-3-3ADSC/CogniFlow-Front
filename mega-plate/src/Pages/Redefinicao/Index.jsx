@@ -24,7 +24,7 @@ export function Redefinicao() {
 
     const atualizarSenha = async (email, novaSenha, resetToken) => {
         try {
-            const response = await fetch(`http://localhost:8080/usuarios/${encodeURIComponent(email)}/senh`, {
+            const response = await fetch(`http://localhost:8080/usuarios/${encodeURIComponent(email)}/senha`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
