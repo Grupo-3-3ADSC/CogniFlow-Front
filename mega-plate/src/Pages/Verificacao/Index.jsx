@@ -80,10 +80,11 @@ export function Verificacao() {
             const data = await response.json();
 
             if (data.success) {
+                const resetToken = data.resetToken;
                 try {
                     const userId = await buscarUsuarioPorEmail(email);
                     toastSuccess('Código verificado com sucesso!');
-                    navigate(`/Redefinicao/${email}`);
+                    navigate(`/Redefinicao/${encodeURIComponent(email)}`, { state: { resetToken } });
                 } catch (error) {
                     toastError('Erro ao encontrar usuário. Tente novamente.');
                 }

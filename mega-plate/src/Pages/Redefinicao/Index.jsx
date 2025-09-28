@@ -22,14 +22,14 @@ export function Redefinicao() {
         setVisivel(!visivel);
     };
 
-    const atualizarSenha = async (email, novaSenha) => {
+    const atualizarSenha = async (email, novaSenha, resetToken) => {
         try {
-            const response = await fetch(`http://localhost:8080/usuarios/${email}/senha`, {
+            const response = await fetch(`http://localhost:8080/usuarios/${encodeURIComponent(email)}/senh`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     // Se você usar autenticação, adicione aqui:
-                    // 'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${resetToken}`
                     // 'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 },
                 body: JSON.stringify({
