@@ -148,12 +148,13 @@
     cursor: pointer;
 }
 
-#buttonProximo{    background-color: #1D597B;
+#button{   
+     background-color: #1D597B;
     padding: 10px;
-    width: 100%;
+    width: 90px;
     border: none;
     color: white;
-    border-radius: 20px;
+    border-radius: 40px;
     display: block;
     text-align: center;
     font-weight: bold;
@@ -166,24 +167,6 @@
     cursor: pointer;
 }
 
-#buttonVoltar {
-    background-color: #1D597B;
-    padding: 10px;
-    width: 100%;
-    border: none;
-    color: white;
-    border-radius: 20px;
-    display: block;
-    text-align: center;
-    font-weight: bold;
-    border: none;
-    outline: none;
-}
-
-#buttonVoltar:hover {
-    background-color: #1a4e6d;
-    cursor: pointer;
-}
 
 .material a {
     color: rgb(218, 218, 218);
@@ -213,6 +196,18 @@
 .form-content-material {
     z-index: 1;
     position: relative;
+}
+
+.seta {
+   width: 28px;
+  height: 28px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.seta:hover {
+  transform: scale(1.1);
 }
 
 /* Media queries para responsividade */
