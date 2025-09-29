@@ -256,11 +256,11 @@ const baixarExcelMaterial = async (material, ordens = [], transferencias = []) =
 const totalRow = sheetEntradas.addRow([
   "Total:",
   "",
-{ formula: `SUBTOTAL(9,C8:C${sheet.rowCount})` }, // Quantidade
+{ formula: `SUBTOTAL(9,C8:C${sheetEntradas.rowCount})` }, // Quantidade
   "",
-{ formula: `SUBTOTAL(9,E8:E${sheet.rowCount})` }, // Preço total do pedido
+{ formula: `SUBTOTAL(9,E8:E${sheetEntradas.rowCount})` }, // Preço total do pedido
   "",
-{ formula: `SUBTOTAL(9,G8:G${sheet.rowCount})` }, // Valor total
+{ formula: `SUBTOTAL(9,G8:G${sheetEntradas.rowCount})` }, // Valor total
 ]);
 
 // Formatar as colunas de valores em Real (BRL)
@@ -360,15 +360,21 @@ sheetSaidas.addImage(imageId, {
     }
   });
 
-  // Total no fim
-  if (transferencias.length > 0) {
-    const totalRowSaida = sheetSaidas.addRow([ "TOTAL", totalSaidas, ""]);
-    totalRowSaida.eachCell((cell, colNumber) => {
-      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1D597B" } };
-      cell.alignment = { horizontal: "center", vertical: "middle" };
-    });
-  }
+if (transferencias.length > 0) {
+  const ultimaLinha = sheetSaidas.rowCount; // última linha preenchida
+  const totalRowSaida = sheetSaidas.addRow([
+    "TOTAL",
+    { formula: `SUBTOTAL(9,B8:B${ultimaLinha})` }, // SUBTOTAL da coluna B (quantidade)
+    ""
+  ]);
+
+  totalRowSaida.eachCell((cell, colNumber) => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1D597B" } };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+  });
+}
+
 
   sheetSaidas.columns.forEach((col) => {
     let maxLength = 0;

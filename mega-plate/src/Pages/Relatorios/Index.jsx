@@ -232,6 +232,13 @@ async function baixarExcelEntradas(ordens) {
       o.valorUnitario * o.quantidade * (1 + (o.ipi || 0) / 100) || 0,
     ]);
 
+    // aplica formatação de moeda
+  row.getCell(6).numFmt = 'R$ #,##0.00'; // Preço unitário
+  row.getCell(7).numFmt = 'R$ #,##0.00';
+  row.getCell(8).numFmt = '0.00"%"'; // Preço total do pedido
+  row.getCell(9).numFmt = 'R$ #,##0.00'; // Valor total
+
+
     // zebra: linhas pares cinza claro
     if (index % 2 === 0) {
       row.eachCell((cell) => {
