@@ -95,7 +95,6 @@ button {
 }
 
 button:hover {
-    background-color: #144a63;
 }
 
 .container-transferencia.success-screen .box-sucesso {
@@ -190,11 +189,11 @@ input::placeholder {
 }
 
 .botao-acao button:hover {
-    background-color: #144a63;
+    /* background-color: #144a63; */
 }
 
 .box-sucesso button:hover {
-    background-color: #144a63;
+    /* background-color: #144a63; */
 }
 
 .box-sucesso .botao-relatorio {

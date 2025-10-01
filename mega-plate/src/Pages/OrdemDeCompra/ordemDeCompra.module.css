@@ -1,3 +1,6 @@
+/* ------------------------------------------- */
+/* --- ESTILOS GERAIS E LAYOUT PRINCIPAL --- */
+/* ------------------------------------------- */
 
 .ordemDeCompra {
   display: flex;          
@@ -13,6 +16,8 @@
 #inputs{
   color: black;
 }
+
+/* --- Navbar e Sidebar (Mantidas) --- */
 
 .navbar {
   background-color: #05314C;
@@ -42,6 +47,25 @@
   cursor: pointer;
 }
 
+.sidebar {
+  width: 80px;
+  height: 100vh;
+  background-color: #1e5676;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 15px;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+  z-index: 99;
+}
+
+/* --- Seções Principais e Progresso --- */
+
 .progressoSecao {
   background-color: #05314C;
   display: flex;
@@ -62,7 +86,6 @@
   height: 60vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
   padding: 2rem;
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4);
@@ -78,6 +101,8 @@
   justify-content: center;
   align-items: center;
 }
+
+/* --- Estilos do Formulário (Progresso 1, 2, 3) --- */
 
 .inputs {
   display: flex;
@@ -106,6 +131,287 @@
   box-sizing: border-box;
 }
 
+/* ------------------------------------------- */
+/* --- TELA DE CONFIRMAÇÃO (PROGRESSO 4) --- */
+/* ------------------------------------------- */
+
+.telaDeConfirmacao {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0; /* O padding deve ficar no painelRevisao */
+}
+
+.painelRevisao {
+    background-color: #1D597B; 
+    border-radius: 10px;
+    width: 95%; /* Ocupa bem o formContent */
+    display: flex; 
+    padding: 25px;
+    gap: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.gridRevisao {
+    flex: 3; 
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.cardRevisao {
+    background-color: #05314C; 
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    position: relative;
+    border-top: 3px solid #00A6FF;
+}
+
+.cardRevisao h3 {
+    color: #ffffff;
+    border-bottom: 1px solid #337198;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.cardRevisao p {
+    margin: 10px 0;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.cardRevisao strong {
+    font-weight: 500;
+    color: #B5E6FF;
+    margin-right: 10px;
+}
+
+.editBtn {
+    position: absolute;
+    top: 0vh;
+    right: 0vh;
+    left: 55vh;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #2ECC71; 
+    padding: 5px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.editBtn:hover {
+}
+
+/* --- BLOCO DE VALORES (Lateral) --- */
+
+.blocoValores {
+    flex: 1; 
+    min-width: 250px;
+    background-color: #05314C; 
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.blocoValores h4 {
+    color: #ffffff; 
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #337198;
+    padding-bottom: 10px;
+    width: 100%;
+    text-align: center;
+}
+
+.valoresItens {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.itemValor {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px dashed #337198;
+    color: white;
+}
+
+.itemValor span {
+    font-weight: 300;
+}
+
+.itemValor strong {
+    font-weight: 500;
+    color: #B5E6FF;
+}
+
+.valorTotal {
+    width: 100%;
+    background-color: #00A6FF;
+    color: black;
+    padding: 15px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.valorTotal span {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.valorTotal strong {
+    font-weight: 800;
+    font-size: 1.2rem;
+}
+
+/* Botão Nova Ordem (Na tela de Confirmação) */
+.btnNovaOrdem {
+  background-color: #2ECC71; 
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 80px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 90%;
+  transition: background-color 0.2s;
+}
+
+.btnNovaOrdem:hover {
+    background-color: #27ae60;
+}
+
+/* ------------------------------------------- */
+/* --- TELA DE FINALIZAÇÃO (PROGRESSO 5) --- */
+/* ------------------------------------------- */
+
+.ordemFinalizadaContainer {
+    width: 95%;
+    height: 100%;
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+    color: white;
+}
+
+.headerFinalizado {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #337198;
+}
+
+.headerFinalizado h2 {
+    color: #00A6FF;
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+}
+
+.headerFinalizado p {
+    color: #B5E6FF;
+}
+
+.painelFinalizado {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.colunaFinalizada {
+    flex: 1;
+    background-color: #1D597B;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 5px solid #FFC300;
+}
+
+.colunaFinalizada h3 {
+    color: #FFC300;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #337198;
+}
+
+.campo {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed #337198;
+}
+
+.campo strong {
+    font-weight: 600;
+    color: #B5E6FF;
+}
+
+.campo span {
+    color: white;
+}
+
+.campoTotal {
+    background-color: #00A6FF;
+    color: black;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    font-size: 1.1rem;
+}
+
+.campoTotal strong {
+    color: black;
+}
+
+.dadosGerais {
+    background-color: #1D597B;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.dadosGerais h3 {
+    color: white;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    border-bottom: 1px solid #00A6FF;
+    padding-bottom: 5px;
+}
+
+.dadosGeraisGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.campoGeral {
+    display: flex;
+    flex-direction: column;
+}
+
+.campoGeral strong {
+    color: #B5E6FF;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+
+/* --- Botoes (Ajustados) --- */
+
 .botoes {
   width: 100%;
   max-width: 1000px;
@@ -113,7 +419,7 @@
   justify-content: space-between;
   padding: 1rem 2rem;
   box-sizing: border-box;
-  margin-left: 15px;
+  margin-left: 5.3vw; 
 }
 
 .botoes button {
@@ -131,45 +437,30 @@
   outline: none;
   cursor: pointer;
   font-size: small;
+  transition: background-color 0.2s;
 }
 
 .botoes button:hover {
-  background-color: #1a4e6d;
 }
 
-.botaoPdf button {
-  margin: 20px 0;
+/* Botões da tela FINALIZADA */
+.botoes > div {
+    display: flex;
+    gap: 10px;
+}
+
+.botoes > div button {
   background-color: #05314C;
-  padding: 10px;
-  width: 12vw;
-  height: 8vh;
-  border: none;
-  color: white;
-  border-radius: 80px;
-  display: block;
-  text-align: center;
-  font-weight: bold;
-  outline: none;
-  cursor: pointer;
+  width: auto;
+  min-width: 12vw;
+  height: 50px;
   border: 2px solid #ccc;
+  font-size: 0.8rem;
 }
 
-.sidebar {
-  width: 80px;
-  height: 100vh;
-  background-color: #1e5676;
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 15px;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-  z-index: 99;
-}
+/* ------------------------------------------- */
+/* --- MEDIA QUERIES --- */
+/* ------------------------------------------- */
 
 @media screen and (max-width: 1024px) {
   .progressoSecao {
@@ -181,18 +472,40 @@
     max-width: 90%;
     height: 65vh;
     padding: 1.5rem;
+    overflow-y: auto;
   }
   
   .inputGroup {
     width: 45%;
+  }
+
+  /* Confirmação (Progresso 4) */
+  .painelRevisao {
+      flex-direction: column; 
+  }
+  .gridRevisao {
+      grid-template-columns: 1fr; /* Uma coluna em telas médias/pequenas */
+  }
+  .blocoValores {
+      min-width: 100%;
+  }
+
+  /* Finalizada (Progresso 5) */
+  .painelFinalizado {
+      flex-direction: column;
+  }
+  
+  .botoes {
+    margin-left: 0;
+    max-width: 90%;
   }
   
   .botoes button {
     width: 15vw;
   }
   
-  .botaoPdf button {
-    width: 18vw;
+  .botoes > div button {
+    min-width: 18vw;
   }
   
   .sidebar {
@@ -201,6 +514,7 @@
   
   .ordemDeCompra {
     padding-left: 80px; 
+    align-items: flex-start; 
   }
 }
 
@@ -212,12 +526,14 @@
     padding: 15px;
     padding-left: 15px; 
     padding-top: 70px; 
+    align-items: center; 
   }
   
   .progressoSecao {
-    width: 70vw;
+    width: 90vw;
     height: 7vh;
     margin-bottom: 20px;
+    margin-left: 0;
   }
   
   .formContent {
@@ -225,6 +541,7 @@
     height: auto;
     min-height: 60vh;
     padding: 1rem;
+    margin-left: 0;
   }
   
   .spanTitulo {
@@ -242,31 +559,19 @@
     width: 100%;
   }
   
+  /* Botoes (Mobile) */
   .botoes {
     flex-direction: column;
     align-items: center;
     padding: 1rem;
+    margin-left: 0;
+    max-width: 95%;
   }
   
   .botoes button {
     width: 80vw;
     margin: 10px 0;
   }
-  
-  .botaoPdf button {
-    width: 80vw;
-    height: 50px;
-  }
-  
-  .sidebar {
-    width: 50px;
-    height: 60px;
-    border-radius: 0 0 10px 0;
-    position: fixed;
-    top: 60px; 
-    left: 0;
-  }
-  
   
   .botoes > div {
     display: flex;
@@ -278,6 +583,15 @@
   .botoes > div button {
     width: 80vw;
     margin: 10px 0;
+  }
+  
+  .sidebar {
+    width: 50px;
+    height: 60px;
+    border-radius: 0 0 10px 0;
+    position: fixed;
+    top: 60px; 
+    left: 0;
   }
 }
 
