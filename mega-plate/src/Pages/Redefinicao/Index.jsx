@@ -5,24 +5,39 @@ import {
     toastError,
     toastSuccess,
 } from "../../components/toastify/ToastifyService.jsx";
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useState } from 'react';
+import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
 export function Redefinicao() {
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const [email] = useSearchParams();
+    const { email } = useParams();
     const [visivel, setVisivel] = useState(false);
     const [senha, setSenha] = useState('');
     const [confirmarSenha, setConfirmarSenha] = useState('');
     const [erro, setErro] = useState('');
     const [carregando, setCarregando] = useState(false);
 
+    const resetToken = location.state?.resetToken || sessionStorage.getItem('reset_token_temp');
+
+    useEffect(() => {
+    if (!resetToken) {
+        toastError('Token não encontrado. Solicite um novo código.');
+        navigate('/Verificacao');
+    }
+}, [resetToken]);
+
     const visorSenha = () => {
         setVisivel(!visivel);
     };
 
-    const atualizarSenha = async (email, novaSenha, resetToken) => {
+    const atualizarSenha = async (email, novaSenha) => {
+
+        // console.log('📧 Email:', email);
+        // console.log('🔑 Token completo:', resetToken);
+        // console.log('🔑 Primeiros 20 chars:', resetToken?.substring(0, 20));
+    
         try {
             const response = await fetch(`http://localhost:8080/usuarios/${encodeURIComponent(email)}/senha`, {
                 method: 'PUT',
@@ -33,6 +48,7 @@ export function Redefinicao() {
                     // 'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 },
                 body: JSON.stringify({
+                    email: email,
                     password: novaSenha
                 })
             });
@@ -67,12 +83,26 @@ export function Redefinicao() {
             return;
        }
 
+       if (!resetToken) {
+            toastError('Token de redefinição não encontrado. Solicite um novo código.');
+            navigate('/Verificacao');
+            return;
+        }
+
         setCarregando(true);
 
         try {
             await atualizarSenha(email, senha);
             toastSuccess('Senha atualizada com sucesso!');
-            navigate('/');
+            setSenha('');
+            setConfirmarSenha('');
+            
+        sessionStorage.removeItem('reset_token_temp');
+        sessionStorage.removeItem('reset_email_temp');
+
+            setTimeout(() => {
+                navigate('/');
+            }, 750);
         } catch (error) {
             toastError('Erro ao atualizar senha: ' + error.message);
         } finally {

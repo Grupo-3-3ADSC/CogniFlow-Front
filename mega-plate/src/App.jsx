@@ -33,7 +33,7 @@ function App() {
         <Route path='/Perfil' element={<Perfil/>} />
         <Route path='/Verificacao' element={<Verificacao />} />
         <Route path='/Transferencia' element={<Transferencia />} />
-        <Route path="/Redefinicao/:userId" element={<Redefinicao />} />
+        <Route path="/Redefinicao/:email" element={<Redefinicao />} />
         <Route path='/Redefinicao' element={<Redefinicao />} />
         <Route path='/Material' element={<DashMaterial />} />
         <Route path='/CadastroFornecedor' element={<CadastroFornecedor />} />
