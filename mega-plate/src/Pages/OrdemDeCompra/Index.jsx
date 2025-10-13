@@ -9,7 +9,10 @@ import { api } from "../../provider/api";
 import { jwtDecode } from "jwt-decode";
 import { jsPDF } from "jspdf";
 import NavBar from "../../components/NavBar";
-import {toastError,toastSuccess} from "../../components/toastify/ToastifyService";
+import {
+  toastError,
+  toastSuccess,
+} from "../../components/toastify/ToastifyService";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import baixarOrdemDeCompraPDF from "../../tools/baixarOrdemDeCompraPDF";
@@ -18,33 +21,42 @@ export function OrdemDeCompra() {
   const [listaFornecedores, setListaFornecedores] = useState([]);
   const [listaMateriais, setListaMateriais] = useState([]);
   const [ordemDeCompra, setOrdemDeCompra] = useState([]);
-
-  function getFornecedores() {
-    api
-      .get("/fornecedores")
-      .then((resposta) => {
-        setListaFornecedores(resposta.data);
-      })
-      .catch((erro) => {
-        toastError("Erro ao buscar usuários", erro);
-      });
-  }
-
+  const [materiaisSelecionados, setMateriaisSelecionados] = useState([]);
+  const [progresso, setProgresso] = useState(1);
+  const [valoresInput, setValoresInput] = useState({});
+  const [errosValidacao, setErrosValidacao] = useState({});
+  const [modalAberto, setModalAberto] = useState(false);
+  const [materialSelecionado, setMaterialSelecionado] = useState("");
+  const [quantidadeMaterial, setQuantidadeMaterial] = useState("");
   const navigate = useNavigate();
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
 
-  function getUsuarioIdDoToken() {
+  // Funções API
+  const getFornecedores = useCallback(() => {
+    api
+      .get("/fornecedores")
+      .then((res) => setListaFornecedores(res.data))
+      .catch((err) => toastError("Erro ao buscar fornecedores"));
+  }, []);
+
+  const getMateriaPrima = useCallback(() => {
+    api
+      .get("/estoque")
+      .then((res) => setListaMateriais(res.data))
+      .catch((err) => console.error("Erro ao buscar estoque", err));
+  }, []);
+
+  const getUsuarioIdDoToken = () => {
     const token = sessionStorage.getItem("authToken");
     if (!token) return null;
-
     try {
       const decoded = jwtDecode(token);
-      return decoded.id; // ou decoded.sub ou decoded.usuarioId, dependendo do seu backend
+      return decoded.id;
     } catch (err) {
       console.error("Erro ao decodificar token:", err);
       return null;
     }
-  }
+  };
 
   useEffect(() => {
     const token = sessionStorage.getItem("authToken");
@@ -59,84 +71,40 @@ export function OrdemDeCompra() {
         setAutenticacaoPassou(true);
       }
     }
-  }, []);
-
-  function getMateriaPrima() {
-    api
-      .get("/estoque")
-      .then((resposta) => {
-        setListaMateriais(resposta.data);
-      })
-      .catch((erro) => {
-        console.error("Erro ao buscar usuários", erro);
-      });
-  }
+  }, [navigate]);
 
   useEffect(() => {
     getFornecedores();
     getMateriaPrima();
-  }, []);
-
-  const [progresso, setProgresso] = useState(1);
-  const [valoresInput, setValoresInput] = useState({});
-  const [errosValidacao, setErrosValidacao] = useState({});
+  }, [getFornecedores, getMateriaPrima]);
 
   // Funções de formatação
-  // const formatarIE = (valor) => {
-  //   const nums = valor.replace(/\D/g, "");
-  //   if (nums.length <= 3) return nums;
-  //   if (nums.length <= 6) return `${nums.slice(0, 3)}.${nums.slice(3)}`;
-  //   if (nums.length <= 9)
-  //     return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(6)}`;
-  //   return `${nums.slice(0, 3)}.${nums.slice(3, 6)}.${nums.slice(
-  //     6,
-  //     9
-  //   )}.${nums.slice(9, 12)}`;
-  // };
-
   const formatarPagamento = (valor) => {
     const nums = valor.replace(/\D/g, "");
-    if (nums.length === 0) return "";
+    if (!nums) return "";
     if (nums.length <= 2) return `${nums} dias`;
     if (nums.length <= 4) return `${nums.slice(0, 2)}/${nums.slice(2)} dias`;
     return `${nums.slice(0, 2)}/${nums.slice(2, 4)} dias`;
   };
 
-  // Função de formatação corrigida para valores monetários
   const formatarValorMonetario = (valor) => {
     const nums = valor.replace(/[^\d]/g, "");
-    if (nums.length === 0) return "";
-
-    // Converte para número e formata corretamente
-    const numero = parseInt(nums);
-    if (numero === 0) return "";
-
-    // Se tem apenas 1 dígito, trata como centavos
+    if (!nums) return "";
     if (nums.length === 1) return `0,0${nums}`;
-    // Se tem 2 dígitos, trata como centavos
     if (nums.length === 2) return `0,${nums}`;
-
-    // Para mais de 2 dígitos, separa os centavos
-    const inteiros = nums.slice(0, -2);
+    const inteiros = nums.slice(0, -2).replace(/^0+/, "") || "0";
     const decimais = nums.slice(-2);
-
-    // Remove zeros à esquerda dos inteiros
-    const inteirosLimpos = inteiros.replace(/^0+/, "") || "0";
-
-    // Adiciona separadores de milhares
-    const inteirosFormatados = inteirosLimpos.replace(
-      /\B(?=(\d{3})+(?!\d))/g,
-      "."
-    );
-
-    return `${inteirosFormatados},${decimais}`;
+    return `${inteiros.replace(/\B(?=(\d{3})+(?!\d))/g, ".")},${decimais}`;
   };
 
-  // CORREÇÃO: Limitando o campo de rastreabilidade a 20 caracteres
   const formatarRastreio = (valor) => {
-    const formatted = valor.toUpperCase().replace(/[^A-Z0-9\-\/]/g, "");
-    return formatted.substring(0, 20); // Limite de 20 caracteres
+    return valor
+      .toUpperCase()
+      .replace(/[^A-Z0-9\-\/]/g, "")
+      .substring(0, 20);
   };
+
+  const formatarQuantidade = (valor) => valor.replace(/\D/g, "");
 
   const formatarIPI = (valor) => {
     const nums = valor.replace(/[^\d,]/g, "");
@@ -144,29 +112,22 @@ export function OrdemDeCompra() {
       const partes = nums.split(",");
       return `${partes[0]},${partes[1].slice(0, 2)}`;
     }
-    return nums ? `${nums}` : "";
-  };
-
-  const formatarQuantidade = (valor) => {
-    return valor.replace(/\D/g, "");
+    return nums || "0,00";
   };
 
   const validarCamposValor = (valoresInput) => {
     const valorKg = valoresInput["Valor por Kg"];
     const valorPeca = valoresInput["Valor por peça"];
-
-    // Se nenhum dos dois estiver preenchido, ambos são obrigatórios
     if (!valorKg && !valorPeca) {
       return {
         "Valor por Kg": "Preencha o valor por Kg OU o valor por peça",
         "Valor por peça": "Preencha o valor por Kg OU o valor por peça",
       };
     }
-
-    return {}; // Nenhum erro se pelo menos um estiver preenchido
+    return {};
   };
 
-  // Configuração das etapas otimizada
+  // Etapas
   const etapas = useMemo(
     () => ({
       1: {
@@ -190,17 +151,6 @@ export function OrdemDeCompra() {
             required: true,
             validationMessage: "Informe uma data de entrega válida",
           },
-          // {
-          //   id: "ie",
-          //   titulo: "I.E",
-          //   tipo: "text",
-          //   placeholder: "Ex: 123.456.789.000",
-          //   pattern: "^\\d{3}\\.\\d{3}\\.\\d{3}\\.\\d{3}$",
-          //   required: true,
-          //   validationMessage:
-          //     "Inscrição estadual inválida. Use: 123.456.789.000",
-          //   formatador: formatarIE,
-          // },
           {
             id: "pagamento",
             titulo: "Cond. Pagamento",
@@ -209,7 +159,6 @@ export function OrdemDeCompra() {
             pattern: "^\\d{1,3}(\\/\\d{1,3})?\\s?dias?$",
             required: true,
             validationMessage: "Use formato: 30 dias ou 30/60 dias",
-            color: "black",
             formatador: formatarPagamento,
           },
         ],
@@ -218,46 +167,14 @@ export function OrdemDeCompra() {
       2: {
         inputs: [
           {
-            id: "valorkg",
-            titulo: "Valor por Kg",
-            tipo: "double",
-            placeholder: "Digite o valor por Kg (Ex: 12,50)",
-            pattern: "^\\d+([,.]\\d{1,2})?$",
-            required: false, // Não é mais sempre obrigatório
-            validationMessage: "Valor inválido. Use formato: 12,50",
-            formatador: formatarValorMonetario,
-          },
-          {
-            id: "rastreio",
-            titulo: "Rastreabilidade",
-            tipo: "text",
-            placeholder: "Código de rastreamento (Max 20 caracteres)",
-            pattern: "^[A-Za-z0-9\\-\\/]{16,20}$", // CORREÇÃO: Limite ajustado para 20
-            required: true,
-            validationMessage:
-              "Código inválido. Use 16-20 caracteres alfanuméricos.", // CORREÇÃO: Mensagem atualizada
-            formatador: formatarRastreio,
-          },
-          {
-            id: "MaterialId",
+            id: "material",
             titulo: "Material",
             tipo: "select",
             options: listaMateriais,
             optionLabel: "tipoMaterial",
             optionValue: "id",
             required: true,
-            placeholder: "Escolha o material desejado",
-            validationMessage: "Selecione um material válido.",
-          },
-          {
-            id: "valorpeca",
-            titulo: "Valor por peça",
-            tipo: "double",
-            placeholder: "Preço unitário da peça (Ex: 5,00)",
-            pattern: "^\\d+([,.]\\d{1,2})?$",
-            required: false, // Não é mais sempre obrigatório
-            validationMessage: "Valor inválido. Use formato: 5,00",
-            formatador: formatarValorMonetario,
+            placeholder: "Selecione o material",
           },
           {
             id: "descricao",
@@ -269,31 +186,6 @@ export function OrdemDeCompra() {
             required: true,
             validationMessage: "Descrição deve ter entre 3 e 100 caracteres.",
           },
-        ],
-        imagem: progressoConcluido,
-      },
-      3: {
-        inputs: [
-          {
-            id: "valorunit",
-            titulo: "Valor Unitário",
-            tipo: "text",
-            placeholder: "Valor final por unidade (Ex: 9,90)",
-            pattern: "^\\d+([,.]\\d{1,2})?$",
-            required: true,
-            validationMessage: "Valor inválido. Use formato: 9,90",
-            formatador: formatarValorMonetario,
-          },
-          // {
-            // id: "ipi",
-            // titulo: "IPI",
-            // tipo: "text",
-            // placeholder: "Percentual do imposto (Ex: 12)",
-            // pattern: "^\\d{1,2}([,.]\\d{1,2})?%?$",
-            // required: true,
-            // validationMessage: "IPI inválido. Use números",
-            // formatador: formatarIPI,
-          // },
           {
             id: "quantidade",
             titulo: "Quantidade",
@@ -306,215 +198,216 @@ export function OrdemDeCompra() {
             formatador: formatarQuantidade,
           },
           {
-            id: "total",
-            titulo: "Total",
+            id: "rastreio",
+            titulo: "Rastreabilidade",
             tipo: "text",
-            placeholder: "Valor calculado automaticamente",
-            disabled: true,
+            placeholder: "Código de rastreamento (Max 20 caracteres)",
+            pattern: "^[A-Za-z0-9\\-\\/]{16,20}$",
+            required: true,
+            validationMessage:
+              "Código inválido. Use 16-20 caracteres alfanuméricos.",
+            formatador: formatarRastreio,
           },
+          {
+            id: "valorkg",
+            titulo: "Valor por Kg",
+            tipo: "text",
+            placeholder: "Digite o valor por Kg (Ex: 12,50)",
+            required: false,
+            validationMessage: "Valor inválido. Use formato: 12,50",
+            formatador: formatarValorMonetario,
+          },
+          {
+            id: "valorpeca",
+            titulo: "Valor por peça",
+            tipo: "text",
+            placeholder: "Preço unitário da peça (Ex: 5,00)",
+            required: false,
+            validationMessage: "Valor inválido. Use formato: 5,00",
+            formatador: formatarValorMonetario,
+          },
+          {
+            id: "valorunit",
+            titulo: "Valor Unitário",
+            tipo: "text",
+            placeholder: "Valor final por unidade (Ex: 9,90)",
+            required: true,
+            validationMessage: "Valor inválido. Use formato: 9,90",
+            formatador: formatarValorMonetario,
+          },
+          { id: "total", titulo: "Total", tipo: "text", disabled: true },
+          { id: "ipi", titulo: "IPI", tipo: "text", disabled: true },
         ],
-        imagem: progresso2Concluido,
+        imagem: progressoConcluido,
       },
-      4: {
-        inputs: [],
-        imagem: progresso3Concluido,
-      },
+      3: { inputs: [], imagem: progresso2Concluido },
+      4: { inputs: [], imagem: progresso3Concluido },
     }),
     [listaFornecedores, listaMateriais]
   );
 
-  // Estados derivados
-  const image = etapas[progresso]?.imagem || progressoImg;
-  const titulo =
-    progresso === 4 ? "FORMULÁRIO FINALIZADO COM SUCESSO!" : "ORDEM DE COMPRA";
-  const nomeBotao = progresso === 3 ? "FINALIZAR" : "PRÓXIMO";
-
-  // CORREÇÃO: Cálculo automático do total incluindo quantidade
-  useEffect(() => {
-    const valorUnit =
-      parseFloat((valoresInput["Valor Unitário"] || "").replace(",", ".")) || 0;
-    const quantidade = parseInt(valoresInput["Quantidade"] || "0") || 0;
-    const total = valorUnit * quantidade;
-
-    if (total > 0) {
-      setValoresInput((prev) => ({
-        ...prev,
-        Total: total.toFixed(2).replace(".", ","),
-      }));
-    } else {
-      setValoresInput((prev) => ({ ...prev, Total: "" }));
-    }
-  }, [valoresInput["Valor Unitário"], valoresInput["Quantidade"]]);
-
-  // Validação
   const validarCampo = useCallback((input, valor) => {
     if (!input.required) return { valido: true };
-
-    if (!valor || valor.trim() === "") {
+    if (!valor || valor.trim() === "")
       return { valido: false, erro: `${input.titulo} é obrigatório` };
-    }
-
-    if (input.pattern && !new RegExp(input.pattern).test(valor)) {
+    if (input.pattern && !new RegExp(input.pattern).test(valor))
       return { valido: false, erro: input.validationMessage };
-    }
-
     return { valido: true };
   }, []);
 
   const validarFormulario = useCallback(() => {
     const inputs = etapas[progresso]?.inputs || [];
     const novosErros = {};
-    let temErro = false;
-    let mensagensErro = []; // Array para coletar mensagens de erro
+    const mensagensErro = [];
 
-    // Validação especial para campos de valor na etapa 2
     if (progresso === 2) {
       const errosValor = validarCamposValor(valoresInput);
       Object.assign(novosErros, errosValor);
-      if (Object.keys(errosValor).length > 0) {
-        temErro = true;
-        // Adicionar mensagens de erro dos campos de valor
-        Object.values(errosValor).forEach((erro) => {
-          if (erro && !mensagensErro.includes(erro)) {
-            mensagensErro.push(erro);
-          }
-        });
-      }
+      Object.values(errosValor).forEach((e) =>
+        mensagensErro.includes(e) ? null : mensagensErro.push(e)
+      );
     }
 
     for (let input of inputs) {
-      if (input.titulo === "Total" && input.disabled) continue;
-
-      // Validação específica para prazo de entrega (não pode ser anterior a hoje)
-      if (input.titulo === "Prazo de entrega") {
-        const dataHoje = new Date();
-        dataHoje.setHours(0, 0, 0, 0); // Zera hora para comparação só da data
-
-        const dataInput = new Date(valoresInput["Prazo de entrega"]);
-        dataInput.setHours(0, 0, 0, 0);
-
-        if (dataInput < dataHoje) {
-          const erroMsg =
-            "A data do prazo de entrega não pode ser anterior a hoje.";
-          novosErros["Prazo de entrega"] = erroMsg;
-          temErro = true;
-          if (!mensagensErro.includes(erroMsg)) {
-            mensagensErro.push(erroMsg);
-          }
-        }
-      }
-
-      // Pula validação de obrigatoriedade para campos de valor se o outro estiver preenchido
-      if (
-        progresso === 2 &&
-        (input.titulo === "Valor por Kg" || input.titulo === "Valor por peça")
-      ) {
-        const valorKg = valoresInput["Valor por Kg"];
-        const valorPeca = valoresInput["Valor por peça"];
-
-        // Se um dos campos estiver preenchido, o outro não é obrigatório
-        if (
-          (input.titulo === "Valor por Kg" && valorPeca) ||
-          (input.titulo === "Valor por peça" && valorKg)
-        ) {
-          continue;
-        }
-      }
-
+      if (input.titulo === "Total" || input.disabled) continue;
       const valor =
         input.tipo === "select"
           ? valoresInput[input.titulo + "Id"]
           : valoresInput[input.titulo];
-
       const validacao = validarCampo(input, valor);
-      if (!validacao.valido && !novosErros[input.titulo]) {
+      if (!validacao.valido) {
         novosErros[input.titulo] = validacao.erro;
-        temErro = true;
-        // Adicionar mensagem de erro única
-        if (!mensagensErro.includes(validacao.erro)) {
+        if (!mensagensErro.includes(validacao.erro))
           mensagensErro.push(validacao.erro);
-        }
       }
     }
 
-    // Validação de segurança
-    const sqlPattern =
-      /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
-    const scriptPattern = /<script.*?>.*?<\/script>/gi;
-
-    for (let input of inputs) {
-      const valor = valoresInput[input.titulo];
-      if (typeof valor === "string") {
-        if (sqlPattern.test(valor)) {
-          const erroMsg = "Comandos SQL não são permitidos";
-          novosErros[input.titulo] = erroMsg;
-          temErro = true;
-          if (!mensagensErro.includes(erroMsg)) {
-            mensagensErro.push(erroMsg);
-          }
-          break;
-        }
-        if (scriptPattern.test(valor)) {
-          const erroMsg = "Scripts não são permitidos";
-          novosErros[input.titulo] = erroMsg;
-          temErro = true;
-          if (!mensagensErro.includes(erroMsg)) {
-            mensagensErro.push(erroMsg);
-          }
-          break;
-        }
-      }
-    }
-
-    // Exibir toastError para cada mensagem de erro única
-    if (mensagensErro.length > 0) {
-      mensagensErro.forEach((mensagem) => {
-        toastError(mensagem);
-      });
-    }
-
+    mensagensErro.forEach((msg) => toastError(msg));
     setErrosValidacao(novosErros);
-    return !temErro;
-  }, [progresso, etapas, valoresInput, validarCampo]);
+    return mensagensErro.length === 0;
+  }, [etapas, progresso, validarCampo, valoresInput]);
 
-  // CORREÇÃO: Finalizar ordem - simulando sucesso para chegar na tela 4
-  const finalizarOrdemDeCompra = useCallback(async () => {
-    const usuarioId = getUsuarioIdDoToken();
-    // console.log(Number(valoresInput["MaterialId"]));
+  // Navegação
+  const avancarProgresso = useCallback(() => {
+    if (!validarFormulario()) return;
+    setProgresso((prev) => Math.min(prev + 1, 4));
+  }, [validarFormulario]);
+
+  const voltarProgresso = useCallback(() => {
+    setProgresso((prev) => Math.max(prev - 1, 1));
+    setErrosValidacao({});
+  }, []);
+
+  const reiniciar = useCallback(() => {
+    setProgresso(1);
+    setValoresInput({});
+    setErrosValidacao({});
+  }, []);
+
+  // Handle input
+  const handleInputChange = useCallback(
+    (titulo, valor, isSelect = false, formatador = null) => {
+      let valorFormatado = valor;
+      if (formatador && !isSelect) valorFormatado = formatador(valor);
+
+      setValoresInput((prev) => {
+        const newState = {
+          ...prev,
+          [titulo]: valorFormatado,
+          ...(isSelect && { [titulo + "Id"]: valor }),
+        };
+
+        // Atualiza IPI automaticamente se material selecionado
+        if (titulo === "Material") {
+          const material = listaMateriais.find(
+            (m) => m.id.toString() === valor.toString()
+          );
+          if (material)
+            newState["IPI"] = formatarIPI(material.IPI?.toString() || "0");
+        }
+
+        return newState;
+      });
+
+      if (errosValidacao[titulo]) {
+        setErrosValidacao((prev) => ({ ...prev, [titulo]: "" }));
+      }
+    },
+    [errosValidacao, listaMateriais]
+  );
+
+  // MODAL
+  const abrirModal = () => setModalAberto(true);
+  const fecharModal = () => {
+    setModalAberto(false);
+    setMaterialSelecionado("");
+    setQuantidadeMaterial("");
+  };
+  const adicionarMaterial = () => {
+    if (!materialSelecionado || !quantidadeMaterial) {
+      toastError("Selecione material e quantidade");
+      return;
+    }
+
+    const mat = listaMateriais.find(
+      (m) => m.id === Number(materialSelecionado)
+    );
+
+    // Evita duplicado
+    if (materiaisSelecionados.some((m) => m.id === mat.id)) {
+      toastError("Este material já foi adicionado");
+      return;
+    }
+
+    setMateriaisSelecionados((prev) => [
+      ...prev,
+      { ...mat, Quantidade: quantidadeMaterial },
+    ]);
+    fecharModal();
+  };
+
+  // Total automático
+  useEffect(() => {
+    const valorUnit =
+      parseFloat((valoresInput["Valor Unitário"] || "0").replace(",", ".")) ||
+      0;
+    const quantidade = parseInt(valoresInput["Quantidade"] || "0") || 0;
+    const total = valorUnit * quantidade;
+    setValoresInput((prev) => ({
+      ...prev,
+      Total: total > 0 ? total.toFixed(2).replace(".", ",") : "0,00",
+    }));
+  }, [valoresInput["Valor Unitário"], valoresInput["Quantidade"]]);
+
+  // Finalizar ordem
+  const finalizarOrdemDeCompra = useCallback(() => {
     const dadosApi = {
       usuarioId: getUsuarioIdDoToken(),
-      fornecedorId: Number(valoresInput["FornecedorId"]), // ✅
+      fornecedorId: Number(valoresInput["FornecedorId"]),
       prazoEntrega: valoresInput["Prazo de entrega"],
-      // ie: (valoresInput["I.E"] || "").replace(/\./g, ""),
       condPagamento: valoresInput["Cond. Pagamento"],
-      valorKg: parseFloat(valoresInput["Valor por Kg"]?.replace(",", ".") || 0),
-      rastreabilidade: valoresInput["Rastreabilidade"],
-      estoqueId: Number(valoresInput["MaterialId"]),
-      valorPeca: parseFloat(
-        valoresInput["Valor por peça"]?.replace(",", ".") || 0
-      ),
-      descricaoMaterial: valoresInput["Descrição do material"],
-      valorUnitario: parseFloat(
-        valoresInput["Valor Unitário"]?.replace(",", ".") || 0
-      ),
-      // ipi: parseFloat(valoresInput["IPI"]?.replace(",", ".") || 0),
-       quantidade: parseFloat(valoresInput["Quantidade"]?.replace(",", ".") || 1),      
+      materiais: materiaisSelecionados.map((mat) => ({
+        estoqueId: mat.id,
+        valorKg: parseFloat(mat["Valor por Kg"]?.replace(",", ".") || 0),
+        valorPeca: parseFloat(mat["Valor por peça"]?.replace(",", ".") || 0),
+        descricaoMaterial: mat["Descrição"],
+        ipi: parseFloat(mat.IPI?.replace(",", ".") || 0),
+        rastreabilidade: mat.Rastreabilidade,
+        quantidade: parseFloat(mat.Quantidade || 1),
+        valorUnitario: parseFloat(
+          mat["Valor Unitário"]?.replace(",", ".") || 0
+        ),
+      })),
     };
-    //  console.log(dadosApi);
-    // console.log("listaMateriais", listaMateriais);
-    // console.log("valoresInput", valoresInput);
 
     api
       .post("/ordemDeCompra", dadosApi)
       .then((res) => {
         const novaId = res?.data?.id;
-
         if (!novaId || isNaN(novaId)) {
-          console.error("ID inválido retornado:", res?.data);
           toastError("Erro ao obter o ID da nova ordem de compra.");
           return;
         }
-
         return api.get(`/ordemDeCompra/${novaId}`);
       })
       .then((resDetalhado) => {
@@ -524,269 +417,49 @@ export function OrdemDeCompra() {
         setProgresso(4);
       })
       .catch((err) => {
-        // console.error("Erro ao criar ordem:", err);
-        toastError(err.response.data?.message || "Erro ao criar ordem de compra");
+        toastError(
+          err.response?.data?.message || "Erro ao criar ordem de compra"
+        );
         setErrosValidacao({
           geral: "Erro ao criar ordem de compra. Verifique os dados.",
         });
       });
-  }, [valoresInput]);
+  }, [materiaisSelecionados, valoresInput]);
 
-  // Navegação
-  const avancarProgresso = useCallback(() => {
-    if (!validarFormulario()) return;
+  const image = etapas[progresso]?.imagem || progressoImg;
 
-    if (progresso === 3) {
-      finalizarOrdemDeCompra();
-    } else {
-      setProgresso((prev) => prev + 1);
-    }
-  }, [progresso, validarFormulario, finalizarOrdemDeCompra]);
+return (
+  <>
+    <NavBar />
+    <section className={style.ordemDeCompra}>
+      <div className={style.progressoSecao}>
+        <img src={etapas[progresso]?.imagem || progressoImg} alt="Progresso" />
+      </div>
+      <main className={style.formContent}>
+        <h1>
+          {progresso === 4
+            ? "FORMULÁRIO FINALIZADO COM SUCESSO!"
+            : "ORDEM DE COMPRA"}
+        </h1>
 
-  const voltarProgresso = useCallback(() => {
-    if (progresso > 1) {
-      setProgresso((prev) => prev - 1);
-      setErrosValidacao({});
-    }
-  }, [progresso]);
-
-  const reiniciar = useCallback(() => {
-    setProgresso(1);
-    setValoresInput({});
-    setErrosValidacao({});
-  }, []);
-
-  const handleInputChange = useCallback(
-    (titulo, valor, isSelect = false, formatador = null) => {
-      let valorFormatado = valor;
-
-      // Aplicar formatação se existir
-      if (formatador && !isSelect) {
-        valorFormatado = formatador(valor);
-      }
-
-      setValoresInput((prev) => {
-        const newState = {
-          ...prev,
-          [titulo]: valorFormatado,
-          ...(isSelect && { [titulo + "Id"]: valor }),
-        };
-
-        return newState;
-      });
-
-      // Limpar erros (manter apenas para lógica interna, não para exibição)
-      if (errosValidacao[titulo]) {
-        setErrosValidacao((prev) => ({ ...prev, [titulo]: "" }));
-      }
-    },
-    [errosValidacao]
-  );
-
-
-  // async function baixarExcel() {
-  //   const workbook = new ExcelJS.Workbook();
-  //   const sheet = workbook.addWorksheet("Ordem de Compra");
-
-  //   const fornecedor = ordemDeCompra.fornecedor;
-
-  //   const fornecedorDetalhes = listaFornecedores.find(
-  //     (f) => f.fornecedorId === parseInt(valoresInput["FornecedorId"])
-  //   );
-
-  //   const corPrimaria = "2A80B9"; // Azul
-  //   const corSecundaria = "95A5A6"; // Cinza
-  //   const corTexto = "2C3E50";
-
-  //   sheet.mergeCells("A1:E1");
-
-  //   sheet.getCell("A1").value = `MegaPlate LTDA`;
-
-  //   sheet.getCell("A1").fill = {
-  //     type: "pattern",
-  //     pattern: "solid",
-  //     fgColor: { argb: corPrimaria },
-  //   };
-  //   sheet.getCell("A1").font = {
-  //     color: { argb: "FFFFFF" },
-  //     bold: true,
-  //     size: 16,
-  //   };
-  //   sheet.getCell("A1").alignment = { vertical: "middle", horizontal: "left" };
-
-  //   sheet.addRow([]);
-
-  //   if (fornecedor || fornecedorDetalhes) {
-  //     sheet.addRow([
-  //       `CNPJ: ${fornecedorDetalhes?.cnpj || "N/A"}`,
-  //       "",
-  //       "",
-  //       `Endereço: ${fornecedorDetalhes.complemento || "N/A"}`,
-  //     ]);
-  //     sheet.addRow([`Telefone: ${fornecedorDetalhes.telefone || "N/A"}`]);
-  //   } else {
-  //     sheet.addRow(["Dados do fornecedor não disponíveis"]);
-  //   }
-
-  //   const dataAtual = new Date();
-  //   const dataFormatada = dataAtual.toLocaleDateString("pt-BR");
-  //   const horaFormatada = dataAtual.toLocaleTimeString("pt-BR");
-
-  //   sheet.addRow([]);
-  //   sheet.addRow([`Ordem de Compra Nº: ${ordemDeCompra.id}`]);
-  //   sheet.addRow([`Data: ${dataFormatada}`, `Hora: ${horaFormatada}`]);
-
-  //   sheet.addRow([]);
-  //   sheet.addRow(["DADOS DO FORNECEDOR"]);
-  //   sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true, size: 12 };
-
-  //   if (fornecedor || fornecedorDetalhes) {
-  //     sheet.addRow([`Nome: ${fornecedorDetalhes?.nomeFantasia}`]);
-  //     if (fornecedorDetalhes?.cnpj)
-  //       sheet.addRow([`CNPJ: ${fornecedorDetalhes?.cnpj}`]);
-  //     if (fornecedorDetalhes.complemento)
-  //       sheet.addRow([`Endereço: ${fornecedorDetalhes.complemento}`]);
-  //   } else {
-  //     sheet.addRow(["Fornecedor não encontrado"]);
-  //   }
-
-  //   sheet.addRow([]);
-  //   sheet.addRow(["DESCRIÇÃO DOS MATERIAIS"]);
-  //   sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true, size: 12 };
-
-  //   // Cabeçalho da tabela
-  //   const header = ["ITEM", "DESCRIÇÃO", "QTD", "VALOR UNIT.", "TOTAL"];
-  //   const headerRow = sheet.addRow(header);
-  //   headerRow.eachCell((cell) => {
-  //     cell.fill = {
-  //       type: "pattern",
-  //       pattern: "solid",
-  //       fgColor: { argb: "F0F0F0" },
-  //     };
-  //     cell.font = { bold: true };
-  //     cell.border = {
-  //       top: { style: "thin" },
-  //       bottom: { style: "thin" },
-  //       left: { style: "thin" },
-  //       right: { style: "thin" },
-  //     };
-  //   });
-
-  //   // Dados do material
-  //   const material = listaMateriais.find(
-  //     (m) => m.id === parseInt(valoresInput["MaterialId"])
-  //   );
-  //   const descricao = material?.tipoMaterial || "Material não encontrado";
-  //   const quantidade = parseFloat(valoresInput["Quantidade"]) || 0;
-  //   const valorUnit = parseFloat(valoresInput["Valor Unitário"]) || 0;
-  //   const total = parseFloat(valoresInput["Total"]) || valorUnit * quantidade;
-  //   const ipi = parseFloat(valoresInput["IPI"]) || 0;
-  //   const totalGeral = total + ipi;
-
-  //   sheet.addRow([
-  //     "001",
-  //     descricao.substring(0, 50),
-  //     quantidade,
-  //     `R$ ${valorUnit.toFixed(2).replace(".", ",")}`,
-  //     `R$ ${total.toFixed(2).replace(".", ",")}`,
-  //   ]);
-
-  //   sheet.addRow([]);
-  //   sheet.addRow([
-  //     "SUBTOTAL:",
-  //     "",
-  //     "",
-  //     "",
-  //     `R$ ${total.toFixed(2).replace(".", ",")}`,
-  //   ]);
-  //   sheet.addRow([
-  //     "IPI:",
-  //     "",
-  //     "",
-  //     "",
-  //     `R$ ${ipi.toFixed(2).replace(".", ",")}`,
-  //   ]);
-  //   sheet.addRow([
-  //     "TOTAL GERAL:",
-  //     "",
-  //     "",
-  //     "",
-  //     `R$ ${totalGeral.toFixed(2).replace(".", ",")}`,
-  //   ]);
-
-  //   sheet.addRow([]);
-  //   sheet.addRow(["OBSERVAÇÕES:"]);
-  //   sheet.getCell(`A${sheet.lastRow.number}`).font = { bold: true };
-  //   const observacoes = [
-  //     "• Documento gerado automaticamente pelo sistema",
-  //     "• Válido como comprovante de compra",
-  //     "• IPI calculado conforme percentual informado",
-  //     "• Para dúvidas, entre em contato conosco",
-  //   ];
-  //   observacoes.forEach((obs) => sheet.addRow([obs]));
-
-  //   sheet.addRow([]);
-  //   sheet.addRow([
-  //     `Documento gerado em ${new Date().toLocaleString("pt-BR")}`,
-  //     "",
-  //     "",
-  //     "",
-  //     "www.megaplate.com.br | vendas@megaplate.com.br",
-  //   ]);
-
-  //   // Ajustar largura das colunas
-  //   sheet.columns.forEach((col) => {
-  //     col.width = 25;
-  //   });
-
-  //   // Gerar o arquivo
-  //   const buffer = await workbook.xlsx.writeBuffer();
-  //   const nomeArquivo = `ordem_de_compra_${
-  //     ordemDeCompra.id
-  //   }_${dataFormatada.replace(/\//g, "-")}.xlsx`;
-  //   saveAs(new Blob([buffer]), nomeArquivo);
-  // }
-
-  return (
-    <>
-      <NavBar />
-      <section className={style.ordemDeCompra}>
-        <div className={style.progressoSecao}>
-          <img src={image} alt="Progresso" />
-        </div>
-
-        <main className={style.formContent}>
-          <span className={style.spanTitulo}>
-            <h1>{titulo}</h1>
-          </span>
-
+        {/* === Etapa 1: Inputs do formulário principal === */}
+        {progresso === 1 && (
           <div className={style.inputs}>
-            {etapas[progresso]?.inputs.map((input) => (
+            {etapas[1].inputs.map((input) => (
               <div key={input.id} className={style.inputGroup}>
                 <p>
-                  {input.titulo}{" "}
+                  {input.titulo}
                   {input.required && <span style={{ color: "red" }}>*</span>}
                 </p>
                 {input.tipo === "select" ? (
                   <select
                     value={valoresInput[input.titulo + "Id"] || ""}
-                    onChange={(e) => {
-                      const valor = e.target.value;
-                      setValoresInput((prev) => ({
-                        ...prev,
-                        [input.titulo]:
-                          input.options.find(
-                            (opt) => String(opt[input.optionValue]) === valor
-                          )?.[input.optionLabel] || "",
-                        [input.titulo + "Id"]: valor,
-                      }));
-                    }}
-                    style={
-                      errosValidacao[input.titulo] ? { borderColor: "red" } : {}
+                    onChange={(e) =>
+                      handleInputChange(input.titulo, e.target.value, true)
                     }
                   >
                     <option value="">{input.placeholder}</option>
-                    {input.options.map((opt) => (
+                    {(input.options || []).map((opt) => (
                       <option
                         key={opt[input.optionValue]}
                         value={opt[input.optionValue]}
@@ -800,52 +473,191 @@ export function OrdemDeCompra() {
                     type={input.tipo}
                     placeholder={input.placeholder}
                     value={valoresInput[input.titulo] || ""}
-                    onChange={(e) =>
-                      handleInputChange(
-                        input.titulo,
-                        e.target.value,
-                        false,
-                        input.formatador
-                      )
-                    }
                     disabled={input.disabled}
-                    style={
-                      errosValidacao[input.titulo] ? { borderColor: "red" } : {}
+                    onChange={(e) =>
+                      handleInputChange(input.titulo, e.target.value)
                     }
                   />
                 )}
               </div>
             ))}
           </div>
+        )}
 
-          {progresso === 4 && (
-            <div className={style.botaoPdf}>
-              <button onClick={() => baixarOrdemDeCompraPDF(ordemDeCompra.id)}>BAIXAR ORDEM DE COMPRA</button>              
-            </div>
-          )}
-        </main>
+        {/* === Etapa 2: Lista de Materiais e Modal === */}
+        {progresso === 2 && (
+          <>
+            <button onClick={abrirModal}>Adicionar Material</button>
 
+            {materiaisSelecionados.length === 0 ? (
+              <p>Nenhum material adicionado ainda</p>
+            ) : (
+              <ul>
+                {materiaisSelecionados.map((mat, idx) => (
+                  <li key={idx}>
+                    <div className={style.listaPrincipal}>
+                      {mat.tipoMaterial} - Qtd: {mat.Quantidade} - Valor Unitário:{" "}
+                      {mat["Valor Unitário"]} - IPI: {mat.IPI} - Total:{" "}
+                      {mat.Total || "0,00"}
+                      <button
+                        onClick={() => {
+                          setMateriaisSelecionados((prev) => {
+                            const copy = [...prev];
+                            copy[idx].expandido = !copy[idx].expandido;
+                            return copy;
+                          });
+                        }}
+                      >
+                        {mat.expandido ? "Ver Menos" : "Ver Mais"}
+                      </button>
+                    </div>
+                    {mat.expandido && (
+                      <div className={style.listaExpandida}>
+                        <p>Descrição: {mat["Descrição"]}</p>
+                        <p>Rastreabilidade: {mat.Rastreabilidade}</p>
+                        <p>Valor por Kg: {mat["Valor por Kg"]}</p>
+                        <p>Valor por peça: {mat["Valor por peça"]}</p>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* === Modal de adicionar material === */}
+       {modalAberto && (
+  <div className={style.modalOverlay}>
+    <div className={style.modalContent}>
+      <h3>Adicionar Material</h3>
+
+      <div className={style.modalGrid}>
+        {/* Select do Material */}
+        <div className={style.inputGroup}>
+          <p>Material <span style={{ color: "red" }}>*</span></p>
+          <select
+            value={materialSelecionado}
+            onChange={(e) => setMaterialSelecionado(e.target.value)}
+          >
+            <option value="">Selecione um material</option>
+            {listaMateriais.map((mat) => (
+              <option key={mat.id} value={mat.id}>
+                {mat.tipoMaterial}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Quantidade */}
+        <div className={style.inputGroup}>
+          <p>Quantidade <span style={{ color: "red" }}>*</span></p>
+          <input
+            type="text"
+            placeholder="Número de peças/unidades"
+            value={quantidadeMaterial}
+            onChange={(e) => setQuantidadeMaterial(e.target.value)}
+          />
+        </div>
+        {/* Valor Unitário */}
+        <div className={style.inputGroup}>
+          <p>Valor Unitário</p>
+          <input
+            type="text"
+            placeholder="Ex: 12,50"
+            value={valoresInput["Valor Unitário"] || ""}
+            onChange={(e) =>
+              handleInputChange("Valor Unitário", e.target.value)
+            }
+          />
+        </div>
+<div className={style.inputGroup}>
+          <p>Ratreabilidade</p>
+          <input
+            type="text"
+            placeholder="Ex:21345-2015"
+            value={valoresInput["Rastreabilidade"] || ""}
+            onChange={(e) =>
+              handleInputChange("Rastreabilidade", formatarPagamento(e.target.value))
+            }
+          />
+        </div>
+
+        {/* Valor Unitário */}
+        <div className={style.inputGroup}>
+          <p>Valor Unitário</p>
+          <input
+            type="text"
+            placeholder="Ex: 12,50"
+            value={valoresInput["Valor Unitário"] || ""}
+            onChange={(e) =>
+              handleInputChange("Valor Unitário", e.target.value)
+            }
+          />
+        </div>
+
+       {/* Valor Unitário */}
+        <div className={style.inputGroup}>
+          <p>Valor Unitário</p>
+          <input
+            type="text"
+            placeholder="Ex: 12,50"
+            value={valoresInput["Valor Unitário"] || ""}
+            onChange={(e) =>
+              handleInputChange("Valor Unitário", e.target.value)
+            }
+          />
+        </div>
+        {/* Valor Unitário */}
+        <div className={style.inputGroup}>
+          <p>Valor Unitário</p>
+          <input
+            type="text"
+            placeholder="Ex: 12,50"
+            value={valoresInput["Valor Unitário"] || ""}
+            onChange={(e) =>
+              handleInputChange("Valor Unitário", e.target.value)
+            }
+          />
+        </div>
+        {/* Valor Unitário */}
+        <div className={style.inputGroup}>
+          <p>Valor Unitário</p>
+          <input
+            type="text"
+            placeholder="Ex: 12,50"
+            value={valoresInput["Valor Unitário"] || ""}
+            onChange={(e) =>
+              handleInputChange("Valor Unitário", e.target.value)
+            }
+          />
+        </div>
+      </div>
+
+      <div className={style.modalButtons}>
+        <button onClick={adicionarMaterial}>Adicionar</button>
+        <button onClick={fecharModal}>Fechar</button>
+      </div>
+    </div>
+  </div>
+)}
+
+          </>
+        )}
+
+        {/* === Botões de navegação === */}
         <div className={style.botoes}>
           {progresso > 1 && progresso < 4 && (
-            <button onClick={voltarProgresso}>VOLTAR</button>
+            <button onClick={voltarProgresso}>Voltar</button>
           )}
-
-          {progresso < 4 && (
-            <button onClick={avancarProgresso}>{nomeBotao}</button>
+          {progresso < 3 && <button onClick={avancarProgresso}>Avançar</button>}
+          {progresso === 3 && (
+            <button onClick={finalizarOrdemDeCompra}>Finalizar</button>
           )}
-
-          {progresso === 4 && (
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={reiniciar}>CRIAR NOVA ORDEM DE COMPRA</button>
-              <button onClick={() => navigate("/Material")}>
-                IR PARA DASHBOARD
-              </button>
-            </div>
-          )}
+          {progresso === 4 && <button onClick={reiniciar}>Reiniciar</button>}
         </div>
-      </section>
-    </>
-  );
+      </main>
+    </section>
+  </>
+);
 }
 
 export default OrdemDeCompra;
