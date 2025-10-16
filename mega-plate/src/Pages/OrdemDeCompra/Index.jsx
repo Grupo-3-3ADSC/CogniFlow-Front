@@ -7,15 +7,11 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../provider/api";
 import { jwtDecode } from "jwt-decode";
-import { jsPDF } from "jspdf";
 import NavBar from "../../components/NavBar";
 import {
   toastError,
   toastSuccess,
 } from "../../components/toastify/ToastifyService";
-import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
-import baixarOrdemDeCompraPDF from "../../tools/baixarOrdemDeCompraPDF";
 
 export function OrdemDeCompra() {
   const [listaFornecedores, setListaFornecedores] = useState([]);
@@ -28,15 +24,17 @@ export function OrdemDeCompra() {
   const [modalAberto, setModalAberto] = useState(false);
   const [materialSelecionado, setMaterialSelecionado] = useState("");
   const [quantidadeMaterial, setQuantidadeMaterial] = useState("");
+  const [modalVerMaisAberto, setModalVerMaisAberto] = useState(false);
+const [materialVerMais, setMaterialVerMais] = useState(null);
+
   const navigate = useNavigate();
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
-
-  // Funções API
+  // API
   const getFornecedores = useCallback(() => {
     api
       .get("/fornecedores")
       .then((res) => setListaFornecedores(res.data))
-      .catch((err) => toastError("Erro ao buscar fornecedores"));
+      .catch(() => toastError("Erro ao buscar fornecedores"));
   }, []);
 
   const getMateriaPrima = useCallback(() => {
@@ -52,24 +50,20 @@ export function OrdemDeCompra() {
     try {
       const decoded = jwtDecode(token);
       return decoded.id;
-    } catch (err) {
-      console.error("Erro ao decodificar token:", err);
+    } catch {
       return null;
     }
   };
 
   useEffect(() => {
     const token = sessionStorage.getItem("authToken");
-    if (!token) {
-      navigate("/");
-    } else {
+    if (!token) navigate("/");
+    else {
       const { exp } = jwtDecode(token);
       if (Date.now() >= exp * 1000) {
         sessionStorage.removeItem("authToken");
         navigate("/");
-      } else {
-        setAutenticacaoPassou(true);
-      }
+      } else setAutenticacaoPassou(true);
     }
   }, [navigate]);
 
@@ -78,7 +72,7 @@ export function OrdemDeCompra() {
     getMateriaPrima();
   }, [getFornecedores, getMateriaPrima]);
 
-  // Funções de formatação
+  // Formatação
   const formatarPagamento = (valor) => {
     const nums = valor.replace(/\D/g, "");
     if (!nums) return "";
@@ -88,7 +82,7 @@ export function OrdemDeCompra() {
   };
 
   const formatarValorMonetario = (valor) => {
-    const nums = valor.replace(/[^\d]/g, "");
+    const nums = valor.replace(/\D/g, "");
     if (!nums) return "";
     if (nums.length === 1) return `0,0${nums}`;
     if (nums.length === 2) return `0,${nums}`;
@@ -97,33 +91,22 @@ export function OrdemDeCompra() {
     return `${inteiros.replace(/\B(?=(\d{3})+(?!\d))/g, ".")},${decimais}`;
   };
 
-  const formatarRastreio = (valor) => {
-    return valor
+  const formatarRastreio = (valor) =>
+    valor
       .toUpperCase()
       .replace(/[^A-Z0-9\-\/]/g, "")
       .substring(0, 20);
-  };
 
   const formatarQuantidade = (valor) => valor.replace(/\D/g, "");
 
-  const formatarIPI = (valor) => {
-    const nums = valor.replace(/[^\d,]/g, "");
-    if (nums.includes(",")) {
-      const partes = nums.split(",");
-      return `${partes[0]},${partes[1].slice(0, 2)}`;
-    }
-    return nums || "0,00";
-  };
-
   const validarCamposValor = (valoresInput) => {
     const valorKg = valoresInput["Valor por Kg"];
-    const valorPeca = valoresInput["Valor por peça"];
-    if (!valorKg && !valorPeca) {
+    const valorPeca = valoresInput["Valor por Peça"];
+    if (!valorKg && !valorPeca)
       return {
         "Valor por Kg": "Preencha o valor por Kg OU o valor por peça",
-        "Valor por peça": "Preencha o valor por Kg OU o valor por peça",
+        "Valor por Peça": "Preencha o valor por Kg OU o valor por peça",
       };
-    }
     return {};
   };
 
@@ -140,29 +123,24 @@ export function OrdemDeCompra() {
             optionLabel: "nomeFantasia",
             optionValue: "fornecedorId",
             required: true,
-            placeholder: "Selecione o fornecedor da lista",
-            validationMessage: "Selecione um fornecedor válido.",
+            placeholder: "Selecione o fornecedor",
           },
           {
             id: "prazo",
             titulo: "Prazo de entrega",
             tipo: "date",
-            placeholder: "Selecione a data de entrega",
             required: true,
-            validationMessage: "Informe uma data de entrega válida",
+            placeholder: "Data de entrega",
           },
           {
             id: "pagamento",
             titulo: "Cond. Pagamento",
             tipo: "text",
-            placeholder: "Ex: 30 dias ou 30/60 dias",
-            pattern: "^\\d{1,3}(\\/\\d{1,3})?\\s?dias?$",
             required: true,
-            validationMessage: "Use formato: 30 dias ou 30/60 dias",
+            placeholder: "30 dias ou 30/60 dias",
             formatador: formatarPagamento,
           },
         ],
-        imagem: progressoImg,
       },
       2: {
         inputs: [
@@ -174,137 +152,40 @@ export function OrdemDeCompra() {
             optionLabel: "tipoMaterial",
             optionValue: "id",
             required: true,
-            placeholder: "Selecione o material",
           },
           {
             id: "descricao",
-            titulo: "Descrição do material",
+            titulo: "Descrição",
             tipo: "text",
-            placeholder:
-              "Descreva detalhadamente o material (Ex: Parafuso galvanizado M6)",
-            pattern: "^[\\w\\s\\-\\.]{3,100}$",
             required: true,
-            validationMessage: "Descrição deve ter entre 3 e 100 caracteres.",
           },
           {
             id: "quantidade",
             titulo: "Quantidade",
             tipo: "text",
-            placeholder: "Número de peças/unidades (Ex: 100)",
-            pattern: "^\\d{1,5}$",
             required: true,
-            validationMessage:
-              "Quantidade inválida. Use apenas números (1-99999).",
-            formatador: formatarQuantidade,
           },
           {
             id: "rastreio",
             titulo: "Rastreabilidade",
             tipo: "text",
-            placeholder: "Código de rastreamento (Max 20 caracteres)",
-            pattern: "^[A-Za-z0-9\\-\\/]{16,20}$",
             required: true,
-            validationMessage:
-              "Código inválido. Use 16-20 caracteres alfanuméricos.",
-            formatador: formatarRastreio,
           },
+          { id: "valorKg", titulo: "Valor por Kg", tipo: "text" },
+          { id: "valorPeca", titulo: "Valor por Peça", tipo: "text" },
           {
-            id: "valorkg",
-            titulo: "Valor por Kg",
-            tipo: "text",
-            placeholder: "Digite o valor por Kg (Ex: 12,50)",
-            required: false,
-            validationMessage: "Valor inválido. Use formato: 12,50",
-            formatador: formatarValorMonetario,
-          },
-          {
-            id: "valorpeca",
-            titulo: "Valor por peça",
-            tipo: "text",
-            placeholder: "Preço unitário da peça (Ex: 5,00)",
-            required: false,
-            validationMessage: "Valor inválido. Use formato: 5,00",
-            formatador: formatarValorMonetario,
-          },
-          {
-            id: "valorunit",
+            id: "valorUnit",
             titulo: "Valor Unitário",
             tipo: "text",
-            placeholder: "Valor final por unidade (Ex: 9,90)",
             required: true,
-            validationMessage: "Valor inválido. Use formato: 9,90",
-            formatador: formatarValorMonetario,
           },
           { id: "total", titulo: "Total", tipo: "text", disabled: true },
-          { id: "ipi", titulo: "IPI", tipo: "text", disabled: true },
         ],
-        imagem: progressoConcluido,
       },
-      3: { inputs: [], imagem: progresso2Concluido },
-      4: { inputs: [], imagem: progresso3Concluido },
     }),
     [listaFornecedores, listaMateriais]
   );
 
-  const validarCampo = useCallback((input, valor) => {
-    if (!input.required) return { valido: true };
-    if (!valor || valor.trim() === "")
-      return { valido: false, erro: `${input.titulo} é obrigatório` };
-    if (input.pattern && !new RegExp(input.pattern).test(valor))
-      return { valido: false, erro: input.validationMessage };
-    return { valido: true };
-  }, []);
-
-  const validarFormulario = useCallback(() => {
-    const inputs = etapas[progresso]?.inputs || [];
-    const novosErros = {};
-    const mensagensErro = [];
-
-    if (progresso === 2) {
-      const errosValor = validarCamposValor(valoresInput);
-      Object.assign(novosErros, errosValor);
-      Object.values(errosValor).forEach((e) =>
-        mensagensErro.includes(e) ? null : mensagensErro.push(e)
-      );
-    }
-
-    for (let input of inputs) {
-      if (input.titulo === "Total" || input.disabled) continue;
-      const valor =
-        input.tipo === "select"
-          ? valoresInput[input.titulo + "Id"]
-          : valoresInput[input.titulo];
-      const validacao = validarCampo(input, valor);
-      if (!validacao.valido) {
-        novosErros[input.titulo] = validacao.erro;
-        if (!mensagensErro.includes(validacao.erro))
-          mensagensErro.push(validacao.erro);
-      }
-    }
-
-    mensagensErro.forEach((msg) => toastError(msg));
-    setErrosValidacao(novosErros);
-    return mensagensErro.length === 0;
-  }, [etapas, progresso, validarCampo, valoresInput]);
-
-  // Navegação
-  const avancarProgresso = useCallback(() => {
-    if (!validarFormulario()) return;
-    setProgresso((prev) => Math.min(prev + 1, 4));
-  }, [validarFormulario]);
-
-  const voltarProgresso = useCallback(() => {
-    setProgresso((prev) => Math.max(prev - 1, 1));
-    setErrosValidacao({});
-  }, []);
-
-  const reiniciar = useCallback(() => {
-    setProgresso(1);
-    setValoresInput({});
-    setErrosValidacao({});
-  }, []);
-
-  // Handle input
   const handleInputChange = useCallback(
     (titulo, valor, isSelect = false, formatador = null) => {
       let valorFormatado = valor;
@@ -317,32 +198,70 @@ export function OrdemDeCompra() {
           ...(isSelect && { [titulo + "Id"]: valor }),
         };
 
-        // Atualiza IPI automaticamente se material selecionado
-        if (titulo === "Material") {
-          const material = listaMateriais.find(
-            (m) => m.id.toString() === valor.toString()
-          );
-          if (material)
-            newState["IPI"] = formatarIPI(material.IPI?.toString() || "0");
+        // Total automático
+        if (titulo === "Valor Unitário" || titulo === "Quantidade") {
+          const valorUnit =
+            parseFloat((newState["Valor Unitário"] || "0").replace(",", ".")) ||
+            0;
+          const quantidade = parseInt(newState["Quantidade"] || "0") || 0;
+          newState.Total =
+            quantidade > 0 && valorUnit > 0
+              ? formatarValorMonetario(
+                  String(Math.round(valorUnit * quantidade * 100) / 100)
+                )
+              : "0,00";
         }
 
         return newState;
       });
-
-      if (errosValidacao[titulo]) {
-        setErrosValidacao((prev) => ({ ...prev, [titulo]: "" }));
-      }
     },
-    [errosValidacao, listaMateriais]
+    []
   );
 
-  // MODAL
+  // Modal
   const abrirModal = () => setModalAberto(true);
   const fecharModal = () => {
     setModalAberto(false);
     setMaterialSelecionado("");
     setQuantidadeMaterial("");
+    setValoresInput((prev) => ({
+      ...prev,
+      Descrição: "",
+      Rastreabilidade: "",
+      "Valor Unitário": "",
+      "Valor por Kg": "",
+      "Valor por Peça": "",
+      Total: "0,00",
+    }));
   };
+
+  const abrirModalVerMais = (mat) => {
+  setMaterialVerMais(mat);
+  setModalVerMaisAberto(true);
+};
+
+const fecharModalVerMais = () => {
+  setMaterialVerMais(null);
+  setModalVerMaisAberto(false);
+};
+
+
+  useEffect(() => {
+    const valorUnit =
+      parseFloat((valoresInput["Valor Unitário"] || "0").replace(",", ".")) ||
+      0;
+    const quantidade = parseInt(quantidadeMaterial || "0") || 0;
+
+    const total =
+      quantidade > 0 && valorUnit > 0
+        ? (Math.round(valorUnit * quantidade * 100) / 100)
+            .toFixed(2)
+            .replace(".", ",")
+        : "0,00";
+
+    setValoresInput((prev) => ({ ...prev, Total: total }));
+  }, [valoresInput["Valor Unitário"], quantidadeMaterial]);
+
   const adicionarMaterial = () => {
     if (!materialSelecionado || !quantidadeMaterial) {
       toastError("Selecione material e quantidade");
@@ -353,7 +272,6 @@ export function OrdemDeCompra() {
       (m) => m.id === Number(materialSelecionado)
     );
 
-    // Evita duplicado
     if (materiaisSelecionados.some((m) => m.id === mat.id)) {
       toastError("Este material já foi adicionado");
       return;
@@ -361,23 +279,19 @@ export function OrdemDeCompra() {
 
     setMateriaisSelecionados((prev) => [
       ...prev,
-      { ...mat, Quantidade: quantidadeMaterial },
+      {
+        ...mat,
+        Quantidade: quantidadeMaterial,
+        "Valor Unitário": valoresInput["Valor Unitário"] || "0,00",
+        "Valor por Kg": valoresInput["Valor por Kg"] || "0,00",
+        "Valor por Peça": valoresInput["Valor por Peça"] || "0,00",
+        Total: valoresInput.Total || "0,00",
+        Descrição: valoresInput.Descrição || "",
+        Rastreabilidade: valoresInput.Rastreabilidade || "",
+      },
     ]);
     fecharModal();
   };
-
-  // Total automático
-  useEffect(() => {
-    const valorUnit =
-      parseFloat((valoresInput["Valor Unitário"] || "0").replace(",", ".")) ||
-      0;
-    const quantidade = parseInt(valoresInput["Quantidade"] || "0") || 0;
-    const total = valorUnit * quantidade;
-    setValoresInput((prev) => ({
-      ...prev,
-      Total: total > 0 ? total.toFixed(2).replace(".", ",") : "0,00",
-    }));
-  }, [valoresInput["Valor Unitário"], valoresInput["Quantidade"]]);
 
   // Finalizar ordem
   const finalizarOrdemDeCompra = useCallback(() => {
@@ -389,9 +303,8 @@ export function OrdemDeCompra() {
       materiais: materiaisSelecionados.map((mat) => ({
         estoqueId: mat.id,
         valorKg: parseFloat(mat["Valor por Kg"]?.replace(",", ".") || 0),
-        valorPeca: parseFloat(mat["Valor por peça"]?.replace(",", ".") || 0),
-        descricaoMaterial: mat["Descrição"],
-        ipi: parseFloat(mat.IPI?.replace(",", ".") || 0),
+        valorPeca: parseFloat(mat["Valor por Peça"]?.replace(",", ".") || 0),
+        descricaoMaterial: mat.Descrição,
         rastreabilidade: mat.Rastreabilidade,
         quantidade: parseFloat(mat.Quantidade || 1),
         valorUnitario: parseFloat(
@@ -404,8 +317,8 @@ export function OrdemDeCompra() {
       .post("/ordemDeCompra", dadosApi)
       .then((res) => {
         const novaId = res?.data?.id;
-        if (!novaId || isNaN(novaId)) {
-          toastError("Erro ao obter o ID da nova ordem de compra.");
+        if (!novaId) {
+          toastError("Erro ao obter ID da ordem");
           return;
         }
         return api.get(`/ordemDeCompra/${novaId}`);
@@ -416,36 +329,26 @@ export function OrdemDeCompra() {
         toastSuccess("Ordem cadastrada com sucesso!");
         setProgresso(4);
       })
-      .catch((err) => {
-        toastError(
-          err.response?.data?.message || "Erro ao criar ordem de compra"
-        );
-        setErrosValidacao({
-          geral: "Erro ao criar ordem de compra. Verifique os dados.",
-        });
-      });
+      .catch(() => toastError("Erro ao criar ordem de compra"));
   }, [materiaisSelecionados, valoresInput]);
 
-  const image = etapas[progresso]?.imagem || progressoImg;
+  return (
+    <>
+      <NavBar />
+      <section className={style.ordemDeCompra}>
+        <div className={style.progressoSecao}>
+          <img src={progressoImg} alt="Progresso" />
+        </div>
+        <main className={style.formContent}>
+          <h1>
+            {progresso === 4
+              ? "FORMULÁRIO FINALIZADO COM SUCESSO!"
+              : "ORDEM DE COMPRA"}
+          </h1>
 
-return (
-  <>
-    <NavBar />
-    <section className={style.ordemDeCompra}>
-      <div className={style.progressoSecao}>
-        <img src={etapas[progresso]?.imagem || progressoImg} alt="Progresso" />
-      </div>
-      <main className={style.formContent}>
-        <h1>
-          {progresso === 4
-            ? "FORMULÁRIO FINALIZADO COM SUCESSO!"
-            : "ORDEM DE COMPRA"}
-        </h1>
-
-        {/* === Etapa 1: Inputs do formulário principal === */}
-        {progresso === 1 && (
-          <div className={style.inputs}>
-            {etapas[1].inputs.map((input) => (
+          {/* === Etapa 1 === */}
+          {progresso === 1 &&
+            etapas[1].inputs.map((input) => (
               <div key={input.id} className={style.inputGroup}>
                 <p>
                   {input.titulo}
@@ -481,183 +384,257 @@ return (
                 )}
               </div>
             ))}
-          </div>
-        )}
 
-        {/* === Etapa 2: Lista de Materiais e Modal === */}
-        {progresso === 2 && (
-          <>
-            <button onClick={abrirModal}>Adicionar Material</button>
+          {/* === Etapa 2 === */}
+          {progresso === 2 && (
+            <>
+              <button onClick={abrirModal}>Adicionar Material</button>
+              {materiaisSelecionados.length === 0 ? (
+                <p>Nenhum material adicionado ainda</p>
+              ) : (
+                <div className={style.ordemDeCompraTabelaWrapper}>
+                  <table className={style.ordemDeCompraTabela}>
+                    <thead>
+                      <tr>
+                        <th>Material</th>
+                        <th>Quantidade</th>
+                        <th>Valor Unitário</th>
+                        <th>Total</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {materiaisSelecionados.map((mat, idx) => (
+                        <tr key={idx}>
+                          <td>{mat.tipoMaterial}</td>
+                          <td>{mat.Quantidade}</td>
+                          <td>{mat["Valor Unitário"]}</td>
+                          <td>{mat.Total}</td>
+                         <td>
+  <button
+    className={style.botaoEditar}
+    onClick={() => editarMaterial(idx)}
+  >
+    Editar
+  </button>
+  <button
+    className={style.botaoVerMais}
+    onClick={() => abrirModalVerMais(mat)}
+  >
+    Ver Mais
+  </button>
+  <button
+    className={style.botaoExcluir}
+    onClick={() =>
+      setMateriaisSelecionados((prev) => prev.filter((_, i) => i !== idx))
+    }
+  >
+    Excluir
+  </button>
+</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
-            {materiaisSelecionados.length === 0 ? (
-              <p>Nenhum material adicionado ainda</p>
-            ) : (
-              <ul>
-                {materiaisSelecionados.map((mat, idx) => (
-                  <li key={idx}>
-                    <div className={style.listaPrincipal}>
-                      {mat.tipoMaterial} - Qtd: {mat.Quantidade} - Valor Unitário:{" "}
-                      {mat["Valor Unitário"]} - IPI: {mat.IPI} - Total:{" "}
-                      {mat.Total || "0,00"}
-                      <button
-                        onClick={() => {
-                          setMateriaisSelecionados((prev) => {
-                            const copy = [...prev];
-                            copy[idx].expandido = !copy[idx].expandido;
-                            return copy;
-                          });
-                        }}
-                      >
-                        {mat.expandido ? "Ver Menos" : "Ver Mais"}
-                      </button>
-                    </div>
-                    {mat.expandido && (
-                      <div className={style.listaExpandida}>
-                        <p>Descrição: {mat["Descrição"]}</p>
-                        <p>Rastreabilidade: {mat.Rastreabilidade}</p>
-                        <p>Valor por Kg: {mat["Valor por Kg"]}</p>
-                        <p>Valor por peça: {mat["Valor por peça"]}</p>
+              {/* Modal */}
+              {modalAberto && (
+                <div className={style.modalOverlay}>
+                  <div className={style.modalContent}>
+                    <h3>Adicionar Material</h3>
+                    <div className={style.modalGrid}>
+                      <div className={style.inputGroup}>
+                        <p>Material*</p>
+                        <select
+                          value={materialSelecionado}
+                          onChange={(e) =>
+                            setMaterialSelecionado(e.target.value)
+                          }
+                        >
+                          <option value="">Selecione</option>
+                          {listaMateriais.map((mat) => (
+                            <option key={mat.id} value={mat.id}>
+                              {mat.tipoMaterial}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
 
-            {/* === Modal de adicionar material === */}
-       {modalAberto && (
+                      <div className={style.inputGroup}>
+                        <p>Quantidade*</p>
+                        <input
+                          type="text"
+                          placeholder="Número de peças"
+                          value={quantidadeMaterial}
+                          onChange={(e) =>
+                            setQuantidadeMaterial(
+                              formatarQuantidade(e.target.value)
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div className={style.inputGroup}>
+                        <p>Descrição*</p>
+                        <input
+                          type="text"
+                          placeholder="Descrição do material"
+                          value={valoresInput.Descrição || ""}
+                          onChange={(e) =>
+                            handleInputChange("Descrição", e.target.value)
+                          }
+                        />
+                      </div>
+
+                      <div className={style.inputGroup}>
+                        <p>Rastreabilidade*</p>
+                        <input
+                          type="text"
+                          placeholder="Ex: 12345-2025"
+                          value={valoresInput.Rastreabilidade || ""}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "Rastreabilidade",
+                              formatarRastreio(e.target.value)
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div className={style.inputGroup}>
+                        <p>Valor Unitário*</p>
+                        <input
+                          type="text"
+                          placeholder="Ex: 12,50"
+                          value={valoresInput["Valor Unitário"] || ""}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "Valor Unitário",
+                              formatarValorMonetario(e.target.value)
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div className={style.inputGroup}>
+                        <p>Valor por Kg</p>
+                        <input
+                          type="text"
+                          placeholder="Ex: 12,50"
+                          value={valoresInput["Valor por Kg"] || ""}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "Valor por Kg",
+                              formatarValorMonetario(e.target.value)
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div className={style.inputGroup}>
+                        <p>Valor por Peça</p>
+                        <input
+                          type="text"
+                          placeholder="Ex: 12,50"
+                          value={valoresInput["Valor por Peça"] || ""}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "Valor por Peça",
+                              formatarValorMonetario(e.target.value)
+                            )
+                          }
+                        />
+                      </div>
+
+                      <div className={style.inputGroup}>
+                        <p>Total</p>
+                        <input
+                          type="text"
+                          value={valoresInput.Total || "0,00"}
+                          disabled
+                        />
+                      </div>
+                    </div>
+
+                    <div className={style.modalButtons}>
+                      <button onClick={adicionarMaterial}>Adicionar</button>
+                      <button onClick={fecharModal}>Fechar</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {modalVerMaisAberto && materialVerMais && (
   <div className={style.modalOverlay}>
     <div className={style.modalContent}>
-      <h3>Adicionar Material</h3>
-
+      <h3>Detalhes do Material</h3>
       <div className={style.modalGrid}>
-        {/* Select do Material */}
         <div className={style.inputGroup}>
-          <p>Material <span style={{ color: "red" }}>*</span></p>
-          <select
-            value={materialSelecionado}
-            onChange={(e) => setMaterialSelecionado(e.target.value)}
-          >
-            <option value="">Selecione um material</option>
-            {listaMateriais.map((mat) => (
-              <option key={mat.id} value={mat.id}>
-                {mat.tipoMaterial}
-              </option>
-            ))}
-          </select>
+          <p>Material</p>
+          <input type="text" value={materialVerMais.tipoMaterial} disabled />
         </div>
-
-        {/* Quantidade */}
         <div className={style.inputGroup}>
-          <p>Quantidade <span style={{ color: "red" }}>*</span></p>
-          <input
-            type="text"
-            placeholder="Número de peças/unidades"
-            value={quantidadeMaterial}
-            onChange={(e) => setQuantidadeMaterial(e.target.value)}
-          />
+          <p>Quantidade</p>
+          <input type="text" value={materialVerMais.Quantidade} disabled />
         </div>
-        {/* Valor Unitário */}
         <div className={style.inputGroup}>
           <p>Valor Unitário</p>
-          <input
-            type="text"
-            placeholder="Ex: 12,50"
-            value={valoresInput["Valor Unitário"] || ""}
-            onChange={(e) =>
-              handleInputChange("Valor Unitário", e.target.value)
-            }
-          />
+          <input type="text" value={materialVerMais["Valor Unitário"]} disabled />
         </div>
-<div className={style.inputGroup}>
-          <p>Ratreabilidade</p>
-          <input
-            type="text"
-            placeholder="Ex:21345-2015"
-            value={valoresInput["Rastreabilidade"] || ""}
-            onChange={(e) =>
-              handleInputChange("Rastreabilidade", formatarPagamento(e.target.value))
-            }
-          />
-        </div>
-
-        {/* Valor Unitário */}
         <div className={style.inputGroup}>
-          <p>Valor Unitário</p>
-          <input
-            type="text"
-            placeholder="Ex: 12,50"
-            value={valoresInput["Valor Unitário"] || ""}
-            onChange={(e) =>
-              handleInputChange("Valor Unitário", e.target.value)
-            }
-          />
+          <p>Valor por Kg</p>
+          <input type="text" value={materialVerMais["Valor por Kg"]} disabled />
         </div>
-
-       {/* Valor Unitário */}
         <div className={style.inputGroup}>
-          <p>Valor Unitário</p>
-          <input
-            type="text"
-            placeholder="Ex: 12,50"
-            value={valoresInput["Valor Unitário"] || ""}
-            onChange={(e) =>
-              handleInputChange("Valor Unitário", e.target.value)
-            }
-          />
+          <p>Valor por Peça</p>
+          <input type="text" value={materialVerMais["Valor por Peça"]} disabled />
         </div>
-        {/* Valor Unitário */}
         <div className={style.inputGroup}>
-          <p>Valor Unitário</p>
-          <input
-            type="text"
-            placeholder="Ex: 12,50"
-            value={valoresInput["Valor Unitário"] || ""}
-            onChange={(e) =>
-              handleInputChange("Valor Unitário", e.target.value)
-            }
-          />
+          <p>Total</p>
+          <input type="text" value={materialVerMais.Total} disabled />
         </div>
-        {/* Valor Unitário */}
         <div className={style.inputGroup}>
-          <p>Valor Unitário</p>
-          <input
-            type="text"
-            placeholder="Ex: 12,50"
-            value={valoresInput["Valor Unitário"] || ""}
-            onChange={(e) =>
-              handleInputChange("Valor Unitário", e.target.value)
-            }
-          />
+          <p>Descrição</p>
+          <input type="text" value={materialVerMais.Descrição} disabled />
+        </div>
+        <div className={style.inputGroup}>
+          <p>Rastreabilidade</p>
+          <input type="text" value={materialVerMais.Rastreabilidade} disabled />
         </div>
       </div>
 
       <div className={style.modalButtons}>
-        <button onClick={adicionarMaterial}>Adicionar</button>
-        <button onClick={fecharModal}>Fechar</button>
+        <button onClick={fecharModalVerMais}>Fechar</button>
       </div>
     </div>
   </div>
 )}
 
-          </>
-        )}
 
-        {/* === Botões de navegação === */}
-        <div className={style.botoes}>
-          {progresso > 1 && progresso < 4 && (
-            <button onClick={voltarProgresso}>Voltar</button>
-          )}
-          {progresso < 3 && <button onClick={avancarProgresso}>Avançar</button>}
-          {progresso === 3 && (
-            <button onClick={finalizarOrdemDeCompra}>Finalizar</button>
-          )}
-          {progresso === 4 && <button onClick={reiniciar}>Reiniciar</button>}
-        </div>
-      </main>
-    </section>
-  </>
-);
+          <div className={style.botoes}>
+            {progresso > 1 && progresso < 4 && (
+              <button onClick={() => setProgresso((p) => p - 1)}>Voltar</button>
+            )}
+            {progresso < 3 && (
+              <button onClick={() => setProgresso((p) => p + 1)}>
+                Avançar
+              </button>
+            )}
+            {progresso === 3 && (
+              <button onClick={finalizarOrdemDeCompra}>Finalizar</button>
+            )}
+            {progresso === 4 && (
+              <button onClick={() => setProgresso(1)}>Reiniciar</button>
+            )}
+          </div>
+        </main>
+      </section>
+    </>
+  );
 }
 
 export default OrdemDeCompra;
