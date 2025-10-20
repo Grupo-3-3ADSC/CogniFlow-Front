@@ -149,9 +149,10 @@ const NavBar = () => {
             {showGestaoSubmenu && (
               <ul className="submenu-list">
                 <li onClick={() => navigate('/TabelaUsuarios')}>Listagem de Usuários</li>
+                <li onClick={() => navigate('/ListagemFornecedor')}>Listagem de Fornecedores</li>
               </ul>
             )}
-             <li className="has-submenu" title="Dashboards" onClick={toggleDashSubmenu}>
+            <li className="has-submenu" title="Dashboards" onClick={toggleDashSubmenu}>
               <img className="icons-menu" src={iconDash} alt="Dashboards" />
               <span>Dashboards</span>
               <svg className={`arrow-icon ${showDashSubmenu ? 'rotate' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -164,33 +165,33 @@ const NavBar = () => {
                 <li onClick={() => navigate('/DashEstoque')}>Dashboard Estoque</li>
               </ul>
             )}
-              <li title="Fornecedores" onClick={() => navigate('/Fornecedor')}>
+            <li title="Fornecedores" onClick={() => navigate('/Fornecedor')}>
               <img className="icons-cifrao" src={iconCifrao} alt="Fornecedor" />
               <span>Custos por Fornecedor</span>
             </li>
-            {usuarioLista?.cargo?.id === 2 && ( 
-            <li className="has-submenu" title="Formulários" onClick={toggleFormSubmenu}>
-              <img className="icons-menu" src={iconFormularios} alt="Formulários" />
-              <span>Cadastros</span>
-              <svg className={`arrow-icon ${showFormSubmenu ? 'rotate' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </li>
-             )}
+            {usuarioLista?.cargo?.id === 2 && (
+              <li className="has-submenu" title="Formulários" onClick={toggleFormSubmenu}>
+                <img className="icons-menu" src={iconFormularios} alt="Formulários" />
+                <span>Cadastros</span>
+                <svg className={`arrow-icon ${showFormSubmenu ? 'rotate' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </li>
+            )}
             {showFormSubmenu && (
               <ul className="submenu-list">
 
-       
-               {usuarioLista?.cargo?.id === 2 && ( // Verifica se o cargo do usuário logado é gestor (id === 2)
+
+                {usuarioLista?.cargo?.id === 2 && ( // Verifica se o cargo do usuário logado é gestor (id === 2)
                   <li onClick={() => navigate('/cadastro')}>Cadastrar Usuários</li>
-              )} 
-               {usuarioLista?.cargo?.id === 2 && ( // Verifica se o cargo do usuário logado é gestor (id === 2)
+                )}
+                {usuarioLista?.cargo?.id === 2 && ( // Verifica se o cargo do usuário logado é gestor (id === 2)
                   <li onClick={() => navigate('/CadastroFornecedor')}>Cadastro de Fornecedor</li>
-               )} 
+                )}
               </ul>
             )}
-         
-            {usuarioLista?.cargo?.id === 2 && ( 
+
+            {usuarioLista?.cargo?.id === 2 && (
               <li className="has-submenu" title="Históricos" onClick={toggleHistoricoSubmenu}>
                 <img className="icons-historico" src={iconHistorico} alt="Históricos" />
                 <span>Históricos</span>
@@ -198,7 +199,7 @@ const NavBar = () => {
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
               </li>
-             )} 
+            )}
             {showHistoricoSubmenu && (
               <ul className="submenu-list">
 
@@ -210,15 +211,15 @@ const NavBar = () => {
 
 
             )}
-            
-          
-         {usuarioLista?.cargo?.id === 2 && ( 
+
+
+            {usuarioLista?.cargo?.id === 2 && (
               <li title="Relatórios" onClick={() => navigate('/relatorios')}>
                 <img className="icons-menu" src={iconFormularios} alt="Relatórios" />
                 <span>Relatórios</span>
               </li>
-         )}
-           
+            )}
+
 
 
             <li title="Perfil" onClick={() => navigate('/Perfil')}>

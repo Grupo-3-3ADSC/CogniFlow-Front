@@ -26,6 +26,8 @@ export function OrdemDeCompra() {
   const [valoresInput, setValoresInput] = useState({});
   const [errosValidacao, setErrosValidacao] = useState({});
   const [modalAberto, setModalAberto] = useState(false);
+  const [modalEdicao, setModalEdicao] = useState(false); // ✅ Novo estado
+  const [materialEditandoIndex, setMaterialEditandoIndex] = useState(null); // ✅ Índice do material sendo editado
   const [materialSelecionado, setMaterialSelecionado] = useState("");
   const [quantidadeMaterial, setQuantidadeMaterial] = useState("");
   const navigate = useNavigate();
@@ -260,32 +262,44 @@ export function OrdemDeCompra() {
     const novosErros = {};
     const mensagensErro = [];
 
+    // ✅ VALIDAÇÃO ESPECIAL PARA PROGRESSO 2 (materiais selecionados)
     if (progresso === 2) {
-      const errosValor = validarCamposValor(valoresInput);
-      Object.assign(novosErros, errosValor);
-      Object.values(errosValor).forEach((e) =>
-        mensagensErro.includes(e) ? null : mensagensErro.push(e)
-      );
+      // Verifica se há materiais adicionados
+      if (materiaisSelecionados.length === 0) {
+        const erroMsg = "Adicione pelo menos um material antes de avançar";
+        mensagensErro.push(erroMsg);
+        toastError(erroMsg);
+        return false;
+      }
+      
+      // Se tem materiais, pode avançar
+      return true;
     }
 
-    for (let input of inputs) {
-      if (input.titulo === "Total" || input.disabled) continue;
-      const valor =
-        input.tipo === "select"
-          ? valoresInput[input.titulo + "Id"]
-          : valoresInput[input.titulo];
-      const validacao = validarCampo(input, valor);
-      if (!validacao.valido) {
-        novosErros[input.titulo] = validacao.erro;
-        if (!mensagensErro.includes(validacao.erro))
-          mensagensErro.push(validacao.erro);
+    // ✅ VALIDAÇÃO PARA ETAPA 1 (dados do fornecedor)
+    if (progresso === 1) {
+      for (let input of inputs) {
+        if (input.disabled) continue;
+        
+        const valor =
+          input.tipo === "select"
+            ? valoresInput[input.titulo + "Id"]
+            : valoresInput[input.titulo];
+        
+        const validacao = validarCampo(input, valor);
+        if (!validacao.valido) {
+          novosErros[input.titulo] = validacao.erro;
+          if (!mensagensErro.includes(validacao.erro))
+            mensagensErro.push(validacao.erro);
+        }
       }
     }
 
+    // Exibir mensagens de erro
     mensagensErro.forEach((msg) => toastError(msg));
     setErrosValidacao(novosErros);
     return mensagensErro.length === 0;
-  }, [etapas, progresso, validarCampo, valoresInput]);
+  }, [etapas, progresso, validarCampo, valoresInput, materiaisSelecionados]);
 
   // Navegação
   const avancarProgresso = useCallback(() => {
@@ -342,68 +356,208 @@ export function OrdemDeCompra() {
     setModalAberto(false);
     setMaterialSelecionado("");
     setQuantidadeMaterial("");
+    limparCamposModal();
   };
+
+  // ✅ Nova função para abrir modal de edição
+  const abrirModalEdicao = (index) => {
+    const mat = materiaisSelecionados[index];
+    setMaterialEditandoIndex(index);
+    setMaterialSelecionado(mat.id.toString());
+    setQuantidadeMaterial(mat.Quantidade);
+    
+    setValoresInput((prev) => ({
+      ...prev,
+      "Descrição": mat["Descrição"],
+      "Rastreabilidade": mat.Rastreabilidade,
+      "Valor por Kg": mat["Valor por Kg"],
+      "Valor por peça": mat["Valor por peça"],
+      "Valor Unitário": mat["Valor Unitário"],
+      "IPI": mat.IPI,
+      "Total": mat.Total,
+    }));
+    
+    setModalEdicao(true);
+  };
+
+  // ✅ Nova função para fechar modal de edição
+  const fecharModalEdicao = () => {
+    setModalEdicao(false);
+    setMaterialEditandoIndex(null);
+    setMaterialSelecionado("");
+    setQuantidadeMaterial("");
+    limparCamposModal();
+  };
+
+  // ✅ Nova função para limpar campos do modal
+  const limparCamposModal = () => {
+    setValoresInput((prev) => ({
+      ...prev,
+      "Descrição": "",
+      "Rastreabilidade": "",
+      "Valor por Kg": "",
+      "Valor por peça": "",
+      "Valor Unitário": "",
+      "IPI": "",
+      "Total": "0,00"
+    }));
+  };
+
+  // ✅ Nova função para salvar edição
+  const salvarEdicao = () => {
+    if (!materialSelecionado || !quantidadeMaterial) {
+      toastError("Selecione material e quantidade");
+      return;
+    }
+
+    if (!valoresInput["Descrição"] || !valoresInput["Rastreabilidade"]) {
+      toastError("Preencha Descrição e Rastreabilidade");
+      return;
+    }
+
+    if (!valoresInput["Valor Unitário"]) {
+      toastError("Preencha o Valor Unitário");
+      return;
+    }
+
+    if (!valoresInput["Valor por Kg"] && !valoresInput["Valor por peça"]) {
+      toastError("Preencha pelo menos um: Valor por Kg OU Valor por peça");
+      return;
+    }
+
+    const mat = listaMateriais.find((m) => m.id === Number(materialSelecionado));
+    const valorUnit = parseFloat((valoresInput["Valor Unitário"] || "0").replace(",", "."));
+    const qtd = parseInt(quantidadeMaterial);
+    const totalCalculado = (valorUnit * qtd).toFixed(2).replace(".", ",");
+
+    // Atualiza o material no array
+    setMateriaisSelecionados((prev) => {
+      const copy = [...prev];
+      copy[materialEditandoIndex] = {
+        ...mat,
+        Quantidade: quantidadeMaterial,
+        "Descrição": valoresInput["Descrição"],
+        "Rastreabilidade": valoresInput["Rastreabilidade"],
+        "Valor por Kg": valoresInput["Valor por Kg"] || "0,00",
+        "Valor por peça": valoresInput["Valor por peça"] || "0,00",
+        "Valor Unitário": valoresInput["Valor Unitário"],
+        IPI: valoresInput["IPI"] || "0,00",
+        Total: totalCalculado,
+        expandido: false
+      };
+      return copy;
+    });
+
+    fecharModalEdicao();
+    toastSuccess("Material atualizado com sucesso!");
+  };
+
+  // ✅ Nova função para remover material
+  const removerMaterial = (index) => {
+    setMateriaisSelecionados((prev) => prev.filter((_, i) => i !== index));
+    toastSuccess("Material removido com sucesso!");
+  };
+
   const adicionarMaterial = () => {
     if (!materialSelecionado || !quantidadeMaterial) {
       toastError("Selecione material e quantidade");
       return;
     }
 
-    const mat = listaMateriais.find(
-      (m) => m.id === Number(materialSelecionado)
-    );
+    // Validações dos campos obrigatórios do modal
+    if (!valoresInput["Descrição"] || !valoresInput["Rastreabilidade"]) {
+      toastError("Preencha Descrição e Rastreabilidade");
+      return;
+    }
 
-    // Evita duplicado
+    if (!valoresInput["Valor Unitário"]) {
+      toastError("Preencha o Valor Unitário");
+      return;
+    }
+
+    // Validação: deve ter pelo menos um dos valores (Kg ou Peça)
+    if (!valoresInput["Valor por Kg"] && !valoresInput["Valor por peça"]) {
+      toastError("Preencha pelo menos um: Valor por Kg OU Valor por peça");
+      return;
+    }
+
+    const mat = listaMateriais.find((m) => m.id === Number(materialSelecionado));
+
     if (materiaisSelecionados.some((m) => m.id === mat.id)) {
       toastError("Este material já foi adicionado");
       return;
     }
 
+    // Calcular o total antes de adicionar
+    const valorUnit = parseFloat((valoresInput["Valor Unitário"] || "0").replace(",", "."));
+    const qtd = parseInt(quantidadeMaterial);
+    const totalCalculado = (valorUnit * qtd).toFixed(2).replace(".", ",");
+
+    // Adiciona o material COM TODOS os valores preenchidos
     setMateriaisSelecionados((prev) => [
       ...prev,
-      { ...mat, Quantidade: quantidadeMaterial },
+      {
+        ...mat,
+        Quantidade: quantidadeMaterial,
+        "Descrição": valoresInput["Descrição"],
+        "Rastreabilidade": valoresInput["Rastreabilidade"],
+        "Valor por Kg": valoresInput["Valor por Kg"] || "0,00",
+        "Valor por peça": valoresInput["Valor por peça"] || "0,00",
+        "Valor Unitário": valoresInput["Valor Unitário"],
+        IPI: valoresInput["IPI"] || "0,00",
+        Total: totalCalculado,
+        expandido: false
+      },
     ]);
+
+    limparCamposModal(); // ✅ Usa a nova função
     fecharModal();
+    toastSuccess("Material adicionado com sucesso!");
   };
 
-  // Total automático
+  // Total automático - CORRIGIDO para calcular no modal também
   useEffect(() => {
     const valorUnit =
-      parseFloat((valoresInput["Valor Unitário"] || "0").replace(",", ".")) ||
-      0;
-    const quantidade = parseInt(valoresInput["Quantidade"] || "0") || 0;
+      parseFloat((valoresInput["Valor Unitário"] || "0").replace(",", ".")) || 0;
+    
+    // Usa quantidadeMaterial se estiver no modal (progresso 2), senão usa do valoresInput
+    const quantidade = progresso === 2 && modalAberto
+      ? parseInt(quantidadeMaterial || "0") || 0
+      : parseInt(valoresInput["Quantidade"] || "0") || 0;
+    
     const total = valorUnit * quantidade;
+    
     setValoresInput((prev) => ({
       ...prev,
       Total: total > 0 ? total.toFixed(2).replace(".", ",") : "0,00",
     }));
-  }, [valoresInput["Valor Unitário"], valoresInput["Quantidade"]]);
+  }, [valoresInput["Valor Unitário"], valoresInput["Quantidade"], quantidadeMaterial, progresso, modalAberto]);
 
-  // Finalizar ordem
+  // Finalizar ordem - CORRIGIDO: Envia array de ordens ao invés de objeto único
   const finalizarOrdemDeCompra = useCallback(() => {
-    const dadosApi = {
-      usuarioId: getUsuarioIdDoToken(),
+    const usuarioId = getUsuarioIdDoToken();
+
+    // ✅ Cria um array de objetos (um para cada material)
+    const ordensParaEnviar = materiaisSelecionados.map((mat) => ({
+      usuarioId: usuarioId,
       fornecedorId: Number(valoresInput["FornecedorId"]),
       prazoEntrega: valoresInput["Prazo de entrega"],
       condPagamento: valoresInput["Cond. Pagamento"],
-      materiais: materiaisSelecionados.map((mat) => ({
-        estoqueId: mat.id,
-        valorKg: parseFloat(mat["Valor por Kg"]?.replace(",", ".") || 0),
-        valorPeca: parseFloat(mat["Valor por peça"]?.replace(",", ".") || 0),
-        descricaoMaterial: mat["Descrição"],
-        ipi: parseFloat(mat.IPI?.replace(",", ".") || 0),
-        rastreabilidade: mat.Rastreabilidade,
-        quantidade: parseFloat(mat.Quantidade || 1),
-        valorUnitario: parseFloat(
-          mat["Valor Unitário"]?.replace(",", ".") || 0
-        ),
-      })),
-    };
+      estoqueId: mat.id,
+      valorKg: parseFloat(mat["Valor por Kg"]?.replace(",", ".") || 0),
+      valorPeca: parseFloat(mat["Valor por peça"]?.replace(",", ".") || 0),
+      descricaoMaterial: mat["Descrição"],
+      ipi: parseFloat(mat.IPI?.replace(",", ".") || 0),
+      rastreabilidade: mat.Rastreabilidade,
+      quantidade: parseFloat(mat.Quantidade || 1),
+      valorUnitario: parseFloat(mat["Valor Unitário"]?.replace(",", ".") || 0),
+    }));
 
+    // ✅ Envia o array diretamente
     api
-      .post("/ordemDeCompra", dadosApi)
+      .post("/ordemDeCompra", ordensParaEnviar)
       .then((res) => {
-        const novaId = res?.data?.id;
+        const novaId = res?.data?.id || res?.data?.[0]?.id;
         if (!novaId || isNaN(novaId)) {
           toastError("Erro ao obter o ID da nova ordem de compra.");
           return;
@@ -417,12 +571,10 @@ export function OrdemDeCompra() {
         setProgresso(4);
       })
       .catch((err) => {
+        console.error("Erro completo:", err.response?.data);
         toastError(
           err.response?.data?.message || "Erro ao criar ordem de compra"
         );
-        setErrosValidacao({
-          geral: "Erro ao criar ordem de compra. Verifique os dados.",
-        });
       });
   }, [materiaisSelecionados, valoresInput]);
 
@@ -499,147 +651,311 @@ return (
                       {mat.tipoMaterial} - Qtd: {mat.Quantidade} - Valor Unitário:{" "}
                       {mat["Valor Unitário"]} - IPI: {mat.IPI} - Total:{" "}
                       {mat.Total || "0,00"}
-                      <button
-                        onClick={() => {
-                          setMateriaisSelecionados((prev) => {
-                            const copy = [...prev];
-                            copy[idx].expandido = !copy[idx].expandido;
-                            return copy;
-                          });
-                        }}
-                      >
-                        {mat.expandido ? "Ver Menos" : "Ver Mais"}
-                      </button>
-                    </div>
-                    {mat.expandido && (
-                      <div className={style.listaExpandida}>
-                        <p>Descrição: {mat["Descrição"]}</p>
-                        <p>Rastreabilidade: {mat.Rastreabilidade}</p>
-                        <p>Valor por Kg: {mat["Valor por Kg"]}</p>
-                        <p>Valor por peça: {mat["Valor por peça"]}</p>
+                      
+                      {/* ✅ Botões de ação */}
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <button onClick={() => abrirModalEdicao(idx)}>
+                          Editar
+                        </button>
+                        <button 
+                          onClick={() => removerMaterial(idx)}
+                          style={{ backgroundColor: "#e74c3c", color: "white" }}
+                        >
+                          Remover
+                        </button>
                       </div>
-                    )}
+                    </div>
                   </li>
                 ))}
               </ul>
             )}
 
-            {/* === Modal de adicionar material === */}
-       {modalAberto && (
-  <div className={style.modalOverlay}>
-    <div className={style.modalContent}>
-      <h3>Adicionar Material</h3>
+            {/* === Modal de ADICIONAR material === */}
+            {modalAberto && (
+              <div className={style.modalOverlay}>
+                <div className={style.modalContent}>
+                  <h3>Adicionar Material</h3>
 
-      <div className={style.modalGrid}>
-        {/* Select do Material */}
-        <div className={style.inputGroup}>
-          <p>Material <span style={{ color: "red" }}>*</span></p>
-          <select
-            value={materialSelecionado}
-            onChange={(e) => setMaterialSelecionado(e.target.value)}
-          >
-            <option value="">Selecione um material</option>
-            {listaMateriais.map((mat) => (
-              <option key={mat.id} value={mat.id}>
-                {mat.tipoMaterial}
-              </option>
-            ))}
-          </select>
-        </div>
+                  <div className={style.modalGrid}>
+                    {/* Select do Material */}
+                    <div className={style.inputGroup}>
+                      <p>
+                        Material <span style={{ color: "red" }}>*</span>
+                      </p>
+                      <select
+                        value={materialSelecionado}
+                        onChange={(e) => {
+                          const valor = e.target.value;
+                          setMaterialSelecionado(valor);
 
-        {/* Quantidade */}
-        <div className={style.inputGroup}>
-          <p>Quantidade <span style={{ color: "red" }}>*</span></p>
-          <input
-            type="text"
-            placeholder="Número de peças/unidades"
-            value={quantidadeMaterial}
-            onChange={(e) => setQuantidadeMaterial(e.target.value)}
-          />
-        </div>
-        {/* Valor Unitário */}
-        <div className={style.inputGroup}>
-          <p>Valor Unitário</p>
-          <input
-            type="text"
-            placeholder="Ex: 12,50"
-            value={valoresInput["Valor Unitário"] || ""}
-            onChange={(e) =>
-              handleInputChange("Valor Unitário", e.target.value)
-            }
-          />
-        </div>
-<div className={style.inputGroup}>
-          <p>Ratreabilidade</p>
-          <input
-            type="text"
-            placeholder="Ex:21345-2015"
-            value={valoresInput["Rastreabilidade"] || ""}
-            onChange={(e) =>
-              handleInputChange("Rastreabilidade", formatarPagamento(e.target.value))
-            }
-          />
-        </div>
+                          // Atualiza IPI automaticamente
+                          const material = listaMateriais.find(
+                            (m) => m.id.toString() === valor.toString()
+                          );
+                          if (material) {
+                            handleInputChange(
+                              "IPI",
+                              formatarIPI(material.IPI?.toString() || "0")
+                            );
+                          }
+                        }}
+                      >
+                        <option value="">Selecione um material</option>
+                        {listaMateriais.map((mat) => (
+                          <option key={mat.id} value={mat.id}>
+                            {mat.tipoMaterial}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-        {/* Valor Unitário */}
-        <div className={style.inputGroup}>
-          <p>Valor Unitário</p>
-          <input
-            type="text"
-            placeholder="Ex: 12,50"
-            value={valoresInput["Valor Unitário"] || ""}
-            onChange={(e) =>
-              handleInputChange("Valor Unitário", e.target.value)
-            }
-          />
-        </div>
+                    {/* Quantidade */}
+                    <div className={style.inputGroup}>
+                      <p>
+                        Quantidade <span style={{ color: "red" }}>*</span>
+                      </p>
+                      <input
+                        type="text"
+                        placeholder="Número de peças/unidades"
+                        value={quantidadeMaterial}
+                        onChange={(e) =>
+                          setQuantidadeMaterial(formatarQuantidade(e.target.value))
+                        }
+                      />
+                    </div>
 
-       {/* Valor Unitário */}
-        <div className={style.inputGroup}>
-          <p>Valor Unitário</p>
-          <input
-            type="text"
-            placeholder="Ex: 12,50"
-            value={valoresInput["Valor Unitário"] || ""}
-            onChange={(e) =>
-              handleInputChange("Valor Unitário", e.target.value)
-            }
-          />
-        </div>
-        {/* Valor Unitário */}
-        <div className={style.inputGroup}>
-          <p>Valor Unitário</p>
-          <input
-            type="text"
-            placeholder="Ex: 12,50"
-            value={valoresInput["Valor Unitário"] || ""}
-            onChange={(e) =>
-              handleInputChange("Valor Unitário", e.target.value)
-            }
-          />
-        </div>
-        {/* Valor Unitário */}
-        <div className={style.inputGroup}>
-          <p>Valor Unitário</p>
-          <input
-            type="text"
-            placeholder="Ex: 12,50"
-            value={valoresInput["Valor Unitário"] || ""}
-            onChange={(e) =>
-              handleInputChange("Valor Unitário", e.target.value)
-            }
-          />
-        </div>
-      </div>
+                    {/* Descrição do Material */}
+                    <div className={style.inputGroup}>
+                      <p>
+                        Descrição do material <span style={{ color: "red" }}>*</span>
+                      </p>
+                      <input
+                        type="text"
+                        placeholder="Ex: Parafuso galvanizado M6"
+                        value={valoresInput["Descrição"] || ""}
+                        onChange={(e) => handleInputChange("Descrição", e.target.value)}
+                      />
+                    </div>
 
-      <div className={style.modalButtons}>
-        <button onClick={adicionarMaterial}>Adicionar</button>
-        <button onClick={fecharModal}>Fechar</button>
-      </div>
-    </div>
-  </div>
-)}
+                    {/* Rastreabilidade */}
+                    <div className={style.inputGroup}>
+                      <p>
+                        Rastreabilidade <span style={{ color: "red" }}>*</span>
+                      </p>
+                      <input
+                        type="text"
+                        placeholder="Ex: 21345-2015"
+                        value={valoresInput["Rastreabilidade"] || ""}
+                        onChange={(e) =>
+                          handleInputChange("Rastreabilidade", formatarRastreio(e.target.value))
+                        }
+                      />
+                    </div>
 
+                    {/* Valor por Kg */}
+                    <div className={style.inputGroup}>
+                      <p>Valor por Kg</p>
+                      <input
+                        type="text"
+                        placeholder="Ex: 12,50"
+                        value={valoresInput["Valor por Kg"] || ""}
+                        onChange={(e) =>
+                          handleInputChange("Valor por Kg", formatarValorMonetario(e.target.value))
+                        }
+                      />
+                    </div>
+
+                    {/* Valor por peça */}
+                    <div className={style.inputGroup}>
+                      <p>Valor por peça</p>
+                      <input
+                        type="text"
+                        placeholder="Ex: 5,00"
+                        value={valoresInput["Valor por peça"] || ""}
+                        onChange={(e) =>
+                          handleInputChange("Valor por peça", formatarValorMonetario(e.target.value))
+                        }
+                      />
+                    </div>
+
+                    {/* Valor Unitário */}
+                    <div className={style.inputGroup}>
+                      <p>
+                        Valor Unitário <span style={{ color: "red" }}>*</span>
+                      </p>
+                      <input
+                        type="text"
+                        placeholder="Ex: 9,90"
+                        value={valoresInput["Valor Unitário"] || ""}
+                        onChange={(e) =>
+                          handleInputChange("Valor Unitário", formatarValorMonetario(e.target.value))
+                        }
+                      />
+                    </div>
+
+                    {/* IPI (calculado automaticamente) */}
+                    <div className={style.inputGroup}>
+                      <p>IPI</p>
+                      <input
+                        type="text"
+                        placeholder="Calculado automaticamente"
+                        value={valoresInput["IPI"] || ""}
+                        disabled
+                        style={{ backgroundColor: "#f0f0f0", cursor: "not-allowed" }}
+                      />
+                    </div>
+
+                    {/* Total (calculado automaticamente) */}
+                    <div className={style.inputGroup}>
+                      <p>Total</p>
+                      <input
+                        type="text"
+                        placeholder="Calculado automaticamente"
+                        value={valoresInput["Total"] || "0,00"}
+                        disabled
+                        style={{ backgroundColor: "#f0f0f0", cursor: "not-allowed" }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className={style.modalButtons}>
+                    <button onClick={adicionarMaterial}>Adicionar</button>
+                    <button onClick={fecharModal}>Fechar</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ✅ Modal de EDITAR material */
+            modalEdicao && (
+              <div className={style.modalOverlay}>
+                <div className={style.modalContent}>
+                  <h3>Editar Material</h3>
+
+                  <div className={style.modalGrid}>
+                    {/* Select do Material */}
+                    <div className={style.inputGroup}>
+                      <p>Material <span style={{ color: "red" }}>*</span></p>
+                      <select
+                        value={materialSelecionado}
+                        onChange={(e) => {
+                          const valor = e.target.value;
+                          setMaterialSelecionado(valor);
+                          const material = listaMateriais.find(
+                            (m) => m.id.toString() === valor.toString()
+                          );
+                          if (material) {
+                            handleInputChange("IPI", formatarIPI(material.IPI?.toString() || "0"));
+                          }
+                        }}
+                      >
+                        <option value="">Selecione um material</option>
+                        {listaMateriais.map((mat) => (
+                          <option key={mat.id} value={mat.id}>
+                            {mat.tipoMaterial}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Quantidade */}
+                    <div className={style.inputGroup}>
+                      <p>Quantidade <span style={{ color: "red" }}>*</span></p>
+                      <input
+                        type="text"
+                        placeholder="Número de peças/unidades"
+                        value={quantidadeMaterial}
+                        onChange={(e) => setQuantidadeMaterial(formatarQuantidade(e.target.value))}
+                      />
+                    </div>
+
+                    {/* Descrição do Material */}
+                    <div className={style.inputGroup}>
+                      <p>Descrição do material <span style={{ color: "red" }}>*</span></p>
+                      <input
+                        type="text"
+                        placeholder="Ex: Parafuso galvanizado M6"
+                        value={valoresInput["Descrição"] || ""}
+                        onChange={(e) => handleInputChange("Descrição", e.target.value)}
+                      />
+                    </div>
+
+                    {/* Rastreabilidade */}
+                    <div className={style.inputGroup}>
+                      <p>Rastreabilidade <span style={{ color: "red" }}>*</span></p>
+                      <input
+                        type="text"
+                        placeholder="Ex: 21345-2015"
+                        value={valoresInput["Rastreabilidade"] || ""}
+                        onChange={(e) => handleInputChange("Rastreabilidade", formatarRastreio(e.target.value))}
+                      />
+                    </div>
+
+                    {/* Valor por Kg */}
+                    <div className={style.inputGroup}>
+                      <p>Valor por Kg</p>
+                      <input
+                        type="text"
+                        placeholder="Ex: 12,50"
+                        value={valoresInput["Valor por Kg"] || ""}
+                        onChange={(e) => handleInputChange("Valor por Kg", formatarValorMonetario(e.target.value))}
+                      />
+                    </div>
+
+                    {/* Valor por peça */}
+                    <div className={style.inputGroup}>
+                      <p>Valor por peça</p>
+                      <input
+                        type="text"
+                        placeholder="Ex: 5,00"
+                        value={valoresInput["Valor por peça"] || ""}
+                        onChange={(e) => handleInputChange("Valor por peça", formatarValorMonetario(e.target.value))}
+                      />
+                    </div>
+
+                    {/* Valor Unitário */}
+                    <div className={style.inputGroup}>
+                      <p>Valor Unitário <span style={{ color: "red" }}>*</span></p>
+                      <input
+                        type="text"
+                        placeholder="Ex: 9,90"
+                        value={valoresInput["Valor Unitário"] || ""}
+                        onChange={(e) => handleInputChange("Valor Unitário", formatarValorMonetario(e.target.value))}
+                      />
+                    </div>
+
+                    {/* IPI */}
+                    <div className={style.inputGroup}>
+                      <p>IPI</p>
+                      <input
+                        type="text"
+                        placeholder="Calculado automaticamente"
+                        value={valoresInput["IPI"] || ""}
+                        disabled
+                        style={{ backgroundColor: "#f0f0f0", cursor: "not-allowed" }}
+                      />
+                    </div>
+
+                    {/* Total */}
+                    <div className={style.inputGroup}>
+                      <p>Total</p>
+                      <input
+                        type="text"
+                        placeholder="Calculado automaticamente"
+                        value={valoresInput["Total"] || "0,00"}
+                        disabled
+                        style={{ backgroundColor: "#f0f0f0", cursor: "not-allowed" }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className={style.modalButtons}>
+                    <button onClick={salvarEdicao}>Salvar</button>
+                    <button onClick={fecharModalEdicao}>Cancelar</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
 
