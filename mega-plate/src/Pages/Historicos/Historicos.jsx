@@ -282,7 +282,6 @@ export function Historicos() {
 
             return matchId && matchDia && matchPrazo && matchPendentes;
         })
-        .sort((a, b) => new Date(b.dataDeEmissao) - new Date(a.dataDeEmissao));
     // 👆 do mais novo para o mais antigo
 
 
