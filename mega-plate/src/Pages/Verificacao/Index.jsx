@@ -77,25 +77,31 @@ export function Verificacao() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, codigo: userCode })
             });
-            const data = await response.json();
-
-            if (data.success) {
-                try {
-                    const userId = await buscarUsuarioPorEmail(email);
-                    toastSuccess('Código verificado com sucesso!');
-                    navigate(`/Redefinicao/${userId}`);
-                } catch (error) {
-                    toastError('Erro ao encontrar usuário. Tente novamente.');
-                }
-            } else {
-                toastError(data.message || 'Código inválido. Tente novamente.');
-            }
-        } catch (err) {
-            toastError('Erro ao conectar com o servidor.');
-        } finally {
-            setIsVerifying(false);
+           const data = await response.json();
+        
+        if (data.success) {
+            const resetToken = data.resetToken;
+            
+            // console.log('✅ Token recebido:', resetToken?.substring(0, 30) + '...');
+            
+            sessionStorage.setItem('reset_token_temp', resetToken);
+            sessionStorage.setItem('reset_email_temp', email);
+            
+            toastSuccess('Código verificado com sucesso!');
+            
+            navigate(`/Redefinicao/${encodeURIComponent(email)}`, { 
+                state: { resetToken } 
+            });
+        } else {
+            toastError(data.message || 'Código inválido. Tente novamente.');
         }
-    };
+    } catch (err) {
+        console.error('Erro:', err);
+        toastError('Erro ao conectar com o servidor.');
+    } finally {
+        setIsVerifying(false);
+    }
+};
 
     const handleKeyDown = (e, index) => {
         if (e.key === 'Backspace') {
