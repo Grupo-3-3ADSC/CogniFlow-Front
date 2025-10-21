@@ -1082,7 +1082,7 @@ function App() {
                 <div id="chart-aviso" className="chart">
                   <div
                     style={{
-                      color: "#FF4C4C",
+                      color: "#f31d1dff",
                       fontWeight: "bold",
                       fontSize: "14px",
                       textAlign: "center",
@@ -1145,6 +1145,7 @@ function App() {
                     borderRadius: "8px",
                     padding: "10px",
                     border: "1px solid rgba(255, 255, 255, 0.05)",
+                    
                   }}
                 >
                   <Chart
@@ -1153,8 +1154,9 @@ function App() {
                     options={{
                       backgroundColor: "transparent",
                       chartArea: {
-                        width: "80%", // Ajustado para dar espaço à legenda
-                        height: "75%",
+                        width: "120%",
+                        height: "105%",
+                        left:"5%"
                       },
                       pieHole: 0.4,
                       pieSliceText: "percentage",
@@ -1162,21 +1164,22 @@ function App() {
                         color: "white",
                         fontSize: 12,
                         bold: true,
+                        marginLeft: "50px",
                       },
                       legend: {
-                        position: "right", // Alterado de 'none' para 'right'
+                        position: "right",
                         textStyle: { 
-                          color: "white", // Cor do texto da legenda
+                          color: "white",
                           fontSize: 12 
                         },
                         alignment: "center"
                       },
+                      // Atualize estas cores conforme necessário
                       colors: [
-                        "#4586AB",
-                        "#7EB9D9",
-                        "#05314C",
-                        "#2E6B8A",
-                        "#1A4D6B",
+                        "#2B5B7A", // Azul escuro
+                        "#5D1C99", // Roxo escuro
+                        "#C93B7D", // Rosa escuro
+                        "#2E7D32"  // Verde escuro
                       ],
                       slices: {
                         1: { offset: 0.03 },

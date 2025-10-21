@@ -23,6 +23,17 @@ export function TabelaUsuarios() {
   const [carregando, setCarregando] = useState(false);
   const navigate = useNavigate();
 
+  // Mapeamento para corrigir o problema do filtro de cargo
+  const mapeamentoCargos = {
+    "assistente_compras": "assistente de compras",
+    "comprador_pleno": "comprador pleno", 
+    "analista_compras": "analista de compras",
+    "coordenador_compras": "coordenador de compras",
+    "gerente_suprimentos": "gerente de suprimentos",
+    "comum": "comum",
+    "gestor": "gestor"
+  };
+
   // 🔐 Autenticação
   useEffect(() => {
     const token = sessionStorage.getItem("authToken");
@@ -140,7 +151,7 @@ export function TabelaUsuarios() {
     }
   };
 
-  // 🔎 Filtros de nome, email, cargo
+  // 🔎 Filtros de nome, email, cargo - CORRIGIDO
   const usuariosFiltrados = usuarios
     .filter((usuario) =>
       usuario.nome?.toLowerCase().includes(filtroNome.toLowerCase())
@@ -150,9 +161,10 @@ export function TabelaUsuarios() {
     )
     .filter((usuario) => {
       if (filtroCargo === "todos") return true;
-      if (filtroCargo === "gestor") return Number(usuario.cargo?.id) === 2;
-      if (filtroCargo === "comum") return Number(usuario.cargo?.id) !== 2;
-      return true;
+      
+      // Usa o mapeamento para converter o value do select para o nome real do cargo
+      const cargoParaComparar = mapeamentoCargos[filtroCargo] || filtroCargo;
+      return usuario.cargo?.nome?.toLowerCase() === cargoParaComparar.toLowerCase();
     });
 
   return (
@@ -198,8 +210,13 @@ export function TabelaUsuarios() {
               className={styles.selectFiltro}
             >
               <option value="todos">Todos os Cargos</option>
-              <option value="gestor">Gestor</option>
               <option value="comum">Comum</option>
+              <option value="gestor">Gestor</option>
+              <option value="assistente_compras">Assistente de Compras</option>
+              <option value="comprador_pleno">Comprador Pleno</option>
+              <option value="analista_compras">Analista de Compras</option>
+              <option value="coordenador_compras">Coordenador de Compras</option>
+              <option value="gerente_suprimentos">Gerente de Suprimentos</option>
             </select>
           </div>
 
@@ -239,7 +256,7 @@ export function TabelaUsuarios() {
                       <td data-label="Email">{String(usuario.email || "—")}</td>
 
                       <td data-label="Cargo">
-                        {Number(usuario.cargo?.id) === 2 ? "Gestor" : "Comum"}
+                        {usuario.cargo?.nome || "—"}
                       </td>
                       <td data-label="Status">
                         <div className={styles.statusColuna}>

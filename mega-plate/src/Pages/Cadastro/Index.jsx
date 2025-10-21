@@ -4,18 +4,17 @@ import { useEffect, useState } from "react";
 import { api } from "../../provider/api.js";
 import NavBar from "../../components/NavBar";
 import { useNavigate } from "react-router-dom";
-import { toastSuccess, toastError, toastWarning } from "../../components/toastify/ToastifyService.jsx";
+import { toastSuccess, toastError } from "../../components/toastify/ToastifyService.jsx";
 import { jwtDecode } from "jwt-decode";
 
 export function Cadastro() {
   const navigate = useNavigate();
+  const token = sessionStorage.getItem("authToken");
+  const [cargos, setCargos] = useState([]);
   const [formData, setFormData] = useState({
     nome: "",
     email: "",
-    cargo: {
-      id: 1,
-      nome: "comum",
-    },
+    cargoId: "", // apenas o ID
     password: "",
   });
 
@@ -40,6 +39,38 @@ export function Cadastro() {
     }
   }, []);
 
+  useEffect(() => {
+    function getCargos() {
+      api
+        .get("/cargos", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+          console.log("Cargos:", response.data);
+          setCargos(response.data);
+
+          // Define gestor (id:2) como padrão
+          const cargoGestor = response.data.find((cargo) => cargo.id === 2);
+          if (cargoGestor) {
+            setFormData((prev) => ({
+              ...prev,
+              cargoId: cargoGestor.id,
+            }));
+          }
+        })
+        .catch(() => {
+          toastError("Erro ao buscar cargos. Tente novamente mais tarde.");
+        });
+    }
+
+    if (autenticacaoPassou) {
+      getCargos();
+    }
+  }, [autenticacaoPassou]);
+
   if (!autenticacaoPassou) return null;
 
   // Funções de validação
@@ -58,13 +89,15 @@ export function Cadastro() {
     return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{6,}$/.test(senha);
   }
 
-  function validarCargo(cargo) {
-    return cargo === 1 || cargo === 2;
+  function validarCargo(cargoId) {
+    return [1, 2, 3, 4, 5, 6, 7].includes(cargoId);
   }
 
   // Função para cadastrar usuário
   const cadastrar = () => {
-    if (!formData.nome || !formData.email || !formData.cargo.id || !formData.password) {
+    console.log("Estado atual do formData:", formData);
+
+    if (!formData.nome || !formData.email || !formData.cargoId || !formData.password) {
       toastError("Por favor, preencha todos os campos!");
       return;
     }
@@ -80,11 +113,13 @@ export function Cadastro() {
     }
 
     if (!validarSenha(formData.password)) {
-      toastError("Senha inválida. Deve ter pelo menos 6 caracteres, uma letra, um número e um caractere especial.");
+      toastError(
+        "Senha inválida. Deve ter pelo menos 6 caracteres, uma letra, um número e um caractere especial."
+      );
       return;
     }
 
-    if (!validarCargo(formData.cargo?.id)) {
+    if (!validarCargo(formData.cargoId)) {
       toastError("Cargo inválido.");
       return;
     }
@@ -99,12 +134,11 @@ export function Cadastro() {
     const userData = {
       nome: formData.nome.trim(),
       email: formData.email.trim(),
-      cargo: {
-        id: formData.cargo.id,
-        nome: formData.cargo.id === 1 ? "comum" : "gestor",
-      },
+      cargoId: parseInt(formData.cargoId), // apenas o ID
       password: formData.password.trim(),
     };
+
+    console.log("Dados sendo enviados:", userData);
 
     const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)\b/i;
     if (sqlPattern.test(userData.email) || sqlPattern.test(userData.nome) || sqlPattern.test(userData.password)) {
@@ -121,10 +155,8 @@ export function Cadastro() {
       return;
     }
 
-    const endpoint = formData.cargo.id === 2 ? "/usuarios/gestor" : "/usuarios";
-
     api
-      .post(endpoint, userData, {
+      .post("/usuarios", userData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -137,7 +169,7 @@ export function Cadastro() {
           nome: "",
           email: "",
           password: "",
-          cargo: { id: 1, nome: "comum" },
+          cargoId: cargos.length > 0 ? cargos[0].id : "",
         });
       })
       .catch((error) => {
@@ -173,9 +205,7 @@ export function Cadastro() {
         <main className={styles["form-content"]}>
           <div className={styles["input-group"]}>
             <p id="textCadastro">
-              Nome e Sobrenome
-              <span style={{}}> </span>
-              <span style={{ color: "red" }}>*</span>
+              Nome e Sobrenome <span style={{ color: "red" }}>*</span>
             </p>
             <input
               placeholder="Marcos Antonio"
@@ -192,9 +222,7 @@ export function Cadastro() {
 
           <div className={styles["input-group"]}>
             <p id="textCadastro">
-              Email
-              <span style={{}}> </span>
-              <span style={{ color: "red" }}>*</span>
+              Email <span style={{ color: "red" }}>*</span>
             </p>
             <input
               placeholder="exemplo@dominio.com"
@@ -206,33 +234,30 @@ export function Cadastro() {
 
           <div className={styles["input-group"]}>
             <p>
-              Cargo
-              <span style={{}}> </span>
-              <span style={{ color: "red" }}>*</span>
+              Cargo <span style={{ color: "red" }}>*</span>
             </p>
             <select
-              value={formData.cargo?.id || 1}
+              value={formData.cargoId || ""}
               onChange={(e) => {
-                const selectedId = parseInt(e.target.value);
+                const selectedId = parseInt(e.target.value, 10);
                 setFormData({
                   ...formData,
-                  cargo: {
-                    id: selectedId,
-                    nome: selectedId === 1 ? "comum" : "gestor",
-                  },
+                  cargoId: selectedId,
                 });
               }}
             >
-              <option value={1}>Usuário Comum</option>
-              <option value={2}>Gestor</option>
+              <option value="">Selecione um cargo</option>
+              {cargos.map((cargo) => (
+                <option key={cargo.id} value={cargo.id}>
+                  {cargo.nome}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className={styles["input-group"]}>
             <p id="textCadastro">
-              Senha
-              <span style={{}}> </span>
-              <span style={{ color: "red" }}>*</span>
+              Senha <span style={{ color: "red" }}>*</span>
             </p>
             <input
               placeholder="********"

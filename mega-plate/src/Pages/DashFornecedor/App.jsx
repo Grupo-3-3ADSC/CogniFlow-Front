@@ -969,7 +969,7 @@ function App() {
         </div>
 
         <div className="containerDashFornecedor">
-          <div className="dashboardFornecedor">
+          <div className="dashboardFornecedor" id="dashboardFornecedor">
             <h2>Custos por Fornecedor</h2>
 
             <div id="charts-superior">

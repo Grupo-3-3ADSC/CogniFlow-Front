@@ -578,6 +578,29 @@ option {
     border-color: var(--secondary-color);
     box-shadow: 0 4px 12px rgba(69, 134, 171, 0.4);
 }
+ #dashboardFornecedor {
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+#dashboardFornecedor::-webkit-scrollbar {
+    width: 6px;
+}
+
+#dashboardFornecedor::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+#dashboardFornecedor::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--secondary-color), var(--accent-color));
+    border-radius: 3px;
+}
+
+#dashboardFornecedor::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #7EB9D9, var(--secondary-color));
+}
 
 /* Responsive Design */
 @media (max-width: 1200px) {
