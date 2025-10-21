@@ -570,13 +570,13 @@ export function OrdemDeCompra() {
       descricaoMaterial: mat["Descrição"],
       ipi: parseFloat(mat.IPI?.replace(",", ".") || 0),
       rastreabilidade: mat.Rastreabilidade,
-      quantidade: parseFloat(mat.Quantidade || 1),
+      quantidade: parseInt(mat.Quantidade || 1),
       valorUnitario: parseFloat(mat["Valor Unitário"]?.replace(",", ".") || 0),
     }));
 
     // ✅ Envia o array diretamente
     api
-      .post("/ordemDeCompra", ordensParaEnviar)
+      .post("/ordemDeCompra/multiplas-ordens", ordensParaEnviar)
       .then((res) => {
         const novaId = res?.data?.id || res?.data?.[0]?.id;
         if (!novaId || isNaN(novaId)) {
