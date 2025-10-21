@@ -22,6 +22,15 @@ export function HistoricoTransferencia() {
     const navigate = useNavigate();
     const [historicoTransferencias, setHistoricoTransferencias] = useState([]);
 
+    const [transferenciasPaginadas, setTransferenciasPaginadas] = useState([]);
+    const [paginaAtual, setPaginaAtual] = useState(0);
+    const [paginasTotais, setPaginasTotais] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [hasNext, setHasNext] = useState(false);
+    const [hasPrevious, setHasPrevious] = useState(false);
+
+    const transferenciasPorPagnia = 6;
+
 
     useEffect(() => {
         const token = sessionStorage.getItem("authToken");
@@ -42,6 +51,7 @@ export function HistoricoTransferencia() {
         setFade(false); // inicia fade out
         const timeout = setTimeout(() => {
             setUsuarios([]);
+            getTransferenciasPaginadas();
             buscarTransferencias({
                 id: filtroId,
                 dia: filtroDia,
@@ -78,6 +88,32 @@ export function HistoricoTransferencia() {
         }
     };
 
+    function getTransferenciasPaginadas() {
+        const paginaInt = Number(paginaAtual) || 0;
+        api.
+            get(`/transferencias/paginados?pagina=${paginaInt}&tamanho=${transferenciasPorPagnia}`)
+            .then((response) => {
+                const { data, paginasTotais, totalItems, paginaAtual, hasNext, hasPrevious } = response.data;
+
+                //  console.log("dataaaa: ", data)
+
+                setTransferenciasPaginadas(data);
+                setPaginasTotais(paginasTotais);
+                setTotalItems(totalItems);
+                setPaginaAtual(paginaAtual);
+                setHasNext(hasNext);
+                setHasPrevious(hasPrevious);
+            })
+            .catch((err) => {
+                console.error("Erro ao buscar transferencias paginadas:", err);
+            });
+    }
+
+    useEffect(() => {
+        getTransferenciasPaginadas();
+    }, [paginaAtual]);
+
+
     function formatarDataBrasileira(dataISO) {
         if (!dataISO) return "N/A";
 
@@ -95,7 +131,7 @@ export function HistoricoTransferencia() {
         });
     };
 
-    const transferenciasFiltradas = transferencias.filter((t) => {
+    const transferenciasFiltradas = transferenciasPaginadas.filter((t) => {
         const matchId = filtroId
             ? String(t?.id ?? "").includes(filtroId)
             : true;
@@ -121,6 +157,66 @@ export function HistoricoTransferencia() {
         return matchId && matchDia && matchMaterial && matchSetor;
     });
 
+    function gerarPaginas() {
+        const paginas = [];
+        const maxPaginasVisiveis = 3;
+
+        // Calcular o range de páginas a mostrar
+        let paginaInicio = Math.max(0, paginaAtual - Math.floor(maxPaginasVisiveis / 2));
+        let paginaFim = Math.min(paginasTotais - 1, paginaInicio + maxPaginasVisiveis - 1);
+
+        // Ajustar o início se estivermos muito próximos do fim
+        if (paginaFim - paginaInicio < maxPaginasVisiveis - 1) {
+            paginaInicio = Math.max(0, paginaFim - maxPaginasVisiveis + 1);
+        }
+
+        // Seta para esquerda (mostrar páginas anteriores)
+        if (paginaInicio > 0) {
+            paginas.push(
+                <div
+                    key="prev"
+                    className={`${styles.circle} ${styles.circleSmall}`}
+                    onClick={() => {
+                        const novaPagina = Math.max(0, paginaInicio - maxPaginasVisiveis);
+                        setPaginaAtual(novaPagina + Math.floor(maxPaginasVisiveis / 2));
+                    }}
+                >
+                    {"<"}
+                </div>
+            );
+        }
+
+        // Páginas numeradas
+        for (let i = paginaInicio; i <= paginaFim; i++) {
+            paginas.push(
+                <div
+                    key={i}
+                    className={`${styles.circle} ${styles.circleSmall} ${paginaAtual === i ? styles.active : ""}`}
+                    onClick={() => setPaginaAtual(i)}
+                >
+                    {i + 1}
+                </div>
+            );
+        }
+
+        // Seta para direita (mostrar páginas seguintes)
+        if (paginaFim < paginasTotais - 1) {
+            paginas.push(
+                <div
+                    key="next"
+                    className={`${styles.circle} ${styles.circleSmall}`}
+                    onClick={() => {
+                        const novaPagina = Math.min(paginasTotais - 1, paginaFim + 1);
+                        setPaginaAtual(novaPagina);
+                    }}
+                >
+                    {">"}
+                </div>
+            );
+        }
+
+        return paginas;
+    }
 
     function baixarOrdem(id) {
         const item = transferencias.find((t) => t.id === id);
@@ -443,6 +539,9 @@ export function HistoricoTransferencia() {
                             </table>
                         </div>
                     )}
+                </div>
+                <div className={styles.backgroundPages}>
+                    {gerarPaginas()}
                 </div>
             </div>
         </>

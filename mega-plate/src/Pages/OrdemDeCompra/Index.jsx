@@ -169,7 +169,28 @@ export function OrdemDeCompra() {
       2: {
         inputs: [
           {
-            id: "material",
+            id: "valorkg",
+            titulo: "Valor por Kg",
+            tipo: "double",
+            placeholder: "Digite o valor por Kg (Ex: 12,50)",
+            pattern: "^\\d+([,.]\\d{1,2})?$",
+            required: false, // Não é mais sempre obrigatório
+            validationMessage: "Valor inválido. Use formato: 12,50",
+            formatador: formatarValorMonetario,
+          },
+          {
+            id: "rastreio",
+            titulo: "Rastreabilidade",
+            tipo: "text",
+            placeholder: "Código de rastreamento (Max 20 caracteres)",
+            pattern: "^[A-Za-z0-9\\-\\/]{5,20}$", // CORREÇÃO: Limite ajustado para 20
+            required: true,
+            validationMessage:
+              "Código inválido. Use 5-20 caracteres alfanuméricos.", // CORREÇÃO: Mensagem atualizada
+            formatador: formatarRastreio,
+          },
+          {
+            id: "MaterialId",
             titulo: "Material",
             tipo: "select",
             options: listaMateriais,
