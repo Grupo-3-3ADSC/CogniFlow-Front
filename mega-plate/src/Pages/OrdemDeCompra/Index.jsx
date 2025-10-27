@@ -7,6 +7,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../provider/api";
 import { jwtDecode } from "jwt-decode";
+import iconbaixar from "../../assets/icon-baixar.png";
 import { jsPDF } from "jspdf";
 import NavBar from "../../components/NavBar";
 import {
@@ -16,6 +17,7 @@ import {
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import baixarOrdemDeCompraPDF from "../../tools/baixarOrdemDeCompraPDF";
+import { gerarPDFPrevia } from "../../tools/gerarPDFPrevia";
 
 export function OrdemDeCompra() {
   const [listaFornecedores, setListaFornecedores] = useState([]);
@@ -44,9 +46,13 @@ export function OrdemDeCompra() {
   const getMateriaPrima = useCallback(() => {
     api
       .get("/estoque")
-      .then((res) => setListaMateriais(res.data))
+      .then((res) => {
+        console.log("Dados retornados pela API:", res.data);
+        setListaMateriais(res.data);
+      })
       .catch((err) => console.error("Erro ao buscar estoque", err));
   }, []);
+ 
 
   const getUsuarioIdDoToken = () => {
     const token = sessionStorage.getItem("authToken");
@@ -259,7 +265,7 @@ export function OrdemDeCompra() {
             formatador: formatarValorMonetario,
           },
           { id: "total", titulo: "Total", tipo: "text", disabled: true },
-          { id: "ipi", titulo: "IPI", tipo: "text", disabled: true },
+        
         ],
         imagem: progressoConcluido,
       },
@@ -357,8 +363,9 @@ export function OrdemDeCompra() {
           const material = listaMateriais.find(
             (m) => m.id.toString() === valor.toString()
           );
-          if (material)
-            newState["IPI"] = formatarIPI(material.IPI?.toString() || "0");
+          if (material) {
+            newState["IPI"] = formatarIPI(material.ipi?.toString() || "0");
+          }
         }
 
         return newState;
@@ -462,7 +469,7 @@ export function OrdemDeCompra() {
         "Valor por Kg": valoresInput["Valor por Kg"] || "0,00",
         "Valor por peça": valoresInput["Valor por peça"] || "0,00",
         "Valor Unitário": valoresInput["Valor Unitário"],
-        IPI: valoresInput["IPI"] || "0,00",
+        ipi: listaMateriais.find(m => m.id === Number(materialSelecionado))?.ipi || 0,
         Total: totalCalculado,
         expandido: false
       };
@@ -525,7 +532,7 @@ export function OrdemDeCompra() {
         "Valor por Kg": valoresInput["Valor por Kg"] || "0,00",
         "Valor por peça": valoresInput["Valor por peça"] || "0,00",
         "Valor Unitário": valoresInput["Valor Unitário"],
-        IPI: valoresInput["IPI"] || "0,00",
+        ipi: listaMateriais.find(m => m.id === Number(materialSelecionado))?.ipi || 0,
         Total: totalCalculado,
         expandido: false
       },
@@ -568,7 +575,7 @@ export function OrdemDeCompra() {
       valorKg: parseFloat(mat["Valor por Kg"]?.replace(",", ".") || 0),
       valorPeca: parseFloat(mat["Valor por peça"]?.replace(",", ".") || 0),
       descricaoMaterial: mat["Descrição"],
-      ipi: parseFloat(mat.IPI?.replace(",", ".") || 0),
+      
       rastreabilidade: mat.Rastreabilidade,
       quantidade: parseInt(mat.Quantidade || 1),
       valorUnitario: parseFloat(mat["Valor Unitário"]?.replace(",", ".") || 0),
@@ -670,10 +677,8 @@ return (
                   <li key={idx}>
                     <div className={style.listaPrincipal}>
                       {mat.tipoMaterial} - Qtd: {mat.Quantidade} - Valor Unitário:{" "}
-                      {mat["Valor Unitário"]} - IPI: {mat.IPI} - Total:{" "}
+                      {mat["Valor Unitário"]} - IPI: {mat.ipi}% - Total:{" "}
                       {mat.Total || "0,00"}
-                      
-                      {/* ✅ Botões de ação */}
                       <div style={{ display: "flex", gap: "10px" }}>
                         <button onClick={() => abrirModalEdicao(idx)}>
                           Editar
@@ -749,11 +754,15 @@ return (
                     <div className={style.inputGroup}>
                       <p>
                         Descrição do material <span style={{ color: "red" }}>*</span>
+                        <span style={{ fontSize: "12px", color: "#666", marginLeft: "10px" }}>
+                          ({(valoresInput["Descrição"] || "").length}/50)
+                        </span>
                       </p>
                       <input
                         type="text"
                         placeholder="Ex: Parafuso galvanizado M6"
                         value={valoresInput["Descrição"] || ""}
+                        maxLength={50}
                         onChange={(e) => handleInputChange("Descrição", e.target.value)}
                       />
                     </div>
@@ -814,17 +823,7 @@ return (
                       />
                     </div>
 
-                    {/* IPI (calculado automaticamente) */}
-                    <div className={style.inputGroup}>
-                      <p>IPI</p>
-                      <input
-                        type="text"
-                        placeholder="Calculado automaticamente"
-                        value={valoresInput["IPI"] || ""}
-                        disabled
-                        style={{ backgroundColor: "#f0f0f0", cursor: "not-allowed" }}
-                      />
-                    </div>
+                    
 
                     {/* Total (calculado automaticamente) */}
                     <div className={style.inputGroup}>
@@ -847,8 +846,8 @@ return (
               </div>
             )}
 
-            {/* ✅ Modal de EDITAR material */
-            modalEdicao && (
+            {/* ✅ Modal de EDITAR material */}
+            {modalEdicao && (
               <div className={style.modalOverlay}>
                 <div className={style.modalContent}>
                   <h3>Editar Material</h3>
@@ -865,9 +864,7 @@ return (
                           const material = listaMateriais.find(
                             (m) => m.id.toString() === valor.toString()
                           );
-                          if (material) {
-                            handleInputChange("IPI", formatarIPI(material.IPI?.toString() || "0"));
-                          }
+                          // Não atualiza mais o campo IPI
                         }}
                       >
                         <option value="">Selecione um material</option>
@@ -892,11 +889,17 @@ return (
 
                     {/* Descrição do Material */}
                     <div className={style.inputGroup}>
-                      <p>Descrição do material <span style={{ color: "red" }}>*</span></p>
+                      <p>
+                        Descrição do material <span style={{ color: "red" }}>*</span>
+                        <span style={{ fontSize: "12px", color: "#666", marginLeft: "10px" }}>
+                          ({(valoresInput["Descrição"] || "").length}/50)
+                        </span>
+                      </p>
                       <input
                         type="text"
                         placeholder="Ex: Parafuso galvanizado M6"
                         value={valoresInput["Descrição"] || ""}
+                        maxLength={50}
                         onChange={(e) => handleInputChange("Descrição", e.target.value)}
                       />
                     </div>
@@ -945,18 +948,6 @@ return (
                       />
                     </div>
 
-                    {/* IPI */}
-                    <div className={style.inputGroup}>
-                      <p>IPI</p>
-                      <input
-                        type="text"
-                        placeholder="Calculado automaticamente"
-                        value={valoresInput["IPI"] || ""}
-                        disabled
-                        style={{ backgroundColor: "#f0f0f0", cursor: "not-allowed" }}
-                      />
-                    </div>
-
                     {/* Total */}
                     <div className={style.inputGroup}>
                       <p>Total</p>
@@ -978,6 +969,79 @@ return (
               </div>
             )}
           </>
+        )}
+
+        {/* === Etapa 3: Confirmação e Download === */}
+        {progresso === 3 && (
+          <div className={style.confirmacao}>
+            <h2>Resumo da Ordem de Compra</h2>
+            
+            {/* Informações do Fornecedor */}
+            <div className={style.resumoSecao}>
+              <h3>Dados do Fornecedor</h3>
+              <p><strong>Fornecedor:</strong> {listaFornecedores.find(f => f.fornecedorId === Number(valoresInput["FornecedorId"]))?.nomeFantasia || "N/A"}</p>
+              <p><strong>Prazo de entrega:</strong> {new Date(valoresInput["Prazo de entrega"]).toLocaleDateString("pt-BR")}</p>
+              <p><strong>Condição de Pagamento:</strong> {valoresInput["Cond. Pagamento"]}</p>
+            </div>
+
+            {/* Lista de Materiais */}
+            <div className={style.resumoSecao}>
+              <h3>Materiais Selecionados</h3>
+              <table className={style.tabelaResumo}>
+                <thead>
+                  <tr>
+                    <th>Material</th>
+                    <th>Descrição</th>
+                    <th>Quantidade</th>
+                    <th>Valor Unit.</th>
+                    <th>IPI</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {materiaisSelecionados.map((mat, idx) => (
+                    <tr key={idx}>
+                      <td>{mat.tipoMaterial}</td>
+                      <td>{mat["Descrição"]}</td>
+                      <td>{mat.Quantidade}</td>
+                      <td>R$ {mat["Valor Unitário"]}</td>
+                      <td>{mat.ipi}%</td>
+                      <td>R$ {mat.Total}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              
+              {/* Total Geral */}
+              <div className={style.totalGeral}>
+                <p><strong>Total Geral:</strong> R$ {
+                  materiaisSelecionados.reduce((acc, mat) => {
+                    const valor = parseFloat(mat.Total?.replace(",", ".") || 0);
+                    return acc + valor;
+                  }, 0).toFixed(2).replace(".", ",")
+                }</p>
+              </div>
+            </div>
+
+            {/* Botão de Download do PDF */}
+            <div className={style.acoesPDF}>
+              <button 
+                className={style.botaoPDF}
+                onClick={() => {
+                  const sucesso = gerarPDFPrevia(valoresInput, materiaisSelecionados, listaFornecedores);
+                  if (sucesso) {
+                    toastSuccess("PDF de pré-visualização baixado!");
+                  }
+                }}
+              >
+                <img src={iconbaixar} alt="Baixar" />
+              </button>
+            </div>
+
+            <p className={style.avisoConfirmacao}>
+              ⚠️ Revise os dados acima. Ao clicar em "Finalizar", a ordem será registrada no sistema.
+            </p>
+          </div>
         )}
 
         {/* === Botões de navegação === */}

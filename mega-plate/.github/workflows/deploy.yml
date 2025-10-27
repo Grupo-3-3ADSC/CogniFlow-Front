@@ -1,56 +1,56 @@
-name: Deploy to AWS EC2
+# name: Deploy to AWS EC2
 
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:  # Permite executar manualmente
+# on:
+#   push:
+#     branches: [ main ]
+#   workflow_dispatch:  # Permite executar manualmente
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
     
-    steps:
-    - name: Checkout código
-      uses: actions/checkout@v3
+#     steps:
+#     - name: Checkout código
+#       uses: actions/checkout@v3
 
-    - name: Deploy para EC2
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        port: 22
-        script: |
-          echo "🚀 Iniciando deploy do CogniFlow..."
+#     - name: Deploy para EC2
+#       uses: appleboy/ssh-action@v1.0.0
+#       with:
+#         host: ${{ secrets.EC2_HOST }}
+#         username: ${{ secrets.EC2_USER }}
+#         key: ${{ secrets.EC2_SSH_KEY }}
+#         port: 22
+#         script: |
+#           echo "🚀 Iniciando deploy do CogniFlow..."
           
-          # Navegar para diretório da aplicação
-          cd /var/www/cogniflow
+#           # Navegar para diretório da aplicação
+#           cd /var/www/cogniflow
           
-          # Atualizar código
-          echo "📥 Atualizando código..."
-          git pull origin main
+#           # Atualizar código
+#           echo "📥 Atualizando código..."
+#           git pull origin main
           
-          # Instalar dependências
-          echo "📦 Instalando dependências..."
-          npm ci
+#           # Instalar dependências
+#           echo "📦 Instalando dependências..."
+#           npm ci
           
-          # Build da aplicação
-          echo "🔨 Buildando aplicação..."
-          npm run build
+#           # Build da aplicação
+#           echo "🔨 Buildando aplicação..."
+#           npm run build
           
-          # Configurar permissões
-          echo "🔐 Configurando permissões..."
-          sudo chown -R www-data:www-data /var/www/cogniflow/dist
+#           # Configurar permissões
+#           echo "🔐 Configurando permissões..."
+#           sudo chown -R www-data:www-data /var/www/cogniflow/dist
           
-          # Reiniciar backend (se existir)
-          if pm2 list | grep -q "cogniflow-api"; then
-            echo "🔄 Reiniciando backend..."
-            pm2 restart cogniflow-api
-          fi
+#           # Reiniciar backend (se existir)
+#           if pm2 list | grep -q "cogniflow-api"; then
+#             echo "🔄 Reiniciando backend..."
+#             pm2 restart cogniflow-api
+#           fi
           
-          # Recarregar Nginx
-          echo "🔄 Recarregando Nginx..."
-          sudo systemctl reload nginx
+#           # Recarregar Nginx
+#           echo "🔄 Recarregando Nginx..."
+#           sudo systemctl reload nginx
           
-          echo "✅ Deploy concluído com sucesso!"
-          echo "🌐 Aplicação disponível em: http://52.23.195.19"
+#           echo "✅ Deploy concluído com sucesso!"
+#           echo "🌐 Aplicação disponível em: http://52.23.195.19"
