@@ -61,7 +61,8 @@ function App() {
   return (
     <Router>
       <AppContent />
-      <ToastContainer position="top-right" autoClose={1500} closeButton={false} />
+      <ToastContainer position="top-right"
+        closeButton={false} />
     </Router>
   );
 }
