@@ -137,7 +137,7 @@ export function gerarPDFPrevia(valoresInput, materiaisSelecionados, listaFornece
     doc.text(`R$ ${totalGeral.toFixed(2).replace(".", ",")}`, 170, posicaoY);
 
     // ✅ ADICIONADO: Linha do IPI total
-    doc.text("IPI:", 135, posicaoY + 7);
+    doc.text("CONVERSÃO IPI:", 135, posicaoY + 7);
     doc.text(`R$ ${ipiTotal.toFixed(2).replace(".", ",")}`, 170, posicaoY + 7);
 
     // ✅ ADICIONADO: Total Geral (Subtotal + IPI)
