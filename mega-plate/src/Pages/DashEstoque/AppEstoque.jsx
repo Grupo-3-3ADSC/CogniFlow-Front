@@ -684,28 +684,28 @@ const [valorIPI, setValorIPI] = useState(0);
 
                         <td
                           style={{
-                            color: quantidadeC1 > 0 ? "green" : "inherit",
+                            color: quantidadeC1 > 0 ? "#7CFC00" : "inherit",
                           }}
                         >
                           {quantidadeC1}
                         </td>
                         <td
                           style={{
-                            color: quantidadeC2 > 0 ? "green" : "inherit",
+                            color: quantidadeC2 > 0 ? "#7CFC00" : "inherit",
                           }}
                         >
                           {quantidadeC2}
                         </td>
                         <td
                           style={{
-                            color: quantidadeC3 > 0 ? "green" : "inherit",
+                            color: quantidadeC3 > 0 ? "#7CFC00" : "inherit",
                           }}
                         >
                           {quantidadeC3}
                         </td>
                         <td
                           style={{
-                            color: quantidadeC4 > 0 ? "green" : "inherit",
+                            color: quantidadeC4 > 0 ? "#7CFC00" : "inherit",
                           }}
                         >
                           {quantidadeC4}
