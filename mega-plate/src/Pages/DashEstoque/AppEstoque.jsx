@@ -543,40 +543,6 @@ const [valorIPI, setValorIPI] = useState(0);
     // console.log(temPendenciasParaMaterial(materialAtual, ultimasOrdensPorMaterial, pendenciasPorMaterial));
   }, [ordemDeCompra]);
 
-  // function temPendenciasParaMaterial(material) {
-  //   const materialUpper = material?.toUpperCase();
-  //   const ultimaOrdem = ultimasOrdensPorMaterial[materialUpper];
-
-  //   if (!ultimaOrdem) return false;
-
-  //   const hoje = new Date();
-  //   const prazoUltimaOrdem = new Date(ultimaOrdem.prazoEntrega);
-
-  //   // Tem pendência se a última ordem ainda não venceu o prazo
-  //   return prazoUltimaOrdem > hoje;
-  // }
-
-  // Para usar na tabela (exemplo para cada linha):
-  // Supondo que você tenha uma variável 'material' para cada linha da tabela
-
-  // Para SAE 1020:
-  // const materialSAE1020 = "SAE 1020";
-  // const pendenciasSAE1020 = temPendenciasParaMaterial(materialSAE1020)
-  //   ? pendenciasPorMaterial[materialSAE1020.toUpperCase()] || 0
-  //   : 0;
-
-  // // Para SAE 1045:
-  // const materialSAE1045 = "SAE 1045";
-  // const pendenciasSAE1045 = temPendenciasParaMaterial(materialSAE1045)
-  //   ? pendenciasPorMaterial[materialSAE1045.toUpperCase()] || 0
-  //   : 0;
-
-  // // Para HARDOX:
-  // const materialHARDOX = "HARDOX";
-  // const pendenciasHARDOX = temPendenciasParaMaterial(materialHARDOX)
-  //   ? pendenciasPorMaterial[materialHARDOX.toUpperCase()] || 0
-  //   : 0;
-
   return (
     <div className="IndexFornecedor">
       <NavBar />

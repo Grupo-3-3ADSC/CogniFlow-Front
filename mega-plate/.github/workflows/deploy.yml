@@ -1,56 +1,223 @@
-# name: Deploy to AWS EC2
+# # Nome do workflow que aparece na interface do GitHub Actions
+# name: Frontend CI/CD
 
+# # Define quando o workflow será executado
 # on:
 #   push:
-#     branches: [ main ]
-#   workflow_dispatch:  # Permite executar manualmente
+#     branches: [ main, merge-sprint2 ]  # Executa quando houver push nessas branches
+#   pull_request:
+#     branches: [ main, merge-sprint2 ]  # Executa quando criar/atualizar PR para essas branches
+#   workflow_dispatch:  # Permite executar manualmente através da interface do GitHub
 
+# # Define os jobs (tarefas) que serão executados
 # jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
+#   # ==========================================
+#   # JOB 1: CI - Continuous Integration
+#   # Valida o código antes de fazer deploy
+#   # ==========================================
+#   ci:
+#     name: CI - Build e Validação  # Nome amigável do job
+#     runs-on: ubuntu-latest  # Sistema operacional onde o job será executado
     
 #     steps:
+#     # PASSO 1: Baixar o código do repositório
+#     - name: Checkout código
+#       uses: actions/checkout@v3  # Action oficial do GitHub para clonar o repo
+
+#     # PASSO 2: Configurar Node.js no ambiente
+#     - name: Setup Node.js
+#       uses: actions/setup-node@v3  # Action para instalar Node.js
+#       with:
+#         node-version: '20'  # Versão do Node.js a ser usada
+#         cache: 'npm'  # Faz cache das dependências do npm para acelerar builds futuros
+
+#     # PASSO 3: Instalar todas as dependências do projeto
+#     - name: Instalar dependências
+#       run: npm ci  # npm ci é mais rápido e confiável que npm install em CI/CD
+
+#     # PASSO 4: Verificar qualidade do código (linting)
+#     - name: Verificar Linting
+#       run: npm run lint || echo "⚠️ Linting com warnings"
+#       continue-on-error: true  # Não falha o workflow se houver erros de lint
+
+#     # PASSO 5: Executar testes automatizados
+#     - name: Rodar testes
+#       run: npm test || echo "⚠️ Testes não configurados"
+#       continue-on-error: true  # Não falha se testes não estiverem configurados
+
+#     # PASSO 6: Fazer build de teste para validar que compila
+#     - name: Build de validação
+#       run: npm run build  # Se o build falhar aqui, o deploy não acontece
+
+#     # PASSO 7: Mostrar informações sobre o build
+#     - name: Verificar tamanho do build
+#       run: |
+#         echo "📦 Tamanho do build:"
+#         du -sh dist/ || du -sh build/  # Tenta ambas as pastas comuns de build
+        
+#     # PASSO 8: Confirmação de que CI passou
+#     - name: CI aprovado
+#       run: echo "✅ Build validado! Pronto para deploy."
+
+#   # ==========================================
+#   # JOB 2: CD - Continuous Deployment
+#   # Faz deploy na EC2 apenas se o CI passar
+#   # ==========================================
+#   deploy:
+#     name: Deploy para EC2
+#     runs-on: ubuntu-latest
+#     needs: ci  # IMPORTANTE: Só executa se o job 'ci' for bem-sucedido
+#     # Condição: apenas em push (não em PR) e apenas nas branches especificadas
+#     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/merge-sprint2')
+    
+#     steps:
+#     # PASSO 1: Baixar código novamente (cada job é um ambiente isolado)
 #     - name: Checkout código
 #       uses: actions/checkout@v3
 
+#     # PASSO 2: Conectar na EC2 via SSH e executar comandos
 #     - name: Deploy para EC2
-#       uses: appleboy/ssh-action@v1.0.0
+#       uses: appleboy/ssh-action@v1.0.0  # Action para executar comandos SSH
 #       with:
-#         host: ${{ secrets.EC2_HOST }}
-#         username: ${{ secrets.EC2_USER }}
-#         key: ${{ secrets.EC2_SSH_KEY }}
-#         port: 22
+#         host: ${{ secrets.EC2_HOST }}  # IP da EC2 (guardado nos secrets)
+#         username: ${{ secrets.EC2_USER }}  # Usuário SSH (geralmente 'ubuntu')
+#         key: ${{ secrets.EC2_SSH_KEY }}  # Chave privada SSH (.pem)
+#         port: 22  # Porta SSH padrão
+#         command_timeout: 10m  # Timeout de 10 minutos para comandos longos
 #         script: |
-#           echo "🚀 Iniciando deploy do CogniFlow..."
+#           # Parar execução se qualquer comando falhar
+#           set -e
           
-#           # Navegar para diretório da aplicação
+#           # ===== CABEÇALHO COM INFORMAÇÕES DO DEPLOY =====
+#           echo "======================================"
+#           echo "🚀 INICIANDO DEPLOY DO COGNIFLOW"
+#           echo "======================================"
+#           echo "📍 Branch: ${{ github.ref_name }}"  # Branch que disparou o deploy
+#           echo "📝 Commit: ${{ github.sha }}"  # Hash do commit
+#           echo "👤 Autor: ${{ github.actor }}"  # Quem fez o push
+#           echo "⏰ Início: $(date '+%Y-%m-%d %H:%M:%S')"
+#           echo ""
+          
+#           # ===== NAVEGAR PARA O DIRETÓRIO DA APLICAÇÃO =====
 #           cd /var/www/cogniflow
           
-#           # Atualizar código
-#           echo "📥 Atualizando código..."
-#           git pull origin main
-          
-#           # Instalar dependências
-#           echo "📦 Instalando dependências..."
-#           npm ci
-          
-#           # Build da aplicação
-#           echo "🔨 Buildando aplicação..."
-#           npm run build
-          
-#           # Configurar permissões
-#           echo "🔐 Configurando permissões..."
-#           sudo chown -R www-data:www-data /var/www/cogniflow/dist
-          
-#           # Reiniciar backend (se existir)
-#           if pm2 list | grep -q "cogniflow-api"; then
-#             echo "🔄 Reiniciando backend..."
-#             pm2 restart cogniflow-api
+#           # ===== BACKUP DO BUILD ANTERIOR =====
+#           # Se já existe uma pasta 'dist', fazer backup antes de substituir
+#           if [ -d "dist" ]; then
+#             echo "💾 Criando backup do build anterior..."
+#             BACKUP_DIR="dist.backup.$(date +%Y%m%d_%H%M%S)"
+#             sudo cp -r dist "$BACKUP_DIR"  # Copia a pasta dist atual
+#             echo "✅ Backup criado: $BACKUP_DIR"
+            
+#             # Manter apenas os últimos 3 backups (economizar espaço)
+#             ls -dt dist.backup.* 2>/dev/null | tail -n +4 | xargs sudo rm -rf 2>/dev/null || true
+#             echo ""
 #           fi
           
-#           # Recarregar Nginx
-#           echo "🔄 Recarregando Nginx..."
-#           sudo systemctl reload nginx
+#           # ===== VERIFICAR SE É UM REPOSITÓRIO GIT =====
+#           if [ ! -d .git ]; then
+#             echo "❌ ERRO: Não é um repositório git!"
+#             exit 1  # Abortar deploy
+#           fi
           
-#           echo "✅ Deploy concluído com sucesso!"
-#           echo "🌐 Aplicação disponível em: http://52.23.195.19"
+#           # ===== SALVAR MUDANÇAS LOCAIS TEMPORARIAMENTE =====
+#           echo "💾 Salvando mudanças locais..."
+#           git stash  # Guarda mudanças não commitadas
+          
+#           # ===== ATUALIZAR CÓDIGO DO GITHUB =====
+#           echo "📥 Atualizando código..."
+#           git fetch origin  # Busca atualizações do GitHub
+#           git reset --hard origin/${{ github.ref_name }}  # Força atualização para a branch
+#           echo "✅ Código atualizado para commit: $(git rev-parse --short HEAD)"
+#           echo ""
+          
+#           # ===== VERIFICAR AMBIENTE NODE.JS =====
+#           echo "🔍 Verificando ambiente..."
+#           echo "Node: $(node --version)"  # Mostra versão do Node instalada
+#           echo "NPM: $(npm --version)"  # Mostra versão do NPM instalada
+#           echo ""
+          
+#           # ===== INSTALAR DEPENDÊNCIAS =====
+#           echo "📦 Instalando dependências..."
+#           npm ci  # Instala dependências de forma limpa e determinística
+#           echo "✅ Dependências instaladas"
+#           echo ""
+          
+#           # ===== BUILD DA APLICAÇÃO =====
+#           echo "🔨 Buildando aplicação..."
+#           npm run build  # Compila o projeto (gera pasta 'dist')
+          
+#           # ===== VERIFICAR SE O BUILD FOI CRIADO =====
+#           if [ ! -d "dist" ]; then
+#             echo "❌ ERRO: Pasta dist não foi criada!"
+#             echo "🔄 Restaurando backup..."
+#             # Se build falhar, restaura o backup anterior
+#             if [ -n "$BACKUP_DIR" ] && [ -d "$BACKUP_DIR" ]; then
+#               sudo mv "$BACKUP_DIR" dist
+#               echo "✅ Backup restaurado"
+#             fi
+#             exit 1  # Abortar deploy
+#           fi
+          
+#           echo "✅ Build criado com sucesso"
+#           echo "📊 Tamanho: $(du -sh dist/ | cut -f1)"  # Mostra tamanho do build
+#           echo ""
+          
+#           # ===== CONFIGURAR PERMISSÕES =====
+#           echo "🔐 Configurando permissões..."
+#           sudo chown -R www-data:www-data dist/  # Dá propriedade ao usuário do Nginx
+#           sudo chmod -R 755 dist/  # Define permissões de leitura/execução
+#           echo "✅ Permissões configuradas"
+#           echo ""
+          
+#           # ===== REINICIAR BACKEND (SE EXISTIR) =====
+#           # Verifica se PM2 está instalado (gerenciador de processos Node.js)
+#           if command -v pm2 &> /dev/null; then
+#             # Verifica se existe processo chamado 'cogniflow'
+#             if pm2 list | grep -q "cogniflow"; then
+#               echo "🔄 Reiniciando backend PM2..."
+#               pm2 restart cogniflow  # Reinicia o processo do backend
+#               echo "✅ Backend reiniciado"
+#             fi
+#           fi
+          
+#           # ===== RECARREGAR NGINX =====
+#           echo "🔄 Recarregando Nginx..."
+#           if sudo nginx -t; then  # Testa configuração do Nginx
+#             sudo systemctl reload nginx  # Recarrega Nginx sem derrubar conexões
+#             echo "✅ Nginx recarregado"
+#           else
+#             echo "❌ ERRO: Configuração do Nginx inválida!"
+#             exit 1  # Abortar se config do Nginx estiver errada
+#           fi
+          
+#           # ===== MENSAGEM DE SUCESSO =====
+#           echo ""
+#           echo "======================================"
+#           echo "✅ DEPLOY CONCLUÍDO COM SUCESSO!"
+#           echo "======================================"
+#           echo "🌐 URL: http://${{ secrets.EC2_HOST }}"
+#           echo "⏰ Finalizado: $(date '+%Y-%m-%d %H:%M:%S')"
+#           echo "======================================"
+
+#     # ===== RESUMO NA INTERFACE DO GITHUB =====
+#     # Cria um resumo visual na aba "Summary" do workflow
+#     - name: Resumo do Deploy
+#       if: success()  # Só executa se o deploy foi bem-sucedido
+#       run: |
+#         echo "## ✅ Deploy Realizado com Sucesso!" >> $GITHUB_STEP_SUMMARY
+#         echo "" >> $GITHUB_STEP_SUMMARY
+#         echo "- 🌐 **URL:** http://${{ secrets.EC2_HOST }}" >> $GITHUB_STEP_SUMMARY
+#         echo "- 📝 **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+#         echo "- 👤 **Autor:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+#         echo "- 🕐 **Horário:** $(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+        
+#     # ===== ALERTA DE FALHA =====
+#     # Mostra mensagem se o deploy falhar
+#     - name: Alerta de Falha
+#       if: failure()  # Só executa se houve falha
+#       run: |
+#         echo "## ❌ Deploy Falhou!" >> $GITHUB_STEP_SUMMARY
+#         echo "" >> $GITHUB_STEP_SUMMARY
+#         echo "⚠️ O build anterior foi mantido como backup" >> $GITHUB_STEP_SUMMARY
+#         echo "🔍 Verifique os logs acima para detalhes" >> $GITHUB_STEP_SUMMARY
