@@ -2,9 +2,9 @@ name: Frontend CI/CD
 
 on:
   push:
-    branches: [  merge-sprint2 ]
+    branches: [ merge-sprint2 ]
   pull_request:
-    branches: [  merge-sprint2 ]
+    branches: [ merge-sprint2 ]
   workflow_dispatch:
 
 jobs:
@@ -12,55 +12,55 @@ jobs:
   # CI - Testes e Validações
   # ==========================================
   ci:
-    name:  CI - Build e Validação
+    name: CI - Build e Validação
     runs-on: ubuntu-latest
     
     steps:
-    - name:  Checkout código
+    - name: Checkout código
       uses: actions/checkout@v3
 
-    - name:  Setup Node.js
+    - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '20'
         cache: 'npm'
 
-    - name:  Instalar dependências
+    - name: Instalar dependências
       run: npm ci
 
-    - name:  Verificar Linting
+    - name: Verificar Linting
       run: npm run lint || echo "⚠️ Linting com warnings"
       continue-on-error: true
 
-    - name:  Rodar testes
+    - name: Rodar testes
       run: npm test || echo "⚠️ Testes não configurados"
       continue-on-error: true
 
-    - name:  Build de validação
+    - name: Build de validação
       run: npm run build
 
-    - name:  Verificar tamanho do build
+    - name: Verificar tamanho do build
       run: |
         echo " Tamanho do build:"
         du -sh dist/ || du -sh build/
         
-    - name:  CI aprovado
+    - name: CI aprovado
       run: echo " Build validado! Pronto para deploy."
 
   # ==========================================
   # CD - Deploy para EC2
   # ==========================================
   deploy:
-    name:  Deploy para EC2
+    name: Deploy para EC2
     runs-on: ubuntu-latest
     needs: ci
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/merge-sprint2')
     
     steps:
-    - name:  Checkout código
+    - name: Checkout código
       uses: actions/checkout@v3
 
-    - name:  Deploy para EC2
+    - name: Deploy para EC2
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -177,21 +177,20 @@ jobs:
           echo " Finalizado: $(date '+%Y-%m-%d %H:%M:%S')"
           echo "======================================"
 
-    - name:  Resumo do Deploy
+    - name: Resumo do Deploy
       if: success()
       run: |
-        echo "##  Deploy Realizado com Sucesso!" >> $GITHUB_STEP_SUMMARY
+        echo "##  Deploy Realizado com Sucesso!" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "-  **URL:** http://${{ secrets.EC2_HOST }}" >> $GITHUB_STEP_SUMMARY
-        echo "-  **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-        echo "-  **Autor:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-        echo "-  **Horário:** $(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+        echo "-  **URL:** http://${{ secrets.EC2_HOST }}" >> $GITHUB_STEP_SUMMARY
+        echo "-  **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "-  **Autor:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "-  **Horário:** $(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_STEP_SUMMARY
         
-    - name:  Alerta de Falha
+    - name: Alerta de Falha
       if: failure()
       run: |
-        echo "##  Deploy Falhou!" >> $GITHUB_STEP_SUMMARY
+        echo "##  Deploy Falhou!" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo " O build anterior foi mantido como backup" >> $GITHUB_STEP_SUMMARY
         echo " Verifique os logs acima para detalhes" >> $GITHUB_STEP_SUMMARY
-        
