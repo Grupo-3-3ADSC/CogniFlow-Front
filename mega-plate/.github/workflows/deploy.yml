@@ -38,6 +38,7 @@ jobs:
 
     - name: Build de validação
       run: npm run build
+      build: vite build
 
     - name: Verificar tamanho do build
       run: |
