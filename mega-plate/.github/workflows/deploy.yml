@@ -71,3 +71,4 @@ jobs:
           echo "Preparado para copiar build para EC2 quando acesso estiver liberado"
           # scp -r ./mega-plate/build usuario@ec2-ip:/home/usuario/frontend/
           # ssh usuario@ec2-ip 'sudo systemctl restart frontend-app'
+          
