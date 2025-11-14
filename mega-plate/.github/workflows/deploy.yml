@@ -3,8 +3,7 @@ name: Frontend CI/CD
 on:
   push:
     branches:
-      - main
-      - fix/tabela-formatada
+     -  merge-sprint2 
   pull_request:
     branches:
       - main
@@ -34,6 +33,14 @@ jobs:
         run: npm install
         working-directory: ./mega-plate
 
+      # --- NOVO PASSO DE DIAGNÓSTICO ---
+      # Adicione este passo para ver o que o GitHub está a ler
+      - name: Show package.json
+        run: |
+          echo "--- Lendo ./mega-plate/package.json ---"
+          cat ./mega-plate/package.json
+          echo "----------------------------------------"
+        
       - name: Build project
         run: npm run build
         working-directory: ./mega-plate
@@ -62,8 +69,6 @@ jobs:
       - name: Configurar AWS CLI
         uses: aws-actions/configure-aws-credentials@v2
         with:
-      #    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
       - name: Deploy build no EC2 (exemplo)
@@ -71,4 +76,3 @@ jobs:
           echo "Preparado para copiar build para EC2 quando acesso estiver liberado"
           # scp -r ./mega-plate/build usuario@ec2-ip:/home/usuario/frontend/
           # ssh usuario@ec2-ip 'sudo systemctl restart frontend-app'
-          
