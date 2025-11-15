@@ -1,5 +1,4 @@
 name: Frontend CI/CD
-
 on:
   push:
     branches:
@@ -7,17 +6,13 @@ on:
   pull_request:
     branches:
       - "main"
-
 jobs:
-  build-and-deploy:
-    name: Build and Deploy Frontend
+  build:
+    name: Build Frontend
     runs-on: ubuntu-latest
     steps:
-      # 1. Checkout do código
       - name: Checkout repo
         uses: actions/checkout@v3
-
-      # 2. Cache do npm
       - name: Cache npm
         uses: actions/cache@v3
         with:
@@ -25,55 +20,45 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
-
-      # 3. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
-
-      # 4. Instalar dependências
       - name: Install dependencies
         run: npm install
         working-directory: ./mega-plate
-
-      # 5. Build do projeto
       - name: Build project
         run: npm run build
         working-directory: ./mega-plate
-
-      # 6. Verificar se o build foi criado
-      - name: Verificar build
-        run: |
-          echo "📦 Conteúdo do diretório build:"
-          ls -la ./mega-plate/build || echo "❌ Diretório build não encontrado!"
-          echo "📊 Tamanho total:"
-          du -sh ./mega-plate/build || echo "❌ Não foi possível calcular tamanho"
-
-      # 7. Deploy para EC2 (apenas em push para merge-sprint2)
-      - name: Deploy to EC2 via rsync
-        if: github.ref == 'refs/heads/merge-sprint2' && github.event_name == 'push'
-        run: |
-          # Salvar chave SSH
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          
-          # Adicionar host aos known_hosts
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-          
-          # Fazer rsync
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-            ./mega-plate/build/ \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/var/www/html/
-          
-          # Limpar chave
-          rm -f ~/.ssh/deploy_key
-
-      # 8. Restart Nginx
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: front-build
+          path: ./mega-plate/build
+  deploy:
+    name: Deploy para AWS EC2
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/merge-sprint2' && github.event_name == 'push'
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: front-build
+          path: ./build
+      - name: Deploy to EC2 via SCP
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "./build/*"
+          target: "/var/www/html"
+          strip_components: 1
+          rm: true
       - name: Restart Nginx on EC2
-        if: github.ref == 'refs/heads/merge-sprint2' && github.event_name == 'push'
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -81,5 +66,4 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             sudo systemctl restart nginx
-            echo "✅ Deploy concluído com sucesso!"
-            echo "🌐 Acesse: http://$(curl -s ifconfig.me)"
+            echo "Deploy concluído com sucesso!"
