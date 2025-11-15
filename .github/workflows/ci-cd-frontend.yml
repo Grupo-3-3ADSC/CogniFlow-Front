@@ -51,17 +51,25 @@ jobs:
           du -sh ./mega-plate/build || echo "❌ Não foi possível calcular tamanho"
 
       # 7. Deploy para EC2 (apenas em push para merge-sprint2)
-      - name: Deploy to EC2 via SCP
+      - name: Deploy to EC2 via rsync
         if: github.ref == 'refs/heads/merge-sprint2' && github.event_name == 'push'
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "./mega-plate/build/*"
-          target: "/var/www/html"
-          strip_components: 2
-          rm: true
+        run: |
+          # Salvar chave SSH
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          
+          # Adicionar host aos known_hosts
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          
+          # Fazer rsync
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            ./mega-plate/build/ \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/var/www/html/
+          
+          # Limpar chave
+          rm -f ~/.ssh/deploy_key
 
       # 8. Restart Nginx
       - name: Restart Nginx on EC2
