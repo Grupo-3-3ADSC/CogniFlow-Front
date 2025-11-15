@@ -1,5 +1,5 @@
 name: Frontend CI/CD
-on:
+on: 
   push:
     branches:
       - "merge-sprint2"
