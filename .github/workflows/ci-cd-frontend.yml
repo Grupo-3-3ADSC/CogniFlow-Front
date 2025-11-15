@@ -34,7 +34,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: front-build
-          path: ./mega-plate/build
+          # --- IMPORTANT ---
+          # I've changed this path to 'dist' as a common example.
+          # Please check your ./mega-plate/package.json build script
+          # to see what your build output directory is and update
+          # this path to match (e.g., './mega-plate/build', './mega-plate/dist', etc.)
+          path: ./mega-plate/dist
   deploy:
     name: Deploy para AWS EC2
     runs-on: ubuntu-latest
@@ -54,7 +59,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "./build/*"
+          source: "./build/" # Using ./build/ is often safer than ./build/*
           target: "/var/www/html"
           strip_components: 1
           rm: true
