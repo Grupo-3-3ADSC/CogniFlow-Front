@@ -6,6 +6,7 @@ on:
   pull_request:
     branches:
       - "main"
+
 jobs:
   build:
     name: Build Frontend
@@ -13,6 +14,7 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+      
       - name: Cache npm
         uses: actions/cache@v3
         with:
@@ -20,26 +22,26 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
+      
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
+      
       - name: Install dependencies
         run: npm install
         working-directory: ./mega-plate
+      
       - name: Build project
         run: npm run build
         working-directory: ./mega-plate
+      
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: front-build
-          # --- IMPORTANT ---
-          # I've changed this path to 'dist' as a common example.
-          # Please check your ./mega-plate/package.json build script
-          # to see what your build output directory is and update
-          # this path to match (e.g., './mega-plate/build', './mega-plate/dist', etc.)
           path: ./mega-plate/dist
+
   deploy:
     name: Deploy para AWS EC2
     runs-on: ubuntu-latest
@@ -48,27 +50,41 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+      
       - name: Download Build Artifacts
         uses: actions/download-artifact@v4
         with:
           name: front-build
           path: ./build
-      - name: Deploy to EC2 via SCP
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "./build/" # Using ./build/ is often safer than ./build/*
-          target: "/var/www/html"
-          strip_components: 1
-          rm: true
-      - name: Restart Nginx on EC2
+      
+      - name: Clean target directory
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            sudo rm -rf /var/www/html/*
+            sudo rm -rf /var/www/html/.[!.]*
+      
+      - name: Deploy to EC2 via SCP
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "./build/*"
+          target: "/var/www/html"
+          strip_components: 1
+      
+      - name: Set permissions and restart Nginx
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo chown -R www-data:www-data /var/www/html
+            sudo chmod -R 755 /var/www/html
             sudo systemctl restart nginx
             echo "Deploy concluído com sucesso!"
