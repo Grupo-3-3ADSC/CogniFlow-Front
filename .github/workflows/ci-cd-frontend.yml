@@ -57,7 +57,18 @@ jobs:
           name: front-build
           path: ./build
       
-      - name: Clean target directory
+      - name: Deploy to EC2 via SCP
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "./build/*"
+          target: "/home/${{ secrets.EC2_USER }}/frontend-build"
+          strip_components: 1
+          overwrite: true
+      
+      - name: Move files and restart Nginx
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -66,25 +77,9 @@ jobs:
           script: |
             sudo rm -rf /var/www/html/*
             sudo rm -rf /var/www/html/.[!.]*
-      
-      - name: Deploy to EC2 via SCP
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "./build/*"
-          target: "/var/www/html"
-          strip_components: 1
-      
-      - name: Set permissions and restart Nginx
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
+            sudo cp -r /home/$USER/frontend-build/* /var/www/html/
             sudo chown -R www-data:www-data /var/www/html
             sudo chmod -R 755 /var/www/html
+            rm -rf /home/$USER/frontend-build
             sudo systemctl restart nginx
             echo "Deploy concluído com sucesso!"
