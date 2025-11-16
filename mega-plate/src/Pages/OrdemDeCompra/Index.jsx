@@ -495,28 +495,27 @@ export function OrdemDeCompra() {
   const qtd = parseInt(quantidadeMaterial);
   const totalCalculado = (valorUnit * qtd).toFixed(2).replace(".", ",");
 
-  setMateriaisSelecionados((prev) => {
-    const copy = [...prev];
-    copy[materialEditandoIndex] = {
-      ...mat,
-      Quantidade: quantidadeMaterial,
-      Descrição: valoresInput["Descrição"],
-      Rastreabilidade: valoresInput["Rastreabilidade"],
-      "Valor por Kg": valoresInput["Valor por Kg"] || "0,00",
-      "Valor por peça": valoresInput["Valor por peça"] || "0,00",
-      "Valor Unitário": valoresInput["Valor Unitário"],
-      ipi:
-        listaMateriais.find((m) => m.id === Number(materialSelecionado))
-          ?.ipi || 0,
-      Total: totalCalculado,
-      expandido: false,
-    };
-    return copy;
-  });
+ setMateriaisSelecionados((prev) => [
+  ...prev,
+  {
+estoqueId: material.estoqueId,
+    tipoMaterial: mat.tipoMaterial, // 👈 ADICIONE ESTA LINHA
+  descricao: valoresInput["Descrição"],
+  rastreabilidade: valoresInput["Rastreabilidade"].substring(0, 16),
+  quantidade: Number(valoresInput["Quantidade"]),
+  valorKg: Number(valoresInput["Valor Kg"]) || null,
+  valorPeca: Number(valoresInput["Valor peça"]) || null,
+  valorUnitario: Number(valoresInput["Valor Unitário"]),
+  total: calcularTotal(valorUnitario, Number(valoresInput["Quantidade"])),
+  tipoMaterial: material.tipoMaterial,
+  },
+]);
+
 
   fecharModalEdicao();
   toastSuccess("Material atualizado com sucesso!");
 };
+
 
 
   // ✅ Nova função para remover material
@@ -585,23 +584,21 @@ export function OrdemDeCompra() {
   const totalCalculado = (valorUnit * qtd).toFixed(2).replace(".", ",");
 
   // 🔸 Adiciona o material completo
-  setMateriaisSelecionados((prev) => [
-    ...prev,
-    {
-      ...mat,
-      Quantidade: quantidadeMaterial,
-      Descrição: valoresInput["Descrição"],
-      Rastreabilidade: valoresInput["Rastreabilidade"],
-      "Valor por Kg": valoresInput["Valor por Kg"] || "0,00",
-      "Valor por peça": valoresInput["Valor por peça"] || "0,00",
-      "Valor Unitário": valoresInput["Valor Unitário"],
-      ipi:
-        listaMateriais.find((m) => m.id === Number(materialSelecionado))
-          ?.ipi || 0,
-      Total: totalCalculado,
-      expandido: false,
-    },
-  ]);
+setMateriaisSelecionados((prev) => [
+  ...prev,
+  {
+    estoqueId: mat.id,
+    quantidade: Number(quantidadeMaterial),
+    descricao: valoresInput["Descrição"],
+    rastreabilidade: valoresInput["Rastreabilidade"].substring(0, 16),
+    valorKg: Number((valoresInput["Valor por Kg"] || "0").replace(",", ".")),
+    valorPeca: Number((valoresInput["Valor por peça"] || "0").replace(",", ".")),
+    valorUnitario: Number((valoresInput["Valor Unitário"] || "0").replace(",", ".")),
+    total: totalCalculado,
+  },
+]);
+
+
 
   limparCamposModal();
   fecharModal();
@@ -636,56 +633,55 @@ export function OrdemDeCompra() {
   ]);
 
   // Finalizar ordem - CORRIGIDO: Envia array de ordens ao invés de objeto único
-  const finalizarOrdemDeCompra = useCallback(() => {
-    const usuarioId = getUsuarioIdDoToken();
 
-    // ✅ Cria um array de objetos (um para cada material)
-    const ordensParaEnviar = materiaisSelecionados.map((mat) => ({
-      usuarioId: usuarioId,
-      fornecedorId: Number(valoresInput["FornecedorId"]),
-      prazoEntrega: valoresInput["Prazo de entrega"], 
-      condPagamento: valoresInput["Cond. Pagamento"],
-      estoqueId: mat.id,
-      valorKg: parseFloat(mat["Valor por Kg"]?.replace(",", ".") || 0),
-      valorPeca: parseFloat(mat["Valor por peça"]?.replace(",", ".") || 0),
-      descricaoMaterial: mat["Descrição"],
+const finalizarOrdemDeCompra = () => {
+  const usuarioId = getUsuarioIdDoToken();
 
-      rastreabilidade: mat.Rastreabilidade,
-      quantidade: parseInt(mat.Quantidade || 1),
-      valorUnitario: parseFloat(mat["Valor Unitário"]?.replace(",", ".") || 0),
-    }));
+  const ordensParaEnviar = materiaisSelecionados.map((mat) => ({
+    usuarioId: usuarioId,
+    fornecedorId: Number(valoresInput["FornecedorId"]),
+    estoqueId: Number(mat.estoqueId),
 
-   
-   if (!valoresInput["FornecedorId"] || !valoresInput["Prazo de entrega"] || !valoresInput["Cond. Pagamento"]) {
+    prazoEntrega: valoresInput["Prazo de entrega"],
+    condPagamento: valoresInput["Cond. Pagamento"],
 
-  toastError("Preencha todos os dados do fornecedor antes de finalizar.");
-  return;
-}
+    valorKg: mat.valorKg > 0 ? Number(mat.valorKg) : null,
+    valorPeca: mat.valorPeca > 0 ? Number(mat.valorPeca) : null,
+    valorUnitario: Number(mat.valorUnitario),
 
-    // ✅ Envia o array diretamente
-    api
-      .post("/ordemDeCompra/multiplas-ordens", ordensParaEnviar)
-      .then((res) => {
-        const novaId = res?.data?.id || res?.data?.[0]?.id;
-        if (!novaId || isNaN(novaId)) {
-          toastError("Erro ao obter o ID da nova ordem de compra.");
-          return;
-        }
-        return api.get(`/ordemDeCompra/${novaId}`);
-      })
-      .then((resDetalhado) => {
-        if (!resDetalhado) return;
-        setOrdemDeCompra(resDetalhado.data);
-        toastSuccess("Ordem cadastrada com sucesso!");
-        setProgresso(4);
-      })
-      .catch((err) => {
-        console.error("Erro completo:", err.response?.data);
-        toastError(
-          err.response?.data?.message || "Erro ao criar ordem de compra"
-        );
-      });
-  }, [materiaisSelecionados, valoresInput]);
+    descricaoMaterial: mat.descricao,
+    rastreabilidade: mat.rastreabilidade.substring(0, 16),
+
+    quantidade: Number(mat.quantidade),
+  }));
+
+  const camposInvalidos = ordensParaEnviar.some(ord =>
+    (!ord.valorKg && !ord.valorPeca) ||
+    !ord.valorUnitario ||
+    !ord.descricaoMaterial ||
+    !ord.rastreabilidade ||
+    !ord.quantidade
+  );
+
+  if (camposInvalidos) {
+    toastError("Preencha todos os campos obrigatórios antes de finalizar!");
+    return;
+  }
+
+  console.log("📦 ENVIANDO PARA O BACKEND:", JSON.stringify(ordensParaEnviar, null, 2));
+
+  api.post("/ordemDeCompra/multiplas-ordens", ordensParaEnviar)
+    .then(() => {
+      toastSuccess("Ordem cadastrada com sucesso!");
+      setProgresso(4);
+    })
+    .catch(err => {
+      console.error("Erro completo:", err.response?.data);
+      toastError(err.response?.data?.message || "Erro ao criar ordem");
+    });
+};
+
+
 
   const image = etapas[progresso]?.imagem || progressoImg;
 
