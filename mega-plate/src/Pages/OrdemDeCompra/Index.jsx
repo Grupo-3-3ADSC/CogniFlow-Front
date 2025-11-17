@@ -34,6 +34,8 @@ export function OrdemDeCompra() {
   const [quantidadeMaterial, setQuantidadeMaterial] = useState("");
   const navigate = useNavigate();
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
+  const [materialEditando, setMaterialEditando] = useState(null);
+
 
   // Funções API
   const getFornecedores = useCallback(() => {
@@ -125,10 +127,6 @@ export function OrdemDeCompra() {
   const validarPrazoEntrega = () => {
   const prazo = valoresInput["Prazo de entrega"];
 
-  if (!prazo) {
-    toastError("O campo Prazo de Entrega é obrigatório.");
-    return false;
-  }
 
   const dataSelecionada = new Date(prazo);
   const hoje = new Date();
@@ -144,6 +142,26 @@ export function OrdemDeCompra() {
   return true;
 };
 
+const validarEtapaFornecedor = () => {
+  let temErro = false;
+
+  if (!valoresInput["FornecedorId"]) {
+    toastError("O campo Fornecedor é obrigatório.");
+    temErro = true;
+  }
+
+  if (!valoresInput["Prazo de entrega"]) {
+    toastError("O campo Prazo de Entrega é obrigatório.");
+    temErro = true;
+  }
+
+  if (!valoresInput["Cond. Pagamento"]) {
+    toastError("O campo Condição de Pagamento é obrigatória.");
+    temErro = true;
+  }
+
+  return !temErro;
+};
 
 
   const validarCamposValor = (valoresInput) => {
@@ -399,24 +417,23 @@ export function OrdemDeCompra() {
 
   // ✅ Nova função para abrir modal de edição
   const abrirModalEdicao = (index) => {
-    const mat = materiaisSelecionados[index];
-    setMaterialEditandoIndex(index);
-    setMaterialSelecionado(mat.id.toString());
-    setQuantidadeMaterial(mat.Quantidade);
+  const mat = materiaisSelecionados[index];
 
-    setValoresInput((prev) => ({
-      ...prev,
-      Descrição: mat["Descrição"],
-      Rastreabilidade: mat.Rastreabilidade,
-      "Valor por Kg": mat["Valor por Kg"],
-      "Valor por peça": mat["Valor por peça"],
-      "Valor Unitário": mat["Valor Unitário"],
-      IPI: mat.IPI,
-      Total: mat.Total,
-    }));
+  setMaterialSelecionado(mat.estoqueId); 
+  setQuantidadeMaterial(mat.quantidade);
 
-    setModalEdicao(true);
-  };
+  setValoresInput({
+    "Descrição": mat.descricao,
+    "Rastreabilidade": mat.rastreabilidade,
+    "Valor por Kg": mat.valorKg?.toString().replace(".", ",") || "",
+    "Valor por peça": mat.valorPeca?.toString().replace(".", ",") || "",
+    "Valor Unitário": mat.valorUnitario?.toString().replace(".", ",") || "",
+    "Total": mat.total
+  });
+
+  setMaterialEditando({ ...mat, index });
+  setModalEdicao(true);
+};
 
   // ✅ Nova função para fechar modal de edição
   const fecharModalEdicao = () => {
@@ -481,38 +498,30 @@ export function OrdemDeCompra() {
     temErro = true;
   }
 
-  // Se teve erro, para aqui
-  if (temErro) return;
+   if (temErro) return;
 
-  // Se tudo ok, prossegue
-  const mat = listaMateriais.find(
-    (m) => m.id === Number(materialSelecionado)
-  );
+  const index = materialEditando.index;
 
-  const valorUnit = parseFloat(
-    (valoresInput["Valor Unitário"] || "0").replace(",", ".")
-  );
-  const qtd = parseInt(quantidadeMaterial);
-  const totalCalculado = (valorUnit * qtd).toFixed(2).replace(".", ",");
+  const atualizado = {
+    ...materialEditando,
+    estoqueId: Number(materialSelecionado),
+    quantidade: Number(quantidadeMaterial),
+    descricao: valoresInput["Descrição"],
+    rastreabilidade: valoresInput["Rastreabilidade"],
+    valorKg: Number((valoresInput["Valor por Kg"] || "0").replace(",", ".")),
+    valorPeca: Number((valoresInput["Valor por peça"] || "0").replace(",", ".")),
+    valorUnitario: Number((valoresInput["Valor Unitário"] || "0").replace(",", ".")),
+    total: (Number((valoresInput["Valor Unitário"] || "0").replace(",", ".")) *
+            Number(quantidadeMaterial)).toFixed(2).replace(".", ","),
+  };
 
- setMateriaisSelecionados((prev) => [
-  ...prev,
-  {
-estoqueId: material.estoqueId,
-    tipoMaterial: mat.tipoMaterial, // 👈 ADICIONE ESTA LINHA
-  descricao: valoresInput["Descrição"],
-  rastreabilidade: valoresInput["Rastreabilidade"].substring(0, 16),
-  quantidade: Number(valoresInput["Quantidade"]),
-  valorKg: Number(valoresInput["Valor Kg"]) || null,
-  valorPeca: Number(valoresInput["Valor peça"]) || null,
-  valorUnitario: Number(valoresInput["Valor Unitário"]),
-  total: calcularTotal(valorUnitario, Number(valoresInput["Quantidade"])),
-  tipoMaterial: material.tipoMaterial,
-  },
-]);
+  setMateriaisSelecionados((prev) => {
+    const copia = [...prev];
+    copia[index] = atualizado;
+    return copia;
+  });
 
-
-  fecharModalEdicao();
+  setModalEdicao(false);
   toastSuccess("Material atualizado com sucesso!");
 };
 
@@ -588,6 +597,8 @@ setMateriaisSelecionados((prev) => [
   ...prev,
   {
     estoqueId: mat.id,
+    nomeMaterial: mat.nome, // 👈 ADICIONE
+tipoMaterial: mat.tipoMaterial,
     quantidade: Number(quantidadeMaterial),
     descricao: valoresInput["Descrição"],
     rastreabilidade: valoresInput["Rastreabilidade"].substring(0, 16),
@@ -780,31 +791,32 @@ const finalizarOrdemDeCompra = () => {
         </tr>
       </thead>
       <tbody>
-        {materiaisSelecionados.map((mat, idx) => (
-          <tr key={idx}>
-            <td>{mat.tipoMaterial}</td>
-            <td>{mat["Descrição"]}</td>
-            <td>{mat.Quantidade}</td>
-            <td>R$ {mat["Valor Unitário"]}</td>
-            <td>{mat.ipi}%</td>
-            <td>R$ {mat.Total}</td>
-            <td className={style.acoes}>
-              <button
-                className={style.btnEditar}
-                onClick={() => abrirModalEdicao(idx)}
-              >
-                Editar
-              </button>
-              <button
-                className={style.btnRemover}
-                onClick={() => removerMaterial(idx)}
-              >
-                Excluir
-              </button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
+  {materiaisSelecionados.map((mat, idx) => (
+    <tr key={idx}>
+      <td>{mat.tipoMaterial || "N/A"}</td>
+      <td>{mat.descricao}</td>
+      <td>{mat.quantidade}</td>
+      <td>R$ {Number(mat.valorUnitario).toFixed(2).replace(".", ",")}</td>
+      <td>{mat.ipi ? `${mat.ipi}%` : "0%"}</td>
+      <td>R$ {mat.total}</td>
+      <td className={style.acoes}>
+        <button
+          className={style.btnEditar}
+          onClick={() => abrirModalEdicao(idx)}
+        >
+          Editar
+        </button>
+        <button
+          className={style.btnRemover}
+          onClick={() => removerMaterial(idx)}
+        >
+          Excluir
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
     </table>
 
     {/* botão vai aparecer no canto inferior da tabela */}
@@ -1227,11 +1239,16 @@ const finalizarOrdemDeCompra = () => {
                       {materiaisSelecionados.map((mat, idx) => (
                         <tr key={idx}>
                           <td>{mat.tipoMaterial}</td>
-                          <td>{mat["Descrição"]}</td>
-                          <td>{mat.Quantidade}</td>
-                          <td>R$ {mat["Valor Unitário"]}</td>
-                          <td>{mat.ipi}%</td>
-                          <td>R$ {mat.Total}</td>
+                        <td>{mat.descricao}</td>
+      <td>{mat.quantidade}</td>
+
+      <td>
+        R$ {Number(mat.valorUnitario)
+          .toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+      </td>
+
+      <td>{mat.ipi ? `${mat.ipi}%` : "0%"}</td>
+                          <td>R$ {mat.total}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1244,7 +1261,7 @@ const finalizarOrdemDeCompra = () => {
                       {materiaisSelecionados
                         .reduce((acc, mat) => {
                           const valor = parseFloat(
-                            mat.Total?.replace(",", ".") || 0
+                            mat.total?.replace(",", ".") || 0
                           );
                           return acc + valor;
                         }, 0)
@@ -1279,6 +1296,51 @@ const finalizarOrdemDeCompra = () => {
               </p>
             </div>
           )}
+      {progresso === 4 && (
+  <div className={style.finalizacaoWrapper}>
+
+
+    <div className={style.containerAcoes}>
+      
+      {/* Área do PDF */}
+      <div className={style.areaPDF}>
+        <button 
+          className={style.botaoPDFGrande}
+          onClick={() => {
+            const sucesso = gerarPDFPrevia(valoresInput, materiaisSelecionados, listaFornecedores);
+            if (sucesso) toastSuccess("PDF gerado com sucesso!");
+          }}
+        >
+          📄 Baixar Ordem de Compra
+        </button>
+      </div>
+
+      {/* Área de navegação */}
+      <div className={style.areaBotoes}>
+        <p className={style.subTexto}>O que você deseja fazer agora?</p>
+        
+        <button onClick={reiniciar}>
+          Nova Ordem de Compra
+        </button>
+
+        <button onClick={() => navigate("/HistoricoOrdemDeCompra")}>
+          Histórico de OC's
+        </button>
+
+        <button onClick={() => navigate("/DashEstoque")}>
+          Dashboard Estoque
+        </button>
+
+        <button onClick={() => navigate("/Material")}>
+          Dashboard Materiais
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
+
+
 
           {/* === Botões de navegação === */}
          <div
@@ -1299,7 +1361,6 @@ const finalizarOrdemDeCompra = () => {
   {progresso === 3 && (
     <button onClick={finalizarOrdemDeCompra}>Finalizar</button>
   )}
-  {progresso === 4 && <button onClick={reiniciar}>Reiniciar</button>}
 </div>
 
         </main>
