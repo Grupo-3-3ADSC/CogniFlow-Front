@@ -31,7 +31,7 @@ function AppContent() {
 
   return (
     <>
-      {showNotifications && <Notification />}
+    
       <Routes>
         <Route path='/' element={<Login />} />
         <Route path='/Cadastro' element={<Cadastro />} />
@@ -60,10 +60,18 @@ function AppContent() {
 function App() {
   return (
     <Router>
+      <Notification /> {/* <-- FIXO, monta só uma vez */}
+      
       <AppContent />
-      <ToastContainer position="top-right" autoClose={1500} closeButton={false} />
+
+      <ToastContainer 
+        position="top-right" 
+        autoClose={1500} 
+        closeButton={false} 
+      />
     </Router>
   );
 }
+
 
 export default App;
