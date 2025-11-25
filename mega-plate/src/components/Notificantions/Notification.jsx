@@ -12,27 +12,27 @@ export default function Notification() {
     return null;
   }
 
-  console.log("✅ MONTANDO Notification.jsx");
+  console.log("MONTANDO Notification.jsx");
 
   const clientRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("🔄 Iniciando WebSocket...");
+    console.log("Iniciando WebSocket...");
 
     // Previne múltiplas conexões APENAS se estiver conectado
     if (clientRef.current?.connected) {
-      console.log("⚠️ Conexão já existe e está ativa");
+      console.log("Conexão já existe e está ativa");
       return;
     }
 
     // Limpa referência antiga se existir mas não estiver conectada
     if (clientRef.current) {
-      console.log("🧹 Limpando conexão antiga...");
+      console.log("Limpando conexão antiga...");
       try {
         clientRef.current.deactivate();
       } catch (e) {
-        console.log("⚠️ Erro ao desconectar antiga:", e);
+        console.log("Erro ao desconectar antiga:", e);
       }
       clientRef.current = null;
     }
@@ -51,7 +51,7 @@ export default function Notification() {
       heartbeatOutgoing: 4000,
 
       onConnect: () => {
-        console.log("✅ Conectado ao WebSocket!");
+        console.log("Conectado ao WebSocket!");
 
         client.subscribe("/topic/notificacoes", (message) => {
           try {
@@ -95,7 +95,7 @@ export default function Notification() {
               config.mensagem = payload.mensagem;
             }
 
-            console.log("🔔 Exibindo toast:", config.mensagem);
+            console.log("Exibindo toast:", config.mensagem);
 
             // Handler de navegação
             const handleNavigation = () => {
@@ -148,23 +148,23 @@ export default function Notification() {
             );
 
           } catch (error) {
-            console.error("❌ Erro ao processar notificação:", error);
+            console.error("Erro ao processar notificação:", error);
             toast.error("Erro ao processar notificação");
           }
         });
       },
 
       onStompError: (frame) => {
-        console.error("❌ Erro STOMP:", frame);
+        console.error("Erro STOMP:", frame);
         toast.error("Erro na conexão com o servidor de notificações");
       },
 
       onWebSocketClose: () => {
-        console.warn("⚠️ Conexão WebSocket fechada");
+        console.warn("Conexão WebSocket fechada");
       },
 
       onWebSocketError: (error) => {
-        console.error("❌ Erro WebSocket:", error);
+        console.error("Erro WebSocket:", error);
       }
     });
 
@@ -172,16 +172,16 @@ export default function Notification() {
     clientRef.current = client;
 
     return () => {
-      console.log("🧹 Limpando componente...");
+      console.log("Limpando componente...");
       if (clientRef.current?.connected) {
         try {
           clientRef.current.deactivate();
-          console.log("🔌 Desconectado do WebSocket");
+          console.log("Desconectado do WebSocket");
         } catch (e) {
-          console.error("❌ Erro ao desconectar:", e);
+          console.error("Erro ao desconectar:", e);
         }
       }
-      clientRef.current = null; // ✅ Limpa a referência
+      clientRef.current = null;
     };
   }, [navigate]);
 
