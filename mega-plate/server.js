@@ -7,7 +7,7 @@ import 'dotenv/config';
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
-
+const path = require("path");
 // Armazene os códigos temporariamente (em produção, use um banco de dados ou cache)
 const codes = {};
 
@@ -63,3 +63,13 @@ app.post('/verificar-codigo', (req, res) => {
 app.listen(3001, () => {
     console.log('Servidor rodando na porta 3001');
 });
+const app = express();
+const PORT = 3001;
+
+app.use(express.static(path.join(__dirname, "dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
+
+app.listen(PORT, () => console.log(`Rodando na porta ${PORT}`));
