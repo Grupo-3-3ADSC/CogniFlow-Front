@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import './NavBarStyles.css';
 import iconDash from '../assets/icon-dash.png';
@@ -14,6 +15,7 @@ import iconCifrao from '../assets/icon-cifrao.png';
 import logoMega from '../assets/logo-megaplate.png';
 import menuHamburger from '../assets/menu-hamburguer.png';
 import user from '../assets/User.png';
+import bell from '../assets/Bell.png';
 import { useEffect } from 'react';
 import { api } from '../provider/api';
 
@@ -29,6 +31,11 @@ const NavBar = () => {
   const [fotoUrl, setFotoUrl] = useState(null); // Mudança: usar fotoUrl específico
   const [fotoError, setFotoError] = useState(false);
   const [usuarioLista, setUsuarioLista] = useState([]);
+  const [notificacoes, setNotificacoes] = useState([]);
+  const [notificacoesNaoLidas, setNotificacoesNaoLidas] = useState(0);
+  const [dropdownAberto, setDropdownAberto] = useState(false);
+  const [listaNotificacoes, setListaNotificacoes] = useState([]); // ← nova lista
+  const dropdownRef = useRef(null);
 
   const token = sessionStorage.getItem('authToken');
   const userId = sessionStorage.getItem('usuario');
@@ -99,6 +106,51 @@ const NavBar = () => {
       }
     };
   }, [fotoUrl]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownAberto(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Atualiza contador quando chega nova notificação via toast
+  useEffect(() => {
+    const handleNovaNotificacao = (mensagem) => {
+      // Incrementa contador
+      setNotificacoesNaoLidas(prev => prev + 1);
+
+      // Adiciona na lista do sino
+      const novaNotif = {
+        id: Date.now(),
+        mensagem: mensagem || "Nova notificação",
+        timestamp: new Date().toLocaleString('pt-BR'),
+        lida: false
+      };
+      setListaNotificacoes(prev => [novaNotif, ...prev]);
+    };
+
+    // Intercepta o toast.info
+    const originalToast = toast.info;
+    toast.info = (mensagem, options) => {
+      handleNovaNotificacao(mensagem);
+      return originalToast(mensagem, options);
+    };
+
+    return () => {
+      toast.info = originalToast;
+    };
+  }, []);
+
+  // Marca todas como lidas
+  const marcarTodasComoLidas = () => {
+    setNotificacoesNaoLidas(0);
+    setListaNotificacoes(prev => prev.map(n => ({ ...n, lida: true })));
+    // opcional: setDropdownAberto(false);
+  };
 
   const toggleGestaoSubmenu = () => setShowGestaoSubmenu(prev => !prev);
   const toggleDashSubmenu = () => setShowDashSubmenu(prev => !prev);
@@ -237,20 +289,71 @@ const NavBar = () => {
         </div>
       </div>
 
-      <div className="perfil">
-        <span>Olá, {nomeUsuario}!</span>
-        <img
-          src={fotoUrl || user}
-          alt="imagem de usuário"
-          className="icons-menu"
-          onClick={() => navigate('/Perfil')}
-          onError={(e) => {
-            e.target.onError = null;
-            e.target.src = user;
-            setFotoError(true);
-          }}
-        />
+      {/* ===== PERFIL + SINO NA DIREITA (JUNTOS, AGORA SIM!) ===== */}
+      <div className="perfil-e-notificacoes">
+        {/* Perfil */}
+        <div className="perfil">
+          <span>Olá, {nomeUsuario}!</span>
+          <img
+            src={fotoUrl || user}
+            alt="Perfil"
+            className="icons-menu"
+            onClick={() => navigate('/Perfil')}
+            onError={(e) => { e.target.src = user; }}
+          />
+        </div>
+
+        {/* Sino */}
+        <div className="notificacoes" ref={dropdownRef}>
+          <div
+            className="sino-container"
+            onClick={() => setDropdownAberto(!dropdownAberto)}
+          >
+            <img
+              src={bell}
+              alt="Notificações"
+              className="bell-icon"
+              style={{
+                animation: notificacoesNaoLidas > 0 ? 'ring 1.5s infinite' : 'none'
+              }}
+            />
+            {notificacoesNaoLidas > 0 && (
+              <span className="badge-notificacao">
+                {notificacoesNaoLidas > 99 ? '99+' : notificacoesNaoLidas}
+              </span>
+            )}
+          </div>
+
+          {/* Dropdown */}
+          {dropdownAberto && (
+            <div className="dropdown-notificacoes">
+              <div className="dropdown-header">
+                <strong>Notificações</strong>
+                {notificacoesNaoLidas > 0 && (
+                  <button onClick={marcarTodasComoLidas} className="btn-marcar-lidas">
+                    Marcar todas como lidas
+                  </button>
+                )}
+              </div>
+              <div className="dropdown-body">
+                {listaNotificacoes.length > 0 ? (
+                  listaNotificacoes.map(notif => (
+                    <div key={notif.id} className="notificacao-item">
+                      <p>{notif.mensagem}</p>
+                      <small>{notif.timestamp}</small>
+                    </div>
+                  ))
+                ) : (
+                  <p style={{ textAlign: 'center', color: '#888', padding: '20px' }}>
+                    Nenhuma notificação
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
     </header>
   );
 };

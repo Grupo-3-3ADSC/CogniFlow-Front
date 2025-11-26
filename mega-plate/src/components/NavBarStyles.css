@@ -43,7 +43,7 @@
     width: 280px;
 }
 
-.menu-logo{
+.menu-logo {
     width: 60px;
     height: 60px;
     margin: 5px auto;
@@ -156,14 +156,16 @@
     object-fit: contain;
 }
 
-.perfil {
+.perfil-e-notificacoes {
     position: absolute;
     right: 20px;
     top: 50%;
     transform: translateY(-50%);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 20px;
+    /* espaço entre foto e sino */
+    z-index: 1001;
     color: white;
     font-family: "Poppins", sans-serif;
 }
@@ -176,15 +178,129 @@
     cursor: pointer;
 }
 
+.perfil {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.perfil span {
+    font-weight: 500;
+    font-size: 15px;
+}
+
+.perfil img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* Sino (já estava bom) */
+.bell-icon {
+    width: 32px;
+    height: 32px;
+    filter: brightness(0) invert(1);
+}
+
+.sino-container {
+    position: relative;
+    display: inline-block;
+}
+
+.badge-notificacao {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #e74c3c;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #0D1C2B;
+}
+
+/* Dropdown (ajusta a posição pra ficar abaixo do sino) */
+.dropdown-notificacoes {
+    position: absolute;
+    top: 70px;
+    right: 0;
+    /* agora alinha certinho com o sino */
+    width: 320px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    font-family: "Poppins", sans-serif;
+}
+
+.notificacao-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+
+.notificacao-item:hover {
+    background: #f8f9fa;
+}
+
+.notificacao-item p {
+    margin: 0;
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+}
+
+.notificacao-item small {
+    color: #888;
+    font-size: 11px;
+}
+
+/* Scroll no dropdown se tiver muitas notificações */
+.dropdown-body {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Animação do sino */
+@keyframes ring {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    10%,
+    30%,
+    50%,
+    70% {
+        transform: rotate(20deg);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: rotate(-20deg);
+    }
+}
+
 .hamburger-icon {
-  display: none;
-  position: fixed;
-  top: 15px;
-  left: 15px;
-  width: 35px;
-  height: 35px;
-  z-index: 2000;
-  cursor: pointer;
+    display: none;
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    width: 35px;
+    height: 35px;
+    z-index: 2000;
+    cursor: pointer;
 }
 
 .menu-lateral.open {
@@ -198,25 +314,25 @@
 }
 
 @media screen and (max-width: 520px) {
-  .menu-lateral {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    transform: translateX(-100%);
-    z-index: 1500;
-  }
+    .menu-lateral {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        transform: translateX(-100%);
+        z-index: 1500;
+    }
 
-  .menu-lateral.open {
-    transform: translateX(0);
-  }
+    .menu-lateral.open {
+        transform: translateX(0);
+    }
 
-  .menu-lateral.closed {
-    transform: translateX(-100%);
-  }
+    .menu-lateral.closed {
+        transform: translateX(-100%);
+    }
 
-  .hamburger-icon {
-    display: block;
-  }
-  
+    .hamburger-icon {
+        display: block;
+    }
+
 }
