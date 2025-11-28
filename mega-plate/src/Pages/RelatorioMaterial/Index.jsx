@@ -30,6 +30,7 @@ export function RelatorioMaterial() {
   const [materiais, setMateriais] = useState([]);
   const [filtroMaterial, setFiltroMaterial] = useState("todos");
   const [filtroNome, setFiltroNome] = useState("");
+    const [estoque, setEstoque] = useState([]);
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
   const todosAnos = gerarListaAnos(2018);
   const [inicio, setInicio] = useState(0);
@@ -40,19 +41,22 @@ export function RelatorioMaterial() {
   const anosVisiveis = todosAnos.slice(inicio, inicio + 5);
 
   useEffect(() => {
-    const token = sessionStorage.getItem("authToken");
-    if (!token) {
-      navigate("/");
-    } else {
-      const { exp } = jwtDecode(token);
-      if (Date.now() >= exp * 1000) {
-        sessionStorage.removeItem("authToken");
-        navigate("/");
-      } else {
-        setAutenticacaoPassou(true);
-      }
-    }
-  }, [navigate]);
+     const token = sessionStorage.getItem("authToken");
+ 
+     api
+       .get("/estoque", {
+         // ajuste se a rota for diferente (ex: /estoques, /materiais)
+         headers: { Authorization: `Bearer ${token}` },
+       })
+       .then((res) => {
+         setEstoque(res.data);
+         console.log("Estoque carregado:", res.data);
+       })
+       .catch((err) => {
+         console.error("Erro ao carregar estoque", err);
+         toastError("Não foi possível carregar dados de estoque (IPI)");
+       });
+   }, []); 
 
   const avancarAno = () => {
     if (inicio + 5 < todosAnos.length) setInicio(inicio + 1);

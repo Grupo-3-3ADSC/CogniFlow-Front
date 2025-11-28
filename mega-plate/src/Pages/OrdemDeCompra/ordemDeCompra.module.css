@@ -465,21 +465,21 @@
 }
 
 .botaoPDFGrande {
-  background-color: #09a658;
+  background-color: #4d9671;
   padding: 14px 25px;
-  min-width: 460px;
+  min-width: 430px;
   height: 300px;
   border: none;
   border-radius: 30px;
   color: white;
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   cursor: pointer;
   transition: 0.2s;
 }
 
 .botaoPDFGrande:hover {
-  background-color: #0ecf6e;
+  background-color: #288d5b;
   transform: scale(1.05);
 }
 

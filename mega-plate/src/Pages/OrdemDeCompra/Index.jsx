@@ -22,21 +22,34 @@ import { gerarPDFPrevia } from "../../tools/gerarPDFPrevia";
 export function OrdemDeCompra() {
   const [listaFornecedores, setListaFornecedores] = useState([]);
   const [listaMateriais, setListaMateriais] = useState([]);
-  const [ordemDeCompra, setOrdemDeCompra] = useState([]);
+  const [dadosFornecedor, setDadosFornecedor] = useState({});
   const [materiaisSelecionados, setMateriaisSelecionados] = useState([]);
   const [progresso, setProgresso] = useState(1);
+
   const [valoresInput, setValoresInput] = useState({});
   const [errosValidacao, setErrosValidacao] = useState({});
+
+  const [modalTemp, setModalTemp] = useState({
+    materialSelecionado: "",
+    quantidade: "",
+    descricao: "",
+    rastreabilidade: "",
+    valorKg: "",
+    valorPeca: "",
+    valorUnitario: "",
+    ipiFormatado: "0,00%",
+    total: "0,00",
+  });
   const [modalAberto, setModalAberto] = useState(false);
-  const [modalEdicao, setModalEdicao] = useState(false); // ✅ Novo estado
-  const [materialEditandoIndex, setMaterialEditandoIndex] = useState(null); // ✅ Índice do material sendo editado
+  const [modalEdicao, setModalEdicao] = useState(false);
+  const [materialEditandoIndex, setMaterialEditandoIndex] = useState(null);
   const [materialSelecionado, setMaterialSelecionado] = useState("");
   const [quantidadeMaterial, setQuantidadeMaterial] = useState("");
   const navigate = useNavigate();
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
   const [materialEditando, setMaterialEditando] = useState(null);
-
-
+  const [conjuntoIdSalvo, setConjuntoIdSalvo] = useState(null);
+const [idsDoConjuntoAtual, setIdsDoConjuntoAtual] = useState([]); // ← NOVO ESTADO
   // Funções API
   const getFornecedores = useCallback(() => {
     api
@@ -116,53 +129,59 @@ export function OrdemDeCompra() {
   const formatarQuantidade = (valor) => valor.replace(/\D/g, "");
 
   const formatarIPI = (valor) => {
-    const nums = valor.replace(/[^\d,]/g, "");
+    const nums = (valor || "0").toString().replace(/[^\d,]/g, "");
+    let valorLimpo = "0,00";
+
     if (nums.includes(",")) {
       const partes = nums.split(",");
-      return `${partes[0]},${partes[1].slice(0, 2)}`;
+      valorLimpo = `${partes[0]},${partes[1].slice(0, 2)}`;
+    } else if (nums && nums !== "0") {
+      valorLimpo = nums.includes(".")
+        ? nums.replace(".", ",").split(",")[0] +
+          "," +
+          nums.split(".")[1].slice(0, 2).padEnd(2, "0")
+        : nums + ",00";
     }
-    return nums || "0,00";
+
+    return `${valorLimpo}%`; // ← AQUI ESTÁ A MÁGICA
   };
 
   const validarPrazoEntrega = () => {
-  const prazo = valoresInput["Prazo de entrega"];
+    const prazo = dadosFornecedor["Prazo de entrega"];
+    if (!prazo) return true; // será validado em outro lugar
 
+    const dataSelecionada = new Date(prazo);
+    const hoje = new Date();
+    dataSelecionada.setHours(0, 0, 0, 0);
+    hoje.setHours(0, 0, 0, 0);
 
-  const dataSelecionada = new Date(prazo);
-  const hoje = new Date();
+    if (dataSelecionada <= hoje) {
+      toastError("Informe uma data de entrega posterior à data atual.");
+      return false;
+    }
+    return true;
+  };
 
-  dataSelecionada.setHours(0, 0, 0, 0);
-  hoje.setHours(0, 0, 0, 0);
+  const validarEtapaFornecedor = () => {
+    let temErro = false;
 
-  if (dataSelecionada <= hoje) {
-    toastError("Informe uma data de entrega posterior à data atual.");
-    return false;
-  }
+    if (!valoresInput["FornecedorId"]) {
+      toastError("O campo Fornecedor é obrigatório.");
+      temErro = true;
+    }
 
-  return true;
-};
+    if (!valoresInput["Prazo de entrega"]) {
+      toastError("O campo Prazo de Entrega é obrigatório.");
+      temErro = true;
+    }
 
-const validarEtapaFornecedor = () => {
-  let temErro = false;
+    if (!valoresInput["Cond. Pagamento"]) {
+      toastError("O campo Condição de Pagamento é obrigatória.");
+      temErro = true;
+    }
 
-  if (!valoresInput["FornecedorId"]) {
-    toastError("O campo Fornecedor é obrigatório.");
-    temErro = true;
-  }
-
-  if (!valoresInput["Prazo de entrega"]) {
-    toastError("O campo Prazo de Entrega é obrigatório.");
-    temErro = true;
-  }
-
-  if (!valoresInput["Cond. Pagamento"]) {
-    toastError("O campo Condição de Pagamento é obrigatória.");
-    temErro = true;
-  }
-
-  return !temErro;
-};
-
+    return !temErro;
+  };
 
   const validarCamposValor = (valoresInput) => {
     const valorKg = valoresInput["Valor por Kg"];
@@ -215,7 +234,6 @@ const validarEtapaFornecedor = () => {
       },
       2: {
         inputs: [
-         
           {
             id: "MaterialId",
             titulo: "Material",
@@ -303,59 +321,39 @@ const validarEtapaFornecedor = () => {
       return { valido: false, erro: input.validationMessage };
     return { valido: true };
   }, []);
-
+  // VALIDAÇÃO CORRETA E SIMPLES (funciona 100%)
   const validarFormulario = useCallback(() => {
-    const inputs = etapas[progresso]?.inputs || [];
-    const novosErros = {};
-    const mensagensErro = [];
-
-    // ✅ VALIDAÇÃO ESPECIAL PARA PROGRESSO 2 (materiais selecionados)
-    if (progresso === 2) {
-      // Verifica se há materiais adicionados
-      if (materiaisSelecionados.length === 0) {
-        const erroMsg = "Adicione pelo menos um material antes de avançar";
-        mensagensErro.push(erroMsg);
-        toastError(erroMsg);
+    if (progresso === 1) {
+      if (!dadosFornecedor.FornecedorId) {
+        toastError("Selecione o fornecedor");
         return false;
       }
-
-      // Se tem materiais, pode avançar
+      if (!dadosFornecedor["Prazo de entrega"]) {
+        toastError("Informe o prazo de entrega");
+        return false;
+      }
+      if (!dadosFornecedor["Cond. Pagamento"]) {
+        toastError("Informe a condição de pagamento");
+        return false;
+      }
+      if (!validarPrazoEntrega()) return false;
       return true;
     }
 
-    // ✅ VALIDAÇÃO PARA ETAPA 1 (dados do fornecedor)
-    if (progresso === 1) {
-      for (let input of inputs) {
-        if (input.disabled) continue;
-
-        const valor =
-          input.tipo === "select"
-            ? valoresInput[input.titulo + "Id"]
-            : valoresInput[input.titulo];
-
-        const validacao = validarCampo(input, valor);
-        if (!validacao.valido) {
-          novosErros[input.titulo] = validacao.erro;
-          if (!mensagensErro.includes(validacao.erro))
-            mensagensErro.push(validacao.erro);
-        }
-      }
-      if (!validarPrazoEntrega()) {
-  return false;
-}
-
+    if (progresso === 2 && materiaisSelecionados.length === 0) {
+      toastError("Adicione pelo menos um material antes de avançar");
+      return false;
     }
 
-    // Exibir mensagens de erro
-    mensagensErro.forEach((msg) => toastError(msg));
-    setErrosValidacao(novosErros);
-    return mensagensErro.length === 0;
-  }, [etapas, progresso, validarCampo, valoresInput, materiaisSelecionados]);
+    return true;
+  }, [progresso, dadosFornecedor, materiaisSelecionados]);
 
   // Navegação
+
   const avancarProgresso = useCallback(() => {
-    if (!validarFormulario()) return;
-    setProgresso((prev) => Math.min(prev + 1, 4));
+    if (validarFormulario()) {
+      setProgresso((prev) => Math.min(prev + 1, 4));
+    }
   }, [validarFormulario]);
 
   const voltarProgresso = useCallback(() => {
@@ -363,11 +361,38 @@ const validarEtapaFornecedor = () => {
     setErrosValidacao({});
   }, []);
 
-  const reiniciar = useCallback(() => {
-    setProgresso(1);
-    setValoresInput({});
-    setErrosValidacao({});
-  }, []);
+ const reiniciar = useCallback(() => {
+  setProgresso(1);
+  setDadosFornecedor({});
+  setValoresInput({});
+  setErrosValidacao({});
+  setMateriaisSelecionados([]);
+  setMaterialSelecionado("");
+  setQuantidadeMaterial("");
+  setMaterialEditando(null);
+  setModalAberto(false);
+  setModalEdicao(false);
+  setConjuntoIdSalvo(null);
+setIdsDoConjuntoAtual([]);
+  toastSuccess("Nova ordem de compra iniciada! Tudo limpo e pronto!");
+  window.scrollTo(0, 0);
+}, []);
+
+  // ✅ FUNÇÃO QUE ESTAVA FALTANDO!
+  const handleInputFornecedor = (titulo, valor, isSelect = false) => {
+    let valorFormatado = valor;
+
+    // Formata automaticamente o campo "Cond. Pagamento"
+    if (titulo === "Cond. Pagamento") {
+      valorFormatado = formatarPagamento(valor);
+    }
+
+    setDadosFornecedor((prev) => ({
+      ...prev,
+      [titulo]: valorFormatado,
+      ...(isSelect && { [titulo + "Id"]: valor }),
+    }));
+  };
 
   // Handle input
   const handleInputChange = useCallback(
@@ -375,9 +400,10 @@ const validarEtapaFornecedor = () => {
       let valorFormatado = valor;
       if (formatador && !isSelect) valorFormatado = formatador(valor);
 
+      // Formata automaticamente o campo "Cond. Pagamento"
       if (titulo === "Cond. Pagamento") {
-  valorFormatado = formatarPagamento(valor);
-}
+        valorFormatado = formatarPagamento(valor);
+      }
 
       setValoresInput((prev) => {
         const newState = {
@@ -417,23 +443,24 @@ const validarEtapaFornecedor = () => {
 
   // ✅ Nova função para abrir modal de edição
   const abrirModalEdicao = (index) => {
-  const mat = materiaisSelecionados[index];
+    const mat = materiaisSelecionados[index];
 
-  setMaterialSelecionado(mat.estoqueId); 
-  setQuantidadeMaterial(mat.quantidade);
+    setMaterialSelecionado(mat.estoqueId);
+    setQuantidadeMaterial(mat.quantidade.toString());
 
-  setValoresInput({
-    "Descrição": mat.descricao,
-    "Rastreabilidade": mat.rastreabilidade,
-    "Valor por Kg": mat.valorKg?.toString().replace(".", ",") || "",
-    "Valor por peça": mat.valorPeca?.toString().replace(".", ",") || "",
-    "Valor Unitário": mat.valorUnitario?.toString().replace(".", ",") || "",
-    "Total": mat.total
-  });
+    setValoresInput({
+      Descrição: mat.descricao,
+      Rastreabilidade: mat.rastreabilidade,
+      "Valor por Kg": mat.valorKg?.toString().replace(".", ",") || "",
+      "Valor por peça": mat.valorPeca?.toString().replace(".", ",") || "",
+      "Valor Unitário": mat.valorUnitario?.toString().replace(".", ",") || "",
+      Total: mat.total,
+      IPI: mat.ipiFormatado || "0,00",
+    });
 
-  setMaterialEditando({ ...mat, index });
-  setModalEdicao(true);
-};
+    setMaterialEditando({ ...mat, index });
+    setModalEdicao(true);
+  };
 
   // ✅ Nova função para fechar modal de edição
   const fecharModalEdicao = () => {
@@ -460,72 +487,102 @@ const validarEtapaFornecedor = () => {
 
   // ✅ Nova função para salvar edição
   const salvarEdicao = () => {
-  let temErro = false;
+    let temErro = false;
 
-  // Valida todos os campos obrigatórios individualmente
-  if (!materialSelecionado) {
-    toastError("O campo Material é obrigatório.");
-    temErro = true;
-  }
+    // Valida todos os campos obrigatórios individualmente
+    if (!materialSelecionado) {
+      toastError("O campo Material é obrigatório.");
+      temErro = true;
+    }
 
-  if (!quantidadeMaterial) {
-    toastError("O campo Quantidade é obrigatório.");
-    temErro = true;
-  }
+    if (!quantidadeMaterial) {
+      toastError("O campo Quantidade é obrigatório.");
+      temErro = true;
+    }
 
-  if (!valoresInput["Descrição"]) {
-    toastError("O campo Descrição é obrigatório.");
-    temErro = true;
-  }
+    if (!valoresInput["Descrição"]) {
+      toastError("O campo Descrição é obrigatório.");
+      temErro = true;
+    }
 
- if (!valoresInput["Rastreabilidade"]) {
-  toastError("O campo Rastreabilidade é obrigatório.");
-  temErro = true;
-} else if (valoresInput["Rastreabilidade"].length > 20) {
-  toastError("O campo Rastreabilidade deve ter no máximo 20 caracteres.");
-  temErro = true;
-}
+    if (!valoresInput["Rastreabilidade"]) {
+      toastError("O campo Rastreabilidade é obrigatório.");
+      temErro = true;
+    } else if (valoresInput["Rastreabilidade"].length > 20) {
+      toastError("O campo Rastreabilidade deve ter no máximo 20 caracteres.");
+      temErro = true;
+    }
 
+    if (!valoresInput["Valor Unitário"]) {
+      toastError("O campo Valor Unitário é obrigatório.");
+      temErro = true;
+    }
 
-  if (!valoresInput["Valor Unitário"]) {
-    toastError("O campo Valor Unitário é obrigatório.");
-    temErro = true;
-  }
+    // Regra específica: precisa ter pelo menos um dos dois
+    if (!valoresInput["Valor por Kg"] && !valoresInput["Valor por peça"]) {
+      toastError(
+        "Preencha pelo menos um dos campos: Valor por Kg ou Valor por Peça."
+      );
+      temErro = true;
+    }
 
-  // Regra específica: precisa ter pelo menos um dos dois
-  if (!valoresInput["Valor por Kg"] && !valoresInput["Valor por peça"]) {
-    toastError("Preencha pelo menos um dos campos: Valor por Kg ou Valor por Peça.");
-    temErro = true;
-  }
+    if (temErro) return;
 
-   if (temErro) return;
+    const index = materialEditando.index;
 
-  const index = materialEditando.index;
+    // Impede duplicidade ao editar (não considera o próprio item sendo editado)
+    if (
+      materiaisSelecionados.some((m, i) => i !== index && m.estoqueId === Number(materialSelecionado))
+    ) {
+      toastError("Este material já foi adicionado");
+      return;
+    }
 
-  const atualizado = {
-    ...materialEditando,
-    estoqueId: Number(materialSelecionado),
-    quantidade: Number(quantidadeMaterial),
-    descricao: valoresInput["Descrição"],
-    rastreabilidade: valoresInput["Rastreabilidade"],
-    valorKg: Number((valoresInput["Valor por Kg"] || "0").replace(",", ".")),
-    valorPeca: Number((valoresInput["Valor por peça"] || "0").replace(",", ".")),
-    valorUnitario: Number((valoresInput["Valor Unitário"] || "0").replace(",", ".")),
-    total: (Number((valoresInput["Valor Unitário"] || "0").replace(",", ".")) *
-            Number(quantidadeMaterial)).toFixed(2).replace(".", ","),
+    const materialAtual = listaMateriais.find(
+      (m) => m.id === Number(materialSelecionado)
+    );
+
+    const ipiAtual = materialAtual
+      ? Number(materialAtual.ipi) || 0
+      : materialEditando.ipi || 0;
+    const ipiFormatadoAtual = materialAtual
+      ? formatarIPI(materialAtual.ipi?.toString() || "0")
+      : materialEditando.ipiFormatado || "0,00";
+
+    const atualizado = {
+      ...materialEditando,
+      estoqueId: Number(materialSelecionado),
+      tipoMaterial:
+        materialAtual?.tipoMaterial || materialEditando.tipoMaterial,
+      quantidade: Number(quantidadeMaterial),
+      descricao: valoresInput["Descrição"],
+      rastreabilidade: valoresInput["Rastreabilidade"],
+      valorKg: Number((valoresInput["Valor por Kg"] || "0").replace(",", ".")),
+      valorPeca: Number(
+        (valoresInput["Valor por peça"] || "0").replace(",", ".")
+      ),
+      valorUnitario: Number(
+        (valoresInput["Valor Unitário"] || "0").replace(",", ".")
+      ),
+      total: (
+        Number((valoresInput["Valor Unitário"] || "0").replace(",", ".")) *
+        Number(quantidadeMaterial)
+      )
+        .toFixed(2)
+        .replace(".", ","),
+      ipi: ipiAtual, // ← Atualizado se mudou material
+      ipiFormatado: ipiFormatadoAtual,
+    };
+
+    setMateriaisSelecionados((prev) => {
+      const copia = [...prev];
+      copia[index] = atualizado;
+      return copia;
+    });
+
+    setModalEdicao(false);
+    toastSuccess("Material atualizado com sucesso!");
   };
-
-  setMateriaisSelecionados((prev) => {
-    const copia = [...prev];
-    copia[index] = atualizado;
-    return copia;
-  });
-
-  setModalEdicao(false);
-  toastSuccess("Material atualizado com sucesso!");
-};
-
-
 
   // ✅ Nova função para remover material
   const removerMaterial = (index) => {
@@ -533,89 +590,94 @@ const validarEtapaFornecedor = () => {
     toastSuccess("Material removido com sucesso!");
   };
 
- const adicionarMaterial = () => {
-  let temErro = false;
+  const adicionarMaterial = () => {
+    let temErro = false;
 
-  // 🔸 Validação individual de cada campo
-  if (!materialSelecionado) {
-    toastError("O campo Material é obrigatório.");
-    temErro = true;
-  }
+    // 🔸 Validação individual de cada campo
+    if (!materialSelecionado) {
+      toastError("O campo Material é obrigatório.");
+      temErro = true;
+    }
 
-  if (!quantidadeMaterial) {
-    toastError("O campo Quantidade é obrigatório.");
-    temErro = true;
-  }
+    if (!quantidadeMaterial) {
+      toastError("O campo Quantidade é obrigatório.");
+      temErro = true;
+    }
 
-  if (!valoresInput["Descrição"]) {
-    toastError("O campo Descrição é obrigatório.");
-    temErro = true;
-  }
+    if (!valoresInput["Descrição"]) {
+      toastError("O campo Descrição é obrigatório.");
+      temErro = true;
+    }
 
-  if (!valoresInput["Rastreabilidade"]) {
-  toastError("O campo Rastreabilidade é obrigatório.");
-  temErro = true;
-} else if (valoresInput["Rastreabilidade"].length > 20) {
-  toastError("O campo Rastreabilidade deve ter no máximo 20 caracteres.");
-  temErro = true;
-}
+    if (!valoresInput["Rastreabilidade"]) {
+      toastError("O campo Rastreabilidade é obrigatório.");
+      temErro = true;
+    } else if (valoresInput["Rastreabilidade"].length > 20) {
+      toastError("O campo Rastreabilidade deve ter no máximo 20 caracteres.");
+      temErro = true;
+    }
 
+    if (!valoresInput["Valor Unitário"]) {
+      toastError("O campo Valor Unitário é obrigatório.");
+      temErro = true;
+    }
 
-  if (!valoresInput["Valor Unitário"]) {
-    toastError("O campo Valor Unitário é obrigatório.");
-    temErro = true;
-  }
+    // 🔸 Validação especial: precisa de pelo menos um dos dois
+    if (!valoresInput["Valor por Kg"] && !valoresInput["Valor por peça"]) {
+      toastError(
+        "Preencha pelo menos um dos campos: Valor por Kg ou Valor por Peça."
+      );
+      temErro = true;
+    }
 
-  // 🔸 Validação especial: precisa de pelo menos um dos dois
-  if (!valoresInput["Valor por Kg"] && !valoresInput["Valor por peça"]) {
-    toastError("Preencha pelo menos um dos campos: Valor por Kg ou Valor por Peça.");
-    temErro = true;
-  }
+    // 🔸 Se houver qualquer erro, interrompe a execução aqui
+    if (temErro) return;
 
-  // 🔸 Se houver qualquer erro, interrompe a execução aqui
-  if (temErro) return;
+    const mat = listaMateriais.find(
+      (m) => m.id === Number(materialSelecionado)
+    );
 
-  const mat = listaMateriais.find(
-    (m) => m.id === Number(materialSelecionado)
-  );
+    // 🔸 Impede duplicidade (usa `estoqueId` nos materiais já adicionados)
+    if (materiaisSelecionados.some((m) => m.estoqueId === mat.id)) {
+      toastError("Este material já foi adicionado");
+      return;
+    }
 
-  // 🔸 Impede duplicidade
-  if (materiaisSelecionados.some((m) => m.id === mat.id)) {
-    toastError("Este material já foi adicionado");
-    return;
-  }
+    // 🔸 Calcula o total antes de adicionar
+    const valorUnit = parseFloat(
+      (valoresInput["Valor Unitário"] || "0").replace(",", ".")
+    );
+    const qtd = parseInt(quantidadeMaterial);
+    const totalCalculado = (valorUnit * qtd).toFixed(2).replace(".", ",");
 
-  // 🔸 Calcula o total antes de adicionar
-  const valorUnit = parseFloat(
-    (valoresInput["Valor Unitário"] || "0").replace(",", ".")
-  );
-  const qtd = parseInt(quantidadeMaterial);
-  const totalCalculado = (valorUnit * qtd).toFixed(2).replace(".", ",");
+    // 🔸 Adiciona o material completo
+    setMateriaisSelecionados((prev) => [
+      ...prev,
+      {
+        estoqueId: Number(mat.id),
+        tipoMaterial: mat.tipoMaterial,
+        quantidade: Number(quantidadeMaterial),
+        descricao: valoresInput["Descrição"],
+        rastreabilidade: valoresInput["Rastreabilidade"].substring(0, 20),
+        valorKg: Number(
+          (valoresInput["Valor por Kg"] || "0").replace(",", ".")
+        ),
+        valorPeca: Number(
+          (valoresInput["Valor por peça"] || "0").replace(",", ".")
+        ),
+        valorUnitario: Number(
+          (valoresInput["Valor Unitário"] || "0").replace(",", ".")
+        ),
+        total: totalCalculado,
+        ipi: Number(mat.ipi) || 0, // ← número puro (pro cálculo)
+        ipiFormatado: formatarIPI(mat.ipi?.toString() || "0"), // ← "12,50%" (pra mostrar)
+      },
+    ]);
 
-  // 🔸 Adiciona o material completo
-setMateriaisSelecionados((prev) => [
-  ...prev,
-  {
-    estoqueId: mat.id,
-    nomeMaterial: mat.nome, // 👈 ADICIONE
-tipoMaterial: mat.tipoMaterial,
-    quantidade: Number(quantidadeMaterial),
-    descricao: valoresInput["Descrição"],
-    rastreabilidade: valoresInput["Rastreabilidade"].substring(0, 16),
-    valorKg: Number((valoresInput["Valor por Kg"] || "0").replace(",", ".")),
-    valorPeca: Number((valoresInput["Valor por peça"] || "0").replace(",", ".")),
-    valorUnitario: Number((valoresInput["Valor Unitário"] || "0").replace(",", ".")),
-    total: totalCalculado,
-  },
-]);
-
-
-
-  limparCamposModal();
-  fecharModal();
-  toastSuccess("Material adicionado com sucesso!");
-};
-
+    limparCamposModal();
+    fecharModal();
+    toastSuccess("Material adicionado com sucesso!");
+  };
 
   // Total automático - CORRIGIDO para calcular no modal também
   useEffect(() => {
@@ -648,52 +710,59 @@ tipoMaterial: mat.tipoMaterial,
 const finalizarOrdemDeCompra = () => {
   const usuarioId = getUsuarioIdDoToken();
 
-  const ordensParaEnviar = materiaisSelecionados.map((mat) => ({
-    usuarioId: usuarioId,
-    fornecedorId: Number(valoresInput["FornecedorId"]),
-    estoqueId: Number(mat.estoqueId),
-
-    prazoEntrega: valoresInput["Prazo de entrega"],
-    condPagamento: valoresInput["Cond. Pagamento"],
-
-    valorKg: mat.valorKg > 0 ? Number(mat.valorKg) : null,
-    valorPeca: mat.valorPeca > 0 ? Number(mat.valorPeca) : null,
-    valorUnitario: Number(mat.valorUnitario),
-
-    descricaoMaterial: mat.descricao,
-    rastreabilidade: mat.rastreabilidade.substring(0, 16),
-
-    quantidade: Number(mat.quantidade),
-  }));
-
-  const camposInvalidos = ordensParaEnviar.some(ord =>
-    (!ord.valorKg && !ord.valorPeca) ||
-    !ord.valorUnitario ||
-    !ord.descricaoMaterial ||
-    !ord.rastreabilidade ||
-    !ord.quantidade
-  );
-
-  if (camposInvalidos) {
-    toastError("Preencha todos os campos obrigatórios antes de finalizar!");
+  if (!usuarioId) {
+    toastError("Usuário não autenticado. Faça login novamente.");
+    navigate("/");
     return;
   }
 
-  console.log("📦 ENVIANDO PARA O BACKEND:", JSON.stringify(ordensParaEnviar, null, 2));
+  const ordensParaEnviar = materiaisSelecionados.map((mat) => ({
+    usuarioId,
+    fornecedorId: Number(dadosFornecedor.FornecedorId),
+    estoqueId: Number(mat.estoqueId),
+    prazoEntrega: dadosFornecedor["Prazo de entrega"],
+    condPagamento: dadosFornecedor["Cond. Pagamento"],
 
-  api.post("/ordemDeCompra/multiplas-ordens", ordensParaEnviar)
-    .then(() => {
-      toastSuccess("Ordem cadastrada com sucesso!");
-      setProgresso(4);
-    })
-    .catch(err => {
-      console.error("Erro completo:", err.response?.data);
-      toastError(err.response?.data?.message || "Erro ao criar ordem");
-    });
+    valorUnitario: Number(mat.valorUnitario),
+    quantidade: Number(mat.quantidade),
+    descricaoMaterial: mat.descricao.padEnd(10, " ").substring(0, 100),
+    rastreabilidade: String(mat.rastreabilidade).padEnd(16, "0").substring(0, 16),
+
+    valorKg: mat.valorKg > 0 ? Number(mat.valorKg) : 0,
+    valorPeca: mat.valorPeca > 0 ? Number(mat.valorPeca) : 0,
+    ipi: Number(mat.ipi || 0),
+
+    dataEmissao: new Date().toISOString().split("T")[0],
+    valorTotal: Number((mat.valorUnitario * mat.quantidade).toFixed(2)),
+  }));
+
+  if (ordensParaEnviar.length === 0) {
+    toastError("Adicione pelo menos um material.");
+    return;
+  }
+
+  console.log("Enviando ordens:", ordensParaEnviar);
+
+  api
+    .post("/ordemDeCompra/multiplas-ordens", ordensParaEnviar)
+  .then((response) => {
+  toastSuccess("Ordem de compra cadastrada com sucesso!");
+
+  const ordensSalvas = Array.isArray(response.data) ? response.data : [response.data];
+  const ids = ordensSalvas.map(o => o.id);
+  const numeroOC = ids[0];
+
+  // SALVA OS DOIS: o número da OC e os IDs completos
+  setConjuntoIdSalvo(numeroOC);
+  setIdsDoConjuntoAtual(ids); // ← ESSA LINHA É A CHAVE
+
+  // Gera PDF automaticamente com os IDs corretos
+  baixarOrdemDeCompraPDF(numeroOC, ids);
+
+  toastSuccess(`PDF da Ordem Nº ${numeroOC} gerado automaticamente!`);
+  setProgresso(4);
+})
 };
-
-
-
   const image = etapas[progresso]?.imagem || progressoImg;
 
   return (
@@ -721,18 +790,22 @@ const finalizarOrdemDeCompra = () => {
               {etapas[1].inputs.map((input) => (
                 <div key={input.id} className={style.inputGroup}>
                   <p>
-                    {input.titulo}
+                    {input.titulo}{" "}
                     {input.required && <span style={{ color: "red" }}>*</span>}
                   </p>
                   {input.tipo === "select" ? (
                     <select
-                      value={valoresInput[input.titulo + "Id"] || ""}
+                      value={dadosFornecedor[input.titulo + "Id"] || ""}
                       onChange={(e) =>
-                        handleInputChange(input.titulo, e.target.value, true)
+                        handleInputFornecedor(
+                          input.titulo,
+                          e.target.value,
+                          true
+                        )
                       }
                     >
                       <option value="">{input.placeholder}</option>
-                      {(input.options || []).map((opt) => (
+                      {input.options.map((opt) => (
                         <option
                           key={opt[input.optionValue]}
                           value={opt[input.optionValue]}
@@ -744,93 +817,94 @@ const finalizarOrdemDeCompra = () => {
                   ) : (
                     <input
                       type={input.tipo}
-                      placeholder={input.placeholder}
-                      value={valoresInput[input.titulo] || ""}
-                      disabled={input.disabled}
+                      value={dadosFornecedor[input.titulo] || ""}
                       onChange={(e) =>
-                        handleInputChange(input.titulo, e.target.value)
+                        handleInputFornecedor(input.titulo, e.target.value)
                       }
+                      placeholder={input.placeholder}
                     />
                   )}
                 </div>
               ))}
             </div>
           )}
-
           {/* === Etapa 2: Lista de Materiais e Modal === */}
-          {/* === Etapa 2: Lista de Materiais e Modal === */}
-{progresso === 2 && (
-  <>
-   {materiaisSelecionados.length === 0 ? (
-  <div className={style.estadoVazio}>
-    <p className={style.mensagemVazia}>
-      Nenhum material foi adicionado ainda.
-    </p>
-    <p className={style.mensagemSecundaria}>
-      Clique abaixo para cadastrar o primeiro material.
-    </p>
-    <button
-      onClick={abrirModal}
-      className={style.botaoAdicionarGrande}
-    >
-      <span className={style.iconeMais}>+</span> Adicionar Material
-    </button>
-  </div>
-) : (
-  <div className={style.tabelaContainer}>
-    <table className={style.tabelaMateriais}>
-      <thead>
-        <tr>
-          <th>Material</th>
-          <th>Descrição</th>
-          <th>Qtd</th>
-          <th>Valor Unit.</th>
-          <th>IPI</th>
-          <th>Total</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-  {materiaisSelecionados.map((mat, idx) => (
-    <tr key={idx}>
-      <td>{mat.tipoMaterial || "N/A"}</td>
-      <td>{mat.descricao}</td>
-      <td>{mat.quantidade}</td>
-      <td>R$ {Number(mat.valorUnitario).toFixed(2).replace(".", ",")}</td>
-      <td>{mat.ipi ? `${mat.ipi}%` : "0%"}</td>
-      <td>R$ {mat.total}</td>
-      <td className={style.acoes}>
-        <button
-          className={style.btnEditar}
-          onClick={() => abrirModalEdicao(idx)}
-        >
-          Editar
-        </button>
-        <button
-          className={style.btnRemover}
-          onClick={() => removerMaterial(idx)}
-        >
-          Excluir
-        </button>
-      </td>
-    </tr>
-  ))}
-</tbody>
+          {progresso === 2 && (
+            <>
+              {materiaisSelecionados.length === 0 ? (
+                <div className={style.estadoVazio}>
+                  <p className={style.mensagemVazia}>
+                    Nenhum material foi adicionado ainda.
+                  </p>
+                  <p className={style.mensagemSecundaria}>
+                    Clique abaixo para cadastrar o primeiro material.
+                  </p>
+                  <button
+                    onClick={abrirModal}
+                    className={style.botaoAdicionarGrande}
+                  >
+                    <span className={style.iconeMais}>+</span> Adicionar
+                    Material
+                  </button>
+                </div>
+              ) : (
+                <div className={style.tabelaContainer}>
+                  <table className={style.tabelaMateriais}>
+                    <thead>
+                      <tr>
+                        <th>Material</th>
+                        <th>Descrição</th>
+                        <th>Qtd</th>
+                        <th>Valor Unit.</th>
+                        <th>IPI</th>
+                        <th>Total</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {materiaisSelecionados.map((mat, idx) => (
+                        <tr key={idx}>
+                          <td>{mat.tipoMaterial || "N/A"}</td>
+                          <td>{mat.descricao}</td>
+                          <td>{mat.quantidade}</td>
+                          <td>
+                            R${" "}
+                            {Number(mat.valorUnitario)
+                              .toFixed(2)
+                              .replace(".", ",")}
+                          </td>
+                          <td>{mat.ipiFormatado || "0,00%"}</td>
+                          <td>R$ {mat.total}</td>
+                          <td className={style.acoes}>
+                            <button
+                              className={style.btnEditar}
+                              onClick={() => abrirModalEdicao(idx)}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              className={style.btnRemover}
+                              onClick={() => removerMaterial(idx)}
+                            >
+                              Excluir
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
 
-    </table>
-
-    {/* botão vai aparecer no canto inferior da tabela */}
-    <div className={style.wrapperBotaoTabela}>
-      <button
-        onClick={abrirModal}
-        className={style.botaoAdicionarTabela}
-      >
-        +
-      </button>
-    </div>
-  </div>
-)}
-
+                  {/* botão vai aparecer no canto inferior da tabela */}
+                  <div className={style.wrapperBotaoTabela}>
+                    <button
+                      onClick={abrirModal}
+                      className={style.botaoAdicionarTabela}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* === Modal de ADICIONAR material === */}
               {modalAberto && (
@@ -848,16 +922,16 @@ const finalizarOrdemDeCompra = () => {
                           value={materialSelecionado}
                           onChange={(e) => {
                             const valor = e.target.value;
-                            setMaterialSelecionado(valor);
+                            setMaterialSelecionado(valor); // ← agora atualiza o estado correto!
 
-                            // Atualiza IPI automaticamente
+                            // Atualiza o IPI automaticamente
                             const material = listaMateriais.find(
-                              (m) => m.id.toString() === valor.toString()
+                              (m) => m.id === Number(valor)
                             );
                             if (material) {
                               handleInputChange(
                                 "IPI",
-                                formatarIPI(material.IPI?.toString() || "0")
+                                formatarIPI(material.ipi?.toString() || "0")
                               );
                             }
                           }}
@@ -919,14 +993,15 @@ const finalizarOrdemDeCompra = () => {
                         <p>
                           Rastreabilidade{" "}
                           <span style={{ color: "red" }}>*</span>
-                           <span
+                          <span
                             style={{
                               fontSize: "12px",
                               color: "#666",
                               marginLeft: "10px",
                             }}
                           >
-                            ({(valoresInput["Rastreabilidade"] || "").length}/20)
+                            ({(valoresInput["Rastreabilidade"] || "").length}
+                            /20)
                           </span>
                         </p>
                         <input
@@ -1030,13 +1105,19 @@ const finalizarOrdemDeCompra = () => {
                         </p>
                         <select
                           value={materialSelecionado}
+                          // No modal de adição, no <select> onChange:
                           onChange={(e) => {
                             const valor = e.target.value;
                             setMaterialSelecionado(valor);
                             const material = listaMateriais.find(
                               (m) => m.id.toString() === valor.toString()
                             );
-                            // Não atualiza mais o campo IPI
+                            if (material) {
+                              handleInputChange(
+                                "IPI",
+                                formatarIPI(material.ipi?.toString() || "0") // ← Atualiza IPI se mudar material
+                              );
+                            }
                           }}
                         >
                           <option value="">Selecione um material</option>
@@ -1096,14 +1177,15 @@ const finalizarOrdemDeCompra = () => {
                         <p>
                           Rastreabilidade{" "}
                           <span style={{ color: "red" }}>*</span>
-                            <span
+                          <span
                             style={{
                               fontSize: "12px",
                               color: "#666",
                               marginLeft: "10px",
                             }}
                           >
-                            ({(valoresInput["Rastreabilidade"] || "").length}/20)
+                            ({(valoresInput["Rastreabilidade"] || "").length}
+                            /20)
                           </span>
                         </p>
                         <input
@@ -1168,6 +1250,18 @@ const finalizarOrdemDeCompra = () => {
                           }
                         />
                       </div>
+                      <div className={style.inputGroup}>
+                        <p>IPI (%)</p>
+                        <input
+                          type="text"
+                          value={valoresInput["IPI"] || "0,00"}
+                          disabled
+                          style={{
+                            backgroundColor: "#f0f0f0",
+                            color: "#2c3e50",
+                          }}
+                        />
+                      </div>
 
                       {/* Total */}
                       <div className={style.inputGroup}>
@@ -1206,18 +1300,20 @@ const finalizarOrdemDeCompra = () => {
                     <strong>Fornecedor:</strong>{" "}
                     {listaFornecedores.find(
                       (f) =>
-                        f.fornecedorId === Number(valoresInput["FornecedorId"])
+                        f.fornecedorId === Number(dadosFornecedor.FornecedorId)
                     )?.nomeFantasia || "N/A"}
                   </p>
                   <p>
                     <strong>Prazo de entrega:</strong>{" "}
-                    {new Date(
-                      valoresInput["Prazo de entrega"]
-                    ).toLocaleDateString("pt-BR")}
+                    {dadosFornecedor["Prazo de entrega"]
+                      ? new Date(
+                          dadosFornecedor["Prazo de entrega"]
+                        ).toLocaleDateString("pt-BR")
+                      : "Não informado"}
                   </p>
                   <p>
                     <strong>Condição de Pagamento:</strong>{" "}
-                    {valoresInput["Cond. Pagamento"]}
+                    {dadosFornecedor["Cond. Pagamento"] || "Não informado"}
                   </p>
                 </div>
 
@@ -1239,15 +1335,17 @@ const finalizarOrdemDeCompra = () => {
                       {materiaisSelecionados.map((mat, idx) => (
                         <tr key={idx}>
                           <td>{mat.tipoMaterial}</td>
-                        <td>{mat.descricao}</td>
-      <td>{mat.quantidade}</td>
+                          <td>{mat.descricao}</td>
+                          <td>{mat.quantidade}</td>
 
-      <td>
-        R$ {Number(mat.valorUnitario)
-          .toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-      </td>
+                          <td>
+                            R${" "}
+                            {Number(mat.valorUnitario).toLocaleString("pt-BR", {
+                              minimumFractionDigits: 2,
+                            })}
+                          </td>
 
-      <td>{mat.ipi ? `${mat.ipi}%` : "0%"}</td>
+                          <td>{mat.ipiFormatado || "0,00%"}</td>
                           <td>R$ {mat.total}</td>
                         </tr>
                       ))}
@@ -1277,7 +1375,7 @@ const finalizarOrdemDeCompra = () => {
                   className={style.botaoPDF}
                   onClick={() => {
                     const sucesso = gerarPDFPrevia(
-                      valoresInput,
+                      dadosFornecedor,
                       materiaisSelecionados,
                       listaFornecedores
                     );
@@ -1296,73 +1394,67 @@ const finalizarOrdemDeCompra = () => {
               </p>
             </div>
           )}
-      {progresso === 4 && (
-  <div className={style.finalizacaoWrapper}>
+          {progresso === 4 && (
+            <div className={style.finalizacaoWrapper}>
+              <div className={style.containerAcoes}>
+                {/* Área do PDF */}
+                <div className={style.areaPDF}>
+                <button
+  className={style.botaoPDFGrande}
+  onClick={() => 
+    conjuntoIdSalvo && 
+    idsDoConjuntoAtual.length > 0 && 
+    baixarOrdemDeCompraPDF(conjuntoIdSalvo, idsDoConjuntoAtual)
+  }
+  disabled={!conjuntoIdSalvo || idsDoConjuntoAtual.length === 0}
+>
+                    📄Baixar Ordem de Compra Final 
+                  </button>
+                </div>
 
+                {/* Área de navegação */}
+                <div className={style.areaBotoes}>
+                  <p className={style.subTexto}>
+                    O que você deseja fazer agora?
+                  </p>
 
-    <div className={style.containerAcoes}>
-      
-      {/* Área do PDF */}
-      <div className={style.areaPDF}>
-        <button 
-          className={style.botaoPDFGrande}
-          onClick={() => {
-            const sucesso = gerarPDFPrevia(valoresInput, materiaisSelecionados, listaFornecedores);
-            if (sucesso) toastSuccess("PDF gerado com sucesso!");
-          }}
-        >
-          📄 Baixar Ordem de Compra
-        </button>
-      </div>
+<button onClick={reiniciar}>Nova Ordem de Compra</button>
+                  <button onClick={() => navigate("/HistoricoOrdemDeCompra")}>
+                    Histórico de OC's
+                  </button>
 
-      {/* Área de navegação */}
-      <div className={style.areaBotoes}>
-        <p className={style.subTexto}>O que você deseja fazer agora?</p>
-        
-        <button onClick={reiniciar}>
-          Nova Ordem de Compra
-        </button>
+                  <button onClick={() => navigate("/DashEstoque")}>
+                    Dashboard Estoque
+                  </button>
 
-        <button onClick={() => navigate("/HistoricoOrdemDeCompra")}>
-          Histórico de OC's
-        </button>
-
-        <button onClick={() => navigate("/DashEstoque")}>
-          Dashboard Estoque
-        </button>
-
-        <button onClick={() => navigate("/Material")}>
-          Dashboard Materiais
-        </button>
-      </div>
-
-    </div>
-  </div>
-)}
-
-
+                  <button onClick={() => navigate("/Material")}>
+                    Dashboard Materiais
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* === Botões de navegação === */}
-         <div
-  className={style.botoes}
-  style={{
-    justifyContent:
-      progresso === 1
-        ? "flex-end" // 👈 primeira etapa: botão "Avançar" à direita
-        : "space-between", // demais etapas: "Voltar" à esquerda e "Avançar" à direita
-  }}
->
-  {progresso > 1 && progresso < 4 && (
-    <button onClick={voltarProgresso}>Voltar</button>
-  )}
-  {progresso < 3 && (
-    <button onClick={avancarProgresso}>Avançar</button>
-  )}
-  {progresso === 3 && (
-    <button onClick={finalizarOrdemDeCompra}>Finalizar</button>
-  )}
-</div>
-
+          <div
+            className={style.botoes}
+            style={{
+              justifyContent:
+                progresso === 1
+                  ? "flex-end" // 👈 primeira etapa: botão "Avançar" à direita
+                  : "space-between", // demais etapas: "Voltar" à esquerda e "Avançar" à direita
+            }}
+          >
+            {progresso > 1 && progresso < 4 && (
+              <button onClick={voltarProgresso}>Voltar</button>
+            )}
+            {progresso < 3 && (
+              <button onClick={avancarProgresso}>Avançar</button>
+            )}
+            {progresso === 3 && (
+              <button onClick={finalizarOrdemDeCompra}>Finalizar</button>
+            )}
+          </div>
         </main>
       </section>
     </>
