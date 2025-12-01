@@ -614,10 +614,10 @@ const [valorIPI, setValorIPI] = useState(0);
                     <th>Material</th>
                     <th>Quantidade</th>
                     <th>Pendente</th>
-                    <th>C1</th>
-                    <th>C2</th>
-                    <th>C3</th>
-                    <th>C4</th>
+                    <th>G1</th>
+                    <th>G2</th>
+                    <th>G3</th>
+                    <th>G4</th>
                   </tr>
                 </thead>
                 <tbody>

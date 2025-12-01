@@ -117,39 +117,76 @@ const NavBar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Atualiza contador quando chega nova notificação via toast
+  // === VERSÃO FINAL OFICIAL - SÓ WEBSOCKET - NUNCA MAIS VAI DAR +2 ===
   useEffect(() => {
-    const handleNovaNotificacao = (mensagem) => {
-      // Incrementa contador
+    const handleNotificacaoWebSocket = (e) => {
+      const payload = e.detail;
+
+      const rotas = {
+        transferencia: "/HistoricoTransferencia",
+        ordem_compra: "/HistoricoOrdemDeCompra",
+        cadastro_fornecedor: "/ListagemFornecedor",
+        cadastro_usuario: "/TabelaUsuarios",
+        cadastro_estoque: "/DashEstoque"
+      };
+
+      const tipo = payload.entity || payload.tipoEvento || payload.tipo || "geral";
+      const mensagem = payload.mensagem || "Nova atividade no sistema";
+      const rota = rotas[tipo] || null;
+
+      // Só adiciona UMA VEZ
       setNotificacoesNaoLidas(prev => prev + 1);
 
-      // Adiciona na lista do sino
       const novaNotif = {
-        id: Date.now(),
-        mensagem: mensagem || "Nova notificação",
-        timestamp: new Date().toLocaleString('pt-BR'),
+        id: Date.now() + Math.random(),
+        mensagem: mensagem.substring(0, 150),
+        timestamp: new Date().toLocaleTimeString('pt-BR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        }),
+        rota,
         lida: false
       };
-      setListaNotificacoes(prev => [novaNotif, ...prev]);
+
+      setListaNotificacoes(prev => {
+        const novaLista = [novaNotif, ...prev].slice(0, 50);
+        localStorage.setItem('notificacoes_sino', JSON.stringify(novaLista));
+        return novaLista;
+      });
     };
 
-    // Intercepta o toast.info
-    const originalToast = toast.info;
-    toast.info = (mensagem, options) => {
-      handleNovaNotificacao(mensagem);
-      return originalToast(mensagem, options);
-    };
+    window.addEventListener("nova-notificacao", handleNotificacaoWebSocket);
 
     return () => {
-      toast.info = originalToast;
+      window.removeEventListener("nova-notificacao", handleNotificacaoWebSocket);
     };
   }, []);
 
-  // Marca todas como lidas
+  // CARREGA NOTIFICAÇÕES SALVAS DO LOCALSTORAGE
+  useEffect(() => {
+    const salvas = localStorage.getItem('notificacoes_sino');
+    if (salvas) {
+      const parsed = JSON.parse(salvas);
+      setListaNotificacoes(parsed);
+      // Opcional: restaura o contador também
+      const naoLidas = parsed.filter(n => !n.lida).length;
+      setNotificacoesNaoLidas(naoLidas);
+    }
+  }, []);
+
+  // SALVA NO LOCALSTORAGE SEMPRE QUE MUDAR
+  useEffect(() => {
+    if (listaNotificacoes.length > 0) {
+      localStorage.setItem('notificacoes_sino', JSON.stringify(listaNotificacoes));
+    }
+  }, [listaNotificacoes]);
+
   const marcarTodasComoLidas = () => {
     setNotificacoesNaoLidas(0);
-    setListaNotificacoes(prev => prev.map(n => ({ ...n, lida: true })));
-    // opcional: setDropdownAberto(false);
+    const listaAtualizada = listaNotificacoes.map(n => ({ ...n, lida: true }));
+    setListaNotificacoes(listaAtualizada);
+    localStorage.setItem('notificacoes_sino', JSON.stringify(listaAtualizada));
   };
 
   const toggleGestaoSubmenu = () => setShowGestaoSubmenu(prev => !prev);
@@ -338,9 +375,21 @@ const NavBar = () => {
               <div className="dropdown-body">
                 {listaNotificacoes.length > 0 ? (
                   listaNotificacoes.map(notif => (
-                    <div key={notif.id} className="notificacao-item">
-                      <p>{notif.mensagem}</p>
-                      <small>{notif.timestamp}</small>
+                    <div
+                      key={notif.id}
+                      className="notificacao-item"
+                      onClick={() => notif.rota && navigate(notif.rota)}
+                      style={{ cursor: notif.rota ? 'pointer' : 'default', padding: '12px' }}
+                    >
+                      <p style={{ margin: 0, fontWeight: notif.rota ? 'bold' : 'normal' }}>
+                        {notif.mensagem}
+                      </p>
+                      <small style={{ color: '#888' }}>{notif.timestamp}</small>
+                      {notif.rota && (
+                        <small style={{ color: '#007bff', display: 'block', marginTop: '4px' }}>
+                          Clique para abrir
+                        </small>
+                      )}
                     </div>
                   ))
                 ) : (

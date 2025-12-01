@@ -411,10 +411,10 @@ export function Transferencia() {
             <option value="" disabled>
               Selecione uma opção
             </option>
-            <option value="C1">C1</option>
-            <option value="C2">C2</option>
-            <option value="C3">C3</option>
-            <option value="C4">C4</option>
+            <option value="G1">G1</option>
+            <option value="G2">G2</option>
+            <option value="G3">G3</option>
+            <option value="G4">G4</option>
           </select>
 
           <button

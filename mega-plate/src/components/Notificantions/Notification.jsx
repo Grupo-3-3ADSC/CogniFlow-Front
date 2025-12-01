@@ -20,13 +20,13 @@ export default function Notification() {
   useEffect(() => {
     console.log("Iniciando WebSocket...");
 
-    // Previne múltiplas conexões APENAS se estiver conectado
+
     if (clientRef.current?.connected) {
       console.log("Conexão já existe e está ativa");
       return;
     }
 
-    // Limpa referência antiga se existir mas não estiver conectada
+
     if (clientRef.current) {
       console.log("Limpando conexão antiga...");
       try {
@@ -56,7 +56,11 @@ export default function Notification() {
         client.subscribe("/topic/notificacoes", (message) => {
           try {
             const payload = JSON.parse(message.body);
-            console.log("📩 Notificação recebida:", payload);
+            console.log("Notificação recebida:", payload);
+
+            window.dispatchEvent(new CustomEvent("nova-notificacao", {
+              detail: payload
+            }));
 
             // Configuração de rotas
             const notificationConfig = {
@@ -111,41 +115,41 @@ export default function Notification() {
             };
 
             // Exibe toast
-            toast.info(
-              <div style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "6px"
-              }}>
-                <div style={{ fontWeight: "500", fontSize: "0.95rem" }}>
-                  {config.mensagem}
-                </div>
+            // toast.info(
+            //   <div style={{
+            //     display: "flex",
+            //     flexDirection: "column",
+            //     gap: "6px"
+            //   }}>
+            //     <div style={{ fontWeight: "500", fontSize: "0.95rem" }}>
+            //       {config.mensagem}
+            //     </div>
 
-                {config.rota && (
-                  <span
-                    onClick={handleNavigation}
-                    style={{
-                      color: "#007bff",
-                      cursor: "pointer",
-                      fontSize: "0.9rem",
-                      textDecoration: "underline",
-                      width: "fit-content"
-                    }}
-                  >
-                    Clique aqui para mais detalhes
-                  </span>
-                )}
-              </div>,
-              {
-                position: "top-right",
-                autoClose: 6000,
-                closeOnClick: false,
-                pauseOnHover: true,
-                draggable: true,
-                hideProgressBar: false,
-                closeButton: false
-              }
-            );
+            //     {config.rota && (
+            //       <span
+            //         onClick={handleNavigation}
+            //         style={{
+            //           color: "#007bff",
+            //           cursor: "pointer",
+            //           fontSize: "0.9rem",
+            //           textDecoration: "underline",
+            //           width: "fit-content"
+            //         }}
+            //       >
+            //         Clique aqui para mais detalhes
+            //       </span>
+            //     )}
+            //   </div>,
+            //   {
+            //     position: "top-right",
+            //     autoClose: 6000,
+            //     closeOnClick: false,
+            //     pauseOnHover: true,
+            //     draggable: true,
+            //     hideProgressBar: false,
+            //     closeButton: false
+            //   }
+            // );
 
           } catch (error) {
             console.error("Erro ao processar notificação:", error);
