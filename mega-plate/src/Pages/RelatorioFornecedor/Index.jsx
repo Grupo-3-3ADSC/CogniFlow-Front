@@ -53,7 +53,7 @@ export function RelatorioFornecedor() {
 
   async function buscarFornecedores() {
     const token = sessionStorage.getItem("authToken");
-    const res = await api.get("/fornecedores", {
+    const res = await api.get("/api/fornecedores", {
       headers: { Authorization: `Bearer ${token}` },
     });
     return res.data;
@@ -62,7 +62,7 @@ export function RelatorioFornecedor() {
   async function buscarOrdensDeCompra(fornecedorId, anoSelecionado) {
     const token = sessionStorage.getItem("authToken");
     const res = await api.get(
-      `/ordemDeCompra/relatorioFornecedor/${fornecedorId}?ano=${anoSelecionado}`,
+      `/api/ordemDeCompra/relatorioFornecedor/${fornecedorId}?ano=${anoSelecionado}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }

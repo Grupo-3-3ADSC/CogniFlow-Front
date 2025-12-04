@@ -21,7 +21,7 @@ export function OrdemDeCompra() {
 
   function getFornecedores() {
     api
-      .get("/fornecedores")
+      .get("/api/fornecedores")
       .then((resposta) => {
         setListaFornecedores(resposta.data);
       })
@@ -63,7 +63,7 @@ export function OrdemDeCompra() {
 
   function getMateriaPrima() {
     api
-      .get("/estoque")
+      .get("/api/estoque")
       .then((resposta) => {
         setListaMateriais(resposta.data);
       })
@@ -505,7 +505,7 @@ export function OrdemDeCompra() {
     // console.log("valoresInput", valoresInput);
 
     api
-      .post("/ordemDeCompra", dadosApi)
+      .post("/api/ordemDeCompra", dadosApi)
       .then((res) => {
         const novaId = res?.data?.id;
 
@@ -515,7 +515,7 @@ export function OrdemDeCompra() {
           return;
         }
 
-        return api.get(`/ordemDeCompra/${novaId}`);
+        return api.get(`/api/ordemDeCompra/${novaId}`);
       })
       .then((resDetalhado) => {
         if (!resDetalhado) return;

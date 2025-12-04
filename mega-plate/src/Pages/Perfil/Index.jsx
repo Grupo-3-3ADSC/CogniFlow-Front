@@ -37,7 +37,7 @@ function Perfil() {
 
     function getUsuarios() {
         if (token) {
-            api.get(`/usuarios/${userId}`, {
+            api.get(`/api/usuarios/${userId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -56,7 +56,7 @@ function Perfil() {
         if (token) {
             setFotoError(false);
 
-            api.get(`/usuarios/${userId}/foto`, {
+            api.get(`/api/usuarios/${userId}/foto`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 },
@@ -162,7 +162,7 @@ function Perfil() {
         }
 
         if (token) {
-            api.patch(`/usuarios/${userId}`, formData, {
+            api.patch(`/api/usuarios/${userId}`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -212,7 +212,7 @@ function Perfil() {
 
         console.log('FormData criado para:', `/usuarios/${userId}/upload-foto`);
 
-        api.post(`/usuarios/${userId}/upload-foto`, formData, {
+        api.post(`/api/usuarios/${userId}/upload-foto`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },

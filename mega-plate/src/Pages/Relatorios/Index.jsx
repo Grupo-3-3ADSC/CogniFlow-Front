@@ -76,7 +76,7 @@ export function Relatorios() {
 
     setIsGestor(Number(cargoUsuario) === 2);
 
-    let url = "/ordemDeCompra";
+    let url = "/api/ordemDeCompra";
 
     try {
       const res = await api.get(url, {
@@ -367,7 +367,7 @@ export function Relatorios() {
   useEffect(() => {
     const token = sessionStorage.getItem("authToken");
     api
-      .get("/transferencias", {
+      .get("/api/transferencias", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setTransferencias(res.data))

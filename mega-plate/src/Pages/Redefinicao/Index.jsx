@@ -25,7 +25,7 @@ export function Redefinicao() {
     // ✅ DESCOMENTADO - Função necessária!
     const atualizarSenha = async (userId, novaSenha) => {
         try {
-            const response = await fetch(`http://localhost:8080/usuarios/${userId}/senha`, {
+            const response = await fetch(`http://${import.meta.env.VITE_API_URL}:8080/api/usuarios/${userId}/senha`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

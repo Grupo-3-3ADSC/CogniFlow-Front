@@ -30,7 +30,7 @@ export function Verificacao() {
         }
 
         try {
-            const response = await fetch('http://localhost:3001/enviar-codigo', {
+            const response = await fetch(`http://${import.meta.env.VITE_API_URL}:3001/api/enviar-codigo`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
@@ -50,7 +50,7 @@ export function Verificacao() {
 
     const buscarUsuarioPorEmail = async (email) => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/usuarios/buscar-por-email/${encodeURIComponent(email)}`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/usuarios/buscar-por-email/${encodeURIComponent(email)}`);
 
             if (!response.ok) {
                 throw new Error('Usuário não encontrado');
@@ -72,7 +72,7 @@ export function Verificacao() {
         setIsVerifying(true);
 
         try {
-            const response = await fetch('http://localhost:3001/verificar-codigo', {
+            const response = await fetch(`http://${import.meta.env.VITE_API_URL}:3001/api/verificar-codigo`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, codigo: userCode })

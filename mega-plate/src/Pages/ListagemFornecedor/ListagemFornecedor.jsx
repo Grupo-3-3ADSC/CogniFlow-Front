@@ -55,7 +55,7 @@ export function ListagemFornecedor() {
 
     async function buscarFornecedores() {
         const token = sessionStorage.getItem("authToken");
-        const res = await api.get("/fornecedores", {
+        const res = await api.get("/api/fornecedores", {
             headers: { Authorization: `Bearer ${token}` },
         });
         return res.data;
@@ -82,7 +82,7 @@ export function ListagemFornecedor() {
             const token = sessionStorage.getItem("authToken");
             try {
                 await api.patch(
-                    `/usuarios/desativarUsuario/${id}`,
+                    `/api/usuarios/desativarUsuario/${id}`,
                     { ativo: !ativo },
                     {
                         headers: {
@@ -115,7 +115,7 @@ export function ListagemFornecedor() {
         if (result.isConfirmed) {
             const token = sessionStorage.getItem("authToken");
             try {
-                await api.delete(`/fornecedores/${id}`, {
+                await api.delete(`/api/fornecedores/${id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

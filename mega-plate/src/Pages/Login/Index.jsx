@@ -72,7 +72,7 @@ export function Login() {
 	console.log(formData)
 	console.log(import.meta.env.VITE_API_URL)
     api
-      .post("/usuarios/login", {
+      .post("/api/usuarios/login", {
         email: formData.email,
         password: formData.password,
       })

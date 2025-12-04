@@ -303,7 +303,7 @@ const popupStyles = `
   // Função para buscar dados do estoque
   function getEstoque() {
     api
-      .get("/estoque")
+      .get("/api/estoque")
       .then((resposta) => {
         const dadosEstoque = resposta.data;
         const tiposUnicos = [
@@ -339,7 +339,7 @@ const popupStyles = `
 
   function getOrdemDeCompra() {
     api
-      .get("/ordemDeCompra")
+      .get("/api/ordemDeCompra")
       .then((resposta) => {
         setOrdemDeCompra(resposta.data);
       }).catch((err) => {
@@ -350,7 +350,7 @@ const popupStyles = `
   // Função para inicializar os gráficos com dados reais
   // Função para buscar dados das transferências
    function getTransferencias() {
-    api.get("/transferencias")
+    api.get("/api/transferencias")
       .then((resposta) => {
         const dados = resposta.data || [];
         setTransferencias(dados);

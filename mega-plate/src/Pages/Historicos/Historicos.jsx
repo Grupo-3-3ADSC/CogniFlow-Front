@@ -74,7 +74,7 @@ export function Historicos() {
 
         setIsGestor(Number(cargoUsuario) === 2);
 
-        let url = "/ordemDeCompra";
+        let url = "/api/ordemDeCompra";
 
         try {
             const res = await api.get(url, {
@@ -90,7 +90,7 @@ export function Historicos() {
     function getOrdensPaginadas() {
         const paginaInt = Number(paginaAtual) || 0;
         api.
-            get(`/ordemDeCompra/paginados?pagina=${paginaInt}&tamanho=${ordensPorPagina}`)
+            get(`/api/ordemDeCompra/paginados?pagina=${paginaInt}&tamanho=${ordensPorPagina}`)
             .then((response) => {
                 const { data, paginasTotais, totalItems, paginaAtual, hasNext, hasPrevious } = response.data;
 
@@ -162,7 +162,7 @@ export function Historicos() {
                 }
             }
 
-            api.patch(`/ordemDeCompra/${id}`, resposta, {
+            api.patch(`/api/ordemDeCompra/${id}`, resposta, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -227,7 +227,7 @@ export function Historicos() {
                 }
             }
 
-            api.patch(`/ordemDeCompra/${id}`, resposta, {
+            api.patch(`/api/ordemDeCompra/${id}`, resposta, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
