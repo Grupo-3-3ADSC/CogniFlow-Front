@@ -37,7 +37,7 @@ const NavBar = () => {
     if (token) {
       setFotoError(false);
 
-      api.get(`/usuarios/${userId}/foto`, {
+      api.get(`/api/usuarios/${userId}/foto`, {
         headers: {
           Authorization: `Bearer ${token}`
         },
@@ -67,7 +67,7 @@ const NavBar = () => {
 
   function getUsuario() {
     if (token) {
-      api.get(`/usuarios/${userId}`, {
+      api.get(`/api/usuarios/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
