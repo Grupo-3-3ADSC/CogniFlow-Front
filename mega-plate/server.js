@@ -1,27 +1,39 @@
 import express from 'express';
 import nodemailer from 'nodemailer';
 import cors from 'cors';
-import bodyParser from 'body-parser';
-import 'dotenv/config';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
+const PORT = process.env.PORT || 3001;
+
+// Middlewares
 app.use(cors());
-app.use(bodyParser.json());
-const path = require("path");
-// Armazene os códigos temporariamente (em produção, use um banco de dados ou cache)
+app.use(express.json());
+
+// Armazenamento temporário de códigos
 const codes = {};
 
-app.post('/enviar-codigo', async (req, res) => {
+// Rotas da API
+app.post('/api/enviar-codigo', async (req, res) => {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ success: false, message: 'E-mail é obrigatório.' });
-
-    // Gera código de 6 dígitos
+    
+    if (!email) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'E-mail é obrigatório.' 
+        });
+    }
+    
     const codigo = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Salva o código associado ao e-mail (expira em 5 minutos)
     codes[email] = { codigo, expires: Date.now() + 5 * 60 * 1000 };
-
-    // Configure o transporter do Nodemailer (exemplo com Gmail)
+    
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -29,7 +41,7 @@ app.post('/enviar-codigo', async (req, res) => {
             pass: process.env.GMAIL_PASS
         }
     });
-
+    
     const mailOptions = {
         from: '"CogniFlow" <cogniflow51@gmail.com>',
         to: email,
@@ -37,39 +49,55 @@ app.post('/enviar-codigo', async (req, res) => {
         text: `Seu código de verificação é: ${codigo}`,
         html: `<p>Seu código de verificação é: <b>${codigo}</b></p>`
     };
-
+    
     try {
         await transporter.sendMail(mailOptions);
         res.json({ success: true, message: 'Código enviado!' });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Erro ao enviar e-mail.' });
+        console.error('Erro ao enviar e-mail:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Erro ao enviar e-mail.' 
+        });
     }
 });
 
-// Endpoint para verificar o código
-app.post('/verificar-codigo', (req, res) => {
+app.post('/api/verificar-codigo', (req, res) => {
     const { email, codigo } = req.body;
-    if (!email || !codigo) return res.status(400).json({ success: false, message: 'Dados incompletos.' });
-
+    
+    if (!email || !codigo) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Dados incompletos.' 
+        });
+    }
+    
     const registro = codes[email];
+    
     if (registro && registro.codigo === codigo && Date.now() < registro.expires) {
-        delete codes[email]; // Código só pode ser usado uma vez
+        delete codes[email];
         res.json({ success: true });
     } else {
-        res.status(400).json({ success: false, message: 'Código inválido ou expirado.' });
+        res.status(400).json({ 
+            success: false, 
+            message: 'Código inválido ou expirado.' 
+        });
     }
 });
 
-app.listen(3001, () => {
-    console.log('Servidor rodando na porta 3001');
+// Servir arquivos estáticos do React
+app.use(express.static(join(__dirname, 'dist')));
+
+// --- CORREÇÃO AQUI ---
+// SPA fallback: Usando Regex /(.*)/ (sem aspas) para capturar todas as rotas
+app.get(/(.*)/, (req, res) => {
+    res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
-const app = express();
-const PORT = 3001;
+// ---------------------
 
-app.use(express.static(path.join(__dirname, "dist")));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "dist", "index.html"));
+// Iniciar servidor
+app.listen(PORT, () => {
+    console.log(`✅ Servidor rodando na porta ${PORT}`);
+    console.log(`📁 Servindo arquivos de: ${join(__dirname, 'dist')}`);
 });
 
-app.listen(PORT, () => console.log(`Rodando na porta ${PORT}`));

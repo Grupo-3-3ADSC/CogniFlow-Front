@@ -234,26 +234,26 @@ const popupStyles = `
 }
 `;
 
-function App() {
+ function App() {
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
   const [userPhoto, setUserPhoto] = useState("./User.png");
   const fileInputRef = useRef(null);
 
   const navigate = useNavigate();
-  useEffect(() => {
-    const token = sessionStorage.getItem("authToken");
-    if (!token) {
-      navigate("/");
-    } else {
-      const { exp } = jwtDecode(token);
-      if (Date.now() >= exp * 1000) {
-        sessionStorage.removeItem("authToken");
-        navigate("/");
-      } else {
-        setAutenticacaoPassou(true);
-      }
-    }
-  }, []);
+ // useEffect(() => {
+ //   const token = sessionStorage.getItem("authToken");
+ //   if (!token) {
+ //     navigate("/");
+ //   } else {
+  //    const { exp } = jwtDecode(token);
+   //   if (Date.now() >= exp * 1000) {
+   //     sessionStorage.removeItem("authToken");
+    //    navigate("/");
+    //  } else {
+     //   setAutenticacaoPassou(true);
+  //    }
+ //   }
+ // }, []);
 
   // Estados para os filtros baseados no AppEstoque
   const [searchTerm, setSearchTerm] = useState("");
@@ -976,7 +976,7 @@ function App() {
     setShowPopup(true);
   };
 
-  if (!autenticacaoPassou) return null;
+//  if (!autenticacaoPassou) return null;
 
   return (
     <div className="IndexMaterial">

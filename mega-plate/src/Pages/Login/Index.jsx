@@ -69,7 +69,8 @@ export function Login() {
       return toastError("Por favor, preencha os campos");
     }
 
-
+	console.log(formData)
+	console.log(import.meta.env.VITE_API_URL)
     api
       .post("/usuarios/login", {
         email: formData.email,
