@@ -50,7 +50,7 @@ export function Verificacao() {
 
     const buscarUsuarioPorEmail = async (email) => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/usuarios/buscar-por-email/${encodeURIComponent(email)}`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/usuarios/buscar-por-email/${encodeURIComponent(email)}`);
 
             if (!response.ok) {
                 throw new Error('Usuário não encontrado');

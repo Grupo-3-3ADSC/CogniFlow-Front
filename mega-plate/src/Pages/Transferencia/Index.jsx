@@ -39,7 +39,7 @@ export function Transferencia() {
 
   function getEstoque() {
     api
-      .get("/estoque")
+      .get("/api/estoque")
       .then((resposta) => {
         setMateriais(resposta.data);
       })
@@ -72,7 +72,7 @@ export function Transferencia() {
     };
 
     api
-      .post("/transferencias", dados)
+      .post("/api/transferencias", dados)
       .then((resposta) => {
         gerarPDF(dados);
         setDadosUltimaTransferencia(dados); // Salva os dados da última transferência

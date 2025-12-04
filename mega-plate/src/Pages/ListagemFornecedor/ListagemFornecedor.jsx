@@ -57,7 +57,7 @@ export function ListagemFornecedor() {
         const cargoUsuario = sessionStorage.getItem("cargoUsuario");
         setIsGestor(Number(cargoUsuario) === 2);
 
-        const res = await api.get("/fornecedores", {
+        const res = await api.get("/api/fornecedores", {
             headers: { Authorization: `Bearer ${token}` },
         });
         return res.data;
@@ -86,7 +86,7 @@ export function ListagemFornecedor() {
         if (result.isConfirmed) {
             const token = sessionStorage.getItem("authToken");
             try {
-                await api.delete(`/fornecedores/${id}`, {
+                await api.delete(`/api/fornecedores/${id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

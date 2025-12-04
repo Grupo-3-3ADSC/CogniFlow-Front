@@ -76,7 +76,7 @@ export function Historicos() {
         
         setLoading(true); // NOVO
 
-        api.get(`/ordemDeCompra/paginados?pagina=${paginaInt}&tamanho=${ordensPorPagina}`, {
+        api.get(`/api/ordemDeCompra/paginados?pagina=${paginaInt}&tamanho=${ordensPorPagina}`, {
             headers: { Authorization: `Bearer ${token}` } // ADICIONADO: header com token
         })
         .then((response) => {
@@ -140,7 +140,7 @@ export function Historicos() {
                 quantidade: ordemAtual.quantidade,
             };
 
-            api.patch(`/ordemDeCompra/${id}`, resposta, {
+            api.patch(`/api/ordemDeCompra/${id}`, resposta, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -188,7 +188,7 @@ export function Historicos() {
                 quantidade: ordemAtual.quantidade,
             };
 
-            api.patch(`/ordemDeCompra/${id}`, resposta, {
+            api.patch(`/api/ordemDeCompra/${id}`, resposta, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",

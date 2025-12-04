@@ -70,7 +70,7 @@ export function TabelaUsuarios() {
 
     setIsGestor(Number(cargoUsuario) === 2);
 
-    let url = "/usuarios/listarTodos";
+    let url = "/api/usuarios/listarTodos";
     if (filtroStatus === "ativos") url = "/usuarios/listarAtivos";
     if (filtroStatus === "inativos") url = "/usuarios/listarInativos";
 
@@ -105,7 +105,7 @@ export function TabelaUsuarios() {
       const token = sessionStorage.getItem("authToken");
       try {
         await api.patch(
-          `/usuarios/desativarUsuario/${id}`,
+          `/api/usuarios/desativarUsuario/${id}`,
           { ativo: !ativo },
           {
             headers: {
@@ -138,7 +138,7 @@ export function TabelaUsuarios() {
     if (result.isConfirmed) {
       const token = sessionStorage.getItem("authToken");
       try {
-        await api.delete(`/usuarios/${id}`, {
+        await api.delete(`/api/usuarios/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

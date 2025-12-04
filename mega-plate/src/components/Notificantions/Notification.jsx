@@ -21,7 +21,7 @@ export default function Notification() {
     // Previne múltiplas conexões
     if (clientRef.current) return;
 
-    const socket = new SockJS("http://localhost:8080/ws-notifications");
+    const socket = new SockJS(`http://${import.meta.env.VITE_API_URL}:8080/api/ws-notifications`);
     const client = new Client({
       webSocketFactory: () => socket,
       connectHeaders: {

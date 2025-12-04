@@ -42,7 +42,7 @@ export function Cadastro() {
   useEffect(() => {
     function getCargos() {
       api
-        .get("/cargos", {
+        .get("/api/cargos", {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -156,7 +156,7 @@ export function Cadastro() {
     }
 
     api
-      .post("/usuarios", userData, {
+      .post("/api/usuarios", userData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

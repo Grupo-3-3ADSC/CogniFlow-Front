@@ -53,14 +53,14 @@ const [idsDoConjuntoAtual, setIdsDoConjuntoAtual] = useState([]); // ← NOVO ES
   // Funções API
   const getFornecedores = useCallback(() => {
     api
-      .get("/fornecedores")
+      .get("/api/fornecedores")
       .then((res) => setListaFornecedores(res.data))
       .catch((err) => toastError("Erro ao buscar fornecedores"));
   }, []);
 
   const getMateriaPrima = useCallback(() => {
     api
-      .get("/estoque")
+      .get("/api/estoque")
       .then((res) => {
         console.log("Dados retornados pela API:", res.data);
         setListaMateriais(res.data);
@@ -744,7 +744,7 @@ const finalizarOrdemDeCompra = () => {
   console.log("Enviando ordens:", ordensParaEnviar);
 
   api
-    .post("/ordemDeCompra/multiplas-ordens", ordensParaEnviar)
+    .post("/api/ordemDeCompra/multiplas-ordens", ordensParaEnviar)
   .then((response) => {
   toastSuccess("Ordem de compra cadastrada com sucesso!");
 

@@ -44,7 +44,7 @@ export function RelatorioMaterial() {
      const token = sessionStorage.getItem("authToken");
  
      api
-       .get("/estoque", {
+       .get("/api/estoque", {
          // ajuste se a rota for diferente (ex: /estoques, /materiais)
          headers: { Authorization: `Bearer ${token}` },
        })
@@ -68,7 +68,7 @@ export function RelatorioMaterial() {
   const buscarMateriais = async () => {
     try {
       const token = sessionStorage.getItem("authToken");
-      const res = await api.get("/estoque", {
+      const res = await api.get("/api/estoque", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -91,13 +91,13 @@ export function RelatorioMaterial() {
       const token = sessionStorage.getItem("authToken");
       const [entradasRes, saidasRes] = await Promise.all([
         api.get(
-          `/ordemDeCompra/material/${material.id}?ano=${anoSelecionado}`,
+          `/api/ordemDeCompra/material/${material.id}?ano=${anoSelecionado}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         ),
         api.get(
-          `/transferencias/material/${material.material}?ano=${anoSelecionado}`,
+          `/api/transferencias/material/${material.material}?ano=${anoSelecionado}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -115,12 +115,12 @@ export function RelatorioMaterial() {
       );
 
       try {
-        const ordensRes = await api.get("/ordemDeCompra", {
+        const ordensRes = await api.get("/api/ordemDeCompra", {
           headers: {
             Authorization: `Bearer ${sessionStorage.getItem("authToken")}`,
           },
         });
-        const transferenciasRes = await api.get("/transferencias", {
+        const transferenciasRes = await api.get("/api/transferencias", {
           headers: {
             Authorization: `Bearer ${sessionStorage.getItem("authToken")}`,
           },

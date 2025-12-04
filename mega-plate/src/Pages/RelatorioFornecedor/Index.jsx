@@ -35,7 +35,7 @@ export function RelatorioFornecedor() {
 
   buscarFornecedores().then((data) => setFornecedores(data));
 
-  api.get("/estoque", {
+  api.get("/api/estoque", {
     headers: { Authorization: `Bearer ${token}` },
   })
   .then((res) => {
@@ -57,7 +57,7 @@ export function RelatorioFornecedor() {
 
   async function buscarFornecedores() {
     const token = sessionStorage.getItem("authToken");
-    const res = await api.get("/fornecedores", {
+    const res = await api.get("/api/fornecedores", {
       headers: { Authorization: `Bearer ${token}` },
     });
     return res.data;
@@ -66,7 +66,7 @@ export function RelatorioFornecedor() {
   async function buscarOrdensDeCompra(fornecedorId, anoSelecionado) {
     const token = sessionStorage.getItem("authToken");
     const res = await api.get(
-      `/ordemDeCompra/relatorioFornecedor/${fornecedorId}?ano=${anoSelecionado}`,
+      `/api/ordemDeCompra/relatorioFornecedor/${fornecedorId}?ano=${anoSelecionado}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -91,7 +91,7 @@ export function RelatorioFornecedor() {
 let estoque = [];
 const token = sessionStorage.getItem("authToken"); // <--- AQUI ESTAVA O PROBLEMA!!!
 try {
-  const res = await api.get("/estoque", {
+  const res = await api.get("/api/estoque", {
     headers: { Authorization: `Bearer ${token}` },
   });
   estoque = res.data;

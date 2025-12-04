@@ -300,7 +300,7 @@ const [valorIPI, setValorIPI] = useState(0);
 
   function getEstoque() {
     api
-      .get("/estoque")
+      .get("/api/estoque")
       .then((resposta) => {
         setStockData(resposta.data);
       })
@@ -314,7 +314,7 @@ const [valorIPI, setValorIPI] = useState(0);
   // Função para carregar as ordens de compra
   function getOrdemDeCompra() {
     api
-      .get("/ordemDeCompra")
+      .get("/api/ordemDeCompra")
       .then((resposta) => {
         setOrdensDeCompra(resposta.data || []);
         console.log("Ordens de compra:", resposta.data);
@@ -325,7 +325,7 @@ const [valorIPI, setValorIPI] = useState(0);
 
   function getTransferencias() {
     api
-      .get("/transferencias")
+      .get("/api/transferencias")
       .then((resposta) => {
         setTransferencias(resposta.data || []);
         console.log("Transferências:", resposta.data);
@@ -342,7 +342,7 @@ const [valorIPI, setValorIPI] = useState(0);
     };  
 
     api
-      .patch(`/estoque/atualizarInfo`, dto)
+      .patch(`/api/estoque/atualizarInfo`, dto)
       .then((resposta) => {
         console.log("Resposta do servidor:", resposta.data);
         // Atualiza o selectedStockItem com o novo valor do IPI

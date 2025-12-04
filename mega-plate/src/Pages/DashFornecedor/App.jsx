@@ -320,7 +320,7 @@ function App() {
   // Função para buscar ordens de compra
   function BuscarOrdemDeCompra() {
     api
-      .get("/ordemDeCompra")
+      .get("/api/ordemDeCompra")
       .then((response) => {
         const ordens = response.data;
         setOrdemDeCompra(ordens);
@@ -334,7 +334,7 @@ function App() {
   // Função para buscar estoque
   function getEstoque() {
     api
-      .get("/estoque")
+      .get("/api/estoque")
       .then((response) => {
         const estoqueData = response.data;
         setEstoque(estoqueData);
@@ -350,7 +350,7 @@ function App() {
 
     const paginaInt = Number(paginaAtual) || 0;
     api.
-      get(`/fornecedores/paginados?pagina=${paginaInt}&tamanho=${fornecedoresPorPagina}`)
+      get(`/api/fornecedores/paginados?pagina=${paginaInt}&tamanho=${fornecedoresPorPagina}`)
       .then((response) => {
         const { data, paginasTotais, totalItems, paginaAtual, hasNext, hasPrevious } = response.data;
 

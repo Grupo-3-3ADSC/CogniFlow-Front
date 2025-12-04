@@ -143,7 +143,7 @@ export function CadastroFornecedor() {
 
     console.log(userData);
     api
-      .post("/fornecedores", userData, {
+      .post("/api/fornecedores", userData, {
         headers: {
           "Content-Type": "application/json",
         },

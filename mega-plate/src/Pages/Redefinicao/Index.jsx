@@ -39,7 +39,7 @@ export function Redefinicao() {
         // console.log('🔑 Primeiros 20 chars:', resetToken?.substring(0, 20));
     
         try {
-            const response = await fetch(`http://localhost:8080/usuarios/${encodeURIComponent(email)}/senha`, {
+            const response = await fetch(`http://${import.meta.env.VITE_API_URL}:8080/usuarios/${encodeURIComponent(email)}/senha`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

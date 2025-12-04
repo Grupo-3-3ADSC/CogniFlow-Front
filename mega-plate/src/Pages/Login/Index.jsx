@@ -71,7 +71,7 @@ export function Login() {
 
 
     api
-      .post("/usuarios/login", {
+      .post("/api/usuarios/login", {
         email: formData.email,
         password: formData.password,
       })
