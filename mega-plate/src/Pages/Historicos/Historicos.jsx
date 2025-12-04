@@ -18,16 +18,17 @@ export function Historicos() {
     const [filtroDia, setFiltroDia] = useState("");
     const [filtroPrazo, setFiltroPrazo] = useState("");
     const [filtroStatus, setFiltroStatus] = useState("");
-    const [filtroPendentes, setFiltroPendentes] = useState("");
+    const [filtroPendentes, setFiltroPendentes] = useState("todos");
     const [fade, setFade] = useState(true);
     const navigate = useNavigate();
 
     const [ordensPaginadas, setOrdensPaginadas] = useState([]);
-    const [paginaAtual, setPaginaAtual] = useState(0);
+    const [paginaAtual, setPaginaAtual] = useState(1); // MUDANÇA: Começa em 1
     const [paginasTotais, setPaginasTotais] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const [hasNext, setHasNext] = useState(false);
     const [hasPrevious, setHasPrevious] = useState(false);
+    const [loading, setLoading] = useState(false); // NOVO: controle de loading
 
     const ordensPorPagina = 6;
 
@@ -37,14 +38,13 @@ export function Historicos() {
         if (!token) {
             navigate("/");
         } else if (cargo !== 2) {
-            // Verifica se o usuário não é gestor
             Swal.fire({
                 title: "Acesso Negado",
                 text: "Você não tem permissão para acessar esta página.",
                 icon: "error",
                 confirmButtonColor: "#3085d6",
             });
-            navigate("/material"); // Redireciona para outra página
+            navigate("/material");
         } else {
             const { exp } = jwtDecode(token);
             if (Date.now() >= exp * 1000) {
@@ -57,63 +57,54 @@ export function Historicos() {
     }, [navigate]);
 
     useEffect(() => {
-        setFade(false); // inicia fade out
-        const timeout = setTimeout(() => {
-            setUsuarios([]);
-            buscarOrdensDeCompra();
-            getOrdensPaginadas();
-            setFade(true); // inicia fade in depois de buscar
-        }, 200); // tempo de fade out antes de buscar
+        if (autenticacaoPassou) {
+            setFade(false);
+            const timeout = setTimeout(() => {
+                getOrdensPaginadas();
+                setFade(true);
+            }, 200);
 
-        return () => clearTimeout(timeout);
-    }, [filtroPendentes, paginaAtual]);
-
-    const buscarOrdensDeCompra = async () => {
-        const token = sessionStorage.getItem("authToken");
-        const cargoUsuario = sessionStorage.getItem("cargoUsuario");
-
-        setIsGestor(Number(cargoUsuario) === 2);
-
-        let url = "/ordemDeCompra";
-
-        try {
-            const res = await api.get(url, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            setOrdens(res.data);
-        } catch (error) {
-            toastError("Erro ao carregar ordens de compra");
+            return () => clearTimeout(timeout);
         }
-    };
+    }, [filtroPendentes, paginaAtual, autenticacaoPassou]);
 
+    // REMOVIDA: buscarOrdensDeCompra() - não é mais necessária
 
     function getOrdensPaginadas() {
-        const paginaInt = Number(paginaAtual) || 0;
-        api.
-            get(`/ordemDeCompra/paginados?pagina=${paginaInt}&tamanho=${ordensPorPagina}`)
-            .then((response) => {
-                const { data, paginasTotais, totalItems, paginaAtual, hasNext, hasPrevious } = response.data;
+        const token = sessionStorage.getItem("authToken"); // ADICIONADO: token
+        const paginaInt = Number(paginaAtual) || 1; // MUDANÇA: default 1
+        
+        setLoading(true); // NOVO
 
-                //  console.log("dataaaa: ", data)
+        api.get(`/ordemDeCompra/paginados?pagina=${paginaInt}&tamanho=${ordensPorPagina}`, {
+            headers: { Authorization: `Bearer ${token}` } // ADICIONADO: header com token
+        })
+        .then((response) => {
+            const { data, paginasTotais, totalItems, paginaAtual, hasNext, hasPrevious } = response.data;
 
-                setOrdensPaginadas(data);
-                setPaginasTotais(paginasTotais);
-                setTotalItems(totalItems);
-                setPaginaAtual(paginaAtual);
-                setHasNext(hasNext);
-                setHasPrevious(hasPrevious);
-            })
-            .catch((err) => {
-                console.error("Erro ao buscar fornecedores paginados:", err);
-            });
+            console.log("Ordens recebidas:", data.length);
+            console.log("Total de itens:", totalItems);
+
+            setOrdensPaginadas(data);
+            setOrdens(data); // MUDANÇA: atualiza ordens também
+            setPaginasTotais(paginasTotais);
+            setTotalItems(totalItems);
+            setPaginaAtual(paginaAtual);
+            setHasNext(hasNext);
+            setHasPrevious(hasPrevious);
+            setLoading(false); // NOVO
+        })
+        .catch((err) => {
+            console.error("Erro ao buscar ordens paginadas:", err);
+            console.error("Detalhes do erro:", err.response?.data);
+            toastError("Erro ao carregar ordens de compra");
+            setLoading(false); // NOVO
+        });
     }
 
     function formatarDataBrasileira(dataISO) {
         if (!dataISO) return "N/A";
-
-        // Pega só a parte da data, ignorando a hora
         const [ano, mes, dia] = dataISO.split("T")[0].split("-");
-
         return `${dia}/${mes}/${ano}`;
     }
 
@@ -124,7 +115,6 @@ export function Historicos() {
             minute: "2-digit"
         });
     };
-
 
     const confirmarEntrega = async (id) => {
         const token = sessionStorage.getItem("authToken");
@@ -138,29 +128,17 @@ export function Historicos() {
         });
 
         if (result.isConfirmed) {
-            let resposta = {
-                id: "",
-                quantidade: "",
-                pendenciaAlterada: ""
+            const ordemAtual = ordensPaginadas.find(ordem => ordem.id === id);
+            
+            if (!ordemAtual) {
+                toastError("Ordem não encontrada");
+                return;
             }
 
-            for (var i = 0; i <= ordens.length; i++) {
-                let ordemAtual = ordens[i];
-                if (ordemAtual.id == id) {
-                    if (ordemAtual.pendenciaAlterada == 0) {
-                        resposta = {
-                            id: parseInt(ordemAtual.id),
-                            quantidade: ordemAtual.quantidade,
-                        };
-                        break;
-                    }
-                    resposta = {
-                        id: parseInt(ordemAtual.id),
-                        quantidade: ordemAtual.quantidade,
-                    };
-                    break;
-                }
-            }
+            const resposta = {
+                id: parseInt(ordemAtual.id),
+                quantidade: ordemAtual.quantidade,
+            };
 
             api.patch(`/ordemDeCompra/${id}`, resposta, {
                 headers: {
@@ -168,26 +146,21 @@ export function Historicos() {
                     "Content-Type": "application/json",
                 },
             })
-                .then((requisicao) => {
-                    resposta = {
-                        id: "",
-                        quantidade: "",
-                        pendenciaAlterada: ""
-                    };
-                    Swal.fire({
-                        title: "Sucesso na entrega da ordem de compra!",
-                        icon: "success",
-                        showConfirmButton: false,
-                        timer: 2000
-                    });
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, "2000")
-                })
-                .catch((err) => {
-                    console.error("erro na mudança de quantidade atual: ", err);
-                    Swal.fire("Erro ao confirmar entrega da ordem de compra", "", "error");
+            .then(() => {
+                Swal.fire({
+                    title: "Sucesso na entrega da ordem de compra!",
+                    icon: "success",
+                    showConfirmButton: false,
+                    timer: 2000
                 });
+                setTimeout(() => {
+                    getOrdensPaginadas(); // MUDANÇA: recarrega dados sem refresh
+                }, 2000);
+            })
+            .catch((err) => {
+                console.error("Erro na mudança de quantidade atual:", err);
+                Swal.fire("Erro ao confirmar entrega da ordem de compra", "", "error");
+            });
         }
     }
 
@@ -203,29 +176,17 @@ export function Historicos() {
         });
 
         if (result.isConfirmed) {
-            let resposta = {
-                id: "",
-                quantidade: "",
-                pendenciaAlterada: ""
+            const ordemAtual = ordensPaginadas.find(ordem => ordem.id === id);
+            
+            if (!ordemAtual) {
+                toastError("Ordem não encontrada");
+                return;
             }
 
-            for (var i = 0; i <= ordens.length; i++) {
-                let ordemAtual = ordens[i];
-                if (ordemAtual.id == id) {
-                    if (ordemAtual.pendenciaAlterada == 0) {
-                        resposta = {
-                            id: parseInt(ordemAtual.id),
-                            quantidade: ordemAtual.quantidade,
-                        };
-                        break;
-                    }
-                    resposta = {
-                        id: parseInt(ordemAtual.id),
-                        quantidade: ordemAtual.quantidade,
-                    };
-                    break;
-                }
-            }
+            const resposta = {
+                id: parseInt(ordemAtual.id),
+                quantidade: ordemAtual.quantidade,
+            };
 
             api.patch(`/ordemDeCompra/${id}`, resposta, {
                 headers: {
@@ -233,80 +194,63 @@ export function Historicos() {
                     "Content-Type": "application/json",
                 },
             })
-                .then((requisicao) => {
-                    resposta = {
-                        id: "",
-                        quantidade: "",
-                        pendenciaAlterada: ""
-                    };
-                    Swal.fire({
-                        title: "Sucesso no cancelamento da ordem de compra!",
-                        icon: "success",
-                        showConfirmButton: false,
-                        timer: 2000
-                    });
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, "1700")
-                })
-                .catch((err) => {
-                    console.error("erro na mudança de quantidade atual: ", err);
-                    Swal.fire("Erro ao confirmar entrega da ordem de compra", "", "error");
+            .then(() => {
+                Swal.fire({
+                    title: "Sucesso no cancelamento da ordem de compra!",
+                    icon: "success",
+                    showConfirmButton: false,
+                    timer: 2000
                 });
+                setTimeout(() => {
+                    getOrdensPaginadas(); // MUDANÇA: recarrega dados sem refresh
+                }, 1700);
+            })
+            .catch((err) => {
+                console.error("Erro na mudança de quantidade atual:", err);
+                Swal.fire("Erro ao confirmar cancelamento da ordem de compra", "", "error");
+            });
         }
     }
 
+    const ordensFiltradas = ordensPaginadas.filter((ordem) => {
+        const matchId = filtroId
+            ? String(ordem?.id ?? "").includes(filtroId)
+            : true;
 
-    const ordensFiltradas = ordensPaginadas
-        .filter((ordem) => {
-            const matchId = filtroId
-                ? String(ordem?.id ?? "").includes(filtroId)
+        const matchDia = filtroDia
+            ? (ordem?.dataDeEmissao ?? "").toLowerCase().includes(filtroDia.toLowerCase())
+            : true;
+
+        const matchPrazo = filtroPrazo
+            ? (ordem?.prazoEntrega ?? "").toLowerCase().includes(filtroPrazo.toLowerCase())
+            : true;
+
+        const matchPendentes =
+            filtroPendentes && filtroPendentes !== "todos"
+                ? (ordem?.pendenciaAlterada ? "entregue" : "pendente") === filtroPendentes.toLowerCase()
                 : true;
 
-            const matchDia = filtroDia
-                ? (ordem?.dataDeEmissao ?? "")
-                    .toLowerCase()
-                    .includes(filtroDia.toLowerCase())
-                : true;
-
-            const matchPrazo = filtroPrazo
-                ? (ordem?.prazoEntrega ?? "")
-                    .toLowerCase()
-                    .includes(filtroPrazo.toLowerCase())
-                : true;
-
-            const matchPendentes =
-                filtroPendentes && filtroPendentes !== "todos"
-                    ? (ordem?.pendenciaAlterada ? "entregue" : "pendente") === filtroPendentes.toLowerCase()
-                    : true;
-
-            return matchId && matchDia && matchPrazo && matchPendentes;
-        })
-    // 👆 do mais novo para o mais antigo
-
-
+        return matchId && matchDia && matchPrazo && matchPendentes;
+    });
 
     function gerarPaginas() {
         const paginas = [];
         const maxPaginasVisiveis = 3;
 
-        // Calcular o range de páginas a mostrar
-        let paginaInicio = Math.max(0, paginaAtual - Math.floor(maxPaginasVisiveis / 2));
-        let paginaFim = Math.min(paginasTotais - 1, paginaInicio + maxPaginasVisiveis - 1);
+        let paginaInicio = Math.max(1, paginaAtual - Math.floor(maxPaginasVisiveis / 2)); // MUDANÇA: começa em 1
+        let paginaFim = Math.min(paginasTotais, paginaInicio + maxPaginasVisiveis - 1); // MUDANÇA: usa paginasTotais direto
 
-        // Ajustar o início se estivermos muito próximos do fim
         if (paginaFim - paginaInicio < maxPaginasVisiveis - 1) {
-            paginaInicio = Math.max(0, paginaFim - maxPaginasVisiveis + 1);
+            paginaInicio = Math.max(1, paginaFim - maxPaginasVisiveis + 1); // MUDANÇA: começa em 1
         }
 
-        // Seta para esquerda (mostrar páginas anteriores)
-        if (paginaInicio > 0) {
+        if (paginaInicio > 1) {
             paginas.push(
                 <div
                     key="prev"
                     className={`${styles.circle} ${styles.circleSmall}`}
                     onClick={() => {
-                        const novaPagina = Math.max(0, paginaInicio - maxPaginasVisiveis);
+                        const novaPagina = Math.max(1, paginaInicio - maxPaginasVisiveis);
                         setPaginaAtual(novaPagina + Math.floor(maxPaginasVisiveis / 2));
                     }}
                 >
@@ -315,7 +259,6 @@ export function Historicos() {
             );
         }
 
-        // Páginas numeradas
         for (let i = paginaInicio; i <= paginaFim; i++) {
             paginas.push(
                 <div
@@ -323,19 +266,18 @@ export function Historicos() {
                     className={`${styles.circle} ${styles.circleSmall} ${paginaAtual === i ? styles.active : ""}`}
                     onClick={() => setPaginaAtual(i)}
                 >
-                    {i + 1}
+                    {i}
                 </div>
             );
         }
 
-        // Seta para direita (mostrar páginas seguintes)
-        if (paginaFim < paginasTotais - 1) {
+        if (paginaFim < paginasTotais) {
             paginas.push(
                 <div
                     key="next"
                     className={`${styles.circle} ${styles.circleSmall}`}
                     onClick={() => {
-                        const novaPagina = Math.min(paginasTotais - 1, paginaFim + 1);
+                        const novaPagina = Math.min(paginasTotais, paginaFim + 1);
                         setPaginaAtual(novaPagina);
                     }}
                 >
@@ -388,60 +330,72 @@ export function Historicos() {
                         </select>
                     </div>
                     <p className={styles.qtdUsuarios}>
-                        {ordens.length} ordem(s) de compra encontrada(s)
+                        {totalItems} ordem(s) de compra encontrada(s)
                     </p>
                     <div className={styles.tabelaWrapper}>
-                        <table className={`${styles.tabela} ${fade ? styles.fadeIn : styles.fadeOut}`}>
-                            <thead>
-                                <tr className={styles.containerTitulos}>
-                                    <th id="titulo">ORDEM DE COMPRA</th>
-                                    <th id="titulo">DIA</th>
-                                    <th id="titulo">HORA</th>
-                                    <th id="titulo">PRAZO DE ENTREGA</th>
-                                    <th id="titulo">STATUS</th>
-                                    <th id="titulo">CONFIRMAR ENTREGA</th>
-                                    <th id="titulo">CANCELAR ENTREGA</th>
-                                    <th id="titulo">BAIXAR</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {ordensFiltradas.map((ordem) => (
-                                    <tr className={styles.containerDados} key={ordem.id}>
-                                        <td><b><p>ID: {ordem.id}</p></b></td>
-                                        <td><b><p>{formatarDataBrasileira(ordem.dataDeEmissao)}</p> </b> </td>
-                                        <td><b><p>{formatarHora(ordem.dataDeEmissao)}</p> </b> </td>
-                                        <td><b><p>{formatarDataBrasileira(ordem.prazoEntrega)}</p></b> </td>
-                                        <td><b><p>{ordem.pendenciaAlterada ? "Entregue" : "Pendente"}</p> </b> </td>
-                                        <td >
-                                            <button className={styles.ativar}
-                                                onClick={() => confirmarEntrega(ordem.id)}
-                                                disabled={ordem.pendenciaAlterada === true}
-                                            >
-                                                <b>CONFIRMAR </b>
-                                            </button>
-                                        </td>
-                                        <td>
-                                            <button className={styles.cancelar}
-                                                onClick={() => cancelarEntrega(ordem.id)}
-                                                disabled={ordem.pendenciaAlterada === false}
-                                            >
-                                                <b>CANCELAR </b>
-                                            </button>
-                                        </td>
-                                        <td >
-                                            <button className={styles.baixar}
-                                                onClick={() => baixarOrdemDeCompraPDF(ordem.id)}
-
-                                            >
-                                                <img src={iconbaixar} alt="Baixar" />
-
-                                            </button>
-                                        </td>
-
+                        {loading ? (
+                            <p>Carregando...</p>
+                        ) : (
+                            <table className={`${styles.tabela} ${fade ? styles.fadeIn : styles.fadeOut}`}>
+                                <thead>
+                                    <tr className={styles.containerTitulos}>
+                                        <th id="titulo">ORDEM DE COMPRA</th>
+                                        <th id="titulo">DIA</th>
+                                        <th id="titulo">HORA</th>
+                                        <th id="titulo">PRAZO DE ENTREGA</th>
+                                        <th id="titulo">STATUS</th>
+                                        <th id="titulo">CONFIRMAR ENTREGA</th>
+                                        <th id="titulo">CANCELAR ENTREGA</th>
+                                        <th id="titulo">BAIXAR</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {ordensFiltradas.length > 0 ? (
+                                        ordensFiltradas.map((ordem) => (
+                                            <tr className={styles.containerDados} key={ordem.id}>
+                                                <td><b><p>ID: {ordem.id}</p></b></td>
+                                                <td><b><p>{formatarDataBrasileira(ordem.dataDeEmissao)}</p></b></td>
+                                                <td><b><p>{formatarHora(ordem.dataDeEmissao)}</p></b></td>
+                                                <td><b><p>{formatarDataBrasileira(ordem.prazoEntrega)}</p></b></td>
+                                                <td><b><p>{ordem.pendenciaAlterada ? "Entregue" : "Pendente"}</p></b></td>
+                                                <td>
+                                                    <button 
+                                                        className={styles.ativar}
+                                                        onClick={() => confirmarEntrega(ordem.id)}
+                                                        disabled={ordem.pendenciaAlterada === true}
+                                                    >
+                                                        <b>CONFIRMAR</b>
+                                                    </button>
+                                                </td>
+                                                <td>
+                                                    <button 
+                                                        className={styles.cancelar}
+                                                        onClick={() => cancelarEntrega(ordem.id)}
+                                                        disabled={ordem.pendenciaAlterada === false}
+                                                    >
+                                                        <b>CANCELAR</b>
+                                                    </button>
+                                                </td>
+                                                <td>
+                                                    <button 
+                                                        className={styles.baixar}
+                                                        onClick={() => baixarOrdemDeCompraPDF(ordem.id)}
+                                                    >
+                                                        <img src={iconbaixar} alt="Baixar" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="8" style={{textAlign: 'center', padding: '20px'}}>
+                                                Nenhuma ordem encontrada
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 </div>
                 <div className={styles.backgroundPages}>
@@ -452,4 +406,3 @@ export function Historicos() {
     );
 }
 export default Historicos;
-
