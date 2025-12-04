@@ -20,6 +20,7 @@ export function RelatorioFornecedor() {
   const navigate = useNavigate();
   const [fornecedores, setFornecedores] = useState([]);
   const [filtroNome, setFiltroNome] = useState("");
+  const [estoque, setEstoque] = useState([]);
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
   const [inicio, setInicio] = useState(0);
   const todosAnos = gerarListaAnos(2018);
@@ -30,19 +31,22 @@ export function RelatorioFornecedor() {
   const [fornecedorSelecionado, setFornecedorSelecionado] = useState(null);
   const anosVisiveis = todosAnos.slice(inicio, inicio + 5);
   useEffect(() => {
-    const token = sessionStorage.getItem("authToken");
-    if (!token) {
-      navigate("/");
-    } else {
-      const { exp } = jwtDecode(token);
-      if (Date.now() >= exp * 1000) {
-        sessionStorage.removeItem("authToken");
-        navigate("/");
-      } else {
-        setAutenticacaoPassou(true);
-      }
-    }
-  }, [navigate]);
+  const token = sessionStorage.getItem("authToken");
+
+  buscarFornecedores().then((data) => setFornecedores(data));
+
+  api.get("/estoque", {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  .then((res) => {
+    setEstoque(res.data);
+    console.log("Estoque carregado para IPI (fornecedores):", res.data);
+  })
+  .catch((err) => {
+    console.error("Erro ao carregar estoque para IPI", err);
+    toastError("Erro ao carregar dados de IPI");
+  });
+}, []);
   const avancarAno = () => {
     if (inicio + 5 < todosAnos.length) setInicio(inicio + 1);
   };
@@ -82,31 +86,46 @@ export function RelatorioFornecedor() {
   async function baixarExcelFornecedores(ordens, anoSelecionado, nomeFornecedor) {
   if (!ordens || ordens.length === 0) return;
 
+  
+// === CARREGA O ESTOQUE AQUI DENTRO, AGORA MESMO ===
+let estoque = [];
+const token = sessionStorage.getItem("authToken"); // <--- AQUI ESTAVA O PROBLEMA!!!
+try {
+  const res = await api.get("/estoque", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  estoque = res.data;
+  console.log("ESTOQUE CARREGADO DENTRO DO DOWNLOAD:", estoque);
+} catch (err) {
+  toastError("Erro ao carregar dados de IPI");
+  console.error("Erro ao carregar estoque:", err);
+  return;
+}
+
+  // === CRIA O MAPA DE IPI COM O ESTOQUE FRESCO ===
+  const estoqueIpiMap = {};
+  estoque.forEach(item => {
+    const id = Number(item.id);
+    const ipiValor = item.ipi !== null && item.ipi !== undefined && item.ipi !== ""
+      ? Number(String(item.ipi).replace(",", "."))
+      : 0;
+    estoqueIpiMap[id] = ipiValor;
+  });
+
+  console.log("MAPA DE IPI CRIADO COM SUCESSO:", estoqueIpiMap);
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Entradas");
+
 
   // === Logo ===
   const response = await fetch(logoMegaPlate);
   const blob = await response.blob();
   const imageBuffer = await blob.arrayBuffer();
-
-  const imageId = workbook.addImage({
-    buffer: imageBuffer,
-    extension: "png",
-  });
+  const imageId = workbook.addImage({ buffer: imageBuffer, extension: "png" });
 
   sheet.mergeCells("A1:H4");
-  const faixa = sheet.getCell("A1");
-  faixa.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "05314c" },
-  };
-
-  sheet.addImage(imageId, {
-    tl: { col: 1.2, row: 0.2 },
-    ext: { width: 120, height: 60 },
-  });
+  sheet.getCell("A1").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "05314c" } };
+  sheet.addImage(imageId, { tl: { col: 1.2, row: 0.2 }, ext: { width: 120, height: 60 } });
 
   // === Título ===
   sheet.mergeCells("A6:H6");
@@ -114,39 +133,19 @@ export function RelatorioFornecedor() {
   tituloCell.value = `Relatório de Entradas - ${nomeFornecedor} - ${anoSelecionado}`;
   tituloCell.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
   tituloCell.alignment = { horizontal: "center", vertical: "middle" };
-  tituloCell.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FF05314C" },
-  };
+  tituloCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF05314C" } };
 
   // === Cabeçalho ===
   const header = [
-    "Data",
-    "Ordem de compra",
-    "Produto",
-    "Quantidade solicitada",
-    "Preço unitário",
-    "Preço total do pedido",
-    "IPI",
-    "Valor total",
+    "Data", "Ordem de compra", "Produto", "Quantidade", 
+    "Preço unitário", "Preço total s/ IPI", "IPI", "Valor total c/ IPI"
   ];
   const headerRow = sheet.addRow(header);
-
   headerRow.eachCell((cell) => {
     cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
-    cell.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF1D597B" },
-    };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1D597B" } };
     cell.alignment = { horizontal: "center", vertical: "middle" };
-    cell.border = {
-      top: { style: "thin" },
-      left: { style: "thin" },
-      bottom: { style: "thin" },
-      right: { style: "thin" },
-    };
+    cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
   });
 
   function formatarDataBrasileira(dataISO) {
@@ -155,93 +154,85 @@ export function RelatorioFornecedor() {
     return `${dia}/${mes}/${ano}`;
   }
 
-  // === Linhas com zebra ===
+  // === DADOS COM IPI CORRETO ===
   ordens.forEach((ordem, index) => {
-    const row = sheet.addRow([
-      formatarDataBrasileira(ordem.dataDeEmissao),
-      ordem.id || "N/A",
-      ordem.tipoMaterial || "N/A",
-      ordem.quantidade || 0,
-      ordem.valorUnitario || 0,
-      ordem.valorUnitario * ordem.quantidade || 0,
-      ordem.ipi || 0,
-      ordem.valorUnitario * ordem.quantidade * (1 + (ordem.ipi || 0) / 100) || 0,
-    ]);
+  const materialId = ordem.estoqueId;  // AQUI ESTAVA O PROBLEMA DESDE O INÍCIO
+const ipi = estoqueIpiMap[Number(materialId)] ?? estoqueIpiMap[String(materialId)] ?? 0;
+  const precoSemIpi = (ordem.valorUnitario || 0) * (ordem.quantidade || 0);
+  const precoComIpi = precoSemIpi * (1 + ipi / 100);
 
-    // formatos numéricos
-    row.getCell(5).numFmt = '"R$"#,##0.00';
-    row.getCell(6).numFmt = '"R$"#,##0.00';
-    row.getCell(7).numFmt = '0.00"%"';
-    row.getCell(8).numFmt = '"R$"#,##0.00';
+  // VOCÊ VAI VER ISSO NO CONSOLE E VAI CHORAR DE FELICIDADE
+  console.log(`Ordem ${ordem.id} → estoqueId: ${materialId} → IPI: ${ipi}% → Valor com IPI: R$${precoComIpi.toFixed(2)}`);
 
-    if (index % 2 === 0) {
-      row.eachCell((cell) => {
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFEFEFEF" },
-        };
-      });
-    }
-  });
+  const row = sheet.addRow([
+    formatarDataBrasileira(ordem.dataDeEmissao),
+    ordem.id || "N/A",
+    ordem.tipoMaterial || ordem.descricaoMaterial || "N/A",
+    ordem.quantidade || 0,
+    ordem.valorUnitario || 0,
+    precoSemIpi,
+    ipi,
+    precoComIpi
+  ]);
 
-// === Linha de totais ===
-const ultimaLinha = sheet.rowCount + 1;
-const totalRow = sheet.addRow([
-  "Total:",
-  "",
-  "",
-{ formula: `SUBTOTAL(9,D8:D${sheet.rowCount})` }, // Quantidade
-  "",
-{ formula: `SUBTOTAL(9,F8:F${sheet.rowCount})` }, // Preço total do pedido
-  "",
-{ formula: `SUBTOTAL(9,H8:H${sheet.rowCount})` }, // Valor total
-]);
+  row.getCell(5).numFmt = 'R$ #,##0.00';
+  row.getCell(6).numFmt = 'R$ #,##0.00';
+  row.getCell(7).numFmt = '0.00"%"';
+  row.getCell(8).numFmt = 'R$ #,##0.00';
 
-// Formatar as colunas de valores em Real (BRL)
-totalRow.getCell(6).numFmt = 'R$ #,##0.00'; // Coluna F → Preço total pedido
-totalRow.getCell(8).numFmt = 'R$ #,##0.00'; // Coluna H → Valor total
-
-// Estilizar linha de totais
-totalRow.eachCell((cell) => {
-  cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-  cell.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FF1D597B" },
-  };
-  cell.alignment = { horizontal: "center", vertical: "middle" };
-  cell.border = {
-    top: { style: "thin" },
-    left: { style: "thin" },
-    bottom: { style: "thin" },
-    right: { style: "thin" },
-  };
+  if (index % 2 === 0) {
+    row.eachCell(cell => {
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEFEFEF" } };
+    });
+  }
 });
 
+  // Depois de clicar no botão de um fornecedor, abre o console e cola isso:
+console.log("PRIMEIRA ORDEM DESSE FORNECEDOR:", ordens[0]);
+console.log("TODOS OS CAMPOS DISPONÍVEIS:", Object.keys(ordens[0]));
+console.log("VALOR DO material_id (ou similar):", ordens[0]?.material_id, ordens[0]?.estoque_id, ordens[0]?.estoqueId);
 
-  // === Filtros ===
-  sheet.autoFilter = {
-    from: "A7",
-    to: `H${ultimaLinha - 1}`,
-  };
+// ADICIONE ESSES 2 CONSOLE.LOG LOGO APÓS CRIAR O MAPA
+console.log("ESTOQUE COMPLETO (pra ver o id e o ipi):", estoque);
+console.log("MAPA FINAL DE IPI:", estoqueIpiMap);
+console.log("EXEMPLO: item com id 2 tem ipi =", estoque.find(i => Number(i.id) === 2)?.ipi);
 
-  // === Ajuste de largura ===
-  sheet.columns.forEach((col) => {
-    let maxLength = 0;
-    col.eachCell({ includeEmpty: true }, (cell) => {
-      const val = cell.value ? cell.value.toString() : "";
-      if (val.length > maxLength) maxLength = val.length;
+  // === Total ===
+  const ultimaLinha = sheet.rowCount;
+  const totalRow = sheet.addRow([
+    "TOTAL:", "", "",
+    { formula: `SUBTOTAL(9,D8:D${ultimaLinha})` },
+    "",
+    { formula: `SUBTOTAL(9,F8:F${ultimaLinha})` },
+    "",
+    { formula: `SUBTOTAL(9,H8:H${ultimaLinha})` }
+  ]);
+
+  totalRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1D597B" } };
+    cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
+
+        sheet.columns.forEach((col) => {
+      let maxLength = 0;
+      col.eachCell({ includeEmpty: true }, (cell) => {
+        const cellValue = cell.value ? cell.value.toString() : "";
+        if (cellValue.length > maxLength) maxLength = cellValue.length;
+      });
+      col.width = maxLength + 5;
     });
-    col.width = maxLength + 5;
   });
+
+  // Filtros e largura
+  sheet.autoFilter = { from: "A7", to: `H${ultimaLinha}` };
+  sheet.columns.forEach(col => col.width = 18);
 
   // === Salvar ===
   const buffer = await workbook.xlsx.writeBuffer();
   const nomeArquivo = nomeFornecedor
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9-_ ]/g, "")
+    .replace(/[^a-zA-Z0-9 ]/g, "")
     .replace(/\s+/g, "_");
 
   saveAs(new Blob([buffer]), `entradas_${nomeArquivo}_${anoSelecionado}.xlsx`);

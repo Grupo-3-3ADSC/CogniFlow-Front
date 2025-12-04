@@ -1,21 +1,20 @@
-
 .ordemDeCompra {
-  display: flex;          
-  flex-direction: column; 
+  display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   width: 100%;
-  padding-top: 80px; /* Altura da navbar */
-  height: calc(100vh - 20px); 
+  padding-top: 17px;
+  height: calc(100vh - 20px);
   margin-top: 20px;
 }
 
-#inputs{
+#inputs {
   color: black;
 }
 
 .navbar {
-  background-color: #05314C;
+  background-color: #05314c;
   height: 60px;
   display: flex;
   align-items: center;
@@ -43,7 +42,7 @@
 }
 
 .progressoSecao {
-  background-color: #05314C;
+  background-color: #05314c;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -51,18 +50,17 @@
   height: 10vh;
   margin-bottom: 28px;
   border-radius: 28px;
-  margin-left: 5.3vw;
 }
 
 .formContent {
-  background-color: #05314C;
+  background-color: #05314c;
   border-radius: 20px;
   width: 100%;
-  max-width: 1300px;
-  height: 80vh;
+  max-width: 85%;
+  height: 71vh;
   display: flex;
   flex-direction: column;
- justify-content: flex-start;
+  justify-content: flex-start;
   align-items: center;
   padding: 2rem;
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4);
@@ -70,11 +68,9 @@
   margin-left: 5.3vw;
 }
 
-
 .spanTitulo {
   width: 70%;
   height: 40px;
-  margin-bottom: 50px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -83,6 +79,7 @@
 .inputs {
   display: flex;
   flex-wrap: wrap;
+  padding: 100px;
   justify-content: center;
   gap: 20px;
   width: 100%;
@@ -119,7 +116,7 @@
 
 .botoes button {
   margin: 20px 0;
-  background-color: #1D597B;
+  background-color: #1d597b;
   padding: 10px;
   width: 10vw;
   height: 50px;
@@ -140,7 +137,7 @@
 
 .botaoPdf button {
   margin: 20px 0;
-  background-color: #05314C;
+  background-color: #05314c;
   padding: 10px;
   width: 12vw;
   height: 8vh;
@@ -168,7 +165,7 @@
   align-items: flex-start;
   justify-content: center;
   padding: 15px;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
   z-index: 99;
 }
 
@@ -178,7 +175,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -186,7 +183,7 @@
 }
 
 .modalContent {
- background-color: #05314C; 
+  background-color: #05314c;
   padding: 2rem;
   border-radius: 10px;
   width: 700px;
@@ -212,137 +209,443 @@
   gap: 1rem;
   margin-top: 1.5rem;
 }
-.resumoSecao{
-  margin-top: 20px;
+
+.confirmacao {
+ display: flex;
+  flex-direction: column; /* empilha verticalmente */
+  align-items: center;
+  gap: 20px;
   width: 100%;
-  max-width: 1200px;
-  background-color: #05314C;
+}
+
+.resumoContainer {
+  display: flex;
+  flex-wrap: wrap; /* para responsividade */
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.resumoSecao {
+  margin-top: 20px;
+   flex: 1;
+  max-width: 30%;;
+  background-color: #9fabb2;
+  color: #05314c;
   border-radius: 20px;
   padding: 1rem;
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4);
- 
-
 }
-.tabelaResumo{
+
+.resumoSecao h2 {
+  color: #05314c;
+}
+
+.totalGeral {
+  display: flex;
+  justify-content: flex-end; /* empurra o texto pro lado direito */
+  margin-top: 14px;
+  padding-right: 50px;
+  font-weight: bold; /* afastamento da borda */
+  font-size: 1rem;
+  color: #05314c;
+}
+
+
+.tabelaResumo {
   width: 100%;
   border-collapse: collapse;
   margin-top: 15px;
-  
- 
 }
+
 .tabelaResumo th,
 .tabelaResumo td {
   padding: 12px;
   text-align: left;
   border-bottom: 1px solid #ddd;
-  color: #ffffff;
+  color: #05314c;
 }
 
+.tabelaMateriais {
+  width: 100%;
+  max-width: 1150px;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background-color: #1d597b;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.adicionarMaterial {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 36px; /* tamanho ideal para o símbolo */
+  font-weight: bold;
+  background-color: #1e5676;
+  color: white;
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Efeito hover opcional */
+.adicionarMaterial:hover {
+  background-color: #72add1;
+  transform: scale(1.1);
+}
+.tabelaMateriais thead {
+  background-color: #9ea7ad;
+}
+
+.tabelaMateriais th {
+  padding: 14px 18px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  color: #05314c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.tabelaMateriais td {
+  padding: 12px 16px;
+  color: #fff;
+  font-size: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tabelaMateriais tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  transition: 0.2s ease-in-out;
+}
+/* === Estado vazio (antes de adicionar materiais) === */
+.estadoVazio {
+  text-align: center;
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.mensagemVazia {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #05314c;
+}
+
+.mensagemSecundaria {
+  color: #5b7b90;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Botão grande no estado vazio */
+.botaoAdicionarGrande {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: #1e5676;
+  color: white;
+  font-size: 1.1rem;
+  padding: 14px 26px;
+  border: none;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.botaoAdicionarGrande:hover {
+  background-color: #72add1;
+  transform: scale(1.05);
+}
+
+.iconeMais {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+/* === Botão flutuante (quando há tabela) === */
+.botaoFlutuante {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  background-color: #1e5676;
+  color: white;
+  font-size: 40px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease-in-out;
+  z-index: 10;
+}
+
+.botaoFlutuante:hover {
+  background-color: #72add1;
+  transform: scale(1.1);
+}
+
+
+
+/* === Botões dentro da tabela === */
+
+.acoes {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+}
+
+.btnEditar,
+.btnRemover {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #fff;
+  transition: all 0.2s ease;
+}
+
+
+.btnEditar {
+  background-color: #deb63d;
+}
+
+.btnRemover {
+  background-color: #e74c3c;
+}
+
+.btnEditar:hover {
+  background-color: #d4ac0d;
+  transform: scale(1.05);
+}
+
+.btnRemover:hover {
+  background-color: #c0392b;
+  transform: scale(1.05);
+}
+
+.finalizacaoWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+  width: 100%;
+}
+
+.containerAcoes {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+  width: 100%;
+  max-width: 900px;
+  height: 300px;
+}
+
+.areaPDF, .areaBotoes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding-top: 20px;
+}
+
+.botaoPDFGrande {
+  background-color: #4d9671;
+  padding: 14px 25px;
+  min-width: 430px;
+  height: 300px;
+  border: none;
+  border-radius: 30px;
+  color: white;
+  font-weight: bold;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.botaoPDFGrande:hover {
+  background-color: #288d5b;
+  transform: scale(1.05);
+}
+
+.areaBotoes button {
+  background-color: #1d597b;
+  padding: 10px 16px;
+  width: 320px;
+  height: 64px;
+  border: none;
+  border-radius: 50px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.areaBotoes button:hover {
+  background-color: #72add1;
+  transform: scale(1.05);
+}
+
+.subTexto {
+  color: #cbd6df;
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+
+.textoSucesso {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #72add1;
+  text-align: center;
+}
+
+
+/* === Responsividade para a tabela === */
+
+@media (max-width: 768px) {
+  .tabelaMateriais {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    border-radius: 10px;
+  }
+
+  .tabelaMateriais th,
+  .tabelaMateriais td {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  .acoes {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .btnEditar,
+  .btnRemover {
+    width: 70px;
+    font-size: 12px;
+    border-radius: 12px;
+  }
+}
 
 @media screen and (max-width: 1024px) {
   .progressoSecao {
     width: 30vw;
     height: 8vh;
   }
-  
+
   .formContent {
     max-width: 90%;
     height: 65vh;
     padding: 1.5rem;
   }
-  
+
   .inputGroup {
     width: 45%;
   }
-  
+
   .botoes button {
     width: 15vw;
   }
-  
+
   .botaoPdf button {
     width: 18vw;
   }
-  
+
   .sidebar {
     width: 60px;
   }
-  
+
   .ordemDeCompra {
-    padding-left: 80px; 
+    padding-left: 80px;
   }
 }
-
 
 @media screen and (max-width: 767px) {
   .ordemDeCompra {
     height: auto;
     min-height: calc(100vh + 10vh);
     padding: 15px;
-    padding-left: 15px; 
-    padding-top: 70px; 
+    padding-left: 15px;
+    padding-top: 70px;
   }
-  
+
   .progressoSecao {
     width: 70vw;
     height: 7vh;
     margin-bottom: 20px;
   }
-  
+
   .formContent {
     max-width: 95%;
     height: auto;
     min-height: 60vh;
     padding: 1rem;
   }
-  
+
   .spanTitulo {
     width: 220px;
     height: 35px;
     margin-bottom: 30px;
   }
-  
+
   .inputs {
     flex-direction: column;
     gap: 15px;
   }
-  
+
   .inputGroup {
     width: 100%;
   }
-  
+
   .botoes {
     flex-direction: column;
     align-items: center;
     padding: 1rem;
   }
-  
+
   .botoes button {
     width: 80vw;
     margin: 10px 0;
   }
-  
+
   .botaoPdf button {
     width: 80vw;
     height: 50px;
   }
-  
+
   .sidebar {
     width: 50px;
     height: 60px;
     border-radius: 0 0 10px 0;
     position: fixed;
-    top: 60px; 
+    top: 60px;
     left: 0;
   }
-  
-  
+
   .botoes > div {
     display: flex;
     flex-direction: column;
     width: 100%;
     align-items: center;
   }
-  
+
   .botoes > div button {
     width: 80vw;
     margin: 10px 0;
@@ -356,19 +659,19 @@
   }
 
   .inputs,
-  input{
+  input {
     text-align: center;
   }
-  
+
   .spanTitulo h1 {
     font-size: 0.9rem;
   }
-  
+
   .inputGroup input,
   .inputGroup select {
     height: 40px;
   }
-  
+
   .formContent {
     padding: 0.8rem;
   }
