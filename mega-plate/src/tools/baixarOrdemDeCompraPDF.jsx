@@ -233,7 +233,6 @@ ordensDoConjunto.forEach((ordem, index) => {
     // SALVA
     const nomeArquivo = `Ordem_de_Compra_${ordemId}.pdf`;
     doc.save(nomeArquivo);
-    toastSuccess(`PDF da Ordem Nº ${ordemId} gerado com sucesso!`);
   } catch (err) {
     console.error("ERRO AO GERAR PDF OFICIAL:", err);
     toastError("Falha ao gerar PDF: " + (err.message || "Verifique a conexão"));
