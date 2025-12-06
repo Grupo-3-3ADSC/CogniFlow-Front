@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - "merge-sprint2"
+      - "fix/testando-ci-cd"
   pull_request:
     branches:
       - "main"
@@ -11,15 +12,16 @@ jobs:
   build:
     name: Build Frontend
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
       
       - name: Cache npm
         uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('mega-plate/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
       
@@ -43,21 +45,21 @@ jobs:
           path: ./mega-plate/dist
 
   deploy:
-    name: Deploy para AWS EC2
+    name: Deploy to AWS EC2
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/merge-sprint2' && github.event_name == 'push'
+    
     steps:
-      - name: Checkout repo
+      - name: Checkout again
         uses: actions/checkout@v3
-      
-      - name: Download Build Artifacts
+
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: front-build
           path: ./build
-      
-      - name: Deploy to EC2 via SCP
+
+      - name: Deploy via SCP
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -67,19 +69,18 @@ jobs:
           target: "/home/${{ secrets.EC2_USER }}/frontend-build"
           strip_components: 1
           overwrite: true
-      
+
       - name: Move files and restart Nginx
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             sudo rm -rf /var/www/html/*
-            sudo rm -rf /var/www/html/.[!.]*
-            sudo cp -r /home/$USER/frontend-build/* /var/www/html/
+            sudo cp -r /home/ubuntu/frontend-build/* /var/www/html/
             sudo chown -R www-data:www-data /var/www/html
             sudo chmod -R 755 /var/www/html
-            rm -rf /home/$USER/frontend-build
+            rm -rf /home/ubuntu/frontend-build
             sudo systemctl restart nginx
             echo "Deploy concluído com sucesso!"
