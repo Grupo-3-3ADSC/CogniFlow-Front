@@ -155,7 +155,7 @@ export function Login() {
         </div>
 
         <a onClick={irParaVerificacao}>
-          <span>Esqueci a senha?</span>
+          <span>Esqueceu a senha?</span>
         </a>
       </main>
     </section>
