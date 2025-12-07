@@ -1,13 +1,13 @@
 import axios from 'axios'
 export const microservico = axios.create({
-    baseURL: import.meta.env.VITE_API_URL,
+    baseURL: import.meta.env.MICROSERVICO_URL,
     headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
     },
 });
 
-api.interceptors.request.use(
+microservico.interceptors.request.use(
     (config) => {
         const token = sessionStorage.getItem('authToken');
         if (token) {
