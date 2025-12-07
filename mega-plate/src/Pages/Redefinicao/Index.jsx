@@ -103,7 +103,8 @@ export function Redefinicao() {
             // Atualiza a senha
             await api.put(
                 `/api/usuarios/${encodeURIComponent(decodedEmail)}/senha`,
-                { password: senha },
+                {    email: decodedEmail,   
+                     password: senha },
                 {
                     headers: {
                         'Authorization': `Bearer ${resetToken}`
