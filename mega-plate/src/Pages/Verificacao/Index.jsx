@@ -3,6 +3,7 @@ import logo from '../../assets/logo-megaplate.png';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {toastError, toastSuccess} from "../../components/toastify/ToastifyService.jsx";
+import { api } from '../../provider/api.js';
 
 export function Verificacao() {
     const navigate = useNavigate();
@@ -30,12 +31,12 @@ export function Verificacao() {
         }
 
         try {
-            const response = await fetch(`http://${import.meta.env.VITE_API_URL}/enviar-codigo`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
-            });
-            const data = await response.json();
+            // Primeiro verifica se o usuário existe
+            await api.get(`/api/usuarios/buscar-por-email/${encodeURIComponent(email)}`);
+            
+            // Se passou, envia o código
+            const response = await api.post('/api/enviar-codigo', { email });
+            const data = response.data;
 
             if (data.success) {
                 toastSuccess('Código enviado para seu e-mail!');
@@ -44,22 +45,11 @@ export function Verificacao() {
                 toastError(data.message || 'Erro ao enviar código.');
             }
         } catch (err) {
-            toastError('Erro ao conectar com o servidor.');
-        }
-    };
-
-    const buscarUsuarioPorEmail = async (email) => {
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/usuarios/buscar-por-email/${encodeURIComponent(email)}`);
-
-            if (!response.ok) {
-                throw new Error('Usuário não encontrado');
+            if (err.response?.status === 404) {
+                toastError('Usuário não encontrado.');
+            } else {
+                toastError('Erro ao conectar com o servidor.');
             }
-
-            const usuario = await response.json();
-            return usuario.id;
-        } catch (error) {
-            throw new Error('Erro ao encontrar usuário');
         }
     };
 
@@ -72,36 +62,40 @@ export function Verificacao() {
         setIsVerifying(true);
 
         try {
-            const response = await fetch(`http://${import.meta.env.VITE_API_URL}/verificar-codigo`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, codigo: userCode })
+            const response = await api.post('/api/verificar-codigo', { 
+                email, 
+                codigo: userCode 
             });
-           const data = await response.json();
-        
-        if (data.success) {
-            const resetToken = data.resetToken;
             
-            // console.log('✅ Token recebido:', resetToken?.substring(0, 30) + '...');
+            const data = response.data;
             
-            sessionStorage.setItem('reset_token_temp', resetToken);
-            sessionStorage.setItem('reset_email_temp', email);
+            if (data.success) {
+                const resetToken = data.resetToken;
+                
+                // Salva no sessionStorage
+                sessionStorage.setItem('reset_token_temp', resetToken);
+                sessionStorage.setItem('reset_email_temp', email);
+                
+                toastSuccess('Código verificado com sucesso!');
+                
+                navigate(`/Redefinicao/${encodeURIComponent(email)}`, { 
+                    state: { resetToken } 
+                });
+            } else {
+                toastError(data.message || 'Código inválido. Tente novamente.');
+            }
+        } catch (err) {
+            console.error('Erro:', err);
             
-            toastSuccess('Código verificado com sucesso!');
-            
-            navigate(`/Redefinicao/${encodeURIComponent(email)}`, { 
-                state: { resetToken } 
-            });
-        } else {
-            toastError(data.message || 'Código inválido. Tente novamente.');
+            if (err.response?.data?.message) {
+                toastError(err.response.data.message);
+            } else {
+                toastError('Erro ao conectar com o servidor.');
+            }
+        } finally {
+            setIsVerifying(false);
         }
-    } catch (err) {
-        console.error('Erro:', err);
-        toastError('Erro ao conectar com o servidor.');
-    } finally {
-        setIsVerifying(false);
-    }
-};
+    };
 
     const handleKeyDown = (e, index) => {
         if (e.key === 'Backspace') {
