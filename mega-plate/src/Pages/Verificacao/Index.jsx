@@ -72,7 +72,7 @@ export function Verificacao() {
         setIsVerifying(true);
 
         try {
-            const response = await fetch('http://localhost:3001/verificar-codigo', {
+            const response = await fetch(`http://${import.meta.env.VITE_API_URL}/verificar-codigo`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, codigo: userCode })

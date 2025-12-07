@@ -306,7 +306,7 @@ function App() {
   // Função para buscar fornecedores
   function getFornecedor() {
     api
-      .get("/fornecedores")
+      .get("/api/fornecedores")
       .then((response) => {
         const fornecedores = response.data;
         setFornecedores(fornecedores);
