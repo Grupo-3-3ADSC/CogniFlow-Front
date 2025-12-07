@@ -193,9 +193,7 @@ export function Redefinicao() {
                         className='input-senha'
                         disabled={carregando}
                     />
-                </div>
-
-                {erro && <p style={{ color: 'red', marginBottom: 10 }}>{erro}</p>}
+                </div>  
 
                 <button
                     onClick={irParaLogin}
