@@ -24,15 +24,15 @@ export async function baixarOrdemDeCompraPDF(
 
     // Busca todas as ordens do conjunto
     const respostas = await Promise.all(
-      idsValidos.map((id) => api.get(`/ordemDeCompra/${id}`))
+      idsValidos.map((id) => api.get(`/api/ordemDeCompra/${id}`))
     );
     const ordensDoConjunto = respostas.map((r) => r.data);
     const ordemPrincipal = ordensDoConjunto[0];
 
     // Dados complementares
     const [fornecedoresResp, materiaisResp] = await Promise.all([
-      api.get("/fornecedores"),
-      api.get("/estoque"),
+      api.get("/api/fornecedores"),
+      api.get("/api/estoque"),
     ]);
 
     const fornecedores = fornecedoresResp.data;
