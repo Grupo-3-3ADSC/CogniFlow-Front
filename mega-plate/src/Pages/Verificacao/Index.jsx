@@ -30,7 +30,7 @@ export function Verificacao() {
         }
 
         try {
-            const response = await fetch('http://localhost:3001/enviar-codigo', {
+            const response = await fetch(`http://${import.meta.env.VITE_API_URL}/enviar-codigo`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
