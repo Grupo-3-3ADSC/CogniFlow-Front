@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {toastError, toastSuccess} from "../../components/toastify/ToastifyService.jsx";
 import { api } from '../../provider/api.js';
+import { microservico } from '../../provider/microservico.js';
 
 export function Verificacao() {
     const navigate = useNavigate();
@@ -35,7 +36,7 @@ export function Verificacao() {
             await api.get(`/api/usuarios/buscar-por-email/${encodeURIComponent(email)}`);
             
             // Se passou, envia o código
-            const response = await api.post('/api/enviar-codigo', { email });
+            const response = await microservico.post('/microservico/enviar-codigo', { email });
             const data = response.data;
 
             if (data.success) {
@@ -62,7 +63,7 @@ export function Verificacao() {
         setIsVerifying(true);
 
         try {
-            const response = await api.post('/api/verificar-codigo', { 
+            const response = await microservico.post('/microservico/verificar-codigo', { 
                 email, 
                 codigo: userCode 
             });

@@ -8,6 +8,7 @@ import {
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { api } from '../../provider/api.js';
+import { microservico } from '../../provider/microservico.js';
 
 export function Redefinicao() {
    const navigate = useNavigate();
@@ -47,7 +48,7 @@ export function Redefinicao() {
                 }
 
                 // Valida o token no microserviço
-                const response = await api.post('/api/validar-token', { jti });
+                const response = await microservico.post('/microservico/validar-token', { jti });
                 
                 if (!response.data.valid) {
                     toastError('Token inválido ou expirado.');
@@ -112,7 +113,7 @@ export function Redefinicao() {
 
             // Marca o token como usado
             if (jti) {
-                await api.post('/api/marcar-token-usado', { jti });
+                await microservico.post('/microservico/marcar-token-usado', { jti });
             }
 
             toastSuccess('Senha atualizada com sucesso!');
