@@ -92,7 +92,7 @@ export function HistoricoTransferencia() {
     function getTransferenciasPaginadas() {
         const paginaInt = Number(paginaAtual) || 0;
         api.
-            get(`/transferencias/paginados?pagina=${paginaInt}&tamanho=${transferenciasPorPagnia}`)
+            get(`/api/transferencias/paginados?pagina=${paginaInt}&tamanho=${transferenciasPorPagnia}`)
             .then((response) => {
                 const { data, paginasTotais, totalItems, paginaAtual, hasNext, hasPrevious } = response.data;
 
