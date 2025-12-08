@@ -109,7 +109,7 @@ export function Login() {
         <img src={logo} alt="" />
       </aside>
       <main className={style["form-content"]}>
-        <h1>Bem-Vindo!</h1>
+        <h1>Bem-Vindo! </h1>
 
         <div className={style["input-group"]}>
           <p>Email</p>
