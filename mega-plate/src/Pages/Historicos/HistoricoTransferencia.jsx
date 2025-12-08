@@ -70,7 +70,7 @@ export function HistoricoTransferencia() {
 
         setIsGestor(Number(cargoUsuario) === 2);
 
-        let url = "/transferencias";
+        let url = "/api/transferencias";
 
         const params = {};
         if (filtroId) params.id = filtroId;
