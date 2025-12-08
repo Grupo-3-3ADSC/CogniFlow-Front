@@ -85,7 +85,7 @@ export function HistoricoTransferencia() {
             setTransferencias(res.data);
             console.log(res)
         } catch (error) {
-            Swal.fire("Erro ao carregar transferências", "", "error");
+           console.log("teste");
         }
     };
 
