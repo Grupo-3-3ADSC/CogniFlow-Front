@@ -28,6 +28,7 @@ export function OrdemDeCompra() {
 
   const [valoresInput, setValoresInput] = useState({});
   const [errosValidacao, setErrosValidacao] = useState({});
+  const [tipoCompra, setTipoCompra] = useState("UNIDADE");
 
   const [modalTemp, setModalTemp] = useState({
     materialSelecionado: "",
@@ -49,7 +50,7 @@ export function OrdemDeCompra() {
   const [autenticacaoPassou, setAutenticacaoPassou] = useState(false);
   const [materialEditando, setMaterialEditando] = useState(null);
   const [conjuntoIdSalvo, setConjuntoIdSalvo] = useState(null);
-const [idsDoConjuntoAtual, setIdsDoConjuntoAtual] = useState([]); // ← NOVO ESTADO
+  const [idsDoConjuntoAtual, setIdsDoConjuntoAtual] = useState([]); // ← NOVO ESTADO
   // Funções API
   const getFornecedores = useCallback(() => {
     api
@@ -99,6 +100,44 @@ const [idsDoConjuntoAtual, setIdsDoConjuntoAtual] = useState([]); // ← NOVO ES
     getFornecedores();
     getMateriaPrima();
   }, [getFornecedores, getMateriaPrima]);
+
+  useEffect(() => {
+    if (tipoCompra === "QUILO") {
+      setValoresInput((prev) => ({ ...prev, "Valor Unitário": "" }));
+    } else {
+      setValoresInput((prev) => ({ ...prev, "Valor por Kg": "" }));
+    }
+  }, [tipoCompra]);
+
+  useEffect(() => {
+    const qtd = Number(quantidadeMaterial || 0);
+
+    const valorUnitario = Number(
+      (valoresInput["Valor Unitário"] || "0").replace(",", ".")
+    );
+
+    const valorKg = Number(
+      (valoresInput["Valor por Kg"] || "0").replace(",", ".")
+    );
+
+    let total = 0;
+
+    if (tipoCompra === "UNIDADE") {
+      total = qtd * valorUnitario;
+    } else {
+      total = qtd * valorKg;
+    }
+
+    setValoresInput((prev) => ({
+      ...prev,
+      Total: total > 0 ? total.toFixed(2).replace(".", ",") : "0,00",
+    }));
+  }, [
+    quantidadeMaterial,
+    valoresInput["Valor Unitário"],
+    valoresInput["Valor por Kg"],
+    tipoCompra,
+  ]);
 
   // Funções de formatação
   const formatarPagamento = (valor) => {
@@ -361,22 +400,22 @@ const [idsDoConjuntoAtual, setIdsDoConjuntoAtual] = useState([]); // ← NOVO ES
     setErrosValidacao({});
   }, []);
 
- const reiniciar = useCallback(() => {
-  setProgresso(1);
-  setDadosFornecedor({});
-  setValoresInput({});
-  setErrosValidacao({});
-  setMateriaisSelecionados([]);
-  setMaterialSelecionado("");
-  setQuantidadeMaterial("");
-  setMaterialEditando(null);
-  setModalAberto(false);
-  setModalEdicao(false);
-  setConjuntoIdSalvo(null);
-setIdsDoConjuntoAtual([]);
-  toastSuccess("Nova ordem de compra iniciada! Tudo limpo e pronto!");
-  window.scrollTo(0, 0);
-}, []);
+  const reiniciar = useCallback(() => {
+    setProgresso(1);
+    setDadosFornecedor({});
+    setValoresInput({});
+    setErrosValidacao({});
+    setMateriaisSelecionados([]);
+    setMaterialSelecionado("");
+    setQuantidadeMaterial("");
+    setMaterialEditando(null);
+    setModalAberto(false);
+    setModalEdicao(false);
+    setConjuntoIdSalvo(null);
+    setIdsDoConjuntoAtual([]);
+    toastSuccess("Nova ordem de compra iniciada! Tudo limpo e pronto!");
+    window.scrollTo(0, 0);
+  }, []);
 
   // ✅ FUNÇÃO QUE ESTAVA FALTANDO!
   const handleInputFornecedor = (titulo, valor, isSelect = false) => {
@@ -448,12 +487,20 @@ setIdsDoConjuntoAtual([]);
     setMaterialSelecionado(mat.estoqueId);
     setQuantidadeMaterial(mat.quantidade.toString());
 
+    // ✅ AQUI ESTAVA FALTANDO
+    setTipoCompra(mat.tipoCompra);
+
     setValoresInput({
       Descrição: mat.descricao,
       Rastreabilidade: mat.rastreabilidade,
-      "Valor por Kg": mat.valorKg?.toString().replace(".", ",") || "",
-      "Valor por peça": mat.valorPeca?.toString().replace(".", ",") || "",
-      "Valor Unitário": mat.valorUnitario?.toString().replace(".", ",") || "",
+      "Valor por Kg":
+        mat.tipoCompra === "QUILO"
+          ? mat.valorKg?.toString().replace(".", ",")
+          : "",
+      "Valor Unitário":
+        mat.tipoCompra === "UNIDADE"
+          ? mat.valorUnitario?.toString().replace(".", ",")
+          : "",
       Total: mat.total,
       IPI: mat.ipiFormatado || "0,00",
     });
@@ -511,19 +558,18 @@ setIdsDoConjuntoAtual([]);
     } else if (valoresInput["Rastreabilidade"].length > 20) {
       toastError("O campo Rastreabilidade deve ter no máximo 20 caracteres.");
       temErro = true;
-    }
-
-    if (!valoresInput["Valor Unitário"]) {
-      toastError("O campo Valor Unitário é obrigatório.");
+    } else if (valoresInput["Rastreabilidade"].length < 7) {
+      toastError("O campo Rastreabilidade deve ter no máximo 20 caracteres.");
       temErro = true;
     }
 
     // Regra específica: precisa ter pelo menos um dos dois
-    if (!valoresInput["Valor por Kg"] && !valoresInput["Valor por peça"]) {
-      toastError(
-        "Preencha pelo menos um dos campos: Valor por Kg ou Valor por Peça."
-      );
-      temErro = true;
+    if (
+      (tipoCompra === "UNIDADE" && !valoresInput["Valor Unitário"]) ||
+      (tipoCompra === "QUILO" && !valoresInput["Valor por Kg"])
+    ) {
+      toastError("Informe o valor de acordo com o tipo de compra.");
+      return;
     }
 
     if (temErro) return;
@@ -532,7 +578,9 @@ setIdsDoConjuntoAtual([]);
 
     // Impede duplicidade ao editar (não considera o próprio item sendo editado)
     if (
-      materiaisSelecionados.some((m, i) => i !== index && m.estoqueId === Number(materialSelecionado))
+      materiaisSelecionados.some(
+        (m, i) => i !== index && m.estoqueId === Number(materialSelecionado)
+      )
     ) {
       toastError("Este material já foi adicionado");
       return;
@@ -551,26 +599,41 @@ setIdsDoConjuntoAtual([]);
 
     const atualizado = {
       ...materialEditando,
+
       estoqueId: Number(materialSelecionado),
-      tipoMaterial:
-        materialAtual?.tipoMaterial || materialEditando.tipoMaterial,
       quantidade: Number(quantidadeMaterial),
+      tipoCompra, // ✅ ESSENCIAL
+
       descricao: valoresInput["Descrição"],
       rastreabilidade: valoresInput["Rastreabilidade"],
-      valorKg: Number((valoresInput["Valor por Kg"] || "0").replace(",", ".")),
-      valorPeca: Number(
-        (valoresInput["Valor por peça"] || "0").replace(",", ".")
-      ),
-      valorUnitario: Number(
-        (valoresInput["Valor Unitário"] || "0").replace(",", ".")
-      ),
-      total: (
-        Number((valoresInput["Valor Unitário"] || "0").replace(",", ".")) *
-        Number(quantidadeMaterial)
-      )
-        .toFixed(2)
-        .replace(".", ","),
-      ipi: ipiAtual, // ← Atualizado se mudou material
+
+      valorKg:
+        tipoCompra === "QUILO"
+          ? Number((valoresInput["Valor por Kg"] || "0").replace(",", "."))
+          : null,
+
+      valorUnitario:
+        tipoCompra === "UNIDADE"
+          ? Number((valoresInput["Valor Unitário"] || "0").replace(",", "."))
+          : null,
+
+      total:
+        tipoCompra === "QUILO"
+          ? (
+              Number((valoresInput["Valor por Kg"] || "0").replace(",", ".")) *
+              Number(quantidadeMaterial)
+            )
+              .toFixed(2)
+              .replace(".", ",")
+          : (
+              Number(
+                (valoresInput["Valor Unitário"] || "0").replace(",", ".")
+              ) * Number(quantidadeMaterial)
+            )
+              .toFixed(2)
+              .replace(".", ","),
+
+      ipi: ipiAtual,
       ipiFormatado: ipiFormatadoAtual,
     };
 
@@ -617,19 +680,6 @@ setIdsDoConjuntoAtual([]);
       temErro = true;
     }
 
-    if (!valoresInput["Valor Unitário"]) {
-      toastError("O campo Valor Unitário é obrigatório.");
-      temErro = true;
-    }
-
-    // 🔸 Validação especial: precisa de pelo menos um dos dois
-    if (!valoresInput["Valor por Kg"] && !valoresInput["Valor por peça"]) {
-      toastError(
-        "Preencha pelo menos um dos campos: Valor por Kg ou Valor por Peça."
-      );
-      temErro = true;
-    }
-
     // 🔸 Se houver qualquer erro, interrompe a execução aqui
     if (temErro) return;
 
@@ -648,7 +698,20 @@ setIdsDoConjuntoAtual([]);
       (valoresInput["Valor Unitário"] || "0").replace(",", ".")
     );
     const qtd = parseInt(quantidadeMaterial);
-    const totalCalculado = (valorUnit * qtd).toFixed(2).replace(".", ",");
+    let totalCalculado = 0;
+
+    if (tipoCompra === "UNIDADE") {
+      totalCalculado = valorUnit * qtd;
+    }
+
+    if (tipoCompra === "QUILO") {
+      const valorKg = parseFloat(
+        (valoresInput["Valor por Kg"] || "0").replace(",", ".")
+      );
+      totalCalculado = valorKg * qtd;
+    }
+
+    const totalFormatado = totalCalculado.toFixed(2).replace(".", ",");
 
     // 🔸 Adiciona o material completo
     setMateriaisSelecionados((prev) => [
@@ -657,20 +720,26 @@ setIdsDoConjuntoAtual([]);
         estoqueId: Number(mat.id),
         tipoMaterial: mat.tipoMaterial,
         quantidade: Number(quantidadeMaterial),
+
+        tipoCompra, // ✅ AQUI
+
         descricao: valoresInput["Descrição"],
         rastreabilidade: valoresInput["Rastreabilidade"].substring(0, 20),
-        valorKg: Number(
-          (valoresInput["Valor por Kg"] || "0").replace(",", ".")
-        ),
-        valorPeca: Number(
-          (valoresInput["Valor por peça"] || "0").replace(",", ".")
-        ),
-        valorUnitario: Number(
-          (valoresInput["Valor Unitário"] || "0").replace(",", ".")
-        ),
+
+        valorKg:
+          tipoCompra === "QUILO"
+            ? Number((valoresInput["Valor por Kg"] || "0").replace(",", "."))
+            : null,
+
+        valorUnitario:
+          tipoCompra === "UNIDADE"
+            ? Number((valoresInput["Valor Unitário"] || "0").replace(",", "."))
+            : null,
+
         total: totalCalculado,
-        ipi: Number(mat.ipi) || 0, // ← número puro (pro cálculo)
-        ipiFormatado: formatarIPI(mat.ipi?.toString() || "0"), // ← "12,50%" (pra mostrar)
+
+        ipi: Number(mat.ipi) || 0,
+        ipiFormatado: formatarIPI(mat.ipi?.toString() || "0"),
       },
     ]);
 
@@ -679,90 +748,107 @@ setIdsDoConjuntoAtual([]);
     toastSuccess("Material adicionado com sucesso!");
   };
 
-  // Total automático - CORRIGIDO para calcular no modal também
-  useEffect(() => {
-    const valorUnit =
-      parseFloat((valoresInput["Valor Unitário"] || "0").replace(",", ".")) ||
-      0;
+  const calcularTotal = () => {
+    const quantidade = Number(quantidadeMaterial?.replace(",", ".") || 0);
 
-    // Usa quantidadeMaterial se estiver no modal (progresso 2), senão usa do valoresInput
-    const quantidade =
-      progresso === 2 && modalAberto
-        ? parseInt(quantidadeMaterial || "0") || 0
-        : parseInt(valoresInput["Quantidade"] || "0") || 0;
+    const valorUnitario = Number(
+      valoresInput["Valor Unitário"]?.replace(",", ".") || 0
+    );
 
-    const total = valorUnit * quantidade;
+    const valorKg = Number(
+      valoresInput["Valor por Kg"]?.replace(",", ".") || 0
+    );
+
+    let total = 0;
+
+    if (tipoCompra === "UNIDADE") {
+      total = quantidade * valorUnitario;
+    }
+
+    if (tipoCompra === "QUILO") {
+      total = quantidade * valorKg;
+    }
 
     setValoresInput((prev) => ({
       ...prev,
-      Total: total > 0 ? total.toFixed(2).replace(".", ",") : "0,00",
+      Total: total.toFixed(2).replace(".", ","),
     }));
+  };
+  useEffect(() => {
+    calcularTotal();
   }, [
-    valoresInput["Valor Unitário"],
-    valoresInput["Quantidade"],
     quantidadeMaterial,
-    progresso,
-    modalAberto,
+    valoresInput["Valor Unitário"],
+    valoresInput["Valor por Kg"],
+    tipoCompra,
   ]);
 
   // Finalizar ordem - CORRIGIDO: Envia array de ordens ao invés de objeto único
 
-const finalizarOrdemDeCompra = () => {
-  const usuarioId = getUsuarioIdDoToken();
+  const finalizarOrdemDeCompra = () => {
+    const usuarioId = getUsuarioIdDoToken();
 
-  if (!usuarioId) {
-    toastError("Usuário não autenticado. Faça login novamente.");
-    navigate("/");
-    return;
-  }
+    if (!usuarioId) {
+      toastError("Usuário não autenticado. Faça login novamente.");
+      navigate("/");
+      return;
+    }
 
-  const ordensParaEnviar = materiaisSelecionados.map((mat) => ({
+const ordensParaEnviar = materiaisSelecionados.map(mat => {
+  const isQuilo = mat.tipoCompra === "QUILO";
+
+  const ordem = {
     usuarioId,
     fornecedorId: Number(dadosFornecedor.FornecedorId),
     estoqueId: Number(mat.estoqueId),
+    quantidade: Number(mat.quantidade),
+    tipoCompra: mat.tipoCompra,
+    descricaoMaterial: mat.descricao.substring(0, 100),
+    rastreabilidade: mat.rastreabilidade.substring(0, 16),
     prazoEntrega: dadosFornecedor["Prazo de entrega"],
     condPagamento: dadosFornecedor["Cond. Pagamento"],
-
-    valorUnitario: Number(mat.valorUnitario),
-    quantidade: Number(mat.quantidade),
-    descricaoMaterial: mat.descricao.padEnd(10, " ").substring(0, 100),
-    rastreabilidade: String(mat.rastreabilidade).padEnd(16, "0").substring(0, 16),
-
-    valorKg: mat.valorKg > 0 ? Number(mat.valorKg) : 0,
-    valorPeca: mat.valorPeca > 0 ? Number(mat.valorPeca) : 0,
     ipi: Number(mat.ipi || 0),
-
     dataEmissao: new Date().toISOString().split("T")[0],
-    valorTotal: Number((mat.valorUnitario * mat.quantidade).toFixed(2)),
-  }));
+  };
 
-  if (ordensParaEnviar.length === 0) {
-    toastError("Adicione pelo menos um material.");
-    return;
-  }
+  // adiciona apenas o campo correto
+  if (isQuilo && mat.valorKg) ordem.valorKg = Number(mat.valorKg);
+  if (!isQuilo && mat.valorUnitario) ordem.valorUnitario = Number(mat.valorUnitario);
 
-  console.log("Enviando ordens:", ordensParaEnviar);
+  return ordem;
+});
 
-  api
-    .post("/ordemDeCompra/multiplas-ordens", ordensParaEnviar)
-  .then((response) => {
-  toastSuccess("Ordem de compra cadastrada com sucesso!");
 
-  const ordensSalvas = Array.isArray(response.data) ? response.data : [response.data];
-  const ids = ordensSalvas.map(o => o.id);
-  const numeroOC = ids[0];
 
-  // SALVA OS DOIS: o número da OC e os IDs completos
-  setConjuntoIdSalvo(numeroOC);
-  setIdsDoConjuntoAtual(ids); // ← ESSA LINHA É A CHAVE
+    if (ordensParaEnviar.length === 0) {
+      toastError("Adicione pelo menos um material.");
+      return;
+    }
 
-  // Gera PDF automaticamente com os IDs corretos
-  baixarOrdemDeCompraPDF(numeroOC, ids);
+    console.log("Enviando ordens:", ordensParaEnviar);
 
-  toastSuccess(`PDF da Ordem Nº ${numeroOC} gerado automaticamente!`);
-  setProgresso(4);
-})
-};
+    api
+      .post("/ordemDeCompra/multiplas-ordens", ordensParaEnviar)
+      .then((response) => {
+        toastSuccess("Ordem de compra cadastrada com sucesso!");
+
+        const ordensSalvas = Array.isArray(response.data)
+          ? response.data
+          : [response.data];
+        const ids = ordensSalvas.map((o) => o.id);
+        const numeroOC = ids[0];
+
+        // SALVA OS DOIS: o número da OC e os IDs completos
+        setConjuntoIdSalvo(numeroOC);
+        setIdsDoConjuntoAtual(ids); // ← ESSA LINHA É A CHAVE
+
+        // Gera PDF automaticamente com os IDs corretos
+        baixarOrdemDeCompraPDF(numeroOC, ids);
+
+        toastSuccess(`PDF da Ordem Nº ${numeroOC} gerado automaticamente!`);
+        setProgresso(4);
+      });
+  };
   const image = etapas[progresso]?.imagem || progressoImg;
 
   return (
@@ -855,7 +941,7 @@ const finalizarOrdemDeCompra = () => {
                         <th>Material</th>
                         <th>Descrição</th>
                         <th>Qtd</th>
-                        <th>Valor Unit.</th>
+                        <th>Valor Unit./Kg</th>
                         <th>IPI</th>
                         <th>Total</th>
                         <th>Ações</th>
@@ -869,10 +955,13 @@ const finalizarOrdemDeCompra = () => {
                           <td>{mat.quantidade}</td>
                           <td>
                             R${" "}
-                            {Number(mat.valorUnitario)
-                              .toFixed(2)
-                              .replace(".", ",")}
+                            {Number(
+                              mat.valorKg ?? mat.valorUnitario
+                            ).toLocaleString("pt-BR", {
+                              minimumFractionDigits: 2,
+                            })}
                           </td>
+
                           <td>{mat.ipiFormatado || "0,00%"}</td>
                           <td>R$ {mat.total}</td>
                           <td className={style.acoes}>
@@ -944,7 +1033,36 @@ const finalizarOrdemDeCompra = () => {
                           ))}
                         </select>
                       </div>
+                      <div className={style.inputGroup}>
+                        <p>
+                          Tipo de compra <span style={{ color: "red" }}>*</span>
+                        </p>
+                        <div className={style.radioGroup}>
+                          <label className={style.radioLabel}>
+                            <input
+                              type="radio"
+                              name="tipoCompra"
+                              value="UNIDADE"
+                              checked={tipoCompra === "UNIDADE"}
+                              onChange={() => setTipoCompra("UNIDADE")}
+                            />
+                            <span className={style.radioCustom}></span>
+                            Por unidade
+                          </label>
 
+                          <label className={style.radioLabel}>
+                            <input
+                              type="radio"
+                              name="tipoCompra"
+                              value="QUILO"
+                              checked={tipoCompra === "QUILO"}
+                              onChange={() => setTipoCompra("QUILO")}
+                            />
+                            <span className={style.radioCustom}></span>
+                            Por quilo
+                          </label>
+                        </div>
+                      </div>
                       {/* Quantidade */}
                       <div className={style.inputGroup}>
                         <p>
@@ -1001,7 +1119,7 @@ const finalizarOrdemDeCompra = () => {
                             }}
                           >
                             ({(valoresInput["Rastreabilidade"] || "").length}
-                            /20)
+                            /17)
                           </span>
                         </p>
                         <input
@@ -1023,6 +1141,7 @@ const finalizarOrdemDeCompra = () => {
                         <input
                           type="text"
                           placeholder="Ex: 12,50"
+                          disabled={tipoCompra !== "QUILO"}
                           value={valoresInput["Valor por Kg"] || ""}
                           onChange={(e) =>
                             handleInputChange(
@@ -1034,20 +1153,20 @@ const finalizarOrdemDeCompra = () => {
                       </div>
 
                       {/* Valor por peça */}
-                      <div className={style.inputGroup}>
-                        <p>Valor por peça</p>
-                        <input
-                          type="text"
-                          placeholder="Ex: 5,00"
-                          value={valoresInput["Valor por peça"] || ""}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "Valor por peça",
-                              formatarValorMonetario(e.target.value)
-                            )
-                          }
-                        />
-                      </div>
+                      {/*     <div className={style.inputGroup}>
+                          <p>Valor por peça</p>
+                          <input
+                            type="text"
+                            placeholder="Ex: 5,00"
+                            value={valoresInput["Valor por peça"] || ""}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "Valor por peça",
+                                formatarValorMonetario(e.target.value)
+                              )
+                            }
+                          />
+                        </div> */}
 
                       {/* Valor Unitário */}
                       <div className={style.inputGroup}>
@@ -1057,6 +1176,7 @@ const finalizarOrdemDeCompra = () => {
                         <input
                           type="text"
                           placeholder="Ex: 9,90"
+                          disabled={tipoCompra !== "UNIDADE"}
                           value={valoresInput["Valor Unitário"] || ""}
                           onChange={(e) =>
                             handleInputChange(
@@ -1128,6 +1248,37 @@ const finalizarOrdemDeCompra = () => {
                           ))}
                         </select>
                       </div>
+                      <div className={style.inputGroup}>
+                        <p>
+                          Tipo de compra <span style={{ color: "red" }}>*</span>
+                        </p>
+
+                        <div className={style.radioGroup}>
+                          <label className={style.radioLabel}>
+                            <input
+                              type="radio"
+                              name="tipoCompraEdicao"
+                              value="UNIDADE"
+                              checked={tipoCompra === "UNIDADE"}
+                              onChange={() => setTipoCompra("UNIDADE")}
+                            />
+                            <span className={style.radioCustom}></span>
+                            Por unidade
+                          </label>
+
+                          <label className={style.radioLabel}>
+                            <input
+                              type="radio"
+                              name="tipoCompraEdicao"
+                              value="QUILO"
+                              checked={tipoCompra === "QUILO"}
+                              onChange={() => setTipoCompra("QUILO")}
+                            />
+                            <span className={style.radioCustom}></span>
+                            Por quilo
+                          </label>
+                        </div>
+                      </div>
 
                       {/* Quantidade */}
                       <div className={style.inputGroup}>
@@ -1203,10 +1354,10 @@ const finalizarOrdemDeCompra = () => {
 
                       {/* Valor por Kg */}
                       <div className={style.inputGroup}>
-                        <p>Valor por Kg</p>
+                        <p>Valor por KG</p>
                         <input
                           type="text"
-                          placeholder="Ex: 12,50"
+                          disabled={tipoCompra !== "QUILO"}
                           value={valoresInput["Valor por Kg"] || ""}
                           onChange={(e) =>
                             handleInputChange(
@@ -1218,29 +1369,27 @@ const finalizarOrdemDeCompra = () => {
                       </div>
 
                       {/* Valor por peça */}
-                      <div className={style.inputGroup}>
-                        <p>Valor por peça</p>
-                        <input
-                          type="text"
-                          placeholder="Ex: 5,00"
-                          value={valoresInput["Valor por peça"] || ""}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "Valor por peça",
-                              formatarValorMonetario(e.target.value)
-                            )
-                          }
-                        />
-                      </div>
+                      {/* <div className={style.inputGroup}>
+                          <p>Valor por peça</p>
+                          <input
+                            type="text"
+                            placeholder="Ex: 5,00"
+                            value={valoresInput["Valor por peça"] || ""}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "Valor por peça",
+                                formatarValorMonetario(e.target.value)
+                              )
+                            }
+                          />
+                        </div> */}
 
                       {/* Valor Unitário */}
                       <div className={style.inputGroup}>
-                        <p>
-                          Valor Unitário <span style={{ color: "red" }}>*</span>
-                        </p>
+                        <p>Valor por Unidade</p>
                         <input
                           type="text"
-                          placeholder="Ex: 9,90"
+                          disabled={tipoCompra !== "UNIDADE"}
                           value={valoresInput["Valor Unitário"] || ""}
                           onChange={(e) =>
                             handleInputChange(
@@ -1326,7 +1475,7 @@ const finalizarOrdemDeCompra = () => {
                         <th>Material</th>
                         <th>Descrição</th>
                         <th>Quantidade</th>
-                        <th>Valor Unit.</th>
+                        <th>Valor Unit./Kg</th>
                         <th>IPI</th>
                         <th>Total</th>
                       </tr>
@@ -1340,7 +1489,11 @@ const finalizarOrdemDeCompra = () => {
 
                           <td>
                             R${" "}
-                            {Number(mat.valorUnitario).toLocaleString("pt-BR", {
+                            {Number(
+                              mat.tipoCompra === "QUILO"
+                                ? mat.valorKg
+                                : mat.valorUnitario
+                            ).toLocaleString("pt-BR", {
                               minimumFractionDigits: 2,
                             })}
                           </td>
@@ -1358,9 +1511,11 @@ const finalizarOrdemDeCompra = () => {
                       <strong>Total Geral:</strong> R${" "}
                       {materiaisSelecionados
                         .reduce((acc, mat) => {
-                          const valor = parseFloat(
-                            mat.total?.replace(",", ".") || 0
-                          );
+                          const valor =
+                            typeof mat.total === "number"
+                              ? mat.total
+                              : Number((mat.total || "0").replace(",", "."));
+
                           return acc + valor;
                         }, 0)
                         .toFixed(2)
@@ -1399,16 +1554,21 @@ const finalizarOrdemDeCompra = () => {
               <div className={style.containerAcoes}>
                 {/* Área do PDF */}
                 <div className={style.areaPDF}>
-                <button
-  className={style.botaoPDFGrande}
-  onClick={() => 
-    conjuntoIdSalvo && 
-    idsDoConjuntoAtual.length > 0 && 
-    baixarOrdemDeCompraPDF(conjuntoIdSalvo, idsDoConjuntoAtual)
-  }
-  disabled={!conjuntoIdSalvo || idsDoConjuntoAtual.length === 0}
->
-                    📄Baixar Ordem de Compra Final 
+                  <button
+                    className={style.botaoPDFGrande}
+                    onClick={() =>
+                      conjuntoIdSalvo &&
+                      idsDoConjuntoAtual.length > 0 &&
+                      baixarOrdemDeCompraPDF(
+                        conjuntoIdSalvo,
+                        idsDoConjuntoAtual
+                      )
+                    }
+                    disabled={
+                      !conjuntoIdSalvo || idsDoConjuntoAtual.length === 0
+                    }
+                  >
+                    📄Baixar Ordem de Compra Final
                   </button>
                 </div>
 
@@ -1418,7 +1578,7 @@ const finalizarOrdemDeCompra = () => {
                     O que você deseja fazer agora?
                   </p>
 
-<button onClick={reiniciar}>Nova Ordem de Compra</button>
+                  <button onClick={reiniciar}>Nova Ordem de Compra</button>
                   <button onClick={() => navigate("/HistoricoOrdemDeCompra")}>
                     Histórico de OC's
                   </button>

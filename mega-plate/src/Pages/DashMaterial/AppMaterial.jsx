@@ -382,7 +382,7 @@ function App() {
   console.log("Propriedades disponíveis:", Object.keys(dados[0]));
 
   // Criar acumuladores
-  const totais = { C1: 0, C2: 0, C3: 0, C4: 0 };
+  const totais = { G1: 0, G2: 0, G3: 0, G4: 0 };
 
   dados.forEach((item) => {
     const setor = item.setor; // "C1", "C2", ...

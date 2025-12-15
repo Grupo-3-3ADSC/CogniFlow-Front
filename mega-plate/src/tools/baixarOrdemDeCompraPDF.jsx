@@ -23,10 +23,13 @@ export async function baixarOrdemDeCompraPDF(
     }
 
     // Busca todas as ordens do conjunto
+    // Busca todas as ordens do conjunto
     const respostas = await Promise.all(
       idsValidos.map((id) => api.get(`/ordemDeCompra/${id}`))
     );
     const ordensDoConjunto = respostas.map((r) => r.data);
+    console.log("Ordens do conjunto:", ordensDoConjunto); // 🔍 log das ordens
+
     const ordemPrincipal = ordensDoConjunto[0];
 
     // Dados complementares
@@ -38,9 +41,13 @@ export async function baixarOrdemDeCompraPDF(
     const fornecedores = fornecedoresResp.data;
     const materiais = materiaisResp.data;
 
+    console.log("Materiais no estoque:", materiais); // 🔍 log dos materiais
+
     const fornecedor = fornecedores.find(
       (f) => f.fornecedorId === ordemPrincipal.fornecedorId
     );
+    console.log("Fornecedor da ordem principal:", fornecedor); //
+
     if (!fornecedor) throw new Error("Fornecedor não encontrado");
 
     const dataObj = new Date(
@@ -134,50 +141,92 @@ export async function baixarOrdemDeCompraPDF(
     doc.setFontSize(9);
     doc.text("ITEM", 25, y);
     doc.text("DESCRIÇÃO", 45, y);
-    doc.text("IPI", 95, y);
-    doc.text("QTD", 110, y);
-    doc.text("VALOR UNIT.", 130, y);
-    doc.text("VALOR TOTAL", 165, y);
+    doc.text("TIPO", 80, y);
+    doc.text("IPI", 105, y, { align: "center" });
+    doc.text("QTD", 120, y, { align: "center" });
+    doc.text("VALOR UNIT./KG", 140, y);
+    doc.text("VALOR TOTAL", 170, y);
 
     y += 6;
     doc.setFont("helvetica", "normal");
 
-       let totalGeral = 0;
+    let totalGeral = 0;
     let ipiTotal = 0;
 
-ordensDoConjunto.forEach((ordem, index) => {
-  const item = String(index + 1).padStart(3, "0");
+    function getMaterialValue(ordem, materiais) {
+      const material = materiais.find((m) => m.id === ordem.estoqueId) || {};
+      const tipoCompra = ordem.tipoCompra?.toUpperCase();
 
-  const tipoMaterial = ordem.tipoMaterial || ordem.descricaoMaterialCompleta || "N/D";
-  const quantidade = Number(ordem.quantidade) || 0;
-  const valorUnitario = Number(ordem.valorUnitario) || 0;
-  const totalItem = valorUnitario * quantidade;
+      const valorUnitario =
+        tipoCompra === "UNIDADE"
+          ? Number(ordem.valorUnitario ?? material.valorUnitario ?? 0)
+          : 0;
+      const valorKg =
+        tipoCompra === "QUILO"
+          ? Number(ordem.valorKg ?? material.valorKg ?? 0)
+          : 0;
+      const ipi = Number(material.ipi ?? 0);
 
-  // === BUSCA O MATERIAL PELO estoqueId (no seu caso é 3) ===
-  const materialEstoque = materiais.find(m => m.id === ordem.estoqueId);
+      return {
+        valorUnitario,
+        valorKg,
+        ipi,
+        materialNome: ordem.descricaoMaterial ?? material.nome ?? "N/D",
+      };
+    }
 
-  // === PEGA O IPI DO CAMPO CORRETO ("ipi" que é número) e formata ===
-  const ipiNumero = materialEstoque?.ipi ?? 0;
-  const ipiFormatado = ipiNumero > 0 ? `${ipiNumero.toFixed(2).replace(".", ",")}%` : "0,00%";
+    function formatTipoCompra(tipo) {
+      if (!tipo) return "Unidade";
+      const t = tipo.toString().toUpperCase();
+      if (t === "QUILO" || t === "KG" || t === "KILO") return "Kg";
+      return "Unidade";
+    }
 
-  // === CÁLCULO DO IPI EM DINHEIRO ===
-  const valorIpiItem = (totalItem * ipiNumero) / 100;
+    ordensDoConjunto.forEach((ordem, index) => {
+      const { valorUnitario, valorKg, ipi, materialNome } = getMaterialValue(
+        ordem,
+        materiais
+      );
 
-  y += 8;
+      const item = String(index + 1).padStart(3, "0");
+      const tipoCompra = ordem.tipoCompra?.toUpperCase() || "UNIDADE"; // fallback seguro
+      const tipoCompraTexto = formatTipoCompra(ordem.tipoCompra);
+      const quantidade = Number(ordem.quantidade) || 0;
 
-  doc.text(item, 25, y);
-  doc.text(tipoMaterial.substring(0, 38), 45, y);
-  doc.text(ipiFormatado, 95, y, { align: "center" });
-  doc.text(String(quantidade), 110, y, { align: "center" });
-  doc.text(`R$ ${valorUnitario.toFixed(2).replace(".", ",")}`, 130, y);
-  doc.text(`R$ ${totalItem.toFixed(2).replace(".", ",")}`, 165, y);
+      const ipiFormatado =
+        ipi > 0 ? `${ipi.toFixed(2).replace(".", ",")}%` : "0,00%";
 
-  doc.setDrawColor(220, 220, 220);
-  doc.line(20, y + 2, 190, y + 2);
+      // Total do item
+      const totalItem =
+        tipoCompra === "QUILO"
+          ? valorKg * quantidade
+          : valorUnitario * quantidade;
 
-  totalGeral += totalItem;
-  ipiTotal += valorIpiItem;
-});
+      y += 8;
+
+      doc.text(item, 25, y);
+      doc.text(materialNome.substring(0, 32), 45, y);
+      doc.text(tipoCompraTexto, 80, y);
+      doc.text(ipiFormatado, 105, y, { align: "center" });
+      doc.text(String(quantidade), 120, y, { align: "center" });
+      doc.text(
+        `R$ ${
+          tipoCompra === "QUILO"
+            ? valorKg.toFixed(2).replace(".", ",")
+            : valorUnitario.toFixed(2).replace(".", ",")
+        }`,
+        140,
+        y
+      );
+      doc.text(`R$ ${totalItem.toFixed(2).replace(".", ",")}`, 170, y);
+
+      doc.setDrawColor(220, 220, 220);
+      doc.line(20, y + 2, 190, y + 2);
+
+      totalGeral += totalItem;
+      ipiTotal += (totalItem * ipi) / 100;
+    });
+
     // === TOTAIS ===
     y += 15;
     doc.setFillColor(240, 240, 240);

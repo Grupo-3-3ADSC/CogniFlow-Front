@@ -514,6 +514,63 @@
   text-align: center;
 }
 
+.radioGroup {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-top: 4px;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #18354e;
+  background-color:  #edf5fc;
+padding: 12px;
+border-radius: 27px;
+width: 200px;
+}
+
+.radioLabel input {
+  display: none;
+}
+
+.radioCustom {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #2f80ed;
+  border-radius: 50%;
+  margin-right: 6px;
+  position: relative;
+}
+
+.radioLabel input:checked + .radioCustom {
+  border-color: #2f80ed;
+}
+
+.radioLabel input:checked + .radioCustom::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background-color: #2f80ed;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background-color: #9e9e9e;
+  color: #171212;
+  cursor: not-allowed;
+  border: 1px solid #d0d0d0;
+}
+
 
 /* === Responsividade para a tabela === */
 
