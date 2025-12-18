@@ -408,6 +408,21 @@ const [valorIPI, setValorIPI] = useState(0);
     getTransferencias();
   }, []);
 
+  // Atualiza os dados quando a página recebe foco (usuário volta para a aba)
+  useEffect(() => {
+    const handleFocus = () => {
+      getEstoque();
+      getOrdemDeCompra();
+      getTransferencias();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
   const parseDate = (dateString) => {
     return new Date(dateString); // já funciona com formato YYYY-MM-DD
   };
@@ -639,22 +654,22 @@ const [valorIPI, setValorIPI] = useState(0);
                     const quantidadeC1 = calcularTransferenciasPorSetor(
                       transferencias,
                       item.tipoMaterial,
-                      "C1"
+                      "G1"
                     );
                     const quantidadeC2 = calcularTransferenciasPorSetor(
                       transferencias,
                       item.tipoMaterial,
-                      "C2"
+                      "G2"
                     );
                     const quantidadeC3 = calcularTransferenciasPorSetor(
                       transferencias,
                       item.tipoMaterial,
-                      "C3"
+                      "G3"
                     );
                     const quantidadeC4 = calcularTransferenciasPorSetor(
                       transferencias,
                       item.tipoMaterial,
-                      "C4"
+                      "G4"
                     );
                     return (
                       <tr

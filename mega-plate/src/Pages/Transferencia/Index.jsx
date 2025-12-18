@@ -77,6 +77,7 @@ export function Transferencia() {
         gerarPDF(dados);
         setDadosUltimaTransferencia(dados); // Salva os dados da última transferência
         resetForm();
+        getEstoque(); // Atualiza a lista de materiais após a transferência
         setShowSuccessScreen(true);
         showSuccessToast(
           resposta.data.message || "Transferência realizada com sucesso"
