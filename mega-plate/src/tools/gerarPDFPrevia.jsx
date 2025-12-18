@@ -89,64 +89,106 @@ export function gerarPDFPrevia(
     doc.text(`Condição de pagamento: ${condPagto}`, 20, y);
     y += 12;
 
-    // Tabela de Materiais
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text("DESCRIÇÃO DOS MATERIAIS", 20, y);
-    y += 10;
-
     // Cabeçalho da tabela
-    doc.setFillColor(240, 240, 240);
-    doc.rect(20, y - 5, 170, 10, "F");
-    doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
-    doc.text("ITEM", 22, y);
-    doc.text("MATERIAL", 40, y);
-    doc.text("TIPO", 85, y);
-    doc.text("IPI", 105, y);
-    doc.text("QTD", 120, y);
-    doc.text("VALOR UNIT./KG", 140, y);
-    doc.text("TOTAL", 175, y);
+doc.setFillColor(240, 240, 240);
+doc.rect(20, y - 5, 170, 10, "F");
+doc.setFontSize(8);
+doc.setTextColor(0, 0, 0);
 
-    y += 6;
-    doc.setFont("helvetica", "normal");
+doc.text("ITEM", 22, y);
+doc.text("MATERIAL", 34, y);
+doc.text("TIPO", 78, y);
+doc.text("QTD", 92, y);
+doc.text("VL UNIT", 104, y);
+doc.text("IPI", 124, y);
+doc.text("TOTAL S/ IPI", 138, y);
+doc.text("TOTAL C/ IPI", 162, y);
+
+y += 8; // espaço padrão entre cabeçalho e primeira linha
+doc.setFont("helvetica", "normal");
+
 
     let totalGeral = 0;
     let ipiTotal = 0;
+materiaisSelecionados.forEach((mat, i) => {
+  if (y > 245) {
+    doc.addPage();
+    y = 30;
+  }
 
-   materiaisSelecionados.forEach((mat, i) => {
-  const item = String(i + 1).padStart(3, "0");
-const valorUnit = mat.tipoCompra === "QUILO" ? Number(mat.valorKg) || 0 : Number(mat.valorUnitario) || 0;
+  const yBase = y + 8;
+
+  const descricao = mat.descricao || "";
+  const rastreio = mat.rastreabilidade || "";
+
+  const item = String(i + 1).padStart(2, "0");
+
+  const valorUnit =
+    mat.tipoCompra === "QUILO"
+      ? Number(mat.valorKg) || 0
+      : Number(mat.valorUnitario) || 0;
+
   const quantidade = Number(mat.quantidade) || 0;
-const totalItemSemIpi = valorUnit * quantidade;
+  const totalSemIpi = valorUnit * quantidade;
 
   const ipiPercentual =
     parseFloat(
       (mat.ipiFormatado || "0,00%").replace("%", "").replace(",", ".")
     ) || 0;
 
+  const valorIpi = (totalSemIpi * ipiPercentual) / 100;
+  const totalComIpi = totalSemIpi + valorIpi;
+
   const tipoCompraTexto = mat.tipoCompra === "QUILO" ? "Kg" : "Unidade";
 
+  // 🔹 LINHA PRINCIPAL
   y += 8;
+  doc.setFontSize(8);
 
+  doc.text(item, 22, y);
+doc.text((mat.tipoMaterial || "N/A").substring(0, 26), 34, y);
+  doc.text(tipoCompraTexto, 75, y);
+  doc.text(String(quantidade), 94, y, { align: "center" });
+  doc.text(`R$ ${valorUnit.toFixed(2).replace(".", ",")}`, 104, y);
+  doc.text(mat.ipiFormatado || "0,00%", 124, y, { align: "center" });
+  doc.text(
+    `R$ ${totalSemIpi.toFixed(2).replace(".", ",")}`,
+    138,
+    y
+  );
+  doc.text(
+    `R$ ${totalComIpi.toFixed(2).replace(".", ",")}`,
+    162,
+    y
+  );
+
+  // 🔹 RASTREABILIDADE
+  y += 5;
+  doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
+  doc.text(
+    `Rastre.: ${mat.rastreabilidade || "-"}`,
+    34,
+    y
+  );
 
-  doc.text(item, 25, y);
-  doc.text((mat.tipoMaterial || "N/A").substring(0, 38), 45, y);
-  doc.text(tipoCompraTexto, 85, y);
-  doc.text(mat.ipiFormatado || "0,00%", 105, y, { align: "center" });
-  doc.text(String(quantidade), 120, y, { align: "center" });
-  doc.text(`R$ ${valorUnit.toFixed(2).replace(".", ",")}`, 140, y);
-  doc.text(`R$ ${totalItemSemIpi.toFixed(2).replace(".", ",")}`, 170, y);
+  // 🔹 DESCRIÇÃO
+  y += 4;
+  doc.text(
+    `Descrição: ${(mat.descricao || "-").substring(0, 95)}`,
+    34,
+    y
+  );
 
-  // 🔹 LINHA SEPARADORA (igual ao PDF oficial)
+  // 🔹 LINHA SEPARADORA
+  y += 4;
   doc.setDrawColor(220, 220, 220);
-  doc.line(20, y + 2, 190, y + 2);
+  doc.line(20, y, 190, y);
 
-  totalGeral += totalItemSemIpi;
-  ipiTotal += (totalItemSemIpi * ipiPercentual) / 100;
+  totalGeral += totalSemIpi;
+  ipiTotal += valorIpi;
 });
+
 
     // === TOTAIS ===
     y += 15;

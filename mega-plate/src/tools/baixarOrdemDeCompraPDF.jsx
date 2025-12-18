@@ -138,23 +138,29 @@ export async function baixarOrdemDeCompraPDF(
 
     doc.setFillColor(240, 240, 240);
     doc.rect(20, y - 5, 170, 10, "F");
-    doc.setFontSize(9);
-    doc.text("ITEM", 25, y);
-    doc.text("DESCRIÇÃO", 45, y);
-    doc.text("TIPO", 80, y);
-    doc.text("IPI", 105, y, { align: "center" });
-    doc.text("QTD", 120, y, { align: "center" });
-    doc.text("VALOR UNIT./KG", 140, y);
-    doc.text("VALOR TOTAL", 170, y);
 
-    y += 6;
+    doc.setFontSize(8);
+    doc.text("ITEM", 22, y);
+    doc.text("MATERIAL", 34, y);
+    doc.text("TIPO", 78, y);
+    doc.text("QTD", 92, y);
+    doc.text("VL UNIT", 104, y);
+    doc.text("IPI", 124, y);
+    doc.text("TOTAL S/ IPI", 138, y);
+    doc.text("TOTAL C/ IPI", 162, y);
+
+    y += 8;
     doc.setFont("helvetica", "normal");
 
     let totalGeral = 0;
     let ipiTotal = 0;
 
     function getMaterialValue(ordem, materiais) {
-      const material = materiais.find((m) => m.id === ordem.estoqueId) || {};
+      const material =
+        materiais.find(
+          (m) => Number(m.id ?? m.estoqueId) === Number(ordem.estoqueId)
+        ) || {};
+
       const tipoCompra = ordem.tipoCompra?.toUpperCase();
 
       const valorUnitario =
@@ -167,11 +173,19 @@ export async function baixarOrdemDeCompraPDF(
           : 0;
       const ipi = Number(material.ipi ?? 0);
 
+      const materialNome =
+        material.tipoMaterial ??
+        material.nome ??
+        material.descricao ??
+        material.nomeMaterial ??
+        material.material?.nome ??
+        "N/D";
+
       return {
         valorUnitario,
         valorKg,
         ipi,
-        materialNome: ordem.descricaoMaterial ?? material.nome ?? "N/D",
+        materialNome,
       };
     }
 
@@ -196,39 +210,45 @@ export async function baixarOrdemDeCompraPDF(
       const ipiFormatado =
         ipi > 0 ? `${ipi.toFixed(2).replace(".", ",")}%` : "0,00%";
 
-      // Total do item
-      const totalItem =
-        tipoCompra === "QUILO"
-          ? valorKg * quantidade
-          : valorUnitario * quantidade;
+      const valorUnit = tipoCompra === "QUILO" ? valorKg : valorUnitario;
+
+      const totalSemIpi = valorUnit * quantidade;
+      const valorIpi = (totalSemIpi * ipi) / 100;
+      const totalComIpi = totalSemIpi + valorIpi;
 
       y += 8;
+      doc.setFontSize(8);
 
-      doc.text(item, 25, y);
-      doc.text(materialNome.substring(0, 32), 45, y);
-      doc.text(tipoCompraTexto, 80, y);
-      doc.text(ipiFormatado, 105, y, { align: "center" });
-      doc.text(String(quantidade), 120, y, { align: "center" });
+      doc.text(item, 22, y);
+      doc.text(materialNome.substring(0, 26), 34, y);
+      doc.text(tipoCompraTexto, 78, y);
+      doc.text(String(quantidade), 95, y, { align: "center" });
+      doc.text(`R$ ${valorUnit.toFixed(2).replace(".", ",")}`, 104, y);
+      doc.text(ipiFormatado, 124, y, { align: "center" });
+      doc.text(`R$ ${totalSemIpi.toFixed(2).replace(".", ",")}`, 138, y);
+      doc.text(`R$ ${totalComIpi.toFixed(2).replace(".", ",")}`, 162, y);
+
+      y += 5;
+      doc.setFontSize(8);
+      doc.text(`Rastre.: ${ordem.rastreabilidade || "-"}`, 34, y);
+
+      y += 4;
       doc.text(
-        `R$ ${
-          tipoCompra === "QUILO"
-            ? valorKg.toFixed(2).replace(".", ",")
-            : valorUnitario.toFixed(2).replace(".", ",")
-        }`,
-        140,
+        `Descrição: ${(ordem.descricaoMaterial || "-").substring(0, 95)}`,
+        34,
         y
       );
-      doc.text(`R$ ${totalItem.toFixed(2).replace(".", ",")}`, 170, y);
 
+      y += 4;
       doc.setDrawColor(220, 220, 220);
-      doc.line(20, y + 2, 190, y + 2);
+      doc.line(20, y, 190, y);
 
-      totalGeral += totalItem;
-      ipiTotal += (totalItem * ipi) / 100;
+      totalGeral += totalSemIpi;
+      ipiTotal += valorIpi;
     });
 
     // === TOTAIS ===
-    y += 15;
+    y += 10;
     doc.setFillColor(240, 240, 240);
     doc.rect(120, y - 5, 70, 38, "F");
 
@@ -250,7 +270,7 @@ export async function baixarOrdemDeCompraPDF(
     );
 
     // === OBSERVAÇÕES ===
-    y += 40;
+    y += 20;
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text("OBSERVAÇÕES:", 20, y);
@@ -269,13 +289,13 @@ export async function baixarOrdemDeCompraPDF(
 
     // Rodapé
     doc.setFillColor(...corPrimaria);
-    doc.rect(0, 275, 210, 30, "F");
+    doc.rect(0, 270, 210, 27, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
-    doc.text("MegaPlate LTDA • CNPJ: XX.XXX.XXX/XXXX-XX", 105, 285, {
+    doc.text("MegaPlate LTDA • CNPJ: XX.XXX.XXX/XXXX-XX", 105, 280, {
       align: "center",
     });
-    doc.text("www.megaplate.com.br | vendas@megaplate.com.br", 105, 291, {
+    doc.text("www.megaplate.com.br | vendas@megaplate.com.br", 105, 286, {
       align: "center",
     });
 
@@ -285,6 +305,7 @@ export async function baixarOrdemDeCompraPDF(
   } catch (err) {
     console.error("ERRO AO GERAR PDF OFICIAL:", err);
     toastError("Falha ao gerar PDF: " + (err.message || "Verifique a conexão"));
+    
   }
 }
 
