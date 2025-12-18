@@ -222,17 +222,34 @@ export function OrdemDeCompra() {
     return !temErro;
   };
 
-  const validarCamposValor = (valoresInput) => {
-    const valorKg = valoresInput["Valor por Kg"];
-    const valorPeca = valoresInput["Valor por peça"];
-    if (!valorKg && !valorPeca) {
-      return {
-        "Valor por Kg": "Preencha o valor por Kg OU o valor por peça",
-        "Valor por peça": "Preencha o valor por Kg OU o valor por peça",
-      };
-    }
-    return {};
-  };
+  const validarRastreabilidade = (valor) => {
+  if (!valor || valor.trim() === "") {
+    toastError("O campo Rastreabilidade é obrigatório.");
+    return false;
+  }
+
+  if (valor.length < 7 || valor.length > 17) {
+    toastError("Rastreabilidade deve conter entre 7 e 17 caracteres.");
+    return false;
+  }
+
+  return true;
+};
+
+const validarDescricao = (valor) => {
+  if (!valor || valor.trim() === "") {
+    toastError("O campo Descrição é obrigatório.");
+    return false;
+  }
+
+  if (valor.trim().length < 4) {
+    toastError("A descrição deve conter pelo menos 4 caracteres.");
+    return false;
+  }
+
+  return true;
+};
+
 
   // Etapas
   const etapas = useMemo(
@@ -308,11 +325,11 @@ export function OrdemDeCompra() {
             id: "rastreio",
             titulo: "Rastreabilidade",
             tipo: "text",
-            placeholder: "Código de rastreamento (Max 20 caracteres)",
-            pattern: "^[A-Za-z0-9\\-\\/]{16,20}$",
+            placeholder: "Código de rastreamento (Max 17 caracteres)",
+            pattern: "^[A-Za-z0-9\\-\\/]{7,17}$",
             required: true,
             validationMessage:
-              "Código inválido. Use 16-20 caracteres alfanuméricos.",
+              "Código inválido. Use 7-17 caracteres alfanuméricos.",
             formatador: formatarRastreio,
           },
           {
@@ -547,21 +564,9 @@ export function OrdemDeCompra() {
       temErro = true;
     }
 
-    if (!valoresInput["Descrição"]) {
-      toastError("O campo Descrição é obrigatório.");
-      temErro = true;
-    }
+  if (!validarDescricao(valoresInput["Descrição"])) return;
 
-    if (!valoresInput["Rastreabilidade"]) {
-      toastError("O campo Rastreabilidade é obrigatório.");
-      temErro = true;
-    } else if (valoresInput["Rastreabilidade"].length > 20) {
-      toastError("O campo Rastreabilidade deve ter no máximo 20 caracteres.");
-      temErro = true;
-    } else if (valoresInput["Rastreabilidade"].length < 7) {
-      toastError("O campo Rastreabilidade deve ter no máximo 20 caracteres.");
-      temErro = true;
-    }
+if (!validarRastreabilidade(valoresInput["Rastreabilidade"])) return;
 
     // Regra específica: precisa ter pelo menos um dos dois
     if (
@@ -667,18 +672,9 @@ export function OrdemDeCompra() {
       temErro = true;
     }
 
-    if (!valoresInput["Descrição"]) {
-      toastError("O campo Descrição é obrigatório.");
-      temErro = true;
-    }
+   if (!validarDescricao(valoresInput["Descrição"])) return;
 
-    if (!valoresInput["Rastreabilidade"]) {
-      toastError("O campo Rastreabilidade é obrigatório.");
-      temErro = true;
-    } else if (valoresInput["Rastreabilidade"].length > 20) {
-      toastError("O campo Rastreabilidade deve ter no máximo 20 caracteres.");
-      temErro = true;
-    }
+if (!validarRastreabilidade(valoresInput["Rastreabilidade"])) return;
 
     // 🔸 Se houver qualquer erro, interrompe a execução aqui
     if (temErro) return;
@@ -724,7 +720,8 @@ export function OrdemDeCompra() {
         tipoCompra, // ✅ AQUI
 
         descricao: valoresInput["Descrição"],
-        rastreabilidade: valoresInput["Rastreabilidade"].substring(0, 20),
+        rastreabilidade: valoresInput["Rastreabilidade"].trim(),
+
 
         valorKg:
           tipoCompra === "QUILO"
@@ -804,7 +801,7 @@ const ordensParaEnviar = materiaisSelecionados.map(mat => {
     quantidade: Number(mat.quantidade),
     tipoCompra: mat.tipoCompra,
     descricaoMaterial: mat.descricao.substring(0, 100),
-    rastreabilidade: mat.rastreabilidade.substring(0, 16),
+    rastreabilidade: mat.rastreabilidade.substring(0, 17),
     prazoEntrega: dadosFornecedor["Prazo de entrega"],
     condPagamento: dadosFornecedor["Cond. Pagamento"],
     ipi: Number(mat.ipi || 0),
@@ -1126,12 +1123,10 @@ const ordensParaEnviar = materiaisSelecionados.map(mat => {
                           type="text"
                           placeholder="Ex: 21345-2015"
                           value={valoresInput["Rastreabilidade"] || ""}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "Rastreabilidade",
-                              formatarRastreio(e.target.value)
-                            )
-                          }
+                       onChange={(e) =>
+  handleInputChange("Rastreabilidade", e.target.value)
+}
+
                         />
                       </div>
 
@@ -1336,19 +1331,17 @@ const ordensParaEnviar = materiaisSelecionados.map(mat => {
                             }}
                           >
                             ({(valoresInput["Rastreabilidade"] || "").length}
-                            /20)
+                            /17)
                           </span>
                         </p>
                         <input
                           type="text"
                           placeholder="Ex: 21345-2015"
                           value={valoresInput["Rastreabilidade"] || ""}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "Rastreabilidade",
-                              formatarRastreio(e.target.value)
-                            )
-                          }
+                        onChange={(e) =>
+  handleInputChange("Rastreabilidade", e.target.value)
+}
+
                         />
                       </div>
 
