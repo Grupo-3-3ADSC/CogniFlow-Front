@@ -71,8 +71,7 @@ export function CadastroFornecedor() {
       !formData.telefone ||
       !formData.email ||
       !formData.responsavel ||
-      !formData.cargo ||
-      !formData.ie
+      !formData.cargo
     ) {
       toastError("Preencha as informações.");
       return;
@@ -104,14 +103,15 @@ export function CadastroFornecedor() {
       toastError("E-mail inválido.");
       return;
     }
-    if (!validarIe(formData.ie.replace(/\D/g, ""))) {
-      Swal.fire({
-        title: "Inscrição Estadual inválida",
-        icon: "warning",
-        confirmButtonColor: "#3085d6",
-      });
-      return;
-    }
+   if (formData.ie && !validarIe(formData.ie)) {
+  Swal.fire({
+    title: "Inscrição Estadual inválida",
+    icon: "warning",
+    confirmButtonColor: "#3085d6",
+  });
+  return;
+}
+
 
     if (cnpjLimpo.length !== 14 || !validarCNPJ(cnpjLimpo)) {
       toastError("CNPJ inválido.");
@@ -281,17 +281,15 @@ export function CadastroFornecedor() {
     return /^[0-9]{14}$/.test(cnpj);
   }
 
-  function validarIe(ie) {
-    // Permite "ISENTO" (em maiúsculas ou minúsculas)
-    if (!ie) return false;
-    if (ie.toUpperCase() === "ISENTO") return true;
+function validarIe(ie) {
+  if (!ie || ie.trim() === "") return true; // IE vazio é válido
 
-    // Remove caracteres não numéricos
-    const numeros = ie.replace(/\D/g, "");
+  if (ie.toUpperCase() === "ISENTO") return true;
 
-    // IE geralmente tem entre 8 e 12 dígitos
-    return /^[0-9]{8,12}$/.test(numeros);
-  }
+  const numeros = ie.replace(/\D/g, "");
+  return /^[0-9]{8,12}$/.test(numeros);
+}
+
 
   function validarTelefone(telefone) {
     const apenasNumeros = telefone.replace(/\D/g, "");
